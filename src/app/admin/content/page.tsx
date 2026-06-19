@@ -13,6 +13,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   AlertCircle, ArrowDown, ArrowUp, Check, ChevronRight,
   FileText, ImageIcon, Loader2, LogOut, Plus, Save, Trash2, X,
+  Settings
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import {
@@ -106,19 +107,20 @@ interface ContactData {
   inquiryAreas: string[];
 }
 
-type PageSlug = "home" | "about" | "corporate" | "education" | "products" | "contact";
+type PageSlug = "home" | "about" | "corporate" | "education" | "products" | "contact" | "site-settings";
 
 interface PageMeta { slug: PageSlug; label: string; icon: React.ReactNode }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const PAGES: PageMeta[] = [
-  { slug: "home",      label: "Home",               icon: <FileText className="w-4 h-4" /> },
-  { slug: "about",     label: "About Us",            icon: <FileText className="w-4 h-4" /> },
-  { slug: "corporate", label: "Corporate Solutions", icon: <FileText className="w-4 h-4" /> },
-  { slug: "education", label: "Educational Solutions",icon: <FileText className="w-4 h-4" /> },
-  { slug: "products",  label: "Products",            icon: <FileText className="w-4 h-4" /> },
-  { slug: "contact",   label: "Contact",             icon: <FileText className="w-4 h-4" /> },
+  { slug: "home",          label: "Home",                  icon: <FileText className="w-4 h-4" /> },
+  { slug: "about",         label: "About Us",              icon: <FileText className="w-4 h-4" /> },
+  { slug: "corporate",     label: "Corporate Solutions",   icon: <FileText className="w-4 h-4" /> },
+  { slug: "education",     label: "Educational Solutions", icon: <FileText className="w-4 h-4" /> },
+  { slug: "products",      label: "Products",              icon: <FileText className="w-4 h-4" /> },
+  { slug: "contact",       label: "Contact",               icon: <FileText className="w-4 h-4" /> },
+  { slug: "site-settings", label: "Global Settings",       icon: <Settings className="w-4 h-4" /> },
 ];
 
 const NAV_TABS = [
@@ -666,6 +668,55 @@ function ContactEditor({
   );
 }
 
+// ─── Site Settings Editor ──────────────────────────────────────────────────
+
+function SiteSettingsEditor({
+  data, onChange,
+}: { data: any; onChange: (d: any) => void }) {
+  const setContact = useCallback((key: string, value: any) => {
+    onChange({
+      ...data,
+      contactInfo: {
+        ...(data.contactInfo || {}),
+        [key]: value
+      }
+    });
+  }, [data, onChange]);
+
+  const setPhones = useCallback((value: string) => {
+    const arr = value.split(",").map(x => x.trim()).filter(Boolean);
+    setContact("phones", arr);
+  }, [setContact]);
+
+  return (
+    <div className="space-y-6">
+      <SectionCard title="Contact Information">
+        <Field label="Office Address" value={data.contactInfo?.address || ""} rows={3} onChange={v => setContact("address", v)} />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Field label="Contact Email" value={data.contactInfo?.email || ""} onChange={v => setContact("email", v)} />
+          <Field label="GST Number" value={data.contactInfo?.gstNumber || ""} onChange={v => setContact("gstNumber", v)} />
+        </div>
+        <div>
+          <Field label="Phone Numbers (comma separated)" value={(data.contactInfo?.phones || []).join(", ")} onChange={v => setPhones(v)} placeholder="e.g. 9961813730, 0484-4059310" />
+          <span className="text-[10px] text-slate mt-1 block">Enter multiple phone numbers separated by commas.</span>
+        </div>
+      </SectionCard>
+
+      <SectionCard title="Company Identity">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Field label="Company Name" value={data.companyName || ""} onChange={v => onChange({ ...data, companyName: v })} />
+          <Field label="Tagline / Subhead" value={data.tagline || ""} onChange={v => onChange({ ...data, tagline: v })} />
+        </div>
+      </SectionCard>
+
+      <SectionCard title="Footer Configuration">
+        <Field label="Footer Description" value={data.footerDescription || ""} rows={3} onChange={v => onChange({ ...data, footerDescription: v })} />
+        <Field label="Footer Tagline" value={data.footerTagline || ""} onChange={v => onChange({ ...data, footerTagline: v })} />
+      </SectionCard>
+    </div>
+  );
+}
+
 // ─── Generic editor for other pages ──────────────────────────────────────────
 
 function GenericEditor({
@@ -710,6 +761,7 @@ export default function AdminContentPage() {
   const [educationData,setEducationData]= useState<EducationData>(FALLBACK_EDUCATION);
   const [productsData, setProductsData] = useState<ProductsPageData>(FALLBACK_PRODUCTS_PAGE);
   const [contactData,  setContactData]  = useState<ContactData>(FALLBACK_CONTACT);
+  const [siteSettingsData, setSiteSettingsData] = useState<any>(FALLBACK_SITE_SETTINGS);
 
   const [genericData,  setGenericData]  = useState<Record<string, unknown>>({});
   const [loading,  setLoading]  = useState(false);
@@ -779,6 +831,24 @@ export default function AdminContentPage() {
             intro: stored.intro || FALLBACK_CONTACT.intro,
             inquiryAreas: stored.inquiryAreas?.length ? stored.inquiryAreas : FALLBACK_CONTACT.inquiryAreas,
           });
+        } else if (selectedSlug === "site-settings") {
+          setSiteSettingsData({
+            companyName: stored.companyName || FALLBACK_SITE_SETTINGS.companyName,
+            tagline: stored.tagline || FALLBACK_SITE_SETTINGS.tagline,
+            regionsServed: stored.regionsServed?.length ? stored.regionsServed : FALLBACK_SITE_SETTINGS.regionsServed,
+            contactInfo: {
+              email: stored.contactInfo?.email || FALLBACK_SITE_SETTINGS.contactInfo.email,
+              phones: stored.contactInfo?.phones?.length ? stored.contactInfo.phones : FALLBACK_SITE_SETTINGS.contactInfo.phones,
+              address: stored.contactInfo?.address || FALLBACK_SITE_SETTINGS.contactInfo.address,
+              gstNumber: stored.contactInfo?.gstNumber || FALLBACK_SITE_SETTINGS.contactInfo.gstNumber,
+            },
+            footerDescription: stored.footerDescription || FALLBACK_SITE_SETTINGS.footerDescription,
+            footerTagline: stored.footerTagline || FALLBACK_SITE_SETTINGS.footerTagline,
+            navItems: stored.navItems || FALLBACK_SITE_SETTINGS.navItems,
+            footerColumns: stored.footerColumns || FALLBACK_SITE_SETTINGS.footerColumns,
+            quickLinks: stored.quickLinks || FALLBACK_SITE_SETTINGS.quickLinks,
+            socialLinks: stored.socialLinks || FALLBACK_SITE_SETTINGS.socialLinks,
+          });
         } else {
           setGenericData(stored);
         }
@@ -798,6 +868,7 @@ export default function AdminContentPage() {
     else if (selectedSlug === "education") payload = educationData;
     else if (selectedSlug === "products") payload = productsData;
     else if (selectedSlug === "contact") payload = contactData;
+    else if (selectedSlug === "site-settings") payload = siteSettingsData;
     else payload = genericData;
 
     try {
@@ -1012,6 +1083,18 @@ export default function AdminContentPage() {
                 </a>
               </div>
               <ContactEditor data={contactData} onChange={setContactData} />
+            </>
+          ) : selectedSlug === "site-settings" ? (
+            <>
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-xl font-bold font-display text-ink">Global Settings</h2>
+                  <p className="text-xs text-slate mt-0.5">
+                    Configure company identity, contact details, and global footer text.
+                  </p>
+                </div>
+              </div>
+              <SiteSettingsEditor data={siteSettingsData} onChange={setSiteSettingsData} />
             </>
           ) : (
             <>
