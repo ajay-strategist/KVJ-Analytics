@@ -3,8 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 export async function POST(req: NextRequest) {
   try {
     const { username, password } = await req.json();
-    const adminUsername = process.env.ADMIN_USERNAME || "admin";
-    const adminPassword = process.env.ADMIN_PASSWORD || "kvjadmin";
+    const adminUsername = process.env.ADMIN_USERNAME || "mail@thestrategist.co.in";
+    const adminPassword = process.env.ADMIN_PASSWORD || "AjayThomas@1";
 
     if (username !== adminUsername || password !== adminPassword) {
       return NextResponse.json(
