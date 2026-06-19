@@ -21,8 +21,13 @@ export async function GET(req: NextRequest) {
 
   const supabaseAdmin = getAdminClient();
   if (!supabaseAdmin) {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     return NextResponse.json(
-      { error: "Supabase not configured." },
+      { 
+        error: `Supabase not configured. url: ${url ? "defined (" + url.substring(0, 10) + "...)" : "undefined"}, serviceKey: ${key ? "defined (" + key.substring(0, 10) + "...)" : "undefined"}, anonKey: ${anonKey ? "defined (" + anonKey.substring(0, 10) + "...)" : "undefined"}` 
+      },
       { status: 500 }
     );
   }
