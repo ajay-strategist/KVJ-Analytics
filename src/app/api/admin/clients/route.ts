@@ -1,48 +1,60 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { cookies } from "next/headers";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
-function isAuthenticated(req: NextRequest) {
-  const cookie = req.cookies.get("admin_session");
-  return cookie?.value === "authenticated";
+// Lazy factory — never call createClient at module level (breaks Next.js build)
+function getAdmin() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return null;
+  return createClient(url, key, { auth: { persistSession: false } });
 }
 
-// GET — list all clients
+function isAuthenticated(req: NextRequest) {
+  return req.cookies.get("admin_session")?.value === "authenticated";
+}
+
+function unauthorized() {
+  return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+}
+function notConfigured() {
+  return NextResponse.json({ error: "Supabase not configured." }, { status: 500 });
+}
+
 export async function GET(req: NextRequest) {
-  if (!isAuthenticated(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const { data, error } = await supabase.from("clients").select("*").order("sort_order").order("created_at", { ascending: false });
+  if (!isAuthenticated(req)) return unauthorized();
+  const db = getAdmin();
+  if (!db) return notConfigured();
+  const { data, error } = await db.from("clients").select("*").order("sort_order").order("created_at", { ascending: false });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ clients: data });
 }
 
-// POST — create client
 export async function POST(req: NextRequest) {
-  if (!isAuthenticated(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!isAuthenticated(req)) return unauthorized();
+  const db = getAdmin();
+  if (!db) return notConfigured();
   const body = await req.json();
-  const { data, error } = await supabase.from("clients").insert([body]).select().single();
+  const { data, error } = await db.from("clients").insert([body]).select().single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ client: data });
 }
 
-// PATCH — update client
 export async function PATCH(req: NextRequest) {
-  if (!isAuthenticated(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!isAuthenticated(req)) return unauthorized();
+  const db = getAdmin();
+  if (!db) return notConfigured();
   const { id, ...updates } = await req.json();
-  const { data, error } = await supabase.from("clients").update(updates).eq("id", id).select().single();
+  const { data, error } = await db.from("clients").update(updates).eq("id", id).select().single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ client: data });
 }
 
-// DELETE — delete client
 export async function DELETE(req: NextRequest) {
-  if (!isAuthenticated(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!isAuthenticated(req)) return unauthorized();
+  const db = getAdmin();
+  if (!db) return notConfigured();
   const { id } = await req.json();
-  const { error } = await supabase.from("clients").delete().eq("id", id);
+  const { error } = await db.from("clients").delete().eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ success: true });
 }
