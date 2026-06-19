@@ -2,11 +2,12 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Lock, Loader2, AlertCircle } from "lucide-react";
+import { Lock, Loader2, AlertCircle, Mail } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 
 export default function AdminLoginPage() {
   const router = useRouter();
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -20,7 +21,7 @@ export default function AdminLoginPage() {
       const response = await fetch("/api/admin/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password }),
+        body: JSON.stringify({ username, password }),
       });
 
       const data = await response.json();
@@ -60,19 +61,44 @@ export default function AdminLoginPage() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Email */}
+          <div>
+            <label
+              htmlFor="username"
+              className="block text-xs font-bold uppercase tracking-wider text-slate mb-2"
+            >
+              Email Address *
+            </label>
+            <div className="relative">
+              <input
+                type="email"
+                id="username"
+                required
+                autoComplete="email"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="mail@thestrategist.co.in"
+                className="w-full pl-10 pr-4 py-3 rounded-input border border-line bg-surface/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent text-sm transition-all"
+              />
+              <Mail className="w-4 h-4 text-slate absolute left-3.5 top-3.5" />
+            </div>
+          </div>
+
+          {/* Password */}
           <div>
             <label
               htmlFor="password"
               className="block text-xs font-bold uppercase tracking-wider text-slate mb-2"
             >
-              Enter Password *
+              Password *
             </label>
             <div className="relative">
               <input
                 type="password"
                 id="password"
                 required
+                autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"

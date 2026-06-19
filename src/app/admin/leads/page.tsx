@@ -228,45 +228,28 @@ export default function AdminLeadsPage() {
         </div>
 
         {/* Tab Navigation Panel */}
-        <div className="flex border-b border-line space-x-6 pb-1">
-          <Link
-            href="/admin/leads"
-            className={`pb-3.5 text-sm font-semibold border-b-2 transition-all ${
-              pathname === "/admin/leads"
-                ? "border-brand text-brand font-bold"
-                : "border-transparent text-slate hover:text-ink"
-            }`}
-          >
-            Leads Inbox
-          </Link>
-          <Link
-            href="/admin/batches"
-            className={`pb-3.5 text-sm font-semibold border-b-2 transition-all ${
-              pathname === "/admin/batches"
-                ? "border-brand text-brand"
-                : "border-transparent text-slate hover:text-ink"
-            }`}
-          >
-            College Batches (TOTP)
-          </Link>
-          <Link
-            href="/admin/enrollments"
-            className={`pb-3.5 text-sm font-semibold border-b-2 transition-all ${
-              pathname === "/admin/enrollments"
-                ? "border-brand text-brand"
-                : "border-transparent text-slate hover:text-ink"
-            }`}
-          >
-            Student Enrollments & Results
-          </Link>
-          <a
-            href="/studio"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="pb-3.5 text-sm font-semibold border-b-2 border-transparent text-slate hover:text-ink transition-all inline-flex items-center gap-1.5"
-          >
-            Website Content (Clients) ↗
-          </a>
+        <div className="flex flex-wrap gap-1 border-b border-line">
+          {[
+            { label: "Leads Inbox", href: "/admin/leads" },
+            { label: "College Batches", href: "/admin/batches" },
+            { label: "Enrollments", href: "/admin/enrollments" },
+            { label: "Clients", href: "/admin/clients" },
+            { label: "Testimonials", href: "/admin/testimonials" },
+            { label: "Case Studies", href: "/admin/case-studies" },
+            { label: "Team", href: "/admin/team" },
+          ].map((tab) => (
+            <Link
+              key={tab.href}
+              href={tab.href}
+              className={`px-4 py-2.5 text-sm font-semibold border-b-2 transition-all ${
+                pathname === tab.href
+                  ? "border-brand text-brand font-bold"
+                  : "border-transparent text-slate hover:text-ink"
+              }`}
+            >
+              {tab.label}
+            </Link>
+          ))}
         </div>
 
         {/* Metrics Row */}
