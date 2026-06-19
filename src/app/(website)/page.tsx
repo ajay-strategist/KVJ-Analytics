@@ -13,34 +13,26 @@ import { ClientLogoCarousel } from "@/components/ui/ClientLogoCarousel";
 import { HeroCarousel } from "@/components/ui/HeroCarousel";
 import { HeroVisual } from "@/components/ui/HeroVisual";
 import { Reveal } from "@/components/ui/Reveal";
-import { client } from "@/sanity/lib/client";
-import { homePageQuery, siteSettingsQuery, clientsQuery } from "@/sanity/lib/queries";
+import { getPageContent, mergePageContent } from "@/lib/content";
 import { FALLBACK_HOME_PAGE, FALLBACK_SITE_SETTINGS } from "@/lib/constants";
 
 export const revalidate = 3600; // Cache for 1 hour
 
 export default async function HomePage() {
-  const hpData = await client.fetch(homePageQuery).catch((err) => {
-    console.warn("Sanity fetch error in HomePage:", err);
-    return null;
-  });
+  // ── Load from Supabase content store, fall back to CEO-approved constants ──
+  const [storedHome, storedSettings] = await Promise.all([
+    getPageContent("home"),
+    getPageContent("site-settings"),
+  ]);
 
-  const settingsData = await client.fetch(siteSettingsQuery).catch((err) => {
-    console.warn("Sanity fetch error in HomePage siteSettings:", err);
-    return null;
-  });
+  const hp       = mergePageContent(storedHome,    FALLBACK_HOME_PAGE);
+  const settings = mergePageContent(storedSettings, FALLBACK_SITE_SETTINGS);
 
-  const clientsData = await client.fetch(clientsQuery).catch((err) => {
-    console.warn("Sanity fetch error in HomePage clients:", err);
-    return null;
-  });
+  const corporateSolutions   = hp.corporateSolutions   ?? FALLBACK_HOME_PAGE.corporateSolutions;
+  const educationalSolutions = hp.educationalSolutions ?? FALLBACK_HOME_PAGE.educationalSolutions;
 
-  const hp = hpData || FALLBACK_HOME_PAGE;
-  const settings = settingsData || FALLBACK_SITE_SETTINGS;
-  const clients = clientsData || [];
-
-  const corporateSolutions = hp.corporateSolutions || FALLBACK_HOME_PAGE.corporateSolutions;
-  const educationalSolutions = hp.educationalSolutions || FALLBACK_HOME_PAGE.educationalSolutions;
+  // Clients from Supabase clients table (already built)
+  const clients: { name: string; logo_url: string; website_url: string }[] = [];
 
   const renderHeadline = (text: string) => {
     const highlightWord = "Data Into Decisions";
@@ -56,7 +48,7 @@ export default async function HomePage() {
     }
     const words = text.split(" ");
     if (words.length > 2) {
-      const lastWords = words.slice(-3).join(" ");
+      const lastWords  = words.slice(-3).join(" ");
       const firstWords = words.slice(0, -3).join(" ");
       return (
         <>
@@ -70,8 +62,8 @@ export default async function HomePage() {
 
   return (
     <>
-      {/* 0. Hero Image Carousel (dynamic, CMS-managed) */}
-      <HeroCarousel slides={hp.heroCarousel} />
+      {/* 0. Hero Image Carousel (CMS-managed via heroCarousel key) */}
+      <HeroCarousel slides={(hp as any).heroCarousel} />
 
       {/* 1. Hero Section */}
       <section className="relative overflow-hidden mesh-hero pt-16 pb-20 md:pt-24 md:pb-28 border-b border-line/50">
@@ -84,29 +76,31 @@ export default async function HomePage() {
             {/* Left: copy */}
             <div className="text-center lg:text-left animate-fade-up">
               <BoldStatement variant="hero" className="mb-6 tracking-tight leading-[1.05]">
-                {renderHeadline(hp.hero?.headline || FALLBACK_HOME_PAGE.hero.headline)}
+                {renderHeadline(hp.hero?.headline ?? FALLBACK_HOME_PAGE.hero.headline)}
               </BoldStatement>
 
               <div className="flex flex-wrap justify-center lg:justify-start items-center gap-x-3 gap-y-2 mb-7 font-display text-xs md:text-sm font-semibold tracking-wider uppercase">
-                {(hp.hero?.subhead || FALLBACK_HOME_PAGE.hero.subhead).split("•").map((item: string, idx: number) => (
-                  <React.Fragment key={idx}>
-                    {idx > 0 && <span className="text-slate/30">•</span>}
-                    <span className="text-brand font-bold bg-brand/5 px-3 py-1 rounded-full">
-                      {item.trim()}
-                    </span>
-                  </React.Fragment>
-                ))}
+                {(hp.hero?.subhead ?? FALLBACK_HOME_PAGE.hero.subhead)
+                  .split("•")
+                  .map((item: string, idx: number) => (
+                    <React.Fragment key={idx}>
+                      {idx > 0 && <span className="text-slate/30">•</span>}
+                      <span className="text-brand font-bold bg-brand/5 px-3 py-1 rounded-full">
+                        {item.trim()}
+                      </span>
+                    </React.Fragment>
+                  ))}
               </div>
 
               <p className="text-lg md:text-xl text-slate leading-relaxed mb-7 max-w-xl mx-auto lg:mx-0 font-medium">
-                {hp.hero?.intro || FALLBACK_HOME_PAGE.hero.intro}
+                {hp.hero?.intro ?? FALLBACK_HOME_PAGE.hero.intro}
               </p>
               <blockquote className="text-sm font-semibold text-slate/75 mb-9 max-w-xl mx-auto lg:mx-0 border-l-2 border-brand/20 pl-4 italic text-left">
-                {hp.hero?.supportingLine || FALLBACK_HOME_PAGE.hero.supportingLine}
+                {hp.hero?.supportingLine ?? FALLBACK_HOME_PAGE.hero.supportingLine}
               </blockquote>
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start items-center">
-                <Button href={hp.hero?.primaryCta?.href || "/contact"} variant="primary" className="px-8 py-4 w-full sm:w-auto shadow-md">
-                  {hp.hero?.primaryCta?.label || "Get Started"}
+                <Button href={hp.hero?.primaryCta?.href ?? "/contact"} variant="primary" className="px-8 py-4 w-full sm:w-auto shadow-md">
+                  {hp.hero?.primaryCta?.label ?? "Get Started"}
                 </Button>
                 <Button href="/about" variant="secondary" className="px-8 py-3.5 w-full sm:w-auto">
                   About Us
@@ -128,7 +122,7 @@ export default async function HomePage() {
       <section className="relative z-20 py-12 bg-white border-b border-line/50">
         <Container>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
-            {(hp.keyHighlights || FALLBACK_HOME_PAGE.keyHighlights).map((hl: string, idx: number) => (
+            {(hp.keyHighlights ?? FALLBACK_HOME_PAGE.keyHighlights).map((hl: string, idx: number) => (
               <Reveal
                 key={idx}
                 delay={idx * 90}
@@ -142,9 +136,9 @@ export default async function HomePage() {
       </section>
 
       {/* 3. Regions Served Strip */}
-      <LogoStrip items={settings.regionsServed || FALLBACK_SITE_SETTINGS.regionsServed} />
+      <LogoStrip items={settings.regionsServed ?? FALLBACK_SITE_SETTINGS.regionsServed} />
 
-      {/* 3b. Client Logo Carousel (renders only when real clients exist) */}
+      {/* 3b. Client Logo Carousel */}
       <ClientLogoCarousel clients={clients} />
 
       {/* 4. Corporate & Educational Solutions */}
@@ -159,7 +153,7 @@ export default async function HomePage() {
               </div>
               <h2 className="text-2xl lg:text-3xl font-bold font-display text-ink mb-6 tracking-tight">Corporate Solutions</h2>
               <ul className="space-y-3.5 mb-8">
-                {corporateSolutions.map((item: { title: string }, idx: number) => (
+                {(corporateSolutions as { title: string; href?: string }[]).map((item, idx) => (
                   <li key={idx} className="flex items-center gap-3">
                     <span className="grid place-items-center h-6 w-6 rounded-full bg-corporate/10 text-corporate shrink-0">
                       <Check className="w-3.5 h-3.5" />
@@ -168,10 +162,7 @@ export default async function HomePage() {
                   </li>
                 ))}
               </ul>
-              <Link
-                href="/corporate"
-                className="inline-flex items-center gap-2 font-bold text-sm text-corporate hover:gap-3 transition-all"
-              >
+              <Link href="/corporate" className="inline-flex items-center gap-2 font-bold text-sm text-corporate hover:gap-3 transition-all">
                 Explore Corporate Solutions <ArrowRight className="w-4 h-4" />
               </Link>
             </Reveal>
@@ -183,7 +174,7 @@ export default async function HomePage() {
               </div>
               <h2 className="text-2xl lg:text-3xl font-bold font-display text-ink mb-6 tracking-tight">Educational Solutions</h2>
               <ul className="space-y-3.5 mb-8">
-                {educationalSolutions.map((item: { title: string }, idx: number) => (
+                {(educationalSolutions as { title: string; href?: string }[]).map((item, idx) => (
                   <li key={idx} className="flex items-center gap-3">
                     <span className="grid place-items-center h-6 w-6 rounded-full bg-education/10 text-education shrink-0">
                       <Check className="w-3.5 h-3.5" />
@@ -192,10 +183,7 @@ export default async function HomePage() {
                   </li>
                 ))}
               </ul>
-              <Link
-                href="/education"
-                className="inline-flex items-center gap-2 font-bold text-sm text-education hover:gap-3 transition-all"
-              >
+              <Link href="/education" className="inline-flex items-center gap-2 font-bold text-sm text-education hover:gap-3 transition-all">
                 Explore Educational Solutions <ArrowRight className="w-4 h-4" />
               </Link>
             </Reveal>
@@ -212,10 +200,10 @@ export default async function HomePage() {
               Why KVJ Analytics
             </Eyebrow>
             <BoldStatement variant="h1" as="h2" className="mb-5">
-              {hp.whyUs?.strapline || FALLBACK_HOME_PAGE.whyUs.strapline}
+              {hp.whyUs?.strapline ?? FALLBACK_HOME_PAGE.whyUs.strapline}
             </BoldStatement>
             <p className="text-lg text-slate leading-relaxed">
-              {hp.whyUs?.body || FALLBACK_HOME_PAGE.whyUs.body}
+              {hp.whyUs?.body ?? FALLBACK_HOME_PAGE.whyUs.body}
             </p>
           </Reveal>
         </Container>
@@ -223,12 +211,12 @@ export default async function HomePage() {
 
       {/* 6. Closing CTA Section */}
       <CTASection
-        title="Let's Build Smarter Systems Together"
-        description="Whether you are a corporate organization looking for automation and analytics solutions or an educational institution seeking industry-oriented learning platforms, KVJ Analytics is ready to support your transformation journey."
-        primaryCtaText="Contact Our Team"
-        primaryCtaHref="/contact"
-        secondaryCtaText="Request a Demo"
-        secondaryCtaHref="/contact"
+        title={(hp as Record<string, any>).cta?.title ?? "Let's Build Smarter Systems Together"}
+        description={(hp as Record<string, any>).cta?.description ?? "Whether you are a corporate organization looking for automation and analytics solutions or an educational institution seeking industry-oriented learning platforms, KVJ Analytics is ready to support your transformation journey."}
+        primaryCtaText={(hp as Record<string, any>).cta?.primaryCtaText ?? "Contact Our Team"}
+        primaryCtaHref={(hp as Record<string, any>).cta?.primaryCtaHref ?? "/contact"}
+        secondaryCtaText={(hp as Record<string, any>).cta?.secondaryCtaText ?? "Request a Demo"}
+        secondaryCtaHref={(hp as Record<string, any>).cta?.secondaryCtaHref ?? "/contact"}
       />
     </>
   );

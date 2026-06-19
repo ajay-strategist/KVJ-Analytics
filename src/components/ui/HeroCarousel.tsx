@@ -12,8 +12,9 @@ export interface HeroSlide {
   subtext?: string;
   ctaLabel?: string;
   ctaHref?: string;
-  image?: Record<string, unknown> | string; // Sanity image (optional — falls back to a gradient theme)
-  theme?: "blue" | "navy" | "teal";
+  image?: Record<string, unknown> | string; // Sanity image (optional)
+  imageUrl?: string; // Direct image URL or /public path (optional)
+  theme?: "blue" | "navy" | "teal"; // Fallback gradient when no image is set
 }
 
 interface HeroCarouselProps {

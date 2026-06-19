@@ -230,13 +230,14 @@ export default function AdminLeadsPage() {
         {/* Tab Navigation Panel */}
         <div className="flex flex-wrap gap-1 border-b border-line">
           {[
-            { label: "Leads Inbox", href: "/admin/leads" },
+            { label: "Leads Inbox",     href: "/admin/leads" },
             { label: "College Batches", href: "/admin/batches" },
-            { label: "Enrollments", href: "/admin/enrollments" },
-            { label: "Clients", href: "/admin/clients" },
-            { label: "Testimonials", href: "/admin/testimonials" },
-            { label: "Case Studies", href: "/admin/case-studies" },
-            { label: "Team", href: "/admin/team" },
+            { label: "Enrollments",     href: "/admin/enrollments" },
+            { label: "Clients",         href: "/admin/clients" },
+            { label: "Testimonials",    href: "/admin/testimonials" },
+            { label: "Case Studies",    href: "/admin/case-studies" },
+            { label: "Team",            href: "/admin/team" },
+            { label: "Website Content", href: "/admin/content" },
           ].map((tab) => (
             <Link
               key={tab.href}
