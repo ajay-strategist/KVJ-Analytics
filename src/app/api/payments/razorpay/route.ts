@@ -3,13 +3,12 @@ import { createClient } from "@supabase/supabase-js";
 import { client as sanityClient } from "@/sanity/lib/client";
 import Razorpay from "razorpay";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
-
-const supabaseAdmin =
-  supabaseUrl && supabaseServiceKey
-    ? createClient(supabaseUrl, supabaseServiceKey)
-    : null;
+function getAdminClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return null;
+  return createClient(url, key, { auth: { persistSession: false } });
+}
 
 // Initialize Razorpay
 const razorpayKeyId = process.env.RAZORPAY_KEY_ID || "";
@@ -34,6 +33,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const supabaseAdmin = getAdminClient();
     if (!supabaseAdmin) {
       return NextResponse.json(
         { error: "Supabase configuration is missing." },

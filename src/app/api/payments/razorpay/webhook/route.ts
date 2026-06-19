@@ -4,16 +4,18 @@ import { client as sanityClient } from "@/sanity/lib/client";
 import { Resend } from "resend";
 import crypto from "crypto";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
-const resendApiKey = process.env.RESEND_API_KEY || "";
+function getAdminClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return null;
+  return createClient(url, key, { auth: { persistSession: false } });
+}
 
-const supabaseAdmin =
-  supabaseUrl && supabaseServiceKey
-    ? createClient(supabaseUrl, supabaseServiceKey)
-    : null;
-
-const resend = resendApiKey ? new Resend(resendApiKey) : null;
+function getResend() {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) return null;
+  return new Resend(apiKey);
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -27,6 +29,7 @@ export async function POST(req: NextRequest) {
       amount,
     } = body;
 
+    const supabaseAdmin = getAdminClient();
     if (!supabaseAdmin) {
       return NextResponse.json(
         { error: "Supabase client not configured." },
@@ -133,6 +136,7 @@ export async function POST(req: NextRequest) {
     const finalSGST = sgst.toFixed(2);
 
     // 7. Send GST Invoice Receipt Email via Resend
+    const resend = getResend();
     if (resend && studentEmail) {
       try {
         await resend.emails.send({

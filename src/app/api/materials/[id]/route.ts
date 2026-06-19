@@ -2,13 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { client as sanityClient } from "@/sanity/lib/client";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
-
-const supabaseAdmin =
-  supabaseUrl && supabaseServiceKey
-    ? createClient(supabaseUrl, supabaseServiceKey)
-    : null;
+function getAdminClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return null;
+  return createClient(url, key, { auth: { persistSession: false } });
+}
 
 async function serveMaterial(material: any) {
   if (material.type === "pdf") {
@@ -68,6 +67,7 @@ export async function GET(
   try {
     const { id } = await params;
 
+    const supabaseAdmin = getAdminClient();
     if (!supabaseAdmin) {
       return NextResponse.json(
         { error: "Supabase client not configured." },

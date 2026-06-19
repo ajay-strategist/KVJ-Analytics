@@ -2,13 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { verifyTOTP } from "@/lib/totp";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
-
-const supabaseAdmin =
-  supabaseUrl && supabaseServiceKey
-    ? createClient(supabaseUrl, supabaseServiceKey)
-    : null;
+function getAdminClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return null;
+  return createClient(url, key, { auth: { persistSession: false } });
+}
 
 // In-memory rate limiting map for brute-force lockout on TOTP entry
 // Key: IP address + course_slug
@@ -39,6 +38,7 @@ export async function POST(
       );
     }
 
+    const supabaseAdmin = getAdminClient();
     if (!supabaseAdmin) {
       return NextResponse.json(
         { error: "Supabase service role client is not configured." },

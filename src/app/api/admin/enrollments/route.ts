@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
-
-const supabaseAdmin =
-  supabaseUrl && supabaseServiceKey
-    ? createClient(supabaseUrl, supabaseServiceKey)
-    : null;
+function getAdminClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return null;
+  return createClient(url, key, { auth: { persistSession: false } });
+}
 
 function isAuthorized(req: NextRequest) {
   const session = req.cookies.get("admin_session")?.value;
@@ -19,6 +18,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized access." }, { status: 401 });
   }
 
+  const supabaseAdmin = getAdminClient();
   if (!supabaseAdmin) {
     return NextResponse.json(
       { error: "Supabase not configured." },
