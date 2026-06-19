@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Lock, BookOpen, Layers, CheckCircle2, ChevronRight, Loader2, PlayCircle, ShieldCheck, AlertCircle } from "lucide-react";
+import { Lock, BookOpen, Layers, CheckCircle2, ChevronRight, Loader2, PlayCircle, ShieldCheck, AlertCircle, Clock } from "lucide-react";
 import { Button } from "./ui/Button";
 import { Card } from "./ui/Card";
 import { supabase } from "@/lib/supabase";
@@ -40,6 +40,11 @@ export function CourseClientWrapper({ course, modules }: CourseClientWrapperProp
   const [loading, setLoading] = useState(true);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [authError, setAuthError] = useState("");
+
+  // Phase 3 - Mock Tests States
+  const [mockTests, setMockTests] = useState<any[]>([]);
+  const [attempts, setAttempts] = useState<any[]>([]);
+  const [loadingTests, setLoadingTests] = useState(false);
 
   // Auth form states
   const [isLogin, setIsLogin] = useState(true);
@@ -93,6 +98,38 @@ export function CourseClientWrapper({ course, modules }: CourseClientWrapperProp
       console.error("Enrollment check error:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (enrolled && user) {
+      fetchStudentTestsAndAttempts();
+    }
+  }, [enrolled, user]);
+
+  const fetchStudentTestsAndAttempts = async () => {
+    setLoadingTests(true);
+    try {
+      const { data: tests, error: testsErr } = await supabase
+        .from("mock_tests")
+        .select("*")
+        .eq("course_id", course.id)
+        .order("display_order", { ascending: true });
+
+      if (testsErr) throw testsErr;
+      setMockTests(tests || []);
+
+      const { data: atts, error: attsErr } = await supabase
+        .from("test_attempts")
+        .select("*")
+        .eq("user_id", user.id);
+
+      if (attsErr) throw attsErr;
+      setAttempts(atts || []);
+    } catch (err) {
+      console.error("Failed to load student tests/attempts:", err);
+    } finally {
+      setLoadingTests(false);
     }
   };
 
@@ -300,23 +337,91 @@ export function CourseClientWrapper({ course, modules }: CourseClientWrapperProp
           </div>
         )}
 
-        {/* Mock Tests Placeholder Section */}
-        <div className="border-t border-line pt-8 mt-6">
-          <div className="bg-surface/40 border border-line rounded-xl p-5 flex items-center justify-between gap-4">
-            <div>
-              <span className="text-[9px] font-bold uppercase text-slate tracking-wider bg-slate/10 px-2 py-0.5 rounded border border-line">
-                Phase 3 Placeholder
-              </span>
-              <h4 className="text-sm font-bold text-ink mt-2">Professional Certification Mock Tests</h4>
+        {/* Mock Tests Section */}
+        {enrolled && (
+          <div className="border-t border-line pt-8 mt-6 space-y-4">
+            <div className="border-b border-line pb-3">
+              <h3 className="text-lg font-bold font-display text-ink flex items-center gap-2">
+                <Clock className="w-5 h-5 text-brand" />
+                Professional Certification Mock Tests
+              </h3>
               <p className="text-xs text-slate mt-1">
-                Our server-graded certification mock tests will unlock in the next phase.
+                Take timed program examinations. Server auto-grading checks objectives and code correctness.
               </p>
             </div>
-            <span className="text-xs font-bold text-slate uppercase tracking-widest shrink-0 border border-line bg-white px-3 py-1.5 rounded-btn shadow-sm">
-              Coming Soon
-            </span>
+
+            {loadingTests ? (
+              <div className="py-6 flex justify-center">
+                <Loader2 className="w-6 h-6 animate-spin text-brand" />
+              </div>
+            ) : mockTests.length === 0 ? (
+              <p className="text-xs text-slate italic">No certification tests scheduled for this course yet.</p>
+            ) : (
+              <div className="space-y-4">
+                {mockTests.map((test) => {
+                  const testAttempts = attempts.filter((a) => a.test_id === test.id);
+                  const bestAttempt = testAttempts.length > 0
+                    ? testAttempts.sort((a, b) => b.score - a.score)[0]
+                    : null;
+
+                  return (
+                    <div key={test.id} className="bg-white border border-line rounded-xl p-5 shadow-soft flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div className="space-y-1.5">
+                        <h4 className="text-sm font-bold text-ink flex items-center gap-2">
+                          {test.title}
+                        </h4>
+                        <div className="flex flex-wrap items-center gap-3 text-xs text-slate">
+                          <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {test.duration_mins} mins</span>
+                          <span>•</span>
+                          <span>Passing score: {test.pass_mark}</span>
+                          {bestAttempt && (
+                            <>
+                              <span>•</span>
+                              <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+                                bestAttempt.passed
+                                  ? "bg-success/10 text-success border border-success/30"
+                                  : "bg-error/10 text-error border border-error/30"
+                              }`}>
+                                {bestAttempt.passed ? "Passed" : "Failed"} (Best: {bestAttempt.score}/{bestAttempt.max_score})
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex gap-2 shrink-0">
+                        <Button
+                          href={`/training/${course.slug}/tests/${test.id}`}
+                          className="py-2 px-4 bg-brand text-white text-xs font-bold"
+                        >
+                          {bestAttempt ? "Retake Exam" : "Start Exam"}
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
-        </div>
+        )}
+
+        {!enrolled && (
+          <div className="border-t border-line pt-8 mt-6">
+            <div className="bg-surface/40 border border-line rounded-xl p-5 flex items-center justify-between gap-4">
+              <div>
+                <span className="text-[9px] font-bold uppercase text-slate tracking-wider bg-slate/10 px-2 py-0.5 rounded border border-line">
+                  Phase 3 Placeholder
+                </span>
+                <h4 className="text-sm font-bold text-ink mt-2">Professional Certification Mock Tests</h4>
+                <p className="text-xs text-slate mt-1">
+                  Our server-graded certification mock tests will unlock in the next phase.
+                </p>
+              </div>
+              <span className="text-xs font-bold text-slate uppercase tracking-widest shrink-0 border border-line bg-white px-3 py-1.5 rounded-btn shadow-sm">
+                Coming Soon
+              </span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* 2. Sidebar Enrollment & Access Card */}
