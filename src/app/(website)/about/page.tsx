@@ -7,45 +7,14 @@ import { BoldStatement } from "@/components/ui/BoldStatement";
 import { Card } from "@/components/ui/Card";
 import { MetricCounter } from "@/components/ui/MetricCounter";
 import { CTASection } from "@/components/ui/CTASection";
-import { client } from "@/sanity/lib/client";
-import { aboutPageQuery } from "@/sanity/lib/queries";
+import { getPageContent, mergePageContent } from "@/lib/content";
+import { FALLBACK_ABOUT } from "@/lib/constants";
 
 export const revalidate = 3600;
 
-const FALLBACK_ABOUT = {
-  title: "About KVJ Analytics",
-  intro:
-    "KVJ Analytics is an analytics, automation, and training company with 16+ years of experience supporting corporates and educational institutions.",
-  specializations: [
-    "Report Automation",
-    "Dashboard Development",
-    "Data Visualization",
-    "Spreadsheet Consulting",
-    "Process Automation",
-    "Corporate Training",
-    "Educational Technology Solutions",
-  ],
-  reachLine:
-    "Our services and training programs have reached clients across Kerala, India, UAE, Oman, USA, and Europe.",
-  impact: [
-    "16+ Years of Experience",
-    "50,000+ Young Professionals Trained",
-    "5,000+ Senior Professionals Trained",
-    "Trusted Corporate & Academic Partnerships",
-  ],
-  vision: {
-    heading: "Our Vision",
-    body: "To build smarter organizations and industry-ready professionals through analytics, automation, and practical learning.",
-  },
-};
-
 export default async function AboutPage() {
-  const data = await client.fetch(aboutPageQuery).catch((err) => {
-    console.warn("Sanity fetch error in AboutPage:", err);
-    return null;
-  });
-
-  const page = data || FALLBACK_ABOUT;
+  const data = await getPageContent("about");
+  const page = mergePageContent(data, FALLBACK_ABOUT);
 
   return (
     <>

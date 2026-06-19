@@ -30,6 +30,8 @@ const NAV_TABS = [
   { label: "Testimonials", href: "/admin/testimonials" },
   { label: "Case Studies", href: "/admin/case-studies" },
   { label: "Team", href: "/admin/team" },
+  { label: "Website Content", href: "/admin/content" },
+  { label: "Courses", href: "/admin/courses" },
 ];
 
 export default function AdminTeamPage() {

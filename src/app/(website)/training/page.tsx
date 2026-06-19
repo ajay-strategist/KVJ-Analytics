@@ -9,8 +9,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Reveal } from "@/components/ui/Reveal";
 import { CTASection } from "@/components/ui/CTASection";
-import { client } from "@/sanity/lib/client";
-import { urlFor } from "@/sanity/lib/image";
+import { supabase } from "@/lib/supabase";
 
 export const revalidate = 3600;
 
@@ -40,7 +39,7 @@ type Course = {
   summary?: string;
   priceINR?: number;
   isPaid?: boolean;
-  thumbnail?: Record<string, unknown> | null;
+  thumbnail?: string | null;
 };
 
 const FALLBACK_COURSES: Course[] = [
@@ -69,19 +68,23 @@ const FALLBACK_COURSES: Course[] = [
 export default async function TrainingCatalogPage() {
   let courses: Course[] = [];
   try {
-    courses = await client.fetch(
-      `*[_type == "course"] | order(order asc) {
-        title,
-        "slug": slug.current,
-        segment,
-        summary,
-        priceINR,
-        isPaid,
-        thumbnail
-      }`
-    );
+    const { data, error } = await supabase
+      .from("courses")
+      .select("title, slug, segment, summary, price_inr, is_paid, thumbnail_url")
+      .order("display_order", { ascending: true });
+
+    if (error) throw error;
+    courses = (data || []).map((c) => ({
+      title: c.title,
+      slug: c.slug,
+      segment: c.segment,
+      summary: c.summary || "",
+      priceINR: Number(c.price_inr || 0),
+      isPaid: !!c.is_paid,
+      thumbnail: c.thumbnail_url || null,
+    }));
   } catch (err) {
-    console.warn("Sanity fetch error in TrainingCatalogPage:", err);
+    console.warn("Supabase fetch error in TrainingCatalogPage:", err);
   }
 
   if (!courses || courses.length === 0) {
@@ -203,9 +206,9 @@ function CourseCard({ course }: { course: Course }) {
       <div>
         {/* Thumbnail Box */}
         <div className="overflow-hidden rounded-xl aspect-[16/10] relative mb-5 bg-brand/5 border border-line/80">
-          {course.thumbnail ? (
+          {course.thumbnail && typeof course.thumbnail === "string" ? (
             <Image
-              src={urlFor(course.thumbnail).url()}
+              src={course.thumbnail}
               alt={course.title}
               fill
               className="object-cover transition-transform duration-500 group-hover:scale-105"

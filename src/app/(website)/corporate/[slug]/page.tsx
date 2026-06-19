@@ -2,102 +2,35 @@ import React from "react";
 import { notFound } from "next/navigation";
 import { ArrowLeft, CheckCircle2, ShieldCheck, Zap } from "lucide-react";
 import Link from "next/link";
-import { PortableText } from "@portabletext/react";
 import { Container } from "@/components/ui/Container";
 import { Section } from "@/components/ui/Section";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { BoldStatement } from "@/components/ui/BoldStatement";
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
-import { client } from "@/sanity/lib/client";
-import { serviceBySlugQuery } from "@/sanity/lib/queries";
+import { getPageContent, mergePageContent } from "@/lib/content";
+import { FALLBACK_CORPORATE } from "@/lib/constants";
 
 export const revalidate = 3600;
-
-const FALLBACK_SERVICES: Record<string, { title: string; desc: string; details: string[] }> = {
-  "report-automation": {
-    title: "Report Automation",
-    desc: "Automate MIS, financial, operational, and management reports with speed and accuracy.",
-    details: [
-      "Say goodbye to hours of copying and pasting cells manually.",
-      "Consolidate multiple files and ERP data pipelines with single-click routines.",
-      "Reduce calculation errors and data mismatch issues.",
-      "Create scalable macros, scripts, and scheduled data loaders.",
-    ],
-  },
-  "data-visualization": {
-    title: "Data Visualization",
-    desc: "Convert complex data into meaningful visual insights and interactive reports.",
-    details: [
-      "Design clear visual hierarchies that highlight operational insights.",
-      "Map out comparative trends and monthly performance breakdowns.",
-      "Structure charts and KPIs to align with corporate audit standards.",
-      "Incorporate company color styles for unified board presentations.",
-    ],
-  },
-  "spreadsheet-consulting": {
-    title: "Spreadsheet Consulting",
-    desc: "Advanced Excel systems, automation, validation, and optimization solutions.",
-    details: [
-      "Audit existing formulas for performance bottle-necks and calculation lag.",
-      "Build robust financial models with dynamic inputs and forecasting.",
-      "Structure spreadsheet rules to validate inputs and prevent accidental data loss.",
-      "Implement custom VBA scripts to extend spreadsheet capabilities.",
-    ],
-  },
-  "dashboard-development": {
-    title: "Dashboard Development",
-    desc: "Real-time dashboards for KPI tracking, performance monitoring, and business intelligence.",
-    details: [
-      "Connect live data sources directly to unified dashboard portals.",
-      "Track daily operations metrics, sales volumes, and regional outputs.",
-      "Build drill-down layers to view details from global maps to specific transactions.",
-      "Share interactive reports securely with team leaders and managers.",
-    ],
-  },
-  "process-automation": {
-    title: "Process Automation",
-    desc: "Reduce manual work through intelligent workflow and process automation.",
-    details: [
-      "Analyze business processes to isolate repetitive manual steps.",
-      "Integrate tools to sync data across folders, spreadsheets, and databases.",
-      "Deploy background automation jobs that run 24/7 without intervention.",
-      "Configure automated email alerts and task assignments on critical events.",
-    ],
-  },
-  "corporate-training": {
-    title: "Corporate Training",
-    desc: "Hands-on training in Excel, Power BI, analytics, dashboards, and automation tools.",
-    details: [
-      "Deliver customized training programs matching your team's skill gap.",
-      "Provide practical datasets and assignments modeled after actual business MIS.",
-      "Increase worker efficiency in using advanced formatting and modeling.",
-      "Review post-training skill assessments and performance scorecards.",
-    ],
-  },
-};
 
 export default async function CorporateServiceDetailPage({
   params,
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }) {
-  const { slug } = params;
+  const { slug } = await params;
 
-  // Query Sanity for service matching this slug
-  const service = await client
-    .fetch(serviceBySlugQuery, { slug })
-    .catch(() => null);
+  const pageData = await getPageContent("corporate");
+  const page = mergePageContent(pageData, FALLBACK_CORPORATE);
+  const services = page.services && page.services.length > 0 ? page.services : FALLBACK_CORPORATE.services;
+  const service = services.find((s: any) => s.slug === slug);
 
-  const fallback = FALLBACK_SERVICES[slug];
-
-  if (!service && !fallback) {
+  if (!service) {
     notFound();
   }
 
-  const title = service?.title || fallback.title;
-  const description = service?.shortDescription || fallback.desc;
-  const details = fallback?.details || [
+  const title = service.title;
+  const description = service.shortDescription;
+  const details = service.details || [
     "Expertly designed workflows matching industry standards.",
     "Integrated analytics models built for immediate business utility.",
     "Tailored documentation and post-delivery operations support.",
@@ -131,32 +64,25 @@ export default async function CorporateServiceDetailPage({
               {description}
             </p>
 
-            {/* Rich portable text from Sanity if available */}
-            {service?.body ? (
-              <div className="prose prose-slate prose-lg max-w-none mb-8 text-slate leading-relaxed">
-                <PortableText value={service.body} />
+            <div className="space-y-6 mb-8">
+              <h4 className="text-xl font-bold font-display text-ink flex items-center mb-4">
+                <Zap className="w-5 h-5 text-corporate mr-2.5" />
+                Key Capabilities & Outcomes
+              </h4>
+              <div className="grid grid-cols-1 gap-4">
+                {details.map((item, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-start space-x-3.5 bg-surface/50 border border-line/70 rounded-xl p-4 shadow-soft hover:shadow-hover-lift transition-all duration-300"
+                  >
+                    <CheckCircle2 className="w-5 h-5 text-education shrink-0 mt-0.5" />
+                    <span className="text-base text-ink font-semibold leading-relaxed">
+                      {item}
+                    </span>
+                  </div>
+                ))}
               </div>
-            ) : (
-              <div className="space-y-6 mb-8">
-                <h4 className="text-xl font-bold font-display text-ink flex items-center mb-4">
-                  <Zap className="w-5 h-5 text-corporate mr-2.5" />
-                  Key Capabilities & Outcomes
-                </h4>
-                <div className="grid grid-cols-1 gap-4">
-                  {details.map((item, idx) => (
-                    <div
-                      key={idx}
-                      className="flex items-start space-x-3.5 bg-surface/50 border border-line/70 rounded-xl p-4 shadow-soft hover:shadow-hover-lift transition-all duration-300"
-                    >
-                      <CheckCircle2 className="w-5 h-5 text-education shrink-0 mt-0.5" />
-                      <span className="text-base text-ink font-semibold leading-relaxed">
-                        {item}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+            </div>
           </div>
 
           {/* Sidebar Conversion Card */}

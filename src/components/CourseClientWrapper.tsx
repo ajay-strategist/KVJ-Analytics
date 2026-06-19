@@ -2,13 +2,27 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Lock, Unlock, FileText, Video, Link as LinkIcon, AlertCircle, PlayCircle, Loader2 } from "lucide-react";
+import { Lock, BookOpen, Layers, CheckCircle2, ChevronRight, Loader2, PlayCircle, ShieldCheck, AlertCircle } from "lucide-react";
 import { Button } from "./ui/Button";
 import { Card } from "./ui/Card";
 import { supabase } from "@/lib/supabase";
 
+interface Lesson {
+  id: string;
+  title: string;
+  kind: "material" | "activity";
+  max_score: number | null;
+}
+
+interface Module {
+  id: string;
+  title: string;
+  lessons: Lesson[];
+}
+
 interface CourseClientWrapperProps {
   course: {
+    id: string;
     title: string;
     slug: string;
     segment: string;
@@ -16,22 +30,10 @@ interface CourseClientWrapperProps {
     priceINR: number;
     isPaid: boolean;
   };
-  materials: Array<{
-    _id: string;
-    title: string;
-    type: "pdf" | "video" | "link" | "richtext";
-    isPreview: boolean;
-  }>;
-  tests: Array<{
-    _id: string;
-    title: string;
-    durationMins: number;
-    passMark: number;
-    questionCount: number;
-  }>;
+  modules: Module[];
 }
 
-export function CourseClientWrapper({ course, materials, tests }: CourseClientWrapperProps) {
+export function CourseClientWrapper({ course, modules }: CourseClientWrapperProps) {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [enrolled, setEnrolled] = useState(false);
@@ -39,7 +41,7 @@ export function CourseClientWrapper({ course, materials, tests }: CourseClientWr
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [authError, setAuthError] = useState("");
 
-  // Auth form states for login
+  // Auth form states
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -47,7 +49,6 @@ export function CourseClientWrapper({ course, materials, tests }: CourseClientWr
   const [showAuthForm, setShowAuthForm] = useState(false);
 
   useEffect(() => {
-    // 1. Get current auth user session
     const getSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       setUser(session?.user || null);
@@ -60,7 +61,6 @@ export function CourseClientWrapper({ course, materials, tests }: CourseClientWr
 
     getSession();
 
-    // Listen to auth state updates
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
         setUser(session?.user || null);
@@ -76,7 +76,6 @@ export function CourseClientWrapper({ course, materials, tests }: CourseClientWr
     return () => subscription.unsubscribe();
   }, [course.slug]);
 
-  // Check Supabase if user is enrolled in this course slug
   const checkEnrollment = async (userId: string) => {
     try {
       const { data, error } = await supabase
@@ -127,7 +126,6 @@ export function CourseClientWrapper({ course, materials, tests }: CourseClientWr
     }
   };
 
-  // Launch Razorpay Checkout
   const handlePayment = async () => {
     if (!user) {
       setIsLogin(true);
@@ -137,7 +135,6 @@ export function CourseClientWrapper({ course, materials, tests }: CourseClientWr
 
     setCheckoutLoading(true);
     try {
-      // 1. Create order on our server
       const response = await fetch("/api/payments/razorpay", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -152,7 +149,6 @@ export function CourseClientWrapper({ course, materials, tests }: CourseClientWr
         throw new Error(orderData.error || "Order creation failed");
       }
 
-      // 2. Load Razorpay script dynamically
       const loadScript = () => {
         return new Promise((resolve) => {
           const script = document.createElement("script");
@@ -168,7 +164,6 @@ export function CourseClientWrapper({ course, materials, tests }: CourseClientWr
         throw new Error("Razorpay SDK failed to load. Are you offline?");
       }
 
-      // 3. Open Razorpay dialog checkout
       const options = {
         key: orderData.key,
         amount: orderData.amount,
@@ -177,8 +172,6 @@ export function CourseClientWrapper({ course, materials, tests }: CourseClientWr
         description: `Enrollment: ${course.title}`,
         order_id: orderData.id,
         handler: async function (response: any) {
-          // Razorpay returns razorpay_payment_id, razorpay_order_id, razorpay_signature
-          // We redirect student to wait, or query order status. We will trigger manual validation:
           setLoading(true);
           try {
             const webhookVerify = await fetch("/api/payments/razorpay/webhook", {
@@ -212,7 +205,7 @@ export function CourseClientWrapper({ course, materials, tests }: CourseClientWr
           email: user.email,
         },
         theme: {
-          color: "#1D4ED8", // brand blue hex
+          color: "#1D4ED8",
         },
       };
 
@@ -222,17 +215,6 @@ export function CourseClientWrapper({ course, materials, tests }: CourseClientWr
       alert(err.message || "Checkout failed. Please try again.");
     } finally {
       setCheckoutLoading(false);
-    }
-  };
-
-  const getMaterialIcon = (type: string) => {
-    switch (type) {
-      case "pdf":
-        return <FileText className="w-5 h-5" />;
-      case "video":
-        return <Video className="w-5 h-5" />;
-      default:
-        return <LinkIcon className="w-5 h-5" />;
     }
   };
 
@@ -246,155 +228,126 @@ export function CourseClientWrapper({ course, materials, tests }: CourseClientWr
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
-      {/* 1. Gated Materials Listing */}
+      {/* 1. Gated Modules/Lessons Outline */}
       <div className="lg:col-span-8 space-y-6">
         <div className="border-b border-line pb-4">
           <h3 className="text-xl font-bold font-display text-ink">
-            Course Syllabus & Study Materials
+            Course Curriculum & Lessons
           </h3>
           <p className="text-sm text-slate mt-1">
-            Access certification files, practical workbook dashboards, and instructional videos.
+            Build hands-on competencies through structured HTML modules, practice activities, and feedback.
           </p>
         </div>
 
-        {materials.length === 0 ? (
-          <p className="text-slate text-sm">No materials added to this syllabus yet.</p>
+        {modules.length === 0 ? (
+          <p className="text-slate text-sm italic">No modules scheduled for this syllabus yet.</p>
         ) : (
-          <div className="space-y-3">
-            {materials.map((mat) => {
-              const isUnlocked = mat.isPreview || enrolled;
-              return (
-                <div
-                  key={mat._id}
-                  className={`flex items-center justify-between p-4 rounded-lg border transition-all ${
-                    isUnlocked
-                      ? "bg-white border-line hover:border-brand/40 shadow-sm"
-                      : "bg-surface/50 border-line opacity-75"
-                  }`}
-                >
-                  <div className="flex items-center space-x-3.5">
-                    <div
-                      className={`p-2 rounded-lg ${
-                        isUnlocked ? "bg-brand/10 text-brand" : "bg-slate/10 text-slate"
-                      }`}
-                    >
-                      {getMaterialIcon(mat.type)}
-                    </div>
-                    <div>
-                      <span className="text-sm font-semibold text-ink block">{mat.title}</span>
-                      <span className="text-[10px] font-bold text-slate uppercase tracking-wider block mt-0.5">
-                        {mat.type} • {mat.isPreview ? "free preview" : "gated content"}
-                      </span>
-                    </div>
-                  </div>
+          <div className="space-y-6">
+            {modules.map((mod, modIdx) => (
+              <Card key={mod.id} hoverLift={false} className="border-line p-5 bg-white shadow-soft">
+                <h4 className="font-bold font-display text-ink text-base flex items-center gap-2 mb-4 border-b border-line pb-2.5">
+                  <span className="flex items-center justify-center w-6 h-6 text-[10px] font-bold rounded-lg bg-brand/10 text-brand">
+                    M{modIdx + 1}
+                  </span>
+                  {mod.title}
+                </h4>
 
-                  {isUnlocked ? (
-                    <a
-                      href={`/api/materials/${mat._id}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="px-3.5 py-1.5 rounded-lg bg-surface text-brand hover:bg-brand hover:text-white font-bold text-xs border border-brand/20 transition-all"
-                    >
-                      Open Resource
-                    </a>
-                  ) : (
-                    <div className="flex items-center space-x-1.5 text-slate text-xs font-bold uppercase tracking-wider">
-                      <Lock className="w-3.5 h-3.5 text-slate" />
-                      <span>Locked</span>
-                    </div>
-                  )}
+                <div className="space-y-2.5">
+                  {mod.lessons.map((les) => {
+                    return (
+                      <div
+                        key={les.id}
+                        className={`flex items-center justify-between p-3.5 rounded-lg border transition-all ${
+                          enrolled
+                            ? "bg-white border-line hover:border-brand/40 shadow-sm"
+                            : "bg-surface/50 border-line opacity-75"
+                        }`}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <div
+                            className={`p-1.5 rounded-lg shrink-0 ${
+                              enrolled ? "bg-brand/10 text-brand" : "bg-slate/10 text-slate"
+                            }`}
+                          >
+                            <BookOpen className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <span className="text-sm font-semibold text-ink block">{les.title}</span>
+                            <span className="text-[10px] font-bold text-slate uppercase tracking-wider block mt-0.5">
+                              {les.kind === "activity" ? "Activity" : "Study Material"}
+                              {les.kind === "activity" && les.max_score ? ` • Max Score: ${les.max_score}` : ""}
+                            </span>
+                          </div>
+                        </div>
+
+                        {enrolled ? (
+                          <span className="flex items-center space-x-1 text-success text-xs font-bold uppercase tracking-wider">
+                            <CheckCircle2 className="w-4 h-4" />
+                            <span>Unlocked</span>
+                          </span>
+                        ) : (
+                          <div className="flex items-center space-x-1.5 text-slate text-xs font-bold uppercase tracking-wider">
+                            <Lock className="w-3.5 h-3.5 text-slate" />
+                            <span>Locked</span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
-              );
-            })}
+              </Card>
+            ))}
           </div>
         )}
 
-        {/* Mock Tests Engine */}
-        <div className="border-b border-line pb-4 pt-8">
-          <h3 className="text-xl font-bold font-display text-ink">
-            Mock Tests & Evaluations
-          </h3>
-          <p className="text-sm text-slate mt-1">
-            Grades must meet the pass criteria to qualify for professional certifications.
-          </p>
+        {/* Mock Tests Placeholder Section */}
+        <div className="border-t border-line pt-8 mt-6">
+          <div className="bg-surface/40 border border-line rounded-xl p-5 flex items-center justify-between gap-4">
+            <div>
+              <span className="text-[9px] font-bold uppercase text-slate tracking-wider bg-slate/10 px-2 py-0.5 rounded border border-line">
+                Phase 3 Placeholder
+              </span>
+              <h4 className="text-sm font-bold text-ink mt-2">Professional Certification Mock Tests</h4>
+              <p className="text-xs text-slate mt-1">
+                Our server-graded certification mock tests will unlock in the next phase.
+              </p>
+            </div>
+            <span className="text-xs font-bold text-slate uppercase tracking-widest shrink-0 border border-line bg-white px-3 py-1.5 rounded-btn shadow-sm">
+              Coming Soon
+            </span>
+          </div>
         </div>
-
-        {tests.length === 0 ? (
-          <p className="text-slate text-sm">No mock tests configured for this course yet.</p>
-        ) : (
-          <div className="space-y-3">
-            {tests.map((test) => {
-              const isUnlocked = enrolled;
-              return (
-                <div
-                  key={test._id}
-                  className={`flex items-center justify-between p-4 rounded-lg border transition-all ${
-                    isUnlocked
-                      ? "bg-white border-line hover:border-education/40 shadow-sm"
-                      : "bg-surface/50 border-line opacity-75"
-                  }`}
-                >
-                  <div className="flex items-center space-x-3.5">
-                    <div
-                      className={`p-2 rounded-lg ${
-                        isUnlocked ? "bg-education/10 text-education" : "bg-slate/10 text-slate"
-                      }`}
-                    >
-                      <PlayCircle className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <span className="text-sm font-semibold text-ink block">{test.title}</span>
-                      <span className="text-[10px] font-bold text-slate uppercase tracking-wider block mt-0.5">
-                        {test.durationMins} Mins • Pass Mark: {test.passMark} • {test.questionCount} Questions
-                      </span>
-                    </div>
-                  </div>
-
-                  {isUnlocked ? (
-                    <Button
-                      href={`/account?test=${test._id}`}
-                      variant="secondary"
-                      className="px-3.5 py-1.5 text-xs font-bold border-education text-education hover:bg-education/5"
-                    >
-                      Start Test
-                    </Button>
-                  ) : (
-                    <div className="flex items-center space-x-1.5 text-slate text-xs font-bold uppercase tracking-wider">
-                      <Lock className="w-3.5 h-3.5 text-slate" />
-                      <span>Locked</span>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
       </div>
 
-      {/* 2. Sidebar Enrollment & Access CTAs */}
+      {/* 2. Sidebar Enrollment & Access Card */}
       <div className="lg:col-span-4 lg:sticky lg:top-28">
         {enrolled ? (
-          <Card hoverLift={false} className="border-l-4 border-success bg-success/5 p-8 text-center">
+          <Card hoverLift={false} className="border-l-4 border-success bg-success/5 p-8 text-center shadow-soft">
             <div className="w-12 h-12 rounded-full bg-success/10 text-success flex items-center justify-center mx-auto mb-4 font-bold">
               ✓
             </div>
             <h4 className="text-xl font-bold font-display text-ink mb-2">
-              Active Enrollment
+              Program Unlocked
             </h4>
             <p className="text-xs text-slate leading-relaxed mb-6">
-              You are currently enrolled in this program. Gated files and mock tests are fully unlocked.
+              You are enrolled in this training. You can view all HTML learning curriculum and submit activities.
             </p>
-            <Button href="/account" variant="primary" className="w-full py-3">
-              Go to Account Dashboard
+            <Button
+              href={`/account?course=${course.slug}`}
+              variant="primary"
+              className="w-full py-3 flex items-center justify-center gap-1.5"
+            >
+              <ShieldCheck className="w-4 h-4" />
+              <span>Launch Course Portal</span>
             </Button>
           </Card>
         ) : (
-          <Card hoverLift={false} className="border-l-4 border-brand bg-surface/30 p-8">
+          <Card hoverLift={false} className="border-l-4 border-brand bg-surface/30 p-8 shadow-soft">
             <h4 className="text-xl font-bold font-display text-ink mb-4">
               Get Program Access
             </h4>
-            <p className="text-sm text-slate leading-relaxed mb-6">
-              Unlock the full syllabus, workbook downloads, and server-scored mock test validations.
+            <p className="text-sm text-slate leading-relaxed mb-6 font-medium">
+              Unlock modules, workbook sheets, and interactive assignments for this curriculum.
             </p>
 
             {course.isPaid ? (
@@ -426,7 +379,7 @@ export function CourseClientWrapper({ course, materials, tests }: CourseClientWr
             ) : (
               <div className="space-y-4 mb-6">
                 <p className="text-xs text-slate italic leading-relaxed">
-                  This program is offered through participating colleges. Enter your current batch code to enroll.
+                  This program is offered through participating colleges. Enter your batch passcode inside the join section.
                 </p>
                 <Button
                   href={`/training/${course.slug}/join`}
@@ -438,7 +391,6 @@ export function CourseClientWrapper({ course, materials, tests }: CourseClientWr
               </div>
             )}
 
-            {/* Auth Login Drawer option */}
             {!user && (
               <div className="text-center border-t border-line pt-4 mt-6">
                 <p className="text-xs text-slate">
@@ -459,13 +411,13 @@ export function CourseClientWrapper({ course, materials, tests }: CourseClientWr
         )}
       </div>
 
-      {/* Auth Modal Modal */}
+      {/* Auth Modal */}
       {showAuthForm && (
         <div className="fixed inset-0 z-50 bg-navy/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="max-w-md w-full bg-white rounded-card border border-line p-8 shadow-2xl relative">
             <button
               onClick={() => setShowAuthForm(false)}
-              className="absolute top-4 right-4 text-slate hover:text-ink font-bold text-lg"
+              className="absolute top-4 right-4 text-slate hover:text-ink font-bold text-lg cursor-pointer"
             >
               ✕
             </button>
@@ -491,7 +443,7 @@ export function CourseClientWrapper({ course, materials, tests }: CourseClientWr
                     required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="e.g. John Doe"
+                    placeholder="e.g. Rahul Kumar"
                     className="w-full px-4 py-3 rounded-input border border-line text-sm bg-surface/50 focus:bg-white"
                   />
                 </div>

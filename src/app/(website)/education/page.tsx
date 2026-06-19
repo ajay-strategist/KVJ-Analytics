@@ -14,56 +14,15 @@ import { Eyebrow } from "@/components/ui/Eyebrow";
 import { BoldStatement } from "@/components/ui/BoldStatement";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { client } from "@/sanity/lib/client";
-import { solutionsPageQuery, servicesQuery } from "@/sanity/lib/queries";
+import { getPageContent, mergePageContent } from "@/lib/content";
+import { FALLBACK_EDUCATION } from "@/lib/constants";
 
 export const revalidate = 3600;
 
-const FALLBACK_PAGE = {
-  heading: "Educational Solutions",
-  strapline: "Industry-Ready Talent. Built Faster.",
-  intro:
-    "KVJ Analytics helps institutions bridge the gap between academics and industry through practical training, automation, and analytics platforms.",
-};
-
-const FALLBACK_SERVICES = [
-  {
-    title: "Training Programs",
-    slug: "training-programs",
-    shortDescription:
-      "Practical programs in Excel, Power BI, Data Analytics, Financial Analytics, and Business Intelligence.",
-  },
-  {
-    title: "Certification Programs",
-    slug: "certification-programs",
-    shortDescription:
-      "Industry-oriented certifications focused on employability and practical skills.",
-  },
-  {
-    title: "Curriculum Development",
-    slug: "curriculum-development",
-    shortDescription:
-      "Modern, analytics-driven curriculum aligned with industry expectations.",
-  },
-  {
-    title: "Academic Analytics Solutions",
-    slug: "academic-analytics-solutions",
-    shortDescription:
-      "Technology platforms for reporting, evaluation, analytics, and performance tracking.",
-  },
-];
-
 export default async function EducationalSolutionsPage() {
-  const pageData = await client
-    .fetch(solutionsPageQuery, { category: "educational" })
-    .catch(() => null);
-
-  const servicesData = await client
-    .fetch(servicesQuery, { category: "educational" })
-    .catch(() => null);
-
-  const page = pageData || FALLBACK_PAGE;
-  const services = servicesData && servicesData.length > 0 ? servicesData : FALLBACK_SERVICES;
+  const pageData = await getPageContent("education");
+  const page = mergePageContent(pageData, FALLBACK_EDUCATION);
+  const services = page.services && page.services.length > 0 ? page.services : FALLBACK_EDUCATION.services;
 
   const getIcon = (slug: string) => {
     switch (slug) {

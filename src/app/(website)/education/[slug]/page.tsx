@@ -2,82 +2,35 @@ import React from "react";
 import { notFound } from "next/navigation";
 import { ArrowLeft, CheckCircle2, Award, Zap } from "lucide-react";
 import Link from "next/link";
-import { PortableText } from "@portabletext/react";
 import { Container } from "@/components/ui/Container";
 import { Section } from "@/components/ui/Section";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { BoldStatement } from "@/components/ui/BoldStatement";
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
-import { client } from "@/sanity/lib/client";
-import { serviceBySlugQuery } from "@/sanity/lib/queries";
+import { getPageContent, mergePageContent } from "@/lib/content";
+import { FALLBACK_EDUCATION } from "@/lib/constants";
 
 export const revalidate = 3600;
-
-const FALLBACK_SERVICES: Record<string, { title: string; desc: string; details: string[] }> = {
-  "training-programs": {
-    title: "Training Programs",
-    desc: "Practical programs in Excel, Power BI, Data Analytics, Financial Analytics, and Business Intelligence.",
-    details: [
-      "Practical labs where students solve cases using actual business data.",
-      "Comprehensive assignments on dashboard layout and data filtering.",
-      "Live instruction by training specialists with 16+ years of exposure.",
-      "Job-readiness programs focused on immediate workplace capability.",
-    ],
-  },
-  "certification-programs": {
-    title: "Certification Programs",
-    desc: "Industry-oriented certifications focused on employability and practical skills.",
-    details: [
-      "Earn recognized credentials validating Advanced Excel and Power BI skills.",
-      "Improve student placement ratios by demonstrating practical analytics capabilities.",
-      "Structured curriculum pathways with graded projects and capstones.",
-      "Direct industry validation via practical testing engines.",
-    ],
-  },
-  "curriculum-development": {
-    title: "Curriculum Development",
-    desc: "Modern, analytics-driven curriculum aligned with industry expectations.",
-    details: [
-      "Collaborate with board-of-studies to introduce credit-based data courses.",
-      "Align lesson plans with tools commonly used by hiring organizations.",
-      "Provide course materials, syllabus manuals, and grading rubrics.",
-      "Ongoing syllabus auditing to stay ahead of software and AI upgrades.",
-    ],
-  },
-  "academic-analytics-solutions": {
-    title: "Academic Analytics Solutions",
-    desc: "Technology platforms for reporting, evaluation, analytics, and performance tracking.",
-    details: [
-      "Integrate reporting tools to consolidate progress cards and metrics.",
-      "Monitor course enrollment, attendance logs, and test score distributions.",
-      "Streamline board audits and accreditation cycles with automated exports.",
-      "Track alumni placement records and performance progress curves.",
-    ],
-  },
-};
 
 export default async function EducationalServiceDetailPage({
   params,
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }) {
-  const { slug } = params;
+  const { slug } = await params;
 
-  // Query Sanity for service matching this slug
-  const service = await client
-    .fetch(serviceBySlugQuery, { slug })
-    .catch(() => null);
+  const pageData = await getPageContent("education");
+  const page = mergePageContent(pageData, FALLBACK_EDUCATION);
+  const services = page.services && page.services.length > 0 ? page.services : FALLBACK_EDUCATION.services;
+  const service = services.find((s: any) => s.slug === slug);
 
-  const fallback = FALLBACK_SERVICES[slug];
-
-  if (!service && !fallback) {
+  if (!service) {
     notFound();
   }
 
-  const title = service?.title || fallback.title;
-  const description = service?.shortDescription || fallback.desc;
-  const details = fallback?.details || [
+  const title = service.title;
+  const description = service.shortDescription;
+  const details = service.details || [
     "Integrated practical training models designed for immediate employability.",
     "Certified evaluation programs tracking student technical performance.",
     "Syllabus structures built in alignment with industry hiring metrics.",
@@ -111,32 +64,25 @@ export default async function EducationalServiceDetailPage({
               {description}
             </p>
 
-            {/* Rich portable text from Sanity if available */}
-            {service?.body ? (
-              <div className="prose prose-slate prose-lg max-w-none mb-8 text-slate leading-relaxed">
-                <PortableText value={service.body} />
+            <div className="space-y-6 mb-8">
+              <h4 className="text-xl font-bold font-display text-ink flex items-center mb-4">
+                <Zap className="w-5 h-5 text-education mr-2.5" />
+                Program Core Outcomes
+              </h4>
+              <div className="grid grid-cols-1 gap-4">
+                {details.map((item, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-start space-x-3.5 bg-surface/50 border border-line/70 rounded-xl p-4 shadow-soft hover:shadow-hover-lift transition-all duration-300"
+                  >
+                    <CheckCircle2 className="w-5 h-5 text-education shrink-0 mt-0.5" />
+                    <span className="text-base text-ink font-semibold leading-relaxed">
+                      {item}
+                    </span>
+                  </div>
+                ))}
               </div>
-            ) : (
-              <div className="space-y-6 mb-8">
-                <h4 className="text-xl font-bold font-display text-ink flex items-center mb-4">
-                  <Zap className="w-5 h-5 text-education mr-2.5" />
-                  Program Core Outcomes
-                </h4>
-                <div className="grid grid-cols-1 gap-4">
-                  {details.map((item, idx) => (
-                    <div
-                      key={idx}
-                      className="flex items-start space-x-3.5 bg-surface/50 border border-line/70 rounded-xl p-4 shadow-soft hover:shadow-hover-lift transition-all duration-300"
-                    >
-                      <CheckCircle2 className="w-5 h-5 text-education shrink-0 mt-0.5" />
-                      <span className="text-base text-ink font-semibold leading-relaxed">
-                        {item}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+            </div>
           </div>
 
           {/* Sidebar Conversion Card */}

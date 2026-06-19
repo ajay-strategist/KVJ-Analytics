@@ -15,6 +15,7 @@ import { HeroVisual } from "@/components/ui/HeroVisual";
 import { Reveal } from "@/components/ui/Reveal";
 import { getPageContent, mergePageContent } from "@/lib/content";
 import { FALLBACK_HOME_PAGE, FALLBACK_SITE_SETTINGS } from "@/lib/constants";
+import { createClient } from "@supabase/supabase-js";
 
 export const revalidate = 3600; // Cache for 1 hour
 
@@ -31,8 +32,30 @@ export default async function HomePage() {
   const corporateSolutions   = hp.corporateSolutions   ?? FALLBACK_HOME_PAGE.corporateSolutions;
   const educationalSolutions = hp.educationalSolutions ?? FALLBACK_HOME_PAGE.educationalSolutions;
 
-  // Clients from Supabase clients table (already built)
-  const clients: { name: string; logo_url: string; website_url: string }[] = [];
+  // Clients from Supabase clients table (using service role key to bypass RLS)
+  let clients: any[] = [];
+  try {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (url && key) {
+      const db = createClient(url, key, { auth: { persistSession: false } });
+      const { data: dbClients } = await db
+        .from("clients")
+        .select("name, logo_url, website_url")
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true })
+        .order("created_at", { ascending: false });
+      if (dbClients) {
+        clients = dbClients.map((c) => ({
+          name: c.name,
+          logoUrl: c.logo_url,
+          websiteUrl: c.website_url,
+        }));
+      }
+    }
+  } catch (err) {
+    console.error("Failed to fetch clients for home page:", err);
+  }
 
   const renderHeadline = (text: string) => {
     const highlightWord = "Data Into Decisions";

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { revalidatePath } from "next/cache";
 
 // Lazy factory — never call createClient at module level (breaks Next.js build)
 function getAdmin() {
@@ -36,6 +37,7 @@ export async function POST(req: NextRequest) {
   const body = await req.json();
   const { data, error } = await db.from("clients").insert([body]).select().single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  revalidatePath("/");
   return NextResponse.json({ client: data });
 }
 
@@ -46,6 +48,7 @@ export async function PATCH(req: NextRequest) {
   const { id, ...updates } = await req.json();
   const { data, error } = await db.from("clients").update(updates).eq("id", id).select().single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  revalidatePath("/");
   return NextResponse.json({ client: data });
 }
 
@@ -56,5 +59,6 @@ export async function DELETE(req: NextRequest) {
   const { id } = await req.json();
   const { error } = await db.from("clients").delete().eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  revalidatePath("/");
   return NextResponse.json({ success: true });
 }

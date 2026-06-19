@@ -19,13 +19,347 @@ import {
   Loader2,
   ChevronRight,
   ShieldAlert,
+  ChevronLeft,
+  GraduationCap,
+  Sparkles,
+  Trophy,
+  ArrowRight
 } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { Section } from "@/components/ui/Section";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { supabase } from "@/lib/supabase";
-import { client as sanityClient } from "@/sanity/lib/client";
+
+// ─── Course Portal Sub-component ─────────────────────────────────────────────
+
+interface CoursePortalViewProps {
+  course: any;
+  activityResults: any[];
+  refreshResults: () => Promise<void>;
+  onClose: () => void;
+}
+
+function CoursePortalView({ course, activityResults, refreshResults, onClose }: CoursePortalViewProps) {
+  const [activeLesson, setActiveLesson] = useState<any>(null);
+  const [submittingScore, setSubmittingScore] = useState(false);
+  const [scoreSubmittedOk, setScoreSubmittedOk] = useState(false);
+  const [latestScoreData, setLatestScoreData] = useState<any>(null);
+
+  // Flatten lessons for next/prev navigation
+  const allLessons = (course.modules || []).reduce((acc: any[], mod: any) => {
+    return [...acc, ...(mod.lessons || [])];
+  }, []);
+
+  const activeLessonIndex = allLessons.findIndex((l: any) => l.id === activeLesson?.id);
+
+  // Listen to postMessage event for activity-score
+  useEffect(() => {
+    const handleMessage = async (e: MessageEvent) => {
+      if (e.data?.type === "activity-score") {
+        const { score, max } = e.data;
+        if (!activeLesson || activeLesson.kind !== "activity") return;
+
+        setSubmittingScore(true);
+        setScoreSubmittedOk(false);
+
+        try {
+          const res = await fetch("/api/activity-result", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              lessonId: activeLesson.id,
+              score: Number(score),
+              maxScore: Number(max),
+              courseSlug: course.slug,
+            }),
+          });
+
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || "Failed to submit score");
+
+          setScoreSubmittedOk(true);
+          setLatestScoreData({ score, max });
+          await refreshResults();
+
+          // Hide success toast after 4 seconds
+          setTimeout(() => {
+            setScoreSubmittedOk(false);
+          }, 4000);
+        } catch (err) {
+          console.error("Score submission error:", err);
+          alert("Could not save activity score. Please check connection.");
+        } finally {
+          setSubmittingScore(false);
+        }
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, [activeLesson, course.slug]);
+
+  const handleNext = () => {
+    if (activeLessonIndex < allLessons.length - 1) {
+      setActiveLesson(allLessons[activeLessonIndex + 1]);
+      setScoreSubmittedOk(false);
+      setLatestScoreData(null);
+    }
+  };
+
+  const handlePrev = () => {
+    if (activeLessonIndex > 0) {
+      setActiveLesson(allLessons[activeLessonIndex - 1]);
+      setScoreSubmittedOk(false);
+      setLatestScoreData(null);
+    }
+  };
+
+  const getLessonResult = (lessonId: string) => {
+    return activityResults.find((r) => r.lesson_id === lessonId);
+  };
+
+  // Progress metrics
+  const totalActivities = allLessons.filter((l: any) => l.kind === "activity").length;
+  const completedActivities = allLessons.filter(
+    (l: any) => l.kind === "activity" && getLessonResult(l.id)
+  ).length;
+
+  const progressPercent = totalActivities > 0 ? Math.round((completedActivities / totalActivities) * 100) : 100;
+
+  return (
+    <Section background="default" className="bg-surface/30 min-h-screen py-6 px-4">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Top Navbar Takeover */}
+        <div className="bg-white border border-line rounded-card p-5 shadow-soft flex flex-col md:flex-row md:items-center justify-between gap-4 relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-1.5 signature-gradient" />
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={onClose}
+              className="p-2 border border-line rounded-lg text-slate hover:text-brand hover:border-brand/35 transition-all shrink-0"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <div>
+              <span className="text-[10px] font-bold text-brand uppercase tracking-wider block">
+                learning portal
+              </span>
+              <h2 className="text-lg font-bold font-display text-ink leading-tight mt-0.5">
+                {course.title}
+              </h2>
+            </div>
+          </div>
+
+          {/* Progress bar */}
+          {totalActivities > 0 && (
+            <div className="flex items-center gap-3 shrink-0">
+              <div className="text-right">
+                <span className="text-xs font-bold text-slate block leading-none">Activities Progress</span>
+                <span className="text-[10px] text-brand font-bold mt-1 block">
+                  {completedActivities} of {totalActivities} Completed ({progressPercent}%)
+                </span>
+              </div>
+              <div className="w-32 bg-slate/10 rounded-full h-2 overflow-hidden border border-line shrink-0">
+                <div
+                  className="signature-gradient h-full rounded-full transition-all duration-500"
+                  style={{ width: `${progressPercent}%` }}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Portal Body */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          {/* Left Sidebar Curriculum Selector */}
+          <div className="lg:col-span-4 bg-white border border-line rounded-card p-5 shadow-soft space-y-5">
+            <div className="border-b border-line pb-3">
+              <h3 className="font-bold font-display text-ink text-sm uppercase tracking-wide">
+                Course Syllabus
+              </h3>
+              <p className="text-[11px] text-slate mt-0.5">Select a lesson node below to begin.</p>
+            </div>
+
+            <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
+              {course.modules?.map((mod: any, modIdx: number) => (
+                <div key={mod.id} className="space-y-2">
+                  <h4 className="text-xs font-bold text-slate uppercase tracking-wider flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-brand/60 shrink-0" />
+                    M{modIdx + 1}: {mod.title}
+                  </h4>
+
+                  <div className="space-y-1 pl-3">
+                    {mod.lessons?.map((les: any, lesIdx: number) => {
+                      const isActive = activeLesson?.id === les.id;
+                      const result = getLessonResult(les.id);
+                      const isActivity = les.kind === "activity";
+
+                      return (
+                        <button
+                          key={les.id}
+                          onClick={() => {
+                            setActiveLesson(les);
+                            setScoreSubmittedOk(false);
+                            setLatestScoreData(null);
+                          }}
+                          className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold flex items-center justify-between gap-2 border transition-all ${
+                            isActive
+                              ? "bg-brand/10 border-brand/20 text-brand font-bold"
+                              : "border-transparent text-slate hover:bg-surface hover:text-ink"
+                          }`}
+                        >
+                          <span className="truncate flex-1">
+                            L{lesIdx + 1}: {les.title}
+                          </span>
+
+                          <div className="flex items-center gap-1 shrink-0">
+                            {isActivity && result && (
+                              <span className="text-[9px] font-extrabold uppercase tracking-wide px-1.5 py-0.5 rounded bg-success/10 text-success border border-success/20">
+                                {result.score}/{result.max_score}
+                              </span>
+                            )}
+                            {isActivity && !result && (
+                              <span className="text-[9px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-600 border border-amber-500/10">
+                                Activity
+                              </span>
+                            )}
+                            {!isActivity && (
+                              <span className="text-[9px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded bg-slate/10 text-slate border border-line">
+                                Material
+                              </span>
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Right Workspace Frame */}
+          <div className="lg:col-span-8 space-y-4">
+            {/* Score Saved Toast */}
+            {scoreSubmittedOk && latestScoreData && (
+              <div className="bg-success/15 border border-success/30 p-4 rounded-xl flex items-start space-x-3 text-success animate-fade-up">
+                <CheckCircle className="w-5 h-5 shrink-0 mt-0.5" />
+                <div>
+                  <span className="text-sm font-bold text-ink block">Activity Attempt Submitted!</span>
+                  <span className="text-xs text-slate block mt-1">
+                    Your interactive score of <strong>{latestScoreData.score} marks</strong> out of <strong>{latestScoreData.max} marks</strong> has been securely logged to Supabase.
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {activeLesson ? (
+              <div className="bg-white border border-line rounded-card p-6 shadow-soft space-y-4 flex flex-col">
+                <div className="flex items-center justify-between border-b border-line pb-3">
+                  <div>
+                    <span className="text-[10px] font-bold text-slate uppercase tracking-wider block">
+                      {activeLesson.kind === "activity" ? "Interactive Practice Activity" : "Syllabus Study Material"}
+                    </span>
+                    <h3 className="text-base font-bold font-display text-ink mt-0.5">{activeLesson.title}</h3>
+                  </div>
+
+                  {activeLesson.kind === "activity" && (
+                    <div className="text-right">
+                      {getLessonResult(activeLesson.id) ? (
+                        <div>
+                          <span className="text-[9px] font-bold text-slate uppercase tracking-wider block">
+                            Logged Marks
+                          </span>
+                          <span className="text-lg font-bold text-success font-display">
+                            {getLessonResult(activeLesson.id).score} / {activeLesson.max_score}
+                          </span>
+                        </div>
+                      ) : (
+                        <div>
+                          <span className="text-[9px] font-bold text-slate uppercase tracking-wider block">
+                            Possible Marks
+                          </span>
+                          <span className="text-lg font-bold text-brand font-display">
+                            {activeLesson.max_score} Max
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Sandboxed iframe */}
+                {activeLesson.content_html ? (
+                  <iframe
+                    key={activeLesson.id}
+                    sandbox="allow-scripts allow-same-origin"
+                    srcDoc={activeLesson.content_html}
+                    className="w-full min-h-[580px] bg-white border border-line rounded-xl shadow-inner mt-2"
+                  />
+                ) : (
+                  <div className="min-h-[300px] flex items-center justify-center border-dashed border-2 border-line rounded-xl text-slate text-xs italic">
+                    This lesson node has no HTML material content loaded.
+                  </div>
+                )}
+
+                {/* Score submission pending loader */}
+                {submittingScore && (
+                  <div className="flex items-center justify-center py-4 bg-brand/5 border border-brand/10 rounded-lg text-brand gap-2 text-xs font-semibold animate-pulse mt-4">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Processing interactive score submission...</span>
+                  </div>
+                )}
+
+                {/* Lesson Pagination Nav */}
+                <div className="border-t border-line pt-4 mt-6 flex items-center justify-between">
+                  <Button
+                    onClick={handlePrev}
+                    disabled={activeLessonIndex <= 0}
+                    variant="secondary"
+                    className="px-4 py-2 text-xs font-bold flex items-center gap-1"
+                  >
+                    <ChevronLeft className="w-3.5 h-3.5" />
+                    <span>Previous</span>
+                  </Button>
+
+                  <Button
+                    onClick={handleNext}
+                    disabled={activeLessonIndex >= allLessons.length - 1}
+                    className="px-5 py-2 text-xs font-bold flex items-center gap-1 bg-brand text-white"
+                  >
+                    <span>Next Lesson</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-white border border-line rounded-card p-10 text-center shadow-soft min-h-[450px] flex flex-col justify-center items-center">
+                <GraduationCap className="w-16 h-16 text-brand/20 mx-auto mb-4" />
+                <h3 className="text-xl font-bold font-display text-ink">Welcome to the Learning Portal</h3>
+                <p className="text-xs text-slate max-w-sm mx-auto mt-2 leading-relaxed font-medium">
+                  Select a module lesson node from the sidebar to launch the sandboxed material worksheets and assignment activities.
+                </p>
+
+                {/* Introduction quick summary */}
+                {course.introduction && (
+                  <div className="mt-8 border-t border-line pt-6 max-w-xl w-full text-left">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate mb-3">Course Syllabus Overview</h4>
+                    <div
+                      className="text-xs text-slate/85 leading-relaxed max-h-48 overflow-y-auto bg-surface/40 p-4 rounded-xl border border-line/60 prose prose-slate"
+                      dangerouslySetInnerHTML={{ __html: course.introduction }}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </Section>
+  );
+}
+
+// ─── Main Account Dashboard Component ────────────────────────────────────────
 
 function StudentAccountDashboard() {
   const router = useRouter();
@@ -37,9 +371,10 @@ function StudentAccountDashboard() {
   const [profile, setProfile] = useState<any>(null);
   const [enrollments, setEnrollments] = useState<any[]>([]);
   const [coursesData, setCoursesData] = useState<any[]>([]);
+  const [activityResults, setActivityResults] = useState<any[]>([]);
   const [testAttempts, setTestAttempts] = useState<any[]>([]);
-  
-  // Auth Form State (Fallback login/register if not logged in)
+
+  // Auth Form State
   const [showRegister, setShowRegister] = useState(false);
   const [authEmail, setAuthEmail] = useState("");
   const [authPassword, setAuthPassword] = useState("");
@@ -49,7 +384,7 @@ function StudentAccountDashboard() {
   const [authError, setAuthError] = useState("");
   const [authLoading, setAuthLoading] = useState(false);
 
-  // Active Test State
+  // Active Test State (Phase 1 legacy tests fallback logic placeholder)
   const [activeTest, setActiveTest] = useState<any>(null);
   const [testLoading, setTestLoading] = useState(false);
   const [testError, setTestError] = useState("");
@@ -58,10 +393,9 @@ function StudentAccountDashboard() {
   const [testStartedAt, setTestStartedAt] = useState<string>("");
   const [testResults, setTestResults] = useState<any>(null);
   const [submittingTest, setSubmittingTest] = useState(false);
-  
+
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Load basic session and student records
   const loadDashboardData = async (sessionUser: any) => {
     try {
       // 1. Profile metadata
@@ -70,7 +404,7 @@ function StudentAccountDashboard() {
         .select("*")
         .eq("id", sessionUser.id)
         .maybeSingle();
-      
+
       setProfile(profData || { name: sessionUser.user_metadata?.name || "Student" });
 
       // 2. Active Enrollments
@@ -84,31 +418,67 @@ function StudentAccountDashboard() {
       setEnrollments(enrolls || []);
 
       if (enrolls && enrolls.length > 0) {
-        // Fetch matching course syllabi from Sanity
         const slugs = enrolls.map((e) => e.course_slug);
-        const sanityCourses = await sanityClient.fetch(
-          `*[_type == "course" && slug.current in $slugs] {
-            title,
-            "slug": slug.current,
-            segment,
-            summary,
-            "materials": *[_type == "material" && references(^._id)] | order(order asc) {
-              _id,
-              title,
-              type,
-              isPreview
-            },
-            "tests": *[_type == "mockTest" && references(^._id)] {
-              _id,
-              title,
-              durationMins,
-              passMark,
-              "questionCount": count(questions)
-            }
-          }`,
-          { slugs }
-        );
-        setCoursesData(sanityCourses || []);
+
+        // Fetch courses, modules, lessons from Supabase (single-source of truth)
+        const { data: dbCourses } = await supabase
+          .from("courses")
+          .select("*")
+          .in("slug", slugs)
+          .order("display_order", { ascending: true });
+
+        if (dbCourses && dbCourses.length > 0) {
+          const courseIds = dbCourses.map((c) => c.id);
+
+          // Fetch modules
+          const { data: dbMods } = await supabase
+            .from("modules")
+            .select("*")
+            .in("course_id", courseIds)
+            .order("display_order", { ascending: true });
+
+          // Fetch lessons
+          let dbLessons: any[] = [];
+          if (dbMods && dbMods.length > 0) {
+            const { data: dbLess } = await supabase
+              .from("lessons")
+              .select("*")
+              .in("module_id", dbMods.map((m) => m.id))
+              .order("display_order", { ascending: true });
+            dbLessons = dbLess || [];
+          }
+
+          // Fetch student activity results
+          const { data: dbResults } = await supabase
+            .from("activity_results")
+            .select("*")
+            .eq("user_id", sessionUser.id);
+
+          setActivityResults(dbResults || []);
+
+          // Assemble the course syllabus data
+          const assembled = dbCourses.map((course) => {
+            const courseMods = (dbMods || []).filter((m) => m.course_id === course.id);
+            const courseModsWithLessons = courseMods.map((mod) => ({
+              ...mod,
+              lessons: dbLessons.filter((l) => l.module_id === mod.id),
+            }));
+
+            return {
+              ...course,
+              title: course.title,
+              slug: course.slug,
+              segment: course.segment,
+              summary: course.summary,
+              introduction: course.introduction,
+              modules: courseModsWithLessons,
+            };
+          });
+
+          setCoursesData(assembled);
+        } else {
+          setCoursesData([]);
+        }
       } else {
         setCoursesData([]);
       }
@@ -128,6 +498,15 @@ function StudentAccountDashboard() {
     }
   };
 
+  const refreshActivityResults = async () => {
+    if (!user) return;
+    const { data: dbResults } = await supabase
+      .from("activity_results")
+      .select("*")
+      .eq("user_id", user.id);
+    setActivityResults(dbResults || []);
+  };
+
   useEffect(() => {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -140,7 +519,6 @@ function StudentAccountDashboard() {
     };
     checkUser();
 
-    // Listen to authentication changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
         setUser(session.user);
@@ -150,6 +528,7 @@ function StudentAccountDashboard() {
         setProfile(null);
         setEnrollments([]);
         setCoursesData([]);
+        setActivityResults([]);
         setTestAttempts([]);
       }
     });
@@ -160,7 +539,6 @@ function StudentAccountDashboard() {
     };
   }, []);
 
-  // Trigger test loader if testId in search query changes
   useEffect(() => {
     if (testId && user) {
       loadMockTest(testId);
@@ -175,7 +553,6 @@ function StudentAccountDashboard() {
     }
   }, [testId, user]);
 
-  // Handle Login & Signup
   const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError("");
@@ -194,8 +571,7 @@ function StudentAccountDashboard() {
           },
         });
         if (error) throw error;
-        
-        // Wait minor delay and upsert custom profile
+
         if (data.user) {
           await supabase.from("profiles").upsert({
             id: data.user.id,
@@ -231,17 +607,17 @@ function StudentAccountDashboard() {
     router.push("/training");
   };
 
-  // Mock Test Loader & Timers
+  // Mock Test Loader (Phase 1 legacy tests logic)
   const loadMockTest = async (id: string) => {
     setTestLoading(true);
     setTestError("");
     setTestResults(null);
     setTestAnswers({});
-    
+
     try {
       const response = await fetch(`/api/tests/${id}`);
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.error || "Failed to load test questions.");
       }
@@ -251,22 +627,19 @@ function StudentAccountDashboard() {
       setTestTimeRemaining(testData.durationMins * 60);
       setTestStartedAt(new Date().toISOString());
 
-      // Start countdown timer
       if (timerRef.current) clearInterval(timerRef.current);
-      
+
       timerRef.current = setInterval(() => {
         setTestTimeRemaining((prev) => {
           if (prev <= 1) {
             clearInterval(timerRef.current!);
             timerRef.current = null;
-            // Auto-submit when timer expires
             triggerAutoSubmit();
             return 0;
           }
           return prev - 1;
         });
       }, 1000);
-
     } catch (err: any) {
       setTestError(err.message || "Connection issue.");
     } finally {
@@ -291,7 +664,7 @@ function StudentAccountDashboard() {
     if (submittingTest || (!force && !confirm("Are you sure you want to finish and submit your test?"))) {
       return;
     }
-    
+
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
@@ -299,9 +672,8 @@ function StudentAccountDashboard() {
 
     setSubmittingTest(true);
     try {
-      // Convert answers map to a matched array matching question order
       const questionsCount = activeTest.questions?.length || 0;
-      const answersArray = Array.from({ length: questionsCount }, (_, i) => 
+      const answersArray = Array.from({ length: questionsCount }, (_, i) =>
         testAnswers[i] !== undefined ? testAnswers[i] : null
       );
 
@@ -320,15 +692,14 @@ function StudentAccountDashboard() {
       }
 
       setTestResults(result);
-      
-      // Reload history background list
+
+      // Reload attempts list
       const { data: attempts } = await supabase
         .from("test_attempts")
         .select("*")
         .eq("user_id", user.id)
         .order("submitted_at", { ascending: false });
       setTestAttempts(attempts || []);
-
     } catch (err: any) {
       alert(err.message || "Failed to submit answers. Check connection.");
     } finally {
@@ -336,22 +707,10 @@ function StudentAccountDashboard() {
     }
   };
 
-  // Helper format seconds -> mm:ss
   const formatTime = (secs: number) => {
     const mins = Math.floor(secs / 60);
     const seconds = secs % 60;
     return `${mins.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
-  };
-
-  const getMaterialIcon = (type: string) => {
-    switch (type) {
-      case "pdf":
-        return <FileText className="w-4 h-4 text-corporate" />;
-      case "video":
-        return <Video className="w-4 h-4 text-education" />;
-      default:
-        return <ExternalLink className="w-4 h-4 text-slate" />;
-    }
   };
 
   if (loading) {
@@ -371,7 +730,6 @@ function StudentAccountDashboard() {
       <Section background="default" className="bg-surface/30 min-h-[85vh] flex items-center py-16">
         <Container className="max-w-md">
           <Card className="p-8 md:p-10 border-line/80 shadow-xl relative overflow-hidden bg-white">
-            {/* Decorative Top Accent Bar */}
             <div className="absolute top-0 left-0 right-0 h-1.5 signature-gradient" />
 
             <div className="text-center mb-8">
@@ -516,14 +874,13 @@ function StudentAccountDashboard() {
     );
   }
 
-  // 2. ACTIVE TEST LAYOUT (Takes over page when test query is present)
+  // 2. ACTIVE TEST LAYOUT (Takeover for mock tests)
   if (activeTest) {
     const questionsList = activeTest.questions || [];
-    
+
     return (
       <Section background="default" className="bg-surface/30 min-h-[90vh] py-12">
         <Container className="max-w-4xl">
-          {/* Header Bar */}
           <div className="bg-white border border-line/80 rounded-card p-6 shadow-soft mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4 relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-1 signature-gradient" />
             <div>
@@ -534,7 +891,7 @@ function StudentAccountDashboard() {
                 {activeTest.title}
               </h2>
             </div>
-            
+
             {!testResults && (
               <div className="flex items-center space-x-3 bg-navy/5 px-4 py-2.5 rounded-lg text-navy border border-navy/10 shrink-0">
                 <Clock className="w-4 h-4 text-brand animate-pulse" />
@@ -548,7 +905,7 @@ function StudentAccountDashboard() {
                 href="/account"
                 className="px-4 py-2.5 bg-slate text-white text-xs font-bold rounded-btn hover:bg-slate-700 transition-colors shadow-sm"
               >
-                Close & Return
+                Close &amp; Return
               </Link>
             )}
           </div>
@@ -569,7 +926,6 @@ function StudentAccountDashboard() {
             </div>
           ) : (
             <div className="space-y-6">
-              {/* If test is already submitted, display score receipt */}
               {testResults && (
                 <Card className={`p-8 border-t-4 shadow-soft transition-all duration-200 ${testResults.passed ? "border-success bg-success/5" : "border-error bg-error/5"}`}>
                   <div className="text-center max-w-md mx-auto">
@@ -594,7 +950,6 @@ function StudentAccountDashboard() {
                 </Card>
               )}
 
-              {/* Quiz Body */}
               <div className="space-y-6">
                 {questionsList.map((q: any, qIdx: number) => {
                   const studentAnswer = testAnswers[qIdx];
@@ -632,7 +987,6 @@ function StudentAccountDashboard() {
                                 optionStyle = "bg-brand/5 border-brand text-brand font-semibold shadow-sm";
                               }
 
-                              // Results review display
                               if (gradedQ) {
                                 const isCorrectAnswer = gradedQ.correctIndex === oIdx;
                                 const isStudentAnswer = gradedQ.studentIndex === oIdx;
@@ -669,7 +1023,6 @@ function StudentAccountDashboard() {
                 })}
               </div>
 
-              {/* Submit panel */}
               {!testResults && (
                 <div className="bg-white border border-line/80 rounded-card p-6 shadow-soft flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                   <div className="text-xs text-slate max-w-md leading-relaxed">
@@ -698,7 +1051,24 @@ function StudentAccountDashboard() {
     );
   }
 
-  // 3. MAIN STUDENT DASHBOARD PORTAL
+  // 3. ENROLLED COURSE CURRICULUM PORTAL VIEW (Interactive iframe Takeover)
+  const activeCourseSlug = searchParams.get("course");
+  const activeCourse = coursesData.find((c) => c.slug === activeCourseSlug);
+
+  if (activeCourse && enrollments.some((e) => e.course_slug === activeCourseSlug)) {
+    return (
+      <CoursePortalView
+        course={activeCourse}
+        activityResults={activityResults}
+        refreshResults={refreshActivityResults}
+        onClose={() => {
+          router.push("/account");
+        }}
+      />
+    );
+  }
+
+  // 4. MAIN STUDENT DASHBOARD PORTAL
   return (
     <Section background="default" className="bg-surface/30 min-h-[85vh] py-12">
       <Container>
@@ -713,7 +1083,7 @@ function StudentAccountDashboard() {
               <h2 className="text-2xl font-bold font-display text-ink leading-tight">
                 {profile?.name}
               </h2>
-              <p className="text-sm text-slate mt-1.5">
+              <p className="text-sm text-slate mt-1.5 font-medium">
                 {user.email} {profile?.organization ? `• ${profile.organization}` : ""}
               </p>
             </div>
@@ -729,14 +1099,14 @@ function StudentAccountDashboard() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          {/* Left Side: Course Catalog Syllabus folders */}
+          {/* Left Side: Course Curriculum Folders */}
           <div className="lg:col-span-8 space-y-6">
             <div className="border-b border-line pb-3">
               <h3 className="text-xl font-bold font-display text-ink">
                 My Enrolled Programs
               </h3>
               <p className="text-xs text-slate mt-1">
-                Open specific syllabi folders to access workbook databases and files.
+                Open specific syllabi dashboards to launch HTML materials and activities.
               </p>
             </div>
 
@@ -747,7 +1117,7 @@ function StudentAccountDashboard() {
                   No Active Courses
                 </h4>
                 <p className="text-sm text-slate max-w-sm mx-auto mb-6 leading-relaxed">
-                  You are not currently enrolled in any skill programs. Check the course catalog to enroll or apply college code.
+                  You are not currently enrolled in any programs. Check the course catalog to enroll or apply college code.
                 </p>
                 <Button href="/training" variant="primary" className="px-6 py-2.5 text-xs font-bold">
                   Browse Course Catalog
@@ -766,82 +1136,46 @@ function StudentAccountDashboard() {
                           {course.title}
                         </h4>
                       </div>
-                      
+
                       <Link
-                        href={`/training/${course.slug}`}
-                        className="text-xs font-semibold text-brand hover:text-brand-700 transition-colors flex items-center"
+                        href={`/account?course=${course.slug}`}
+                        className="px-4 py-2 bg-brand/5 border border-brand/20 text-brand text-xs font-bold rounded-lg flex items-center gap-1 hover:bg-brand/10 transition-colors shadow-sm"
                       >
-                        Syllabus details <ChevronRight className="w-3.5 h-3.5 ml-0.5" />
+                        <span>Launch Course Portal</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
                       </Link>
                     </div>
 
-                    {/* Materials inside Course */}
-                    <div className="space-y-2.5">
-                      <span className="text-[10px] font-bold text-slate uppercase tracking-wider block mb-1">
-                        Syllabus Files & Attachments
+                    {/* Quick Outline preview */}
+                    <div className="space-y-2">
+                      <span className="text-[9px] font-bold text-slate uppercase tracking-wider block mb-1">
+                        Syllabus Outline
                       </span>
-                      {course.materials?.length === 0 ? (
-                        <p className="text-xs text-slate italic">No downloadable assets loaded.</p>
+                      {course.modules?.length === 0 ? (
+                        <p className="text-xs text-slate italic">Curriculum outline is loading.</p>
                       ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          {course.materials?.map((mat: any) => (
-                            <a
-                              key={mat._id}
-                              href={`/api/materials/${mat._id}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex items-center justify-between p-3.5 bg-surface/50 border border-line rounded-lg text-sm font-semibold hover:border-brand/40 hover:bg-white hover:shadow-soft transition-all duration-200 group"
-                            >
-                              <div className="flex items-center space-x-2.5">
-                                {getMaterialIcon(mat.type)}
-                                <span className="text-ink group-hover:text-brand transition-colors text-xs truncate max-w-[200px]">
-                                  {mat.title}
-                                </span>
-                              </div>
-                              <span className="text-[8px] font-bold uppercase tracking-wider text-slate border border-line bg-white px-1.5 py-0.5 rounded shadow-sm">
-                                {mat.type}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs font-medium text-slate">
+                          {course.modules?.map((mod: any, idx: number) => (
+                            <div key={mod.id} className="flex items-center gap-2 p-2.5 bg-surface/50 border border-line rounded-lg">
+                              <span className="flex items-center justify-center w-5 h-5 rounded bg-brand/10 text-brand text-[9px] font-bold shrink-0">
+                                M{idx + 1}
                               </span>
-                            </a>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Tests inside Course */}
-                    <div className="space-y-2.5 mt-6 pt-5 border-t border-line">
-                      <span className="text-[10px] font-bold text-slate uppercase tracking-wider block mb-1">
-                        Cert Evaluations & Mock Tests
-                      </span>
-                      {course.tests?.length === 0 ? (
-                        <p className="text-xs text-slate italic">No test models scheduled.</p>
-                      ) : (
-                        <div className="space-y-2">
-                          {course.tests?.map((test: any) => (
-                            <div
-                              key={test._id}
-                              className="flex items-center justify-between p-3.5 bg-surface/50 border border-line rounded-lg"
-                            >
-                              <div className="flex items-center space-x-3">
-                                <PlayCircle className="w-5 h-5 text-education" />
-                                <div>
-                                  <span className="text-xs font-semibold text-ink block">{test.title}</span>
-                                  <span className="text-[9px] font-bold text-slate uppercase tracking-wider block mt-0.5">
-                                    {test.durationMins} Mins • Pass Mark: {test.passMark} • {test.questionCount} Qs
-                                  </span>
-                                </div>
-                              </div>
-                              
-                              <Button
-                                href={`/account?test=${test._id}`}
-                                variant="secondary"
-                                className="px-4 py-1.5 text-xs font-bold bg-white text-education border-education hover:bg-education/5"
-                              >
-                                Start Exam
-                              </Button>
+                              <span className="truncate text-ink/80">{mod.title}</span>
                             </div>
                           ))}
                         </div>
                       )}
+                    </div>
+
+                    {/* Mock Tests Placeholder Section */}
+                    <div className="space-y-2.5 mt-6 pt-5 border-t border-line">
+                      <span className="text-[10px] font-bold text-slate uppercase tracking-wider block mb-1">
+                        Cert Evaluations &amp; Mock Tests (Phase 3)
+                      </span>
+                      <div className="bg-surface/40 border border-line p-4 rounded-xl flex items-center justify-between gap-3 text-xs text-slate">
+                        <span>Professional Certification evaluations will launch in the next phase.</span>
+                        <span className="font-bold text-[9px] uppercase tracking-wider bg-slate/15 px-2 py-1 rounded">Coming Soon</span>
+                      </div>
                     </div>
                   </Card>
                 ))}
@@ -849,7 +1183,7 @@ function StudentAccountDashboard() {
             )}
           </div>
 
-          {/* Right Side: Evaluation history logs */}
+          {/* Right Side: Evaluation History logs */}
           <div className="lg:col-span-4 space-y-6">
             <div className="border-b border-line pb-3">
               <h3 className="text-xl font-bold font-display text-ink">

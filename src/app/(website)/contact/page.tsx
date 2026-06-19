@@ -4,35 +4,17 @@ import { Container } from "@/components/ui/Container";
 import { BoldStatement } from "@/components/ui/BoldStatement";
 import { Reveal } from "@/components/ui/Reveal";
 import { ContactForm } from "@/components/ContactForm";
-import { client } from "@/sanity/lib/client";
-import { contactPageQuery, siteSettingsQuery } from "@/sanity/lib/queries";
-import { FALLBACK_SITE_SETTINGS } from "@/lib/constants";
+import { getPageContent, mergePageContent } from "@/lib/content";
+import { FALLBACK_CONTACT, FALLBACK_SITE_SETTINGS } from "@/lib/constants";
 
 export const revalidate = 3600;
 
-const FALLBACK_CONTACT = {
-  heading: "Contact KVJ Analytics",
-  strapline: "Let's Build Smarter Systems Together",
-  intro:
-    "Whether you are a corporate organization looking for automation and analytics solutions or an educational institution seeking industry-oriented learning platforms, KVJ Analytics is ready to support your transformation journey.",
-  inquiryAreas: [
-    "Corporate Consulting",
-    "Dashboard Development",
-    "Process Automation",
-    "Corporate Training",
-    "Educational Partnerships",
-    "Curriculum Development",
-    "Product Demonstrations",
-    "Institutional Collaborations",
-  ],
-};
-
 export default async function ContactPage() {
-  const contactData = await client.fetch(contactPageQuery).catch(() => null);
-  const settingsData = await client.fetch(siteSettingsQuery).catch(() => null);
+  const contactData = await getPageContent("contact");
+  const settingsData = await getPageContent("site-settings");
 
-  const page = contactData || FALLBACK_CONTACT;
-  const settings = settingsData || FALLBACK_SITE_SETTINGS;
+  const page = mergePageContent(contactData, FALLBACK_CONTACT);
+  const settings = mergePageContent(settingsData, FALLBACK_SITE_SETTINGS);
   const contact = settings.contactInfo || FALLBACK_SITE_SETTINGS.contactInfo;
   const inquiryAreas = page.inquiryAreas || FALLBACK_CONTACT.inquiryAreas;
 

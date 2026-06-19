@@ -2,17 +2,26 @@ import React from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { PortableText } from "@portabletext/react";
 import { Container } from "@/components/ui/Container";
 import { Section } from "@/components/ui/Section";
-import { Eyebrow } from "@/components/ui/Eyebrow";
 import { BoldStatement } from "@/components/ui/BoldStatement";
 import { CourseClientWrapper } from "@/components/CourseClientWrapper";
-import { client } from "@/sanity/lib/client";
+import { supabase } from "@/lib/supabase";
 
 export const revalidate = 3600;
 
-const FALLBACK_COURSES: Record<string, { title: string; segment: string; summary: string; priceINR: number; isPaid: boolean; syllabus: string[] }> = {
+const FALLBACK_COURSES: Record<
+  string,
+  {
+    title: string;
+    segment: string;
+    summary: string;
+    priceINR: number;
+    isPaid: boolean;
+    introduction: string;
+    syllabus: string[];
+  }
+> = {
   "excel-mis-automation": {
     title: "Advanced Excel & MIS Automation",
     segment: "college",
@@ -20,6 +29,7 @@ const FALLBACK_COURSES: Record<string, { title: string; segment: string; summary
       "Master formula consolidation, reporting loops, and dashboard designs using real corporate MIS datasets.",
     priceINR: 4999,
     isPaid: false,
+    introduction: "<h3>Advanced Excel Syllabus</h3><p>Master MIS consolidation and workflows.</p>",
     syllabus: [
       "Introduction to advanced nested formulas and logical criteria tests.",
       "Power Query data pipeline building: merging directory files with single-click refresh.",
@@ -34,6 +44,7 @@ const FALLBACK_COURSES: Record<string, { title: string; segment: string; summary
       "Connect live data sources, design KPI tiles, and deploy interactive boards for senior executives.",
     priceINR: 7999,
     isPaid: true,
+    introduction: "<h3>Power BI Course Intro</h3><p>Learn to connect live data sources and deploy boards.</p>",
     syllabus: [
       "Data ingestion modeling: defining facts, dimensions, and relationships.",
       "DAX logic: writing time intelligence formulas and performance indices.",
@@ -43,16 +54,6 @@ const FALLBACK_COURSES: Record<string, { title: string; segment: string; summary
   },
 };
 
-const FALLBACK_MATERIALS = [
-  { _id: "m1", title: "MIS Consolidation Worksheet (Excel Template)", type: "pdf" as const, isPreview: true },
-  { _id: "m2", title: "Power Query Data Loader Guide (PDF Manual)", type: "pdf" as const, isPreview: false },
-  { _id: "m3", title: "Interactive Charts & Slicer Tutorial (Video Link)", type: "video" as const, isPreview: false },
-];
-
-const FALLBACK_TESTS = [
-  { _id: "t1", title: "Advanced Formulas & Logical Functions Test", durationMins: 30, passMark: 10, questionCount: 10 },
-];
-
 export default async function CourseDetailPage({
   params,
 }: {
@@ -60,21 +61,51 @@ export default async function CourseDetailPage({
 }) {
   const { slug } = params;
 
-  // 1. Fetch Course details
-  const course = await client
-    .fetch(
-      `*[_type == "course" && slug.current == $slug][0] {
-        title,
-        "slug": slug.current,
-        segment,
-        summary,
-        syllabus,
-        priceINR,
-        isPaid
-      }`,
-      { slug }
-    )
-    .catch(() => null);
+  // 1. Fetch Course details from Supabase
+  let course: any = null;
+  let dbModules: any[] = [];
+
+  try {
+    const { data: dbCourse, error: courseError } = await supabase
+      .from("courses")
+      .select("*")
+      .eq("slug", slug)
+      .maybeSingle();
+
+    if (dbCourse) {
+      course = dbCourse;
+
+      // Fetch Modules & Lessons
+      const { data: mods, error: modsError } = await supabase
+        .from("modules")
+        .select("*")
+        .eq("course_id", course.id)
+        .order("display_order", { ascending: true });
+
+      if (mods && mods.length > 0) {
+        const { data: less, error: lessError } = await supabase
+          .from("lessons")
+          .select("*")
+          .in("module_id", mods.map((m) => m.id))
+          .order("display_order", { ascending: true });
+
+        dbModules = mods.map((m) => ({
+          id: m.id,
+          title: m.title,
+          lessons: (less || [])
+            .filter((l) => l.module_id === m.id)
+            .map((l) => ({
+              id: l.id,
+              title: l.title,
+              kind: l.kind,
+              max_score: l.max_score,
+            })),
+        }));
+      }
+    }
+  } catch (err) {
+    console.warn("Supabase fetch error in CourseDetailPage:", err);
+  }
 
   const fallback = FALLBACK_COURSES[slug];
 
@@ -82,44 +113,29 @@ export default async function CourseDetailPage({
     notFound();
   }
 
-  // 2. Fetch associated materials
-  let materials = await client
-    .fetch(
-      `*[_type == "material" && course->slug.current == $slug] | order(order asc) {
-        _id,
-        title,
-        type,
-        isPreview
-      }`,
-      { slug }
-    )
-    .catch(() => []);
-
-  // 3. Fetch associated mock tests
-  let tests = await client
-    .fetch(
-      `*[_type == "mockTest" && course->slug.current == $slug] | order(created_at desc) {
-        _id,
-        title,
-        durationMins,
-        passMark,
-        "questionCount": count(questions)
-      }`,
-      { slug }
-    )
-    .catch(() => []);
-
+  const id = course?.id || `fallback-id-${slug}`;
   const title = course?.title || fallback.title;
   const segment = course?.segment || fallback.segment;
   const summary = course?.summary || fallback.summary;
-  const priceINR = course?.priceINR || fallback.priceINR;
-  const isPaid = course?.isPaid !== undefined ? course.isPaid : fallback.isPaid;
+  const priceINR = course?.price_inr !== undefined ? Number(course.price_inr) : fallback.priceINR;
+  const isPaid = course?.is_paid !== undefined ? !!course.is_paid : fallback.isPaid;
+  const introduction = course?.introduction || fallback.introduction;
 
-  if (materials.length === 0) {
-    materials = FALLBACK_MATERIALS;
-  }
-  if (tests.length === 0) {
-    tests = FALLBACK_TESTS;
+  // Build modules list from fallback if not present in DB
+  let modules = dbModules;
+  if (modules.length === 0 && fallback) {
+    modules = [
+      {
+        id: `fallback-mod-${slug}`,
+        title: "Course Curriculum Outline",
+        lessons: fallback.syllabus.map((item, idx) => ({
+          id: `fallback-les-${slug}-${idx}`,
+          title: item,
+          kind: "material",
+          max_score: null,
+        })),
+      },
+    ];
   }
 
   return (
@@ -158,29 +174,16 @@ export default async function CourseDetailPage({
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 mt-8 items-start">
             <div className="lg:col-span-12">
               <BoldStatement variant="h3" className="mb-8">
-                Syllabus & Core Outline
+                Syllabus &amp; Core Outline
               </BoldStatement>
 
-              {course?.syllabus ? (
-                <div className="prose prose-slate max-w-none text-slate leading-relaxed">
-                  <PortableText value={course.syllabus} />
-                </div>
+              {introduction ? (
+                <div
+                  className="prose prose-slate max-w-none text-slate leading-relaxed"
+                  dangerouslySetInnerHTML={{ __html: introduction }}
+                />
               ) : (
-                <div className="grid grid-cols-1 gap-4">
-                  {fallback.syllabus.map((item, idx) => (
-                    <div
-                      key={idx}
-                      className="flex items-start space-x-4 bg-surface/50 border border-line/60 rounded-xl p-4.5 shadow-soft hover:shadow-hover-lift hover:-translate-y-0.5 transition-all duration-300"
-                    >
-                      <div className="w-6.5 h-6.5 rounded-full bg-brand/10 text-brand flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">
-                        {idx + 1}
-                      </div>
-                      <span className="text-base text-ink font-semibold leading-relaxed">
-                        {item}
-                      </span>
-                    </div>
-                  ))}
-                </div>
+                <p className="text-slate italic">No course syllabus details uploaded yet.</p>
               )}
             </div>
           </div>
@@ -189,9 +192,8 @@ export default async function CourseDetailPage({
         {/* Dynamic client-side course panel (Syllabus items, Lock badges, Pay, Join code inputs) */}
         <div className="max-w-5xl mx-auto border-t border-line pt-12">
           <CourseClientWrapper
-            course={{ title, slug, segment, summary, priceINR, isPaid }}
-            materials={materials}
-            tests={tests}
+            course={{ id, title, slug, segment, summary, priceINR, isPaid }}
+            modules={modules}
           />
         </div>
       </Container>

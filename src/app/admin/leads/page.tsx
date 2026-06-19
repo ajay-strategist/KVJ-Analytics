@@ -238,6 +238,7 @@ export default function AdminLeadsPage() {
             { label: "Case Studies",    href: "/admin/case-studies" },
             { label: "Team",            href: "/admin/team" },
             { label: "Website Content", href: "/admin/content" },
+            { label: "Courses",         href: "/admin/courses" },
           ].map((tab) => (
             <Link
               key={tab.href}

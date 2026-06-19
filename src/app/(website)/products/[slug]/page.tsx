@@ -2,65 +2,36 @@ import React from "react";
 import { notFound } from "next/navigation";
 import { ArrowLeft, CheckCircle2, Monitor, Layers } from "lucide-react";
 import Link from "next/link";
-import { PortableText } from "@portabletext/react";
 import { Container } from "@/components/ui/Container";
 import { Section } from "@/components/ui/Section";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { BoldStatement } from "@/components/ui/BoldStatement";
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
-import { client } from "@/sanity/lib/client";
-import { productBySlugQuery } from "@/sanity/lib/queries";
+import { getPageContent, mergePageContent } from "@/lib/content";
+import { FALLBACK_PRODUCTS_PAGE } from "@/lib/constants";
 
 export const revalidate = 3600;
-
-const FALLBACK_PRODUCTS: Record<string, { name: string; tagline: string; desc: string; features: string[] }> = {
-  "grade-scope": {
-    name: "Grade Scope",
-    tagline: "Educational Reporting & Analytics Platform",
-    desc: "Grade Scope automates student progress reports, placement reports, training reports, and institutional analytics.",
-    features: [
-      "Single-click PDF scorecard generation.",
-      "Multi-cohort progress analytics showing performance gaps.",
-      "NAAC and board-audit compliance reports.",
-      "Secure database synchronization across departments.",
-    ],
-  },
-  "protrix": {
-    name: "Protrix",
-    tagline: "Assignment & Assessment Automation Platform",
-    desc: "Protrix helps teachers generate, manage, and evaluate practical assignments while helping students practice and improve skills.",
-    features: [
-      "Automatic grading of spreadsheet assignments with immediate feedback loops.",
-      "Randomized question blocks preventing copy-pasting among students.",
-      "Detailed instructor dashboards outlining completion speed and score spreads.",
-      "Custom grade export integrations to common learning systems.",
-    ],
-  },
-};
 
 export default async function ProductDetailPage({
   params,
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }) {
-  const { slug } = params;
+  const { slug } = await params;
 
-  // Query Sanity for product matching this slug
-  const product = await client
-    .fetch(productBySlugQuery, { slug })
-    .catch(() => null);
+  const pageData = await getPageContent("products");
+  const page = mergePageContent(pageData, FALLBACK_PRODUCTS_PAGE);
+  const products = page.products && page.products.length > 0 ? page.products : FALLBACK_PRODUCTS_PAGE.products;
+  const product = products.find((p: any) => p.slug === slug);
 
-  const fallback = FALLBACK_PRODUCTS[slug];
-
-  if (!product && !fallback) {
+  if (!product) {
     notFound();
   }
 
-  const name = product?.name || fallback.name;
-  const tagline = product?.tagline || fallback.tagline;
-  const description = product?.description || fallback.desc;
-  const features = product?.keyFeatures || fallback.features;
+  const name = product.name;
+  const tagline = product.tagline;
+  const description = product.description;
+  const features = product.keyFeatures || [];
   const isGradeScope = slug === "grade-scope";
 
   return (

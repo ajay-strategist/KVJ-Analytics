@@ -16,68 +16,15 @@ import { Eyebrow } from "@/components/ui/Eyebrow";
 import { BoldStatement } from "@/components/ui/BoldStatement";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { client } from "@/sanity/lib/client";
-import { solutionsPageQuery, servicesQuery } from "@/sanity/lib/queries";
+import { getPageContent, mergePageContent } from "@/lib/content";
+import { FALLBACK_CORPORATE } from "@/lib/constants";
 
 export const revalidate = 3600;
 
-const FALLBACK_PAGE = {
-  heading: "Corporate Solutions",
-  strapline: "Smarter Reporting. Faster Decisions.",
-  intro:
-    "We help organizations automate reporting, improve visibility, optimize workflows, and make faster business decisions.",
-};
-
-const FALLBACK_SERVICES = [
-  {
-    title: "Report Automation",
-    slug: "report-automation",
-    shortDescription:
-      "Automate MIS, financial, operational, and management reports with speed and accuracy.",
-  },
-  {
-    title: "Data Visualization",
-    slug: "data-visualization",
-    shortDescription:
-      "Convert complex data into meaningful visual insights and interactive reports.",
-  },
-  {
-    title: "Spreadsheet Consulting",
-    slug: "spreadsheet-consulting",
-    shortDescription:
-      "Advanced Excel systems, automation, validation, and optimization solutions.",
-  },
-  {
-    title: "Dashboard Development",
-    slug: "dashboard-development",
-    shortDescription:
-      "Real-time dashboards for KPI tracking, performance monitoring, and business intelligence.",
-  },
-  {
-    title: "Process Automation",
-    slug: "process-automation",
-    shortDescription:
-      "Reduce manual work through intelligent workflow and process automation.",
-  },
-  {
-    title: "Corporate Training",
-    slug: "corporate-training",
-    shortDescription:
-      "Hands-on training in Excel, Power BI, analytics, dashboards, and automation tools.",
-  },
-];
-
 export default async function CorporateSolutionsPage() {
-  const pageData = await client
-    .fetch(solutionsPageQuery, { category: "corporate" })
-    .catch(() => null);
-
-  const servicesData = await client
-    .fetch(servicesQuery, { category: "corporate" })
-    .catch(() => null);
-
-  const page = pageData || FALLBACK_PAGE;
-  const services = servicesData && servicesData.length > 0 ? servicesData : FALLBACK_SERVICES;
+  const pageData = await getPageContent("corporate");
+  const page = mergePageContent(pageData, FALLBACK_CORPORATE);
+  const services = page.services && page.services.length > 0 ? page.services : FALLBACK_CORPORATE.services;
 
   const getIcon = (slug: string) => {
     switch (slug) {

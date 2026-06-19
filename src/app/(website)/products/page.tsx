@@ -7,53 +7,15 @@ import { Eyebrow } from "@/components/ui/Eyebrow";
 import { BoldStatement } from "@/components/ui/BoldStatement";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { client } from "@/sanity/lib/client";
-import { productsPageQuery, productsQuery } from "@/sanity/lib/queries";
+import { getPageContent, mergePageContent } from "@/lib/content";
+import { FALLBACK_PRODUCTS_PAGE } from "@/lib/constants";
 
 export const revalidate = 3600;
 
-const FALLBACK_PAGE = {
-  heading: "Our EdTech Products",
-  intro: "Automate Reporting. Elevate Institutions.",
-};
-
-const FALLBACK_PRODUCTS = [
-  {
-    name: "Grade Scope",
-    slug: "grade-scope",
-    tagline: "Educational Reporting & Analytics Platform",
-    description:
-      "Grade Scope automates student progress reports, placement reports, training reports, and institutional analytics.",
-    keyFeatures: [
-      "Automated Reporting",
-      "Student Progress Tracking",
-      "Placement Analytics",
-      "Performance Monitoring",
-      "Centralized Data Management",
-    ],
-  },
-  {
-    name: "Protrix",
-    slug: "protrix",
-    tagline: "Assignment & Assessment Automation Platform",
-    description:
-      "Protrix helps teachers generate, manage, and evaluate practical assignments while helping students practice and improve skills.",
-    keyFeatures: [
-      "Assignment Automation",
-      "Automated Evaluation",
-      "Excel-Based Learning",
-      "Practical Skill Assessment",
-      "Time-Saving Evaluation System",
-    ],
-  },
-];
-
 export default async function ProductsPage() {
-  const pageData = await client.fetch(productsPageQuery).catch(() => null);
-  const productsData = await client.fetch(productsQuery).catch(() => null);
-
-  const page = pageData || FALLBACK_PAGE;
-  const products = productsData && productsData.length > 0 ? productsData : FALLBACK_PRODUCTS;
+  const pageData = await getPageContent("products");
+  const page = mergePageContent(pageData, FALLBACK_PRODUCTS_PAGE);
+  const products = page.products && page.products.length > 0 ? page.products : FALLBACK_PRODUCTS_PAGE.products;
 
   return (
     <Section background="default" className="bg-white relative overflow-hidden">

@@ -7,7 +7,16 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { FALLBACK_HOME_PAGE, FALLBACK_SITE_SETTINGS } from "@/lib/constants";
+import { revalidatePath } from "next/cache";
+import {
+  FALLBACK_HOME_PAGE,
+  FALLBACK_SITE_SETTINGS,
+  FALLBACK_ABOUT,
+  FALLBACK_CORPORATE,
+  FALLBACK_EDUCATION,
+  FALLBACK_PRODUCTS_PAGE,
+  FALLBACK_CONTACT
+} from "@/lib/constants";
 
 // ---------------------------------------------------------------------------
 // Service-role admin client (write access)
@@ -32,6 +41,11 @@ function isAuthorized(req: NextRequest) {
 const FALLBACKS: Record<string, Record<string, unknown>> = {
   home: FALLBACK_HOME_PAGE as unknown as Record<string, unknown>,
   "site-settings": FALLBACK_SITE_SETTINGS as unknown as Record<string, unknown>,
+  about: FALLBACK_ABOUT as unknown as Record<string, unknown>,
+  corporate: FALLBACK_CORPORATE as unknown as Record<string, unknown>,
+  education: FALLBACK_EDUCATION as unknown as Record<string, unknown>,
+  products: FALLBACK_PRODUCTS_PAGE as unknown as Record<string, unknown>,
+  contact: FALLBACK_CONTACT as unknown as Record<string, unknown>,
 };
 
 // ---------------------------------------------------------------------------
@@ -98,6 +112,31 @@ export async function PUT(
 
   if (error)
     return NextResponse.json({ error: error.message }, { status: 500 });
+
+  // Revalidate corresponding page paths dynamically
+  try {
+    if (slug === "home") {
+      revalidatePath("/");
+    } else if (slug === "about") {
+      revalidatePath("/about");
+    } else if (slug === "corporate") {
+      revalidatePath("/corporate");
+      revalidatePath("/corporate/[slug]", "page");
+    } else if (slug === "education") {
+      revalidatePath("/education");
+      revalidatePath("/education/[slug]", "page");
+      revalidatePath("/training");
+    } else if (slug === "products") {
+      revalidatePath("/products");
+      revalidatePath("/products/[slug]", "page");
+    } else if (slug === "contact") {
+      revalidatePath("/contact");
+    } else if (slug === "site-settings") {
+      revalidatePath("/", "layout");
+    }
+  } catch (err) {
+    console.error("Revalidation failed for slug:", slug, err);
+  }
 
   return NextResponse.json({ success: true, slug });
 }

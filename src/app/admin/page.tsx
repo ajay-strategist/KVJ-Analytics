@@ -43,9 +43,11 @@ export default function AdminLoginPage() {
     <div className="min-h-screen bg-surface flex flex-col items-center justify-center p-4">
       <div className="max-w-md w-full bg-white rounded-card border border-line p-8 shadow-soft">
         <div className="text-center mb-8">
-          <div className="w-12 h-12 rounded-lg signature-gradient text-white flex items-center justify-center font-bold text-xl mx-auto mb-4 shadow-sm">
-            K
-          </div>
+          <img
+            src="/logo.png"
+            alt="KVJ Analytics"
+            className="h-12 w-auto object-contain mx-auto mb-4"
+          />
           <h2 className="text-2xl font-bold font-display text-ink">
             Admin Console
           </h2>
