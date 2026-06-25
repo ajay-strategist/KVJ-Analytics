@@ -3,10 +3,10 @@
 import { useEffect, useRef } from "react";
 
 /**
- * A highly interactive, futuristic node network background using HTML5 Canvas.
+ * A highly interactive, futuristic WebGL-style node network background using HTML5 Canvas.
  * Particles float dynamically, connect when close, and react to cursor movement
- * by drawing golden connector lines and responding to soft attraction forces.
- * Stylized in deep navy blue and glowing gold.
+ * by drawing neon cyan connector lines and responding to soft attraction forces.
+ * Optimized for dark theme with neon cyan and electric blue styling.
  */
 export function HeroCanvas() {
   const ref = useRef<HTMLCanvasElement>(null);
@@ -22,9 +22,9 @@ export function HeroCanvas() {
       window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 
     // Node counts and properties
-    const nodeCount = 90;
+    const nodeCount = 95;
     const maxDistance = 110;
-    const mouseRadius = 160;
+    const mouseRadius = 180;
 
     interface Node {
       x: number;
@@ -46,15 +46,15 @@ export function HeroCanvas() {
       for (let i = 0; i < nodeCount; i++) {
         const x = Math.random() * width;
         const y = Math.random() * height;
-        // Random golden or navy/slate colored nodes
-        const isGold = Math.random() > 0.4;
-        const color = isGold ? "rgba(212, 175, 55, 0.8)" : "rgba(10, 17, 40, 0.4)";
+        // Random neon cyan or electric blue nodes
+        const isCyan = Math.random() > 0.45;
+        const color = isCyan ? "rgba(0, 240, 255, 0.85)" : "rgba(0, 114, 255, 0.75)";
         nodes.push({
           x,
           y,
-          vx: (Math.random() - 0.5) * (reduce ? 0.15 : 0.6),
-          vy: (Math.random() - 0.5) * (reduce ? 0.15 : 0.6),
-          radius: Math.random() * 2 + (isGold ? 1.5 : 1),
+          vx: (Math.random() - 0.5) * (reduce ? 0.12 : 0.7),
+          vy: (Math.random() - 0.5) * (reduce ? 0.12 : 0.7),
+          radius: Math.random() * 2.2 + (isCyan ? 1.5 : 1),
           color,
           baseX: x,
           baseY: y,
@@ -127,8 +127,8 @@ export function HeroCanvas() {
           if (dist < mouseRadius) {
             // Calculate pull force
             const force = (mouseRadius - dist) / mouseRadius;
-            const pullX = (dx / dist) * force * 0.9;
-            const pullY = (dy / dist) * force * 0.9;
+            const pullX = (dx / dist) * force * 1.1;
+            const pullY = (dy / dist) * force * 1.1;
             n1.x += pullX;
             n1.y += pullY;
           }
@@ -142,13 +142,15 @@ export function HeroCanvas() {
           const dist = Math.sqrt(dx * dx + dy * dy);
 
           if (dist < maxDistance) {
-            const alpha = (1 - dist / maxDistance) * 0.18;
+            const alpha = (1 - dist / maxDistance) * 0.15;
             ctx.beginPath();
             ctx.moveTo(n1.x, n1.y);
             ctx.lineTo(n2.x, n2.y);
-            // Draw in soft navy outline
-            ctx.strokeStyle = `rgba(10, 17, 40, ${alpha})`;
-            ctx.lineWidth = 0.55;
+            // Draw in soft cyan/blue neon outline
+            ctx.strokeStyle = n1.color.includes("240") 
+              ? `rgba(0, 240, 255, ${alpha})`
+              : `rgba(0, 114, 255, ${alpha})`;
+            ctx.lineWidth = 0.5;
             ctx.stroke();
           }
         }
@@ -159,12 +161,12 @@ export function HeroCanvas() {
           const dy = mouse.y - n1.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
           if (dist < mouseRadius) {
-            const alpha = (1 - dist / mouseRadius) * 0.35;
+            const alpha = (1 - dist / mouseRadius) * 0.38;
             ctx.beginPath();
             ctx.moveTo(n1.x, n1.y);
             ctx.lineTo(mouse.x, mouse.y);
-            // Draw glowing gold connection to cursor
-            ctx.strokeStyle = `rgba(212, 175, 55, ${alpha})`;
+            // Draw glowing neon cyan connection to cursor
+            ctx.strokeStyle = `rgba(0, 240, 255, ${alpha})`;
             ctx.lineWidth = 0.85;
             ctx.stroke();
           }
@@ -176,11 +178,13 @@ export function HeroCanvas() {
         ctx.fillStyle = n1.color;
         ctx.fill();
         
-        // Add subtle gold aura on gold nodes
-        if (n1.color.includes("212") && !reduce) {
+        // Add subtle neon cyan/blue aura on nodes
+        if (!reduce) {
           ctx.beginPath();
           ctx.arc(n1.x, n1.y, n1.radius * 2.2, 0, Math.PI * 2);
-          ctx.fillStyle = "rgba(212, 175, 55, 0.08)";
+          ctx.fillStyle = n1.color.includes("240")
+            ? "rgba(0, 240, 255, 0.06)"
+            : "rgba(0, 114, 255, 0.05)";
           ctx.fill();
         }
       }

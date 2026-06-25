@@ -15,6 +15,7 @@ import { RevealText } from "@/components/ui/RevealText";
 import { HeroCanvas } from "@/components/ui/HeroCanvas";
 import { HeroVisual } from "@/components/ui/HeroVisual";
 import { CountUp } from "@/components/ui/CountUp";
+import { ServiceCard } from "@/components/ui/ServiceCard";
 import { client } from "@/sanity/lib/client";
 import { homePageQuery, clientsQuery } from "@/sanity/lib/queries";
 import { FALLBACK_HOME_PAGE } from "@/lib/constants";
@@ -146,9 +147,9 @@ export default async function HomePage() {
             <BoldStatement variant="h1">Two audiences. One standard of engineering.</BoldStatement>
           </Reveal>
 
-          <SolutionGrid label="Corporate Solutions" href="/corporate" items={corporateSolutions} icons={CORP_ICONS} accent="corporate" />
+          <SolutionGrid label="Corporate Solutions" href="/corporate" items={corporateSolutions} accent="corporate" />
           <div className="mt-24 md:mt-32">
-            <SolutionGrid label="Educational Solutions" href="/education" items={educationalSolutions} icons={EDU_ICONS} accent="education" />
+            <SolutionGrid label="Educational Solutions" href="/education" items={educationalSolutions} accent="education" />
           </div>
         </Container>
       </Section>
@@ -187,21 +188,14 @@ function SolutionGrid({
   label,
   href,
   items,
-  icons,
   accent,
 }: {
   label: string;
   href: string;
   items: { title: string }[];
-  icons: React.ComponentType<{ className?: string }>[];
   accent: "corporate" | "education";
 }) {
   const isEdu = accent === "education";
-  const accentText = isEdu ? "text-brand" : "text-navy";
-  const tileBg = isEdu ? "bg-brand/10 border-brand/20 group-hover:bg-brand/20" : "bg-navy/5 border-navy/15 group-hover:bg-navy/10";
-  const hoverTitle = isEdu ? "group-hover:text-brand" : "group-hover:text-navy";
-  const hoverBorder = isEdu ? "hover:border-brand/45" : "hover:border-navy/30";
-  const tag = isEdu ? "Educational service" : "Corporate service";
 
   return (
     <div>
@@ -215,34 +209,43 @@ function SolutionGrid({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
         {items.map((item, idx) => {
-          const Icon = icons[idx % icons.length];
           const desc = SOLUTION_DESC[item.title] || "Tailored solutions engineered around measurable business outcomes.";
+          
+          // Determine the most appropriate premium iconName based on the title
+          let iconName: "visualization" | "automation" | "education" = "visualization";
+          const titleLower = item.title.toLowerCase();
+          
+          if (isEdu) {
+            if (titleLower.includes("analytics") || titleLower.includes("platform")) {
+              iconName = "visualization";
+            } else {
+              iconName = "education";
+            }
+          } else {
+            if (
+              titleLower.includes("automation") ||
+              titleLower.includes("spreadsheet") ||
+              titleLower.includes("excel") ||
+              titleLower.includes("report")
+            ) {
+              iconName = "automation";
+            } else if (titleLower.includes("training") || titleLower.includes("certification")) {
+              iconName = "education";
+            } else {
+              iconName = idx % 2 === 0 ? "visualization" : "automation";
+            }
+          }
+
           return (
             <Reveal key={idx} delay={(idx % 3) * 90}>
-              <Link
+              <ServiceCard
+                title={item.title}
+                description={desc}
                 href={href}
-                className={`card-premium group relative flex h-full min-h-[250px] flex-col overflow-hidden p-7 md:p-8 ${hoverBorder}`}
-              >
-                {/* hover glow */}
-                <div className={`pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full opacity-0 blur-3xl transition-opacity duration-500 group-hover:opacity-100 ${isEdu ? "bg-education/15" : "bg-brand/15"}`} />
-
-                <div className={`relative grid h-13 w-13 place-items-center rounded-2xl border transition-all duration-300 ${tileBg}`} style={{ width: 52, height: 52 }}>
-                  <Icon className={`h-6 w-6 ${accentText} icon-anim`} />
-                </div>
-
-                <p className={`relative mt-6 text-[10px] uppercase tracking-[0.2em] font-semibold ${accentText}`}>{tag}</p>
-                <h4 className={`relative mt-2 text-[19px] md:text-[21px] font-medium text-ink leading-snug transition-colors duration-300 ${hoverTitle}`}>
-                  {item.title}
-                </h4>
-                <p className="relative mt-3 text-[14px] font-light leading-relaxed text-slate">
-                  {desc}
-                </p>
-
-                <div className={`relative mt-auto pt-6 inline-flex items-center gap-2 text-[14px] font-medium ${accentText}`}>
-                  Explore
-                  <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1.5" />
-                </div>
-              </Link>
+                iconName={iconName}
+                tag={isEdu ? "Academic Solution" : "Corporate Solution"}
+                accentColor={isEdu ? "cyan" : "blue"}
+              />
             </Reveal>
           );
         })}

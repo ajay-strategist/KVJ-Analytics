@@ -38,19 +38,56 @@ export default async function ContactPage() {
         {/* Unified two-panel card */}
         <Reveal className="max-w-6xl mx-auto rounded-card overflow-hidden shadow-xl border border-line bg-card">
           <div className="grid lg:grid-cols-12">
-            {/* Info panel (navy & gold glow) */}
+            {/* Info panel (dark premium & cyan/blue radar) */}
             <div
-              className="lg:col-span-5 relative overflow-hidden p-8 sm:p-10 text-white flex flex-col"
-              style={{ background: "linear-gradient(150deg, #0A1128 0%, #121A36 55%, #1F2A4E 130%)" }}
+              className="lg:col-span-5 relative overflow-hidden p-8 sm:p-10 text-white flex flex-col min-h-[500px]"
+              style={{ background: "linear-gradient(150deg, #0A0A0E 0%, #12121A 60%, #181824 100%)" }}
             >
-              <div className="absolute -top-20 -right-16 w-64 h-64 rounded-full blur-3xl pointer-events-none animate-blob" style={{ background: "rgba(212,175,55,0.22)" }} />
-              <div className="absolute -bottom-24 -left-12 w-64 h-64 rounded-full blur-3xl pointer-events-none animate-blob" style={{ background: "rgba(212,175,55,0.12)", animationDelay: "3s" }} />
+              {/* Glowing backlights */}
+              <div className="absolute -top-20 -right-16 w-64 h-64 rounded-full blur-3xl pointer-events-none animate-blob" style={{ background: "rgba(0, 240, 255, 0.15)" }} />
+              <div className="absolute -bottom-24 -left-12 w-64 h-64 rounded-full blur-3xl pointer-events-none animate-blob" style={{ background: "rgba(0, 114, 255, 0.1)", animationDelay: "3s" }} />
+
+              {/* Pulsing Radar Connectivity Map Overlay */}
+              <svg viewBox="0 0 400 400" className="absolute inset-0 w-full h-full opacity-20 pointer-events-none z-0">
+                <defs>
+                  <radialGradient id="radarGlow" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stopColor="#00F0FF" stopOpacity="0.25" />
+                    <stop offset="100%" stopColor="#00F0FF" stopOpacity="0" />
+                  </radialGradient>
+                </defs>
+                
+                {/* Concentric Pulsing Waves */}
+                <circle cx="200" cy="200" r="40" fill="url(#radarGlow)" stroke="rgba(0, 240, 255, 0.2)" strokeWidth="1" className="animate-[ping_3.5s_linear_infinite]" />
+                <circle cx="200" cy="200" r="90" fill="none" stroke="rgba(0, 240, 255, 0.12)" strokeWidth="1" className="animate-[ping_5s_linear_infinite]" />
+                <circle cx="200" cy="200" r="140" fill="none" stroke="rgba(0, 114, 255, 0.08)" strokeWidth="1" className="animate-[ping_6.5s_linear_infinite]" />
+                
+                {/* Grid rings */}
+                <circle cx="200" cy="200" r="50" fill="none" stroke="rgba(0, 240, 255, 0.06)" strokeWidth="0.8" />
+                <circle cx="200" cy="200" r="100" fill="none" stroke="rgba(0, 240, 255, 0.06)" strokeWidth="0.8" />
+                <circle cx="200" cy="200" r="150" fill="none" stroke="rgba(0, 240, 255, 0.04)" strokeWidth="0.8" />
+                
+                {/* Sweep line */}
+                <line x1="200" y1="200" x2="200" y2="40" stroke="rgba(0, 240, 255, 0.35)" strokeWidth="1.2" className="origin-[200px_200px] animate-[spin_12s_linear_infinite]" />
+                
+                {/* Blinking geographic connectivity points */}
+                <circle cx="120" cy="150" r="3" fill="#00F0FF" className="animate-ping" />
+                <circle cx="120" cy="150" r="2" fill="#00F0FF" />
+                
+                <circle cx="280" cy="180" r="3" fill="#0072FF" className="animate-[ping_2s_linear_infinite_0.5s]" />
+                <circle cx="280" cy="180" r="2" fill="#0072FF" />
+
+                <circle cx="220" cy="290" r="3" fill="#00F0FF" className="animate-[ping_4s_linear_infinite_1.2s]" />
+                <circle cx="220" cy="290" r="2" fill="#00F0FF" />
+                
+                <line x1="50" y1="200" x2="350" y2="200" stroke="rgba(0, 240, 255, 0.04)" strokeWidth="1" />
+                <line x1="200" y1="50" x2="200" y2="350" stroke="rgba(0, 240, 255, 0.04)" strokeWidth="1" />
+              </svg>
 
               <div className="relative z-10 flex flex-col h-full">
                 {/* Brand block */}
                 <div className="mb-8">
-                  <h2 className="text-2xl font-bold font-display mb-1.5">KVJ Analytics</h2>
-                  <p className="text-xs font-bold uppercase tracking-[0.15em] text-white/55">
+                  <h2 className="text-2xl font-bold font-display mb-1.5 text-white">KVJ Analytics</h2>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-brand">
                     Analytics | Automation | Training | Educational Technology
                   </p>
                 </div>
@@ -58,34 +95,34 @@ export default async function ContactPage() {
                 {/* Details */}
                 <ul className="space-y-5 mb-8">
                   <li className="flex items-start gap-4">
-                    <span className="grid place-items-center h-11 w-11 rounded-2xl bg-white/10 shrink-0">
+                    <span className="grid place-items-center h-11 w-11 rounded-2xl bg-white/5 border border-white/10 shrink-0 text-brand">
                       <MapPin className="w-5 h-5" />
                     </span>
                     <div>
-                      <div className="text-xs font-bold uppercase tracking-wider text-white/55 mb-1">Office</div>
-                      <p className="text-sm text-white/85 leading-relaxed">{contact.address}</p>
+                      <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Office</div>
+                      <p className="text-sm text-slate-350 leading-relaxed">{contact.address}</p>
                     </div>
                   </li>
                   <li className="flex items-start gap-4">
-                    <span className="grid place-items-center h-11 w-11 rounded-2xl bg-white/10 shrink-0">
+                    <span className="grid place-items-center h-11 w-11 rounded-2xl bg-white/5 border border-white/10 shrink-0 text-brand">
                       <Mail className="w-5 h-5" />
                     </span>
                     <div className="min-w-0">
-                      <div className="text-xs font-bold uppercase tracking-wider text-white/55 mb-1">Email</div>
-                      <a href={`mailto:${contact.email}`} className="text-sm font-semibold text-white hover:text-cta transition-colors break-all">
+                      <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Email</div>
+                      <a href={`mailto:${contact.email}`} className="text-sm font-semibold text-white hover:text-brand transition-colors break-all">
                         {contact.email}
                       </a>
                     </div>
                   </li>
                   <li className="flex items-start gap-4">
-                    <span className="grid place-items-center h-11 w-11 rounded-2xl bg-white/10 shrink-0">
+                    <span className="grid place-items-center h-11 w-11 rounded-2xl bg-white/5 border border-white/10 shrink-0 text-brand">
                       <Phone className="w-5 h-5" />
                     </span>
                     <div>
-                      <div className="text-xs font-bold uppercase tracking-wider text-white/55 mb-1">Phone</div>
+                      <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Phone</div>
                       <div className="flex flex-col gap-0.5">
                         {contact.phones.map((phone: string, idx: number) => (
-                          <a key={idx} href={`tel:${phone}`} className="text-sm font-semibold text-white hover:text-cta transition-colors">
+                          <a key={idx} href={`tel:${phone}`} className="text-sm font-semibold text-white hover:text-brand transition-colors">
                             {phone}
                           </a>
                         ))}
@@ -101,7 +138,7 @@ export default async function ContactPage() {
                   )}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-auto inline-flex items-center justify-center gap-2.5 px-5 py-3.5 rounded-btn bg-success hover:bg-success/90 text-white font-bold text-sm shadow-md transition-all duration-200 hover:-translate-y-0.5"
+                  className="mt-auto inline-flex items-center justify-center gap-2.5 px-5 py-3.5 rounded-btn bg-[#25D366] hover:bg-[#25D366]/90 text-white font-bold text-sm shadow-md transition-all duration-200 hover:-translate-y-0.5"
                 >
                   <MessageSquare className="w-4.5 h-4.5" />
                   Chat with us on WhatsApp

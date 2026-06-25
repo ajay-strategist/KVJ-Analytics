@@ -53,7 +53,7 @@ export function Header({ siteSettings = FALLBACK_SITE_SETTINGS }: HeaderProps) {
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] w-full border-b ${
         overHero
           ? "py-5 bg-transparent border-transparent"
-          : "py-3 bg-white/85 backdrop-blur-xl border-line shadow-[0_8px_30px_rgba(20,18,40,0.08)]"
+          : "py-3 bg-[#0A0A0E]/85 backdrop-blur-xl border-line shadow-[0_8px_30px_rgba(0,0,0,0.5)]"
       }`}
     >
       <div className="w-full pl-3 pr-4 sm:pl-4 sm:pr-6 lg:pr-8 flex items-center justify-between">
@@ -96,8 +96,8 @@ export function Header({ siteSettings = FALLBACK_SITE_SETTINGS }: HeaderProps) {
             href={`tel:${contact.phones[0]}`}
             className={`hidden xl:flex items-center whitespace-nowrap text-[13px] font-medium transition-all duration-200 px-4 py-2 rounded-full border ${
               overHero
-                ? "text-slate hover:text-ink border-line hover:border-brand/40 bg-white/40"
-                : "text-slate hover:text-ink border-line hover:border-brand/40 bg-surface"
+                ? "text-slate hover:text-ink border-line hover:border-brand/40 bg-white/5"
+                : "text-slate hover:text-ink border-line hover:border-brand/40 bg-[#12121A]/80"
             }`}
           >
             <PhoneCall className="w-3.5 h-3.5 mr-2 text-brand flex-shrink-0" />
@@ -111,7 +111,7 @@ export function Header({ siteSettings = FALLBACK_SITE_SETTINGS }: HeaderProps) {
         {/* Mobile Menu Button */}
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="lg:hidden p-2 rounded-lg focus:outline-none transition-colors text-ink hover:bg-surface"
+          className="lg:hidden p-2 rounded-lg focus:outline-none transition-colors text-ink hover:bg-white/5"
           aria-label="Toggle navigation menu"
         >
           {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -120,7 +120,7 @@ export function Header({ siteSettings = FALLBACK_SITE_SETTINGS }: HeaderProps) {
 
       {/* Mobile Menu Panel */}
       {mobileMenuOpen && (
-        <div className="lg:hidden absolute top-full left-0 right-0 bg-white/95 backdrop-blur-xl border-b border-line shadow-lg animate-fade-in py-6 px-4 space-y-4 max-h-[85vh] overflow-y-auto">
+        <div className="lg:hidden absolute top-full left-0 right-0 bg-[#0A0A0E]/95 backdrop-blur-xl border-b border-line shadow-lg animate-fade-in py-6 px-4 space-y-4 max-h-[85vh] overflow-y-auto">
           <div className="flex flex-col space-y-2">
             {navItems.map((item, idx) => {
               const isActive = pathname === item.href;
@@ -130,7 +130,7 @@ export function Header({ siteSettings = FALLBACK_SITE_SETTINGS }: HeaderProps) {
                   href={item.href}
                   onClick={() => setMobileMenuOpen(false)}
                   className={`px-4 py-3 rounded-xl text-base font-medium transition-all ${
-                    isActive ? "text-brand bg-brand/5" : "text-slate hover:bg-surface hover:text-ink"
+                    isActive ? "text-brand bg-brand/10" : "text-slate hover:bg-white/5 hover:text-ink"
                   }`}
                 >
                   {item.label}
@@ -141,7 +141,7 @@ export function Header({ siteSettings = FALLBACK_SITE_SETTINGS }: HeaderProps) {
           <div className="border-t border-line pt-4 flex flex-col space-y-3">
             <a
               href={`tel:${contact.phones[0]}`}
-              className="flex items-center justify-center w-full px-4 py-3 rounded-full bg-surface text-sm font-medium text-ink border border-line"
+              className="flex items-center justify-center w-full px-4 py-3 rounded-full bg-[#12121A] text-sm font-medium text-ink border border-line hover:bg-white/5 transition-all duration-200"
             >
               <PhoneCall className="w-4 h-4 mr-2 text-brand" />
               Call Us

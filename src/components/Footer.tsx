@@ -15,7 +15,7 @@ export function Footer({ siteSettings = FALLBACK_SITE_SETTINGS }: FooterProps) {
   const columns = siteSettings.footerColumns || FALLBACK_SITE_SETTINGS.footerColumns;
 
   return (
-    <footer className="bg-white/60 backdrop-blur-xl text-ink pt-16 pb-8 border-t border-line relative overflow-hidden">
+    <footer className="bg-[#0A0A0E]/80 backdrop-blur-xl text-ink pt-16 pb-8 border-t border-line relative overflow-hidden">
       {/* Ambient backgrounds */}
       <div className="absolute top-0 right-0 w-80 h-80 bg-brand/8 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-80 h-80 bg-education/8 rounded-full blur-3xl pointer-events-none" />

@@ -7,6 +7,7 @@ import { BoldStatement } from "@/components/ui/BoldStatement";
 import { Button } from "@/components/ui/Button";
 import { Reveal } from "@/components/ui/Reveal";
 import { RevealText } from "@/components/ui/RevealText";
+import { ServiceCard } from "@/components/ui/ServiceCard";
 import { getPageContent, mergePageContent } from "@/lib/content";
 import { FALLBACK_EDUCATION } from "@/lib/constants";
 
@@ -54,31 +55,17 @@ export default async function EducationalSolutionsPage() {
         <Container className="relative z-10">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-7 max-w-5xl mx-auto">
             {services.map((service: any, idx: number) => {
-              const Icon = getIcon(service.slug);
+              const iconName = service.slug === "academic-analytics-solutions" ? "visualization" : "education";
               return (
                 <Reveal key={idx} delay={(idx % 2) * 90}>
-                  <Link
+                  <ServiceCard
+                    title={service.title}
+                    description={service.shortDescription}
                     href={`/education/${service.slug}`}
-                    className="card-premium group relative flex h-full flex-col p-7 md:p-8 overflow-hidden hover:border-education/45"
-                  >
-                    <div className="pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full bg-education/20 opacity-0 blur-3xl transition-opacity duration-500 group-hover:opacity-100" />
-                    <div className="relative mb-6 flex items-center justify-between">
-                      <span className="grid h-12 w-12 place-items-center rounded-2xl bg-education/10 border border-education/20 text-education transition-all duration-300 group-hover:bg-education/20">
-                        <Icon className="h-5 w-5 icon-anim" />
-                      </span>
-                      <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted">Academic Service</span>
-                    </div>
-                    <h3 className="relative text-[20px] md:text-[22px] font-medium text-ink mb-3 transition-colors duration-300 group-hover:text-education">
-                      {service.title}
-                    </h3>
-                    <p className="relative text-[14px] text-slate font-light leading-relaxed mb-6">
-                      {service.shortDescription}
-                    </p>
-                    <div className="relative mt-auto inline-flex items-center gap-2 text-[14px] font-medium text-education">
-                      Read Program Details
-                      <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1.5" />
-                    </div>
-                  </Link>
+                    iconName={iconName}
+                    tag="Academic Solution"
+                    accentColor={idx % 2 === 0 ? "cyan" : "blue"}
+                  />
                 </Reveal>
               );
             })}

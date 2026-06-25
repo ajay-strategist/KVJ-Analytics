@@ -20,6 +20,7 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
     message: "",
   });
 
+  const [focusedField, setFocusedField] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
@@ -119,10 +120,8 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        <div>
-          <label htmlFor="name" className="block text-xs font-bold uppercase tracking-wider text-slate mb-2">
-            Your Name *
-          </label>
+        {/* Name input with floating label */}
+        <div className="relative">
           <input
             type="text"
             id="name"
@@ -130,14 +129,24 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
             required
             value={formData.name}
             onChange={handleChange}
-            placeholder="e.g. John Doe"
-            className="w-full px-4 py-3 rounded-input border border-line bg-surface focus:bg-white focus:border-brand/60 text-ink text-sm transition-all font-medium placeholder:text-slate/40"
+            onFocus={() => setFocusedField("name")}
+            onBlur={() => setFocusedField("")}
+            className="peer w-full px-4 pt-6 pb-2 rounded-input border border-white/5 bg-[#12121A]/50 focus:bg-[#12121A]/80 focus:border-brand focus:ring-1 focus:ring-brand text-white text-sm transition-all outline-none"
           />
-        </div>
-        <div>
-          <label htmlFor="organization" className="block text-xs font-bold uppercase tracking-wider text-slate mb-2">
-            Organization Name *
+          <label
+            htmlFor="name"
+            className={`absolute left-4 top-4 text-xs font-bold uppercase tracking-wider transition-all pointer-events-none origin-left ${
+              focusedField === "name" || formData.name
+                ? "transform -translate-y-2.5 scale-75 text-brand"
+                : "transform translate-y-0 scale-100 text-slate-400"
+            }`}
+          >
+            Your Name *
           </label>
+        </div>
+
+        {/* Organization input with floating label */}
+        <div className="relative">
           <input
             type="text"
             id="organization"
@@ -145,17 +154,26 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
             required
             value={formData.organization}
             onChange={handleChange}
-            placeholder="e.g. Acme Corp"
-            className="w-full px-4 py-3 rounded-input border border-line bg-surface focus:bg-white focus:border-brand/60 text-ink text-sm transition-all font-medium placeholder:text-slate/40"
+            onFocus={() => setFocusedField("organization")}
+            onBlur={() => setFocusedField("")}
+            className="peer w-full px-4 pt-6 pb-2 rounded-input border border-white/5 bg-[#12121A]/50 focus:bg-[#12121A]/80 focus:border-brand focus:ring-1 focus:ring-brand text-white text-sm transition-all outline-none"
           />
+          <label
+            htmlFor="organization"
+            className={`absolute left-4 top-4 text-xs font-bold uppercase tracking-wider transition-all pointer-events-none origin-left ${
+              focusedField === "organization" || formData.organization
+                ? "transform -translate-y-2.5 scale-75 text-brand"
+                : "transform translate-y-0 scale-100 text-slate-400"
+            }`}
+          >
+            Organization Name *
+          </label>
         </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        <div>
-          <label htmlFor="email" className="block text-xs font-bold uppercase tracking-wider text-slate mb-2">
-            Email Address *
-          </label>
+        {/* Email input with floating label */}
+        <div className="relative">
           <input
             type="email"
             id="email"
@@ -163,14 +181,24 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
             required
             value={formData.email}
             onChange={handleChange}
-            placeholder="e.g. john@company.com"
-            className="w-full px-4 py-3 rounded-input border border-line bg-surface focus:bg-white focus:border-brand/60 text-ink text-sm transition-all font-medium placeholder:text-slate/40"
+            onFocus={() => setFocusedField("email")}
+            onBlur={() => setFocusedField("")}
+            className="peer w-full px-4 pt-6 pb-2 rounded-input border border-white/5 bg-[#12121A]/50 focus:bg-[#12121A]/80 focus:border-brand focus:ring-1 focus:ring-brand text-white text-sm transition-all outline-none"
           />
-        </div>
-        <div>
-          <label htmlFor="phone" className="block text-xs font-bold uppercase tracking-wider text-slate mb-2">
-            Phone Number *
+          <label
+            htmlFor="email"
+            className={`absolute left-4 top-4 text-xs font-bold uppercase tracking-wider transition-all pointer-events-none origin-left ${
+              focusedField === "email" || formData.email
+                ? "transform -translate-y-2.5 scale-75 text-brand"
+                : "transform translate-y-0 scale-100 text-slate-400"
+            }`}
+          >
+            Email Address *
           </label>
+        </div>
+
+        {/* Phone input with floating label */}
+        <div className="relative">
           <input
             type="tel"
             id="phone"
@@ -178,40 +206,64 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
             required
             value={formData.phone}
             onChange={handleChange}
-            placeholder="e.g. 9961813730"
-            className="w-full px-4 py-3 rounded-input border border-line bg-surface focus:bg-white focus:border-brand/60 text-ink text-sm transition-all font-medium placeholder:text-slate/40"
+            onFocus={() => setFocusedField("phone")}
+            onBlur={() => setFocusedField("")}
+            className="peer w-full px-4 pt-6 pb-2 rounded-input border border-white/5 bg-[#12121A]/50 focus:bg-[#12121A]/80 focus:border-brand focus:ring-1 focus:ring-brand text-white text-sm transition-all outline-none"
           />
+          <label
+            htmlFor="phone"
+            className={`absolute left-4 top-4 text-xs font-bold uppercase tracking-wider transition-all pointer-events-none origin-left ${
+              focusedField === "phone" || formData.phone
+                ? "transform -translate-y-2.5 scale-75 text-brand"
+                : "transform translate-y-0 scale-100 text-slate-400"
+            }`}
+          >
+            Phone Number *
+          </label>
         </div>
       </div>
 
-      <div>
-        <label htmlFor="serviceInterest" className="block text-xs font-bold uppercase tracking-wider text-slate mb-2">
-          Service Interested In *
-        </label>
+      {/* Select input with floating label */}
+      <div className="relative">
         <select
           id="serviceInterest"
           name="serviceInterest"
           required
           value={formData.serviceInterest}
           onChange={handleChange}
-          className="w-full px-4 py-3 rounded-input border border-line bg-surface focus:bg-white focus:border-brand/60 text-ink text-sm transition-all font-medium"
+          onFocus={() => setFocusedField("serviceInterest")}
+          onBlur={() => setFocusedField("")}
+          className="peer w-full px-4 pt-6 pb-2 rounded-input border border-white/5 bg-[#12121A]/50 focus:bg-[#12121A]/80 focus:border-brand focus:ring-1 focus:ring-brand text-white text-sm transition-all outline-none appearance-none cursor-pointer"
         >
-          <option value="">-- Select Interest Category --</option>
+          <option value="" className="bg-[#0A0A0E] text-slate-500">-- Select Interest Category --</option>
           {inquiryAreas.map((area, idx) => (
-            <option key={idx} value={area}>
+            <option key={idx} value={area} className="bg-[#0A0A0E] text-white">
               {area}
             </option>
           ))}
           {formData.serviceInterest && !inquiryAreas.includes(formData.serviceInterest) && (
-            <option value={formData.serviceInterest}>{formData.serviceInterest}</option>
+            <option value={formData.serviceInterest} className="bg-[#0A0A0E] text-white">{formData.serviceInterest}</option>
           )}
         </select>
+        <label
+          htmlFor="serviceInterest"
+          className={`absolute left-4 top-4 text-xs font-bold uppercase tracking-wider transition-all pointer-events-none origin-left ${
+            focusedField === "serviceInterest" || formData.serviceInterest
+              ? "transform -translate-y-2.5 scale-75 text-brand"
+              : "transform translate-y-0 scale-100 text-slate-400"
+          }`}
+        >
+          Service Interested In *
+        </label>
+        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none border-l border-white/10 pl-3">
+          <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </div>
       </div>
 
-      <div>
-        <label htmlFor="message" className="block text-xs font-bold uppercase tracking-wider text-slate mb-2">
-          How can we help you? *
-        </label>
+      {/* Message textarea with floating label */}
+      <div className="relative">
         <textarea
           id="message"
           name="message"
@@ -219,14 +271,26 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
           rows={4}
           value={formData.message}
           onChange={handleChange}
-          placeholder="Briefly describe your requirements or the systems you'd like audited/automated..."
-          className="w-full px-4 py-3 rounded-input border border-line bg-surface focus:bg-white focus:border-brand/60 text-ink text-sm transition-all resize-y font-medium placeholder:text-slate/40"
+          onFocus={() => setFocusedField("message")}
+          onBlur={() => setFocusedField("")}
+          className="peer w-full px-4 pt-6 pb-2 rounded-input border border-white/5 bg-[#12121A]/50 focus:bg-[#12121A]/80 focus:border-brand focus:ring-1 focus:ring-brand text-white text-sm transition-all outline-none resize-none"
         />
+        <label
+          htmlFor="message"
+          className={`absolute left-4 top-4 text-xs font-bold uppercase tracking-wider transition-all pointer-events-none origin-left ${
+            focusedField === "message" || formData.message
+              ? "transform -translate-y-2.5 scale-75 text-brand"
+              : "transform translate-y-0 scale-100 text-slate-400"
+          }`}
+        >
+          How can we help you? *
+        </label>
       </div>
 
       <div className="flex justify-end pt-2">
         <Button
           type="submit"
+          variant="accent"
           disabled={loading}
           className="w-full sm:w-auto px-8 py-4 flex items-center justify-center space-x-2"
         >
@@ -238,7 +302,7 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
           ) : (
             <>
               <Send className="w-4 h-4 animate-[bounce_1.5s_infinite]" />
-              <span>Send Request</span>
+              <span>Request Demo</span>
             </>
           )}
         </Button>
