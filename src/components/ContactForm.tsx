@@ -58,7 +58,6 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
     setSuccess(false);
 
     try {
-      // Capture UTM params from session/localStorage if available (Phase 4), else standard
       const response = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -95,12 +94,12 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
 
   if (success) {
     return (
-      <div className="bg-success/5 border border-success/30 rounded-card p-8 text-center flex flex-col items-center w-full shadow-sm animate-fade-up">
-        <CheckCircle2 className="w-16 h-16 text-success mb-6" />
-        <h3 className="text-2xl font-bold font-display text-ink mb-3">
+      <div className="bg-[#0072FF]/5 border border-[#0072FF]/30 rounded-[24px] p-8 text-center flex flex-col items-center w-full shadow-sm animate-fade-up">
+        <CheckCircle2 className="w-16 h-16 text-brand mb-6" />
+        <h3 className="text-2xl font-bold font-display text-white mb-3">
           Message Sent Successfully!
         </h3>
-        <p className="text-base text-slate leading-relaxed mb-6">
+        <p className="text-base text-slate-400 leading-relaxed mb-6 font-light">
           Thank you for contacting KVJ Analytics. Our consulting team will review your interest and reach back to you within 24 hours.
         </p>
         <Button variant="secondary" onClick={() => setSuccess(false)}>
@@ -110,8 +109,27 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
     );
   }
 
+  const inputClasses = "peer w-full px-0 pt-6 pb-2 rounded-none border-none border-b border-white/10 bg-transparent focus:border-b-brand text-white text-sm transition-all outline-none";
+
   return (
-    <form onSubmit={handleSubmit} className="w-full space-y-6">
+    <form onSubmit={handleSubmit} className="w-full space-y-8 relative">
+      {/* Styles for breathing button and focus tracers */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes blue-breath {
+          0%, 100% {
+            box-shadow: 0 0 12px rgba(0, 114, 255, 0.45), 0 0 5px rgba(0, 240, 255, 0.25);
+            border-color: rgba(0, 240, 255, 0.4);
+          }
+          50% {
+            box-shadow: 0 0 28px rgba(0, 114, 255, 0.85), 0 0 15px rgba(0, 240, 255, 0.5);
+            border-color: #00F0FF;
+          }
+        }
+        .btn-breathing-neon-blue {
+          animation: blue-breath 3s ease-in-out infinite !important;
+        }
+      `}} />
+
       {error && (
         <div className="bg-error/5 border border-error/20 p-4 rounded-lg flex items-start space-x-3 text-error animate-fade-up">
           <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
@@ -119,8 +137,8 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        {/* Name input with floating label */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+        {/* Name input */}
         <div className="relative">
           <input
             type="text"
@@ -131,21 +149,21 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
             onChange={handleChange}
             onFocus={() => setFocusedField("name")}
             onBlur={() => setFocusedField("")}
-            className="peer w-full px-4 pt-6 pb-2 rounded-input border border-white/5 bg-[#12121A]/50 focus:bg-[#12121A]/80 focus:border-brand focus:ring-1 focus:ring-brand text-white text-sm transition-all outline-none"
+            className={inputClasses}
           />
           <label
             htmlFor="name"
-            className={`absolute left-4 top-4 text-xs font-bold uppercase tracking-wider transition-all pointer-events-none origin-left ${
+            className={`absolute left-0 top-4 text-xs font-bold uppercase tracking-wider transition-all pointer-events-none origin-left ${
               focusedField === "name" || formData.name
                 ? "transform -translate-y-2.5 scale-75 text-brand"
-                : "transform translate-y-0 scale-100 text-slate-400"
+                : "transform translate-y-0 scale-100 text-slate-500"
             }`}
           >
             Your Name *
           </label>
         </div>
 
-        {/* Organization input with floating label */}
+        {/* Organization input */}
         <div className="relative">
           <input
             type="text"
@@ -156,14 +174,14 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
             onChange={handleChange}
             onFocus={() => setFocusedField("organization")}
             onBlur={() => setFocusedField("")}
-            className="peer w-full px-4 pt-6 pb-2 rounded-input border border-white/5 bg-[#12121A]/50 focus:bg-[#12121A]/80 focus:border-brand focus:ring-1 focus:ring-brand text-white text-sm transition-all outline-none"
+            className={inputClasses}
           />
           <label
             htmlFor="organization"
-            className={`absolute left-4 top-4 text-xs font-bold uppercase tracking-wider transition-all pointer-events-none origin-left ${
+            className={`absolute left-0 top-4 text-xs font-bold uppercase tracking-wider transition-all pointer-events-none origin-left ${
               focusedField === "organization" || formData.organization
                 ? "transform -translate-y-2.5 scale-75 text-brand"
-                : "transform translate-y-0 scale-100 text-slate-400"
+                : "transform translate-y-0 scale-100 text-slate-500"
             }`}
           >
             Organization Name *
@@ -171,8 +189,8 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        {/* Email input with floating label */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+        {/* Email input */}
         <div className="relative">
           <input
             type="email"
@@ -183,21 +201,21 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
             onChange={handleChange}
             onFocus={() => setFocusedField("email")}
             onBlur={() => setFocusedField("")}
-            className="peer w-full px-4 pt-6 pb-2 rounded-input border border-white/5 bg-[#12121A]/50 focus:bg-[#12121A]/80 focus:border-brand focus:ring-1 focus:ring-brand text-white text-sm transition-all outline-none"
+            className={inputClasses}
           />
           <label
             htmlFor="email"
-            className={`absolute left-4 top-4 text-xs font-bold uppercase tracking-wider transition-all pointer-events-none origin-left ${
+            className={`absolute left-0 top-4 text-xs font-bold uppercase tracking-wider transition-all pointer-events-none origin-left ${
               focusedField === "email" || formData.email
                 ? "transform -translate-y-2.5 scale-75 text-brand"
-                : "transform translate-y-0 scale-100 text-slate-400"
+                : "transform translate-y-0 scale-100 text-slate-500"
             }`}
           >
             Email Address *
           </label>
         </div>
 
-        {/* Phone input with floating label */}
+        {/* Phone input */}
         <div className="relative">
           <input
             type="tel"
@@ -208,14 +226,14 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
             onChange={handleChange}
             onFocus={() => setFocusedField("phone")}
             onBlur={() => setFocusedField("")}
-            className="peer w-full px-4 pt-6 pb-2 rounded-input border border-white/5 bg-[#12121A]/50 focus:bg-[#12121A]/80 focus:border-brand focus:ring-1 focus:ring-brand text-white text-sm transition-all outline-none"
+            className={inputClasses}
           />
           <label
             htmlFor="phone"
-            className={`absolute left-4 top-4 text-xs font-bold uppercase tracking-wider transition-all pointer-events-none origin-left ${
+            className={`absolute left-0 top-4 text-xs font-bold uppercase tracking-wider transition-all pointer-events-none origin-left ${
               focusedField === "phone" || formData.phone
                 ? "transform -translate-y-2.5 scale-75 text-brand"
-                : "transform translate-y-0 scale-100 text-slate-400"
+                : "transform translate-y-0 scale-100 text-slate-500"
             }`}
           >
             Phone Number *
@@ -223,7 +241,7 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
         </div>
       </div>
 
-      {/* Select input with floating label */}
+      {/* Select input */}
       <div className="relative">
         <select
           id="serviceInterest"
@@ -233,36 +251,36 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
           onChange={handleChange}
           onFocus={() => setFocusedField("serviceInterest")}
           onBlur={() => setFocusedField("")}
-          className="peer w-full px-4 pt-6 pb-2 rounded-input border border-white/5 bg-[#12121A]/50 focus:bg-[#12121A]/80 focus:border-brand focus:ring-1 focus:ring-brand text-white text-sm transition-all outline-none appearance-none cursor-pointer"
+          className="peer w-full px-0 pt-6 pb-2 rounded-none border-none border-b border-white/10 bg-transparent focus:border-b-brand text-white text-sm transition-all outline-none appearance-none cursor-pointer"
         >
-          <option value="" className="bg-[#0A0A0E] text-slate-500">-- Select Interest Category --</option>
+          <option value="" className="bg-[#050505] text-slate-500">-- Select Interest Category --</option>
           {inquiryAreas.map((area, idx) => (
-            <option key={idx} value={area} className="bg-[#0A0A0E] text-white">
+            <option key={idx} value={area} className="bg-[#050505] text-white">
               {area}
             </option>
           ))}
           {formData.serviceInterest && !inquiryAreas.includes(formData.serviceInterest) && (
-            <option value={formData.serviceInterest} className="bg-[#0A0A0E] text-white">{formData.serviceInterest}</option>
+            <option value={formData.serviceInterest} className="bg-[#050505] text-white">{formData.serviceInterest}</option>
           )}
         </select>
         <label
           htmlFor="serviceInterest"
-          className={`absolute left-4 top-4 text-xs font-bold uppercase tracking-wider transition-all pointer-events-none origin-left ${
+          className={`absolute left-0 top-4 text-xs font-bold uppercase tracking-wider transition-all pointer-events-none origin-left ${
             focusedField === "serviceInterest" || formData.serviceInterest
               ? "transform -translate-y-2.5 scale-75 text-brand"
-              : "transform translate-y-0 scale-100 text-slate-400"
+              : "transform translate-y-0 scale-100 text-slate-500"
           }`}
         >
           Service Interested In *
         </label>
-        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none border-l border-white/10 pl-3">
-          <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none border-l border-white/10 pl-3">
+          <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
           </svg>
         </div>
       </div>
 
-      {/* Message textarea with floating label */}
+      {/* Message textarea */}
       <div className="relative">
         <textarea
           id="message"
@@ -273,26 +291,27 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
           onChange={handleChange}
           onFocus={() => setFocusedField("message")}
           onBlur={() => setFocusedField("")}
-          className="peer w-full px-4 pt-6 pb-2 rounded-input border border-white/5 bg-[#12121A]/50 focus:bg-[#12121A]/80 focus:border-brand focus:ring-1 focus:ring-brand text-white text-sm transition-all outline-none resize-none"
+          className="peer w-full px-0 pt-6 pb-2 rounded-none border-none border-b border-white/10 bg-transparent focus:border-b-brand text-white text-sm transition-all outline-none resize-none"
         />
         <label
           htmlFor="message"
-          className={`absolute left-4 top-4 text-xs font-bold uppercase tracking-wider transition-all pointer-events-none origin-left ${
+          className={`absolute left-0 top-4 text-xs font-bold uppercase tracking-wider transition-all pointer-events-none origin-left ${
             focusedField === "message" || formData.message
               ? "transform -translate-y-2.5 scale-75 text-brand"
-              : "transform translate-y-0 scale-100 text-slate-400"
+              : "transform translate-y-0 scale-100 text-slate-500"
           }`}
         >
           How can we help you? *
         </label>
       </div>
 
-      <div className="flex justify-end pt-2">
+      <div className="flex justify-end pt-4">
+        {/* Request Demo submit button with breathing neon-blue glow */}
         <Button
           type="submit"
           variant="accent"
           disabled={loading}
-          className="w-full sm:w-auto px-8 py-4 flex items-center justify-center space-x-2"
+          className="w-full sm:w-auto px-8 py-4 flex items-center justify-center space-x-2 btn-breathing-neon-blue"
         >
           {loading ? (
             <>
