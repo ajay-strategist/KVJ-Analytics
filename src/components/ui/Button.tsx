@@ -19,21 +19,21 @@ export function Button({
     "group/btn relative inline-flex items-center justify-center gap-2.5 font-body text-[15px] font-medium transition-all duration-300 ease-out focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer";
 
   const variantClasses = {
-    // Primary: filled brand gradient pill (main CTA on light pages)
+    // Primary: filled gold metallic gradient pill with navy text (main CTA on light pages)
     primary:
-      "bg-gradient-to-r from-brand to-brand-700 text-white rounded-full px-7 py-3.5 shadow-[0_8px_24px_rgba(123,97,255,0.22)] hover:shadow-[0_16px_36px_rgba(123,97,255,0.35)] hover:-translate-y-0.5 sheen transition-all duration-300",
+      "bg-gradient-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] text-navy rounded-full px-7 py-3.5 shadow-[0_8px_24px_rgba(191,149,63,0.25)] hover:shadow-[0_16px_36px_rgba(191,149,63,0.40)] hover:-translate-y-0.5 sheen transition-all duration-300 font-bold border border-navy/10",
     // Secondary: glass/outline card that has sheen
     secondary:
-      "border border-line bg-white/50 text-ink rounded-full px-7 py-3.5 hover:border-brand/40 hover:text-brand hover:-translate-y-0.5 sheen shadow-sm transition-all duration-300",
+      "border border-navy/20 bg-white/50 text-navy rounded-full px-7 py-3.5 hover:border-brand hover:text-[#B8860B] hover:-translate-y-0.5 sheen shadow-sm transition-all duration-300",
     // Text link + arrow nudge (accent)
     ghost:
-      "bg-transparent text-brand hover:text-accent-bright px-0 py-2 transition-colors",
+      "bg-transparent text-brand hover:text-brand-700 px-0 py-2 transition-colors font-semibold",
     // White glass pill for hero overlays (dark text)
     light:
-      "bg-white/70 backdrop-blur-md text-ink border border-white/90 rounded-full px-7 py-3.5 shadow-[0_8px_24px_rgba(123,97,255,0.06)] hover:-translate-y-0.5 hover:shadow-[0_16px_36px_rgba(123,97,255,0.12)] hover:border-brand/40 sheen transition-all duration-300",
-    // Accent: filled brand gradient with glow (same as primary, kept for emphasis)
+      "bg-white/70 backdrop-blur-md text-navy border border-navy/15 rounded-full px-7 py-3.5 shadow-[0_8px_24px_rgba(10,17,40,0.04)] hover:-translate-y-0.5 hover:shadow-[0_16px_36px_rgba(191,149,63,0.15)] hover:border-brand sheen transition-all duration-300",
+    // Accent: filled gold gradient with glow
     accent:
-      "bg-gradient-to-r from-brand to-brand-700 text-white rounded-full px-7 py-3.5 shadow-[0_10px_30px_rgba(123,97,255,0.26)] hover:shadow-[0_16px_42px_rgba(123,97,255,0.40)] hover:-translate-y-0.5 sheen transition-all duration-300",
+      "bg-gradient-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] text-navy rounded-full px-7 py-3.5 shadow-[0_10px_30px_rgba(191,149,63,0.30)] hover:shadow-[0_16px_42px_rgba(191,149,63,0.45)] hover:-translate-y-0.5 sheen transition-all duration-300 font-bold border border-navy/10",
   };
 
   const finalClasses = `${baseClasses} ${variantClasses[variant]} ${className}`;

@@ -146,7 +146,7 @@ export default async function HomePage() {
             <BoldStatement variant="h1">Two audiences. One standard of engineering.</BoldStatement>
           </Reveal>
 
-          <SolutionGrid label="Corporate Solutions" href="/corporate" items={corporateSolutions} icons={CORP_ICONS} accent="brand" />
+          <SolutionGrid label="Corporate Solutions" href="/corporate" items={corporateSolutions} icons={CORP_ICONS} accent="corporate" />
           <div className="mt-24 md:mt-32">
             <SolutionGrid label="Educational Solutions" href="/education" items={educationalSolutions} icons={EDU_ICONS} accent="education" />
           </div>
@@ -194,13 +194,13 @@ function SolutionGrid({
   href: string;
   items: { title: string }[];
   icons: React.ComponentType<{ className?: string }>[];
-  accent: "brand" | "education";
+  accent: "corporate" | "education";
 }) {
   const isEdu = accent === "education";
-  const accentText = isEdu ? "text-education" : "text-brand";
-  const tileBg = isEdu ? "bg-education/10 border-education/20 group-hover:bg-education/20" : "bg-brand/10 border-brand/20 group-hover:bg-brand/20";
-  const hoverTitle = isEdu ? "group-hover:text-education" : "group-hover:text-brand";
-  const hoverBorder = isEdu ? "hover:border-education/40" : "hover:border-brand/40";
+  const accentText = isEdu ? "text-brand" : "text-navy";
+  const tileBg = isEdu ? "bg-brand/10 border-brand/20 group-hover:bg-brand/20" : "bg-navy/5 border-navy/15 group-hover:bg-navy/10";
+  const hoverTitle = isEdu ? "group-hover:text-brand" : "group-hover:text-navy";
+  const hoverBorder = isEdu ? "hover:border-brand/45" : "hover:border-navy/30";
   const tag = isEdu ? "Educational service" : "Corporate service";
 
   return (

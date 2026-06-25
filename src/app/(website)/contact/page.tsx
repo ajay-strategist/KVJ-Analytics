@@ -38,13 +38,13 @@ export default async function ContactPage() {
         {/* Unified two-panel card */}
         <Reveal className="max-w-6xl mx-auto rounded-card overflow-hidden shadow-xl border border-line bg-card">
           <div className="grid lg:grid-cols-12">
-            {/* Info panel (violet) */}
+            {/* Info panel (navy & gold glow) */}
             <div
               className="lg:col-span-5 relative overflow-hidden p-8 sm:p-10 text-white flex flex-col"
-              style={{ background: "linear-gradient(150deg, #160E2E 0%, #241356 55%, #4B2FB8 130%)" }}
+              style={{ background: "linear-gradient(150deg, #0A1128 0%, #121A36 55%, #1F2A4E 130%)" }}
             >
-              <div className="absolute -top-20 -right-16 w-64 h-64 rounded-full blur-3xl pointer-events-none animate-blob" style={{ background: "rgba(124,92,255,0.4)" }} />
-              <div className="absolute -bottom-24 -left-12 w-64 h-64 rounded-full blur-3xl pointer-events-none animate-blob" style={{ background: "rgba(45,214,206,0.18)", animationDelay: "3s" }} />
+              <div className="absolute -top-20 -right-16 w-64 h-64 rounded-full blur-3xl pointer-events-none animate-blob" style={{ background: "rgba(212,175,55,0.22)" }} />
+              <div className="absolute -bottom-24 -left-12 w-64 h-64 rounded-full blur-3xl pointer-events-none animate-blob" style={{ background: "rgba(212,175,55,0.12)", animationDelay: "3s" }} />
 
               <div className="relative z-10 flex flex-col h-full">
                 {/* Brand block */}

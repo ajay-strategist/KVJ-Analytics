@@ -3,10 +3,10 @@
 import { useEffect, useRef } from "react";
 
 /**
- * Dependency-free animated hero centerpiece: a slowly rotating 3D point-globe
- * (white points on transparent), evoking a data/analytics network. Gives the
- * dark hero a premium "3D animation" feel without Three.js. Pauses for
- * reduced-motion users.
+ * A highly interactive, futuristic node network background using HTML5 Canvas.
+ * Particles float dynamically, connect when close, and react to cursor movement
+ * by drawing golden connector lines and responding to soft attraction forces.
+ * Stylized in deep navy blue and glowing gold.
  */
 export function HeroCanvas() {
   const ref = useRef<HTMLCanvasElement>(null);
@@ -21,67 +21,182 @@ export function HeroCanvas() {
       typeof window !== "undefined" &&
       window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 
-    // Fibonacci-sphere point cloud
-    const N = 720;
-    const pts: { x: number; y: number; z: number }[] = [];
-    for (let i = 0; i < N; i++) {
-      const y = 1 - (i / (N - 1)) * 2;
-      const r = Math.sqrt(Math.max(0, 1 - y * y));
-      const theta = i * 2.399963229; // golden angle
-      pts.push({ x: Math.cos(theta) * r, y, z: Math.sin(theta) * r });
+    // Node counts and properties
+    const nodeCount = 90;
+    const maxDistance = 110;
+    const mouseRadius = 160;
+
+    interface Node {
+      x: number;
+      y: number;
+      vx: number;
+      vy: number;
+      radius: number;
+      color: string;
+      baseX: number;
+      baseY: number;
     }
 
-    let raf = 0;
-    let t = 0;
+    const nodes: Node[] = [];
+    const mouse = { x: -1000, y: -1000, active: false };
+
+    // Initialize particles
+    const initNodes = (width: number, height: number) => {
+      nodes.length = 0;
+      for (let i = 0; i < nodeCount; i++) {
+        const x = Math.random() * width;
+        const y = Math.random() * height;
+        // Random golden or navy/slate colored nodes
+        const isGold = Math.random() > 0.4;
+        const color = isGold ? "rgba(212, 175, 55, 0.8)" : "rgba(10, 17, 40, 0.4)";
+        nodes.push({
+          x,
+          y,
+          vx: (Math.random() - 0.5) * (reduce ? 0.15 : 0.6),
+          vy: (Math.random() - 0.5) * (reduce ? 0.15 : 0.6),
+          radius: Math.random() * 2 + (isGold ? 1.5 : 1),
+          color,
+          baseX: x,
+          baseY: y,
+        });
+      }
+    };
 
     const resize = () => {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      canvas.width = canvas.clientWidth * dpr;
-      canvas.height = canvas.clientHeight * dpr;
+      const w = canvas.clientWidth;
+      const h = canvas.clientHeight;
+      canvas.width = w * dpr;
+      canvas.height = h * dpr;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      initNodes(w, h);
     };
+
     resize();
     window.addEventListener("resize", resize);
+
+    // Mouse listeners
+    const handleMouseMove = (e: MouseEvent) => {
+      const rect = canvas.getBoundingClientRect();
+      mouse.x = e.clientX - rect.left;
+      mouse.y = e.clientY - rect.top;
+      mouse.active = true;
+    };
+
+    const handleMouseLeave = () => {
+      mouse.x = -1000;
+      mouse.y = -1000;
+      mouse.active = false;
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    canvas.addEventListener("mouseleave", handleMouseLeave);
+
+    let raf = 0;
 
     const draw = () => {
       const w = canvas.clientWidth;
       const h = canvas.clientHeight;
       ctx.clearRect(0, 0, w, h);
-      const cx = w / 2;
-      const cy = h / 2;
-      const R = Math.min(w, h) * 0.36;
-      const cosA = Math.cos(t), sinA = Math.sin(t);
-      const cosB = Math.cos(t * 0.42), sinB = Math.sin(t * 0.42);
 
-      for (const p of pts) {
-        let x = p.x * cosA - p.z * sinA;
-        let z = p.x * sinA + p.z * cosA;
-        const y = p.y * cosB - z * sinB;
-        z = p.y * sinB + z * cosB;
+      // Update and draw connections
+      for (let i = 0; i < nodes.length; i++) {
+        const n1 = nodes[i];
 
-        const persp = 1 / (2.1 - z);
-        const sx = cx + x * R * persp * 1.7;
-        const sy = cy + y * R * persp * 1.7;
-        const depth = (z + 1) / 2; // 0..1
-        const alpha = 0.18 + depth * 0.62;
-        const size = 0.6 + depth * 1.7;
+        // Move node
+        if (!reduce) {
+          n1.x += n1.vx;
+          n1.y += n1.vy;
 
+          // Bounce off edges
+          if (n1.x < 0 || n1.x > w) n1.vx *= -1;
+          if (n1.y < 0 || n1.y > h) n1.vy *= -1;
+
+          // Soft correction to stay inside bounds
+          if (n1.x < 0) n1.x = 0;
+          if (n1.x > w) n1.x = w;
+          if (n1.y < 0) n1.y = 0;
+          if (n1.y > h) n1.y = h;
+        }
+
+        // Mouse attraction physics
+        if (mouse.active) {
+          const dx = mouse.x - n1.x;
+          const dy = mouse.y - n1.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < mouseRadius) {
+            // Calculate pull force
+            const force = (mouseRadius - dist) / mouseRadius;
+            const pullX = (dx / dist) * force * 0.9;
+            const pullY = (dy / dist) * force * 0.9;
+            n1.x += pullX;
+            n1.y += pullY;
+          }
+        }
+
+        // Draw connections between nodes
+        for (let j = i + 1; j < nodes.length; j++) {
+          const n2 = nodes[j];
+          const dx = n1.x - n2.x;
+          const dy = n1.y - n2.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+
+          if (dist < maxDistance) {
+            const alpha = (1 - dist / maxDistance) * 0.18;
+            ctx.beginPath();
+            ctx.moveTo(n1.x, n1.y);
+            ctx.lineTo(n2.x, n2.y);
+            // Draw in soft navy outline
+            ctx.strokeStyle = `rgba(10, 17, 40, ${alpha})`;
+            ctx.lineWidth = 0.55;
+            ctx.stroke();
+          }
+        }
+
+        // Draw connection to mouse
+        if (mouse.active) {
+          const dx = mouse.x - n1.x;
+          const dy = mouse.y - n1.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < mouseRadius) {
+            const alpha = (1 - dist / mouseRadius) * 0.35;
+            ctx.beginPath();
+            ctx.moveTo(n1.x, n1.y);
+            ctx.lineTo(mouse.x, mouse.y);
+            // Draw glowing gold connection to cursor
+            ctx.strokeStyle = `rgba(212, 175, 55, ${alpha})`;
+            ctx.lineWidth = 0.85;
+            ctx.stroke();
+          }
+        }
+
+        // Draw node
         ctx.beginPath();
-        ctx.fillStyle = `rgba(123, 97, 255, ${alpha})`;
-        ctx.arc(sx, sy, size, 0, Math.PI * 2);
+        ctx.arc(n1.x, n1.y, n1.radius, 0, Math.PI * 2);
+        ctx.fillStyle = n1.color;
         ctx.fill();
+        
+        // Add subtle gold aura on gold nodes
+        if (n1.color.includes("212") && !reduce) {
+          ctx.beginPath();
+          ctx.arc(n1.x, n1.y, n1.radius * 2.2, 0, Math.PI * 2);
+          ctx.fillStyle = "rgba(212, 175, 55, 0.08)";
+          ctx.fill();
+        }
       }
 
-      if (!reduce) t += 0.0032;
       raf = requestAnimationFrame(draw);
     };
-    draw();
 
-    return () => {
+    const cleanup = () => {
       cancelAnimationFrame(raf);
       window.removeEventListener("resize", resize);
+      window.removeEventListener("mousemove", handleMouseMove);
+      canvas.removeEventListener("mouseleave", handleMouseLeave);
     };
+
+    return cleanup;
   }, []);
 
-  return <canvas ref={ref} className="w-full h-full" aria-hidden />;
+  return <canvas ref={ref} className="w-full h-full block" aria-hidden />;
 }
