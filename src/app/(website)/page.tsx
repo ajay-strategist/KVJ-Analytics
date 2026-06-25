@@ -79,11 +79,11 @@ export default async function HomePage() {
               </Reveal>
               <RevealText
                 as="h1"
-                text={hp.hero?.headline || FALLBACK_HOME_PAGE.hero.headline}
-                className="font-display font-medium text-[42px] sm:text-[60px] lg:text-[76px] leading-[1.06] tracking-[-0.025em] mb-8 max-w-[16ch] text-ink"
+                text={hp.hero?.headline || "Transforming Data Into Decisions"}
+                className="font-display font-medium text-[42px] sm:text-[60px] lg:text-[76px] leading-[1.06] tracking-[-0.025em] mb-8 max-w-[16ch] text-ink text-left"
               />
               <Reveal delay={180}>
-                <p className="text-[18px] md:text-[22px] font-light text-slate leading-[1.6] max-w-2xl mb-12">
+                <p className="text-[18px] md:text-[22px] font-light text-slate leading-[1.6] max-w-2xl mb-12 text-left">
                   {hp.hero?.intro || FALLBACK_HOME_PAGE.hero.intro}
                 </p>
                 <div className="flex flex-col sm:flex-row gap-5 items-start sm:items-center">
@@ -104,33 +104,35 @@ export default async function HomePage() {
             </div>
           </div>
         </Container>
-
+ 
         {/* Scroll indicator */}
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-slate/60">
           <span className="text-[10px] uppercase tracking-[0.25em]">Scroll</span>
           <ArrowDown className="w-4 h-4 animate-scroll-hint text-brand" />
         </div>
       </section>
-
-      {/* ───── STATS — animated count-up (light) ───── */}
-      <section className="relative bg-surface border-b border-line overflow-hidden">
-        <div className="bg-radial-glow pointer-events-none absolute left-1/4 top-1/2 h-72 w-72 -translate-y-1/2 opacity-70" />
-        <Container className="relative z-10 py-16 md:py-20">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-y-12 gap-x-8">
+ 
+      {/* ───── STATS — animated count-up inside glassmorphic pills ───── */}
+      <section className="relative bg-[#08080A] border-b border-white/5 py-12 overflow-hidden">
+        <div className="bg-radial-glow pointer-events-none absolute left-1/4 top-1/2 h-72 w-72 -translate-y-1/2 opacity-30" />
+        <Container className="relative z-10">
+          <div className="flex flex-wrap justify-center gap-5 md:gap-7">
             {highlights.map((hl: string, idx: number) => {
               const m = hl.match(/^([\d,]+)(\+)?\s*(.*)$/);
               const num = m ? parseInt(m[1].replace(/,/g, ""), 10) : null;
               const suffix = m && m[2] ? "+" : "";
               const label = m ? m[3] : hl;
               return (
-                <Reveal key={idx} delay={idx * 90} className="border-l border-line pl-5 group">
-                  {num !== null ? (
-                    <div className="text-[36px] md:text-[48px] font-medium font-display leading-none mb-3">
-                      <CountUp value={num} suffix={suffix} className="signature-gradient-text" />
+                <Reveal key={idx} delay={idx * 90}>
+                  <div className="rounded-full border border-white/5 hover:border-corporate/40 bg-[#0A0A0C]/70 backdrop-blur-xl px-8 py-3.5 shadow-[0_8px_32px_rgba(0,0,0,0.4)] transition-all duration-300 flex items-center justify-center gap-4 group cursor-default">
+                    {num !== null ? (
+                      <div className="text-2xl md:text-3xl font-bold font-display leading-none text-transparent bg-clip-text bg-gradient-to-r from-brand to-corporate">
+                        <CountUp value={num} suffix={suffix} />
+                      </div>
+                    ) : null}
+                    <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 group-hover:text-slate-200 transition-colors">
+                      {label}
                     </div>
-                  ) : null}
-                  <div className="text-[12px] md:text-[13px] font-medium text-slate leading-snug uppercase tracking-wide">
-                    {label}
                   </div>
                 </Reveal>
               );

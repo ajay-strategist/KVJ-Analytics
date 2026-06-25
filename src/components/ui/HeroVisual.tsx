@@ -1,12 +1,13 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { TrendingUp, Activity, Globe, Cpu, Shield, Zap } from "lucide-react";
+import { TrendingUp, Activity, Cpu, Workflow, Layers, CheckCircle2 } from "lucide-react";
 
 /**
- * Holographic 3D Rotating Data Globe and HUD Interface.
- * Pure React/SVG/CSS 3D design that animates smoothly at 60fps.
- * Uses neon cyan and electric blue styling on the dark theme.
+ * Highly detailed 3D animated holographic projection.
+ * Displays a complex Power BI-style financial dashboard,
+ * interactive data charts, and interconnected automation workflow nodes.
+ * Utilizes hardware-accelerated CSS 3D transforms for a smooth floating animation.
  */
 export function HeroVisual() {
   const [t, setT] = useState(0);
@@ -14,190 +15,231 @@ export function HeroVisual() {
   useEffect(() => {
     let raf = 0;
     const tick = () => {
-      setT((prev) => (prev + 0.015) % (Math.PI * 2));
+      setT((prev) => (prev + 0.01) % (Math.PI * 2));
       raf = requestAnimationFrame(tick);
     };
     tick();
     return () => cancelAnimationFrame(raf);
   }, []);
 
-  // Compute positions of floating nodes on the holographic globe
-  const nodeCount = 5;
-  const nodes = Array.from({ length: nodeCount }).map((_, i) => {
-    const angle = t + (i * Math.PI * 2) / nodeCount;
-    // Project 3D circle points into 2D ellipse
-    const radiusX = 140;
-    const radiusY = 45;
-    const cx = 200 + Math.cos(angle) * radiusX;
-    const cy = 200 + Math.sin(angle) * radiusY;
-    const z = Math.sin(angle); // -1 (back) to 1 (front)
-    const scale = 0.5 + (z + 1) * 0.45; // larger in front
-    const opacity = 0.35 + (z + 1) * 0.55;
-    return { cx, cy, scale, opacity, z };
-  });
+  // Compute rotation offsets for a organic floating breathing effect
+  const rotX = 58 + Math.sin(t) * 3;
+  const rotY = -12 + Math.cos(t * 1.2) * 3;
+  const rotZ = 4 + Math.sin(t * 0.8) * 2;
+  const translateZ = Math.sin(t * 1.5) * 12;
 
   return (
-    <div className="relative w-full max-w-[550px] mx-auto min-h-[500px] flex items-center justify-center py-8 select-none">
-      {/* Background ambient glowing backlights */}
-      <div className="absolute top-[20%] left-[20%] w-72 h-72 rounded-full bg-brand/8 blur-[100px] pointer-events-none animate-pulse duration-[6s]" />
-      <div className="absolute bottom-[20%] right-[15%] w-80 h-80 rounded-full bg-[#0072FF]/10 blur-[100px] pointer-events-none animate-pulse duration-[8s]" />
-      
-      {/* Holographic HUD Container */}
-      <div className="relative w-full aspect-square max-w-[440px] flex items-center justify-center">
-        
-        {/* Decorative corner target brackets */}
-        <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-brand/40 rounded-tl-lg" />
-        <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-brand/40 rounded-tr-lg" />
-        <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-brand/40 rounded-bl-lg" />
-        <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-brand/40 rounded-br-lg" />
-        
-        {/* Holographic HUD Stats Readout (left) */}
-        <div className="absolute left-[-40px] top-[20%] glass-panel rounded-xl px-3 py-2 flex flex-col gap-1 border border-brand/20 shadow-lg text-[9px] font-mono tracking-widest text-[#00F0FF]/80">
-          <div className="flex items-center gap-1.5 border-b border-brand/15 pb-1">
-            <span className="h-1.5 w-1.5 rounded-full bg-brand animate-ping" />
-            <span>SYS_ONLINE</span>
-          </div>
-          <div>LAT: 40.7128</div>
-          <div>LON: -74.0060</div>
-          <div>FEED: 8.6 KB/s</div>
-        </div>
+    <div className="relative w-full max-w-[550px] mx-auto min-h-[520px] flex items-center justify-center py-10 select-none">
+      {/* Background ambient neon cyan/blue glowing backlights */}
+      <div className="absolute top-[10%] left-[10%] w-80 h-80 rounded-full bg-brand/10 blur-[110px] pointer-events-none animate-pulse duration-[7s]" />
+      <div className="absolute bottom-[10%] right-[10%] w-[340px] h-[340px] rounded-full bg-[#0072FF]/12 blur-[120px] pointer-events-none animate-pulse duration-[9s]" />
 
-        {/* Holographic HUD Stats Readout (right) */}
-        <div className="absolute right-[-40px] bottom-[25%] glass-panel rounded-xl px-3.5 py-2.5 flex items-center gap-2.5 border border-brand/20 shadow-lg">
-          <Activity className="w-5 h-5 text-brand animate-pulse" />
-          <div className="font-mono text-left">
-            <div className="text-[8px] text-slate-400 uppercase">SYS STATUS</div>
-            <div className="text-[12px] font-bold text-white leading-none mt-0.5">SECURE_</div>
-          </div>
-        </div>
+      {/* Holographic Projection HUD Ring Base */}
+      <div className="absolute bottom-4 w-[90%] h-12 bg-gradient-to-t from-brand/20 to-transparent rounded-full blur-[10px] transform scale-y-[0.35] opacity-80 pointer-events-none" />
+      <div className="absolute bottom-6 w-[80%] h-6 border-2 border-brand/20 rounded-full transform scale-y-[0.25] opacity-60 pointer-events-none animate-ping" />
 
-        {/* Master SVG Globe Visual */}
-        <svg 
-          viewBox="0 0 400 400" 
-          className="w-full h-full overflow-visible relative z-10"
+      {/* Isometric 3D Space Wrapper */}
+      <div
+        className="relative w-full aspect-square max-w-[460px] flex items-center justify-center"
+        style={{
+          perspective: "1200px",
+          transformStyle: "preserve-3d",
+        }}
+      >
+        <div
+          className="relative w-full h-full transition-transform duration-100 ease-out"
+          style={{
+            transform: `rotateX(${rotX}deg) rotateY(${rotY}deg) rotateZ(${rotZ}deg) translateY(${translateZ}px)`,
+            transformStyle: "preserve-3d",
+          }}
         >
-          <defs>
-            {/* Glow filters */}
-            <filter id="neonGlow" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur stdDeviation="5" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
+          {/* ==================== LAYER 1: AUTOMATION NODES (Bottom Layer, Z-offset: -50px) ==================== */}
+          <div
+            className="absolute inset-4 rounded-[28px] border border-brand/10 bg-brand/[0.02] flex items-center justify-center"
+            style={{
+              transform: "translateZ(-50px)",
+              transformStyle: "preserve-3d",
+            }}
+          >
+            {/* Grid overlay */}
+            <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,240,255,0.04)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,240,255,0.04)_1px,transparent_1px)] bg-[size:2rem_2rem] rounded-[28px]" />
             
-            {/* Radial shader for holographic sphere depth */}
-            <radialGradient id="sphereShader" cx="50%" cy="40%" r="50%">
-              <stop offset="0%" stopColor="rgba(0, 240, 255, 0.12)" />
-              <stop offset="70%" stopColor="rgba(0, 114, 255, 0.03)" />
-              <stop offset="100%" stopColor="rgba(10, 10, 15, 0.85)" />
-            </radialGradient>
-          </defs>
+            {/* Connected Node Network SVG */}
+            <svg viewBox="0 0 400 400" className="w-full h-full opacity-65">
+              <defs>
+                <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="#00F0FF" stopOpacity="0.8" />
+                  <stop offset="100%" stopColor="#0072FF" stopOpacity="0.2" />
+                </linearGradient>
+              </defs>
+              {/* Connection lines */}
+              <line x1="80" y1="120" x2="200" y2="200" stroke="url(#lineGrad)" strokeWidth="1.5" strokeDasharray="5 3" />
+              <line x1="320" y1="120" x2="200" y2="200" stroke="url(#lineGrad)" strokeWidth="1.5" />
+              <line x1="200" y1="200" x2="200" y2="320" stroke="url(#lineGrad)" strokeWidth="2" />
+              <line x1="80" y1="280" x2="200" y2="320" stroke="url(#lineGrad)" strokeWidth="1.5" />
+              <line x1="320" y1="280" x2="200" y2="320" stroke="url(#lineGrad)" strokeWidth="1.5" strokeDasharray="5 3" />
 
-          {/* 1. Main Transparent Sphere Shader */}
-          <circle 
-            cx="200" 
-            cy="200" 
-            r="150" 
-            fill="url(#sphereShader)" 
-            stroke="rgba(0, 240, 255, 0.22)" 
-            strokeWidth="1"
-          />
+              {/* Pulsing automation node loops */}
+              <g>
+                <circle cx="80" cy="120" r="14" fill="#0A0A0E" stroke="#00F0FF" strokeWidth="1.5" />
+                <circle cx="80" cy="120" r="6" fill="#00F0FF" className="animate-pulse" />
+              </g>
+              <g>
+                <circle cx="320" cy="120" r="14" fill="#0A0A0E" stroke="#0072FF" strokeWidth="1.5" />
+                <circle cx="320" cy="120" r="6" fill="#0072FF" />
+              </g>
+              <g>
+                <circle cx="200" cy="200" r="20" fill="#0A0A0E" stroke="#00F0FF" strokeWidth="2" />
+                <circle cx="200" cy="200" r="6" fill="#00F0FF" />
+              </g>
+              <g>
+                <circle cx="200" cy="320" r="16" fill="#0A0A0E" stroke="#0072FF" strokeWidth="1.5" />
+                <circle cx="200" cy="320" r="6" fill="#0072FF" className="animate-ping" />
+              </g>
+              <g>
+                <circle cx="80" cy="280" r="12" fill="#0A0A0E" stroke="#00F0FF" strokeWidth="1.2" />
+              </g>
+              <g>
+                <circle cx="320" cy="280" r="12" fill="#0A0A0E" stroke="#0072FF" strokeWidth="1.2" />
+              </g>
+            </svg>
+          </div>
 
-          {/* 2. Outer Ring Orbital (Golden Ratio Angle) */}
-          <ellipse 
-            cx="200" 
-            cy="200" 
-            rx="180" 
-            ry="60" 
-            fill="none" 
-            stroke="rgba(0, 114, 255, 0.18)" 
-            strokeWidth="1.5" 
-            strokeDasharray="8 6"
-            className="origin-center animate-spin-slow"
-            style={{ transform: "rotate(-15deg)" }}
-          />
-
-          {/* 3. Latitude Lines */}
-          <ellipse cx="200" cy="200" rx="150" ry="25" fill="none" stroke="rgba(0, 240, 255, 0.15)" strokeWidth="1" />
-          <ellipse cx="200" cy="150" rx="140" ry="20" fill="none" stroke="rgba(0, 240, 255, 0.12)" strokeWidth="0.75" />
-          <ellipse cx="200" cy="250" rx="140" ry="20" fill="none" stroke="rgba(0, 240, 255, 0.12)" strokeWidth="0.75" />
-          <ellipse cx="200" cy="110" rx="110" ry="15" fill="none" stroke="rgba(0, 240, 255, 0.1)" strokeWidth="0.75" />
-          <ellipse cx="200" cy="290" rx="110" ry="15" fill="none" stroke="rgba(0, 240, 255, 0.1)" strokeWidth="0.75" />
-
-          {/* 4. Rotating Longitude Rings (Opposing rotations) */}
-          <g 
-            className="origin-center"
-            style={{ 
-              transform: `rotateY(${t * 45}deg)`,
-              transformStyle: "preserve-3d" 
+          {/* ==================== LAYER 2: POWER BI FINANCIAL DASHBOARD (Middle Layer, Z-offset: 0px) ==================== */}
+          <div
+            className="absolute inset-0 rounded-[28px] border border-white/10 bg-[#12121A]/75 backdrop-blur-xl p-6 shadow-2xl flex flex-col justify-between"
+            style={{
+              transform: "translateZ(0px)",
+              transformStyle: "preserve-3d",
             }}
           >
-            <ellipse cx="200" cy="200" rx="45" ry="150" fill="none" stroke="rgba(0, 240, 255, 0.22)" strokeWidth="1" />
-            <ellipse cx="200" cy="200" rx="125" ry="150" fill="none" stroke="rgba(0, 114, 255, 0.15)" strokeWidth="1" />
-          </g>
+            {/* Dashboard Header */}
+            <div className="flex items-center justify-between border-b border-white/5 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 rounded-lg bg-brand/10 text-brand">
+                  <Layers className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="text-[10px] font-mono font-bold tracking-widest text-[#00F0FF]">FINANCE_BI_HUB</div>
+                  <div className="text-[7px] text-slate-500 font-mono">SECURE INTEGRATION v4.2</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-brand/5 border border-brand/20">
+                <span className="h-1.5 w-1.5 rounded-full bg-brand animate-ping" />
+                <span className="text-[7px] font-mono font-bold text-white tracking-wider">LIVE</span>
+              </div>
+            </div>
 
-          <g 
-            className="origin-center"
-            style={{ 
-              transform: `rotateY(${-t * 30}deg)`,
-              transformStyle: "preserve-3d" 
+            {/* Dashboard Visual Grid */}
+            <div className="grid grid-cols-12 gap-3.5 my-4 flex-grow items-stretch">
+              
+              {/* Left Column: KPI Ring Dial Gauge */}
+              <div className="col-span-4 rounded-xl border border-white/5 bg-white/[0.01] p-3 flex flex-col items-center justify-center text-center">
+                <span className="text-[7px] font-mono uppercase tracking-widest text-slate-500">MIS Target</span>
+                
+                <div className="relative w-18 h-18 my-2 flex items-center justify-center">
+                  <svg viewBox="0 0 36 36" className="w-full h-full transform -rotate-90">
+                    <circle cx="18" cy="18" r="16" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="3" />
+                    <circle 
+                      cx="18" 
+                      cy="18" 
+                      r="16" 
+                      fill="none" 
+                      stroke="#00F0FF" 
+                      strokeWidth="3.5" 
+                      strokeDasharray="100" 
+                      strokeDashoffset="16" 
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  <span className="absolute text-[9px] font-mono font-bold text-white">84%</span>
+                </div>
+                
+                <span className="text-[8px] font-bold text-[#00F0FF] font-mono leading-none">Automated</span>
+              </div>
+
+              {/* Middle Column: Financial Bar Charts */}
+              <div className="col-span-8 rounded-xl border border-white/5 bg-white/[0.01] p-3 flex flex-col justify-between">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-[7px] font-mono uppercase tracking-widest text-slate-500">Yield Analytics</span>
+                  <div className="flex gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-brand" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#0072FF]" />
+                  </div>
+                </div>
+                
+                {/* Bar heights modulated slightly dynamically */}
+                <div className="h-14 flex items-end justify-between gap-1.5 pt-2">
+                  {[30, 65, 50, 90, 45, 75, 60, 95].map((h, idx) => (
+                    <div key={idx} className="flex-1 flex flex-col gap-1 items-center">
+                      <div className="w-full relative rounded bg-white/5" style={{ height: "45px" }}>
+                        <div 
+                          className="absolute bottom-0 inset-x-0 rounded bg-gradient-to-t from-[#0072FF] to-[#00F0FF] shadow-[0_0_10px_rgba(0,240,255,0.2)] transition-all duration-1000"
+                          style={{ height: `${h}%` }}
+                        />
+                      </div>
+                      <span className="text-[5px] font-bold text-slate-500 font-mono">Q{idx+1}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Row status banner */}
+            <div className="flex items-center justify-between border-t border-white/5 pt-3 text-[7px] font-mono text-slate-400">
+              <div className="flex items-center gap-1">
+                <Workflow className="w-3.5 h-3.5 text-brand mr-1" />
+                <span>INTEGRATION: ACTIVE</span>
+              </div>
+              <div>LATENCY: 0.12ms</div>
+            </div>
+          </div>
+
+          {/* ==================== LAYER 3: FLOATING TOOLTIPS & METRICS (Top Layer, Z-offset: 50px) ==================== */}
+          {/* Floating Line Chart Tooltip (Top Right) */}
+          <div
+            className="absolute top-[8%] right-[-30px] rounded-2xl border border-brand/35 bg-[#12121A]/90 backdrop-blur-xl px-4 py-3 shadow-[0_12px_32px_rgba(0,240,255,0.18)] max-w-[170px]"
+            style={{
+              transform: "translateZ(50px)",
+              transformStyle: "preserve-3d",
+              backfaceVisibility: "hidden",
             }}
           >
-            <ellipse cx="200" cy="200" rx="85" ry="150" fill="none" stroke="rgba(0, 240, 255, 0.18)" strokeWidth="1" strokeDasharray="5 5" />
-          </g>
+            <div className="flex items-center gap-2 mb-1.5">
+              <div className="p-1 rounded bg-brand/10 text-brand">
+                <TrendingUp className="w-3.5 h-3.5" />
+              </div>
+              <span className="text-[9px] font-bold text-white font-display">Revenue Growth</span>
+            </div>
+            
+            <div className="text-lg font-bold font-mono text-transparent bg-clip-text bg-gradient-to-r from-brand to-corporate leading-none mb-1">
+              +142.8%
+            </div>
+            
+            <p className="text-[6px] text-slate-500 font-mono leading-normal">
+              Continuous dashboard generation successfully loaded.
+            </p>
+          </div>
 
-          {/* 5. Scanning satellite beam */}
-          <path 
-            d={`M 200 200 L ${200 + Math.cos(t * 1.5) * 170} ${200 + Math.sin(t * 1.5) * 55}`} 
-            stroke="rgba(0, 240, 255, 0.35)" 
-            strokeWidth="1.5"
-            strokeDasharray="4 2"
-          />
-
-          {/* 6. Dynamic Floating Data Nodes (Front & Back layers) */}
-          {/* Back layer nodes (z < 0) */}
-          {nodes
-            .filter((n) => n.z < 0)
-            .map((n, idx) => (
-              <g key={idx} opacity={n.opacity} transform={`translate(${n.cx}, ${n.cy}) scale(${n.scale})`}>
-                <circle cx="0" cy="0" r="5" fill="#0072FF" />
-                <circle cx="0" cy="0" r="10" fill="none" stroke="#0072FF" strokeWidth="1" />
-              </g>
-            ))}
-
-          {/* Front layer nodes (z >= 0) */}
-          {nodes
-            .filter((n) => n.z >= 0)
-            .map((n, idx) => (
-              <g 
-                key={idx} 
-                opacity={n.opacity} 
-                transform={`translate(${n.cx}, ${n.cy}) scale(${n.scale})`}
-                filter="url(#neonGlow)"
-              >
-                <circle cx="0" cy="0" r="5" fill="#00F0FF" />
-                <circle cx="0" cy="0" r="12" fill="none" stroke="#00F0FF" strokeWidth="1" className="animate-ping duration-1500" />
-                <circle cx="0" cy="0" r="8" fill="none" stroke="#00F0FF" strokeWidth="1.2" />
-                {/* Horizontal data tooltip */}
-                <line x1="8" y1="0" x2="35" y2="0" stroke="rgba(0,240,255,0.5)" strokeWidth="1" />
-                <rect x="35" y="-8" width="40" height="14" rx="3" fill="rgba(10, 10, 14, 0.85)" stroke="rgba(0, 240, 255, 0.4)" strokeWidth="0.8" />
-                <text x="55" y="2" fill="#00F0FF" fontSize="7" fontFamily="monospace" textAnchor="middle" fontWeight="bold">
-                  VAL_{Math.floor(n.scale * 100)}
-                </text>
-              </g>
-            ))}
-
-          {/* 7. Holographic outer rings for HUD aesthetic */}
-          <circle cx="200" cy="200" r="162" fill="none" stroke="rgba(0, 240, 255, 0.15)" strokeWidth="1" strokeDasharray="30 15 10 15" />
-          <circle cx="200" cy="200" r="172" fill="none" stroke="rgba(0, 114, 255, 0.08)" strokeWidth="1.5" strokeDasharray="4 8" />
-        </svg>
-
-        {/* Lower Ring HUD Platform */}
-        <div 
-          className="absolute bottom-5 w-[85%] h-5 bg-gradient-to-t from-brand/20 to-transparent rounded-full blur-[8px] transform scale-y-50 pointer-events-none"
-          style={{ transform: "rotateX(75deg)" }}
-        />
+          {/* Floating Performance Indicator Badge (Bottom Left) */}
+          <div
+            className="absolute bottom-[12%] left-[-40px] rounded-xl border border-[#0072FF]/40 bg-[#12121A]/90 backdrop-blur-xl px-3 py-2.5 shadow-[0_12px_28px_rgba(0,114,255,0.18)] flex items-center gap-2"
+            style={{
+              transform: "translateZ(65px)",
+              transformStyle: "preserve-3d",
+              backfaceVisibility: "hidden",
+            }}
+          >
+            <div className="w-6 h-6 rounded-full bg-[#0072FF]/10 flex items-center justify-center text-[#0072FF]">
+              <CheckCircle2 className="w-3.5 h-3.5" />
+            </div>
+            <div className="text-left font-mono">
+              <span className="text-[6px] text-slate-500 uppercase tracking-wider block">MIS AUDIT</span>
+              <span className="text-[10px] font-bold text-white leading-none mt-0.5">COMPLIANT</span>
+            </div>
+          </div>
+          
+        </div>
       </div>
     </div>
   );
