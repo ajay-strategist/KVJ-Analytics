@@ -4,7 +4,11 @@ import React, { useEffect, useRef, useState } from "react";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { CountUp } from "@/components/ui/CountUp";
-import { LineChart, Cpu, GraduationCap, Database, Activity, ArrowRight, Zap, Play } from "lucide-react";
+import { Reveal } from "@/components/ui/Reveal";
+import { 
+  Compass, Target, Workflow, MapPin, Mail, Phone, MessageSquare, 
+  ChevronRight, Sparkles, Layers, BookOpen, GraduationCap, ArrowRight, Activity
+} from "lucide-react";
 
 interface AboutClientProps {
   pageData: {
@@ -20,7 +24,8 @@ interface AboutClientProps {
   };
 }
 
-const ScrollRevealParagraph = ({ children, index }: { children: React.ReactNode; index: number }) => {
+// Paragraph viewport tracking revealer
+const ScrollRevealParagraph = ({ children }: { children: React.ReactNode }) => {
   const ref = useRef<HTMLDivElement>(null);
   const [isActive, setIsActive] = useState(false);
 
@@ -30,12 +35,11 @@ const ScrollRevealParagraph = ({ children, index }: { children: React.ReactNode;
       const rect = ref.current.getBoundingClientRect();
       const viewportHeight = window.innerHeight;
       
-      // Calculate how close the center of the paragraph is to the center of the viewport
       const elementCenter = rect.top + rect.height / 2;
-      const viewCenter = viewportHeight * 0.45; // slightly above absolute center
+      const viewCenter = viewportHeight * 0.45;
       
       const distance = Math.abs(elementCenter - viewCenter);
-      const threshold = viewportHeight * 0.22; // middle zone height
+      const threshold = viewportHeight * 0.22;
       
       if (distance < threshold) {
         setIsActive(true);
@@ -45,7 +49,6 @@ const ScrollRevealParagraph = ({ children, index }: { children: React.ReactNode;
     };
 
     window.addEventListener("scroll", handleScroll);
-    // run once initially and with a slight delay to ensure layout is complete
     handleScroll();
     const timer = setTimeout(handleScroll, 100);
     
@@ -58,18 +61,18 @@ const ScrollRevealParagraph = ({ children, index }: { children: React.ReactNode;
   return (
     <div
       ref={ref}
-      className="transition-all duration-700 ease-out py-6 md:py-8 border-l-2 pl-6 cursor-default group"
+      className="transition-all duration-700 ease-out py-6 border-l-2 pl-6 cursor-default"
       style={{
-        borderColor: isActive ? "rgba(0, 240, 255, 0.8)" : "rgba(255, 255, 255, 0.05)",
+        borderColor: isActive ? "#00F0FF" : "rgba(255, 255, 255, 0.05)",
         opacity: isActive ? 1 : 0.25,
-        transform: isActive ? "translateX(10px) scale(1.02)" : "translateX(0) scale(1.0)",
+        transform: isActive ? "translateX(10px) scale(1.02)" : "translateX(0) scale(1)",
       }}
     >
       <div 
-        className="font-display font-medium text-2xl md:text-3xl lg:text-4xl transition-all duration-500"
+        className="font-display font-medium text-xl sm:text-2xl md:text-3xl transition-all duration-500"
         style={{
           color: isActive ? "#FFFFFF" : "#9CA3AF",
-          textShadow: isActive ? "0 0 20px rgba(0, 240, 255, 0.5)" : "none"
+          textShadow: isActive ? "0 0 15px rgba(0, 240, 255, 0.45)" : "none"
         }}
       >
         {children}
@@ -78,355 +81,556 @@ const ScrollRevealParagraph = ({ children, index }: { children: React.ReactNode;
   );
 };
 
-export function AboutClientContent({ pageData }: AboutClientProps) {
-  const specializations = pageData.specializations || [];
-  const impact = pageData.impact || [];
-  const [activeTab, setActiveTab] = useState(0);
+// 3D Holographic Brain Component
+function HolographicBrain() {
+  return (
+    <div className="relative w-full aspect-square max-w-[420px] mx-auto flex items-center justify-center animate-[float-slow_6s_ease-in-out_infinite]">
+      {/* Brain projection beam backlights */}
+      <div className="absolute inset-0 bg-gradient-to-tr from-brand/5 to-corporate/5 rounded-full blur-[80px] pointer-events-none" />
+      <div className="absolute bottom-[-10px] w-[80%] h-8 bg-brand/20 rounded-full blur-[8px] transform scale-y-[0.3] pointer-events-none" />
 
-  // Parse statistics
-  const parsedStats = impact.map((imp) => {
+      {/* SVG Brain Circuits */}
+      <svg viewBox="0 0 400 400" className="w-full h-full relative z-10 overflow-visible">
+        <defs>
+          <filter id="brainGlow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+
+        {/* Outer hud circle */}
+        <circle cx="200" cy="200" r="170" fill="none" stroke="rgba(0, 240, 255, 0.08)" strokeWidth="1" strokeDasharray="5, 8" />
+        <circle cx="200" cy="200" r="160" fill="none" stroke="rgba(0, 114, 255, 0.05)" strokeWidth="1.5" strokeDasharray="30, 20" className="animate-[spin_30s_linear_infinite]" />
+
+        {/* Brain Hemispheres - Left & Right circuit lines */}
+        <g filter="url(#brainGlow)" strokeWidth="2.2" strokeLinecap="round" fill="none">
+          {/* Left Hemisphere (Neon Cyan) */}
+          <g stroke="#00F0FF">
+            {/* Frontal Lobe */}
+            <path d="M 200 90 C 130 90, 100 130, 100 180 C 100 200, 110 220, 120 230" />
+            <path d="M 120 120 Q 150 140, 180 130" strokeDasharray="5, 3" />
+            <path d="M 100 180 Q 140 180, 170 170" />
+            {/* Occipital / Temporal */}
+            <path d="M 120 230 C 120 270, 160 300, 200 300" />
+            <path d="M 150 250 Q 170 220, 195 210" />
+            <path d="M 120 200 Q 150 210, 170 250" strokeWidth="1.5" />
+          </g>
+
+          {/* Right Hemisphere (Electric Blue) */}
+          <g stroke="#0072FF">
+            {/* Frontal Lobe */}
+            <path d="M 200 90 C 270 90, 300 130, 300 180 C 300 200, 290 220, 280 230" />
+            <path d="M 280 120 Q 250 140, 220 130" strokeDasharray="5, 3" />
+            <path d="M 300 180 Q 260 180, 230 170" />
+            {/* Occipital / Temporal */}
+            <path d="M 280 230 C 280 270, 240 300, 200 300" />
+            <path d="M 250 250 Q 230 220, 205 210" />
+            <path d="M 280 200 Q 250 210, 230 250" strokeWidth="1.5" />
+          </g>
+        </g>
+
+        {/* Brain Synapse Nodes (Pulsing circles) */}
+        <g>
+          {/* Central spine */}
+          <line x1="200" y1="90" x2="200" y2="300" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5" />
+          
+          {/* Synapses Left */}
+          <circle cx="100" cy="180" r="5" fill="#00F0FF" className="animate-pulse" />
+          <circle cx="130" cy="110" r="4.5" fill="#00F0FF" />
+          <circle cx="170" cy="170" r="4" fill="#FFFFFF" />
+          <circle cx="150" cy="250" r="5" fill="#00F0FF" className="animate-ping duration-2000" />
+          <circle cx="150" cy="250" r="4" fill="#00F0FF" />
+
+          {/* Synapses Right */}
+          <circle cx="300" cy="180" r="5" fill="#0072FF" className="animate-pulse" />
+          <circle cx="270" cy="110" r="4.5" fill="#0072FF" />
+          <circle cx="230" cy="170" r="4" fill="#FFFFFF" />
+          <circle cx="250" cy="250" r="5" fill="#0072FF" className="animate-ping duration-1500" />
+          <circle cx="250" cy="250" r="4" fill="#0072FF" />
+        </g>
+
+        {/* Interconnected data streams flowing in/out */}
+        <path d="M 200 200 L 50 150 M 200 130 L 350 100 M 200 250 L 50 280 M 200 280 L 350 260" stroke="rgba(0,240,255,0.1)" strokeWidth="1" strokeDasharray="4, 4" />
+        <circle cx="50" cy="150" r="3" fill="#00F0FF" className="animate-ping" />
+        <circle cx="350" cy="100" r="3" fill="#0072FF" className="animate-ping" />
+        <circle cx="50" cy="280" r="3" fill="#00F0FF" />
+        <circle cx="350" cy="260" r="3" fill="#0072FF" />
+      </svg>
+    </div>
+  );
+}
+
+// Context-sensitive animations for timeline
+// 1. Founding: Startup garage made of circuit lines
+function GarageCircuitAnimation() {
+  return (
+    <svg viewBox="0 0 100 100" className="w-16 h-16 text-brand mx-auto">
+      {/* Circuit board house outline */}
+      <polygon points="50,15 85,45 85,85 15,85 15,45" fill="none" stroke="#00F0FF" strokeWidth="2.5" strokeLinecap="round" />
+      <line x1="15" y1="45" x2="85" y2="45" stroke="#0072FF" strokeWidth="2" />
+      {/* Garage door grid lines */}
+      <rect x="30" y="55" width="40" height="30" fill="none" stroke="rgba(0, 240, 255, 0.3)" strokeWidth="1.5" />
+      <line x1="30" y1="65" x2="70" y2="65" stroke="rgba(0, 240, 255, 0.3)" strokeWidth="1.5" />
+      <line x1="30" y1="75" x2="70" y2="75" stroke="rgba(0, 240, 255, 0.3)" strokeWidth="1.5" />
+      
+      {/* Glowing node connections */}
+      <circle cx="50" cy="15" r="4" fill="#FFF" className="animate-pulse" />
+      <circle cx="15" y1="85" r="3.5" fill="#00F0FF" />
+      <circle cx="85" y1="85" r="3.5" fill="#0072FF" />
+    </svg>
+  );
+}
+
+// 2. AI Integration: Swirling Neural Network
+function NeuralNetworkAnimation() {
+  return (
+    <div className="relative w-16 h-16 mx-auto flex items-center justify-center">
+      <svg viewBox="0 0 100 100" className="w-full h-full">
+        {/* Swirling orbits */}
+        <circle cx="50" cy="50" r="28" fill="none" stroke="rgba(0, 114, 255, 0.25)" strokeWidth="1.5" strokeDasharray="10, 5" className="animate-[spin_8s_linear_infinite]" />
+        <circle cx="50" cy="50" r="38" fill="none" stroke="rgba(0, 240, 255, 0.2)" strokeWidth="1.5" strokeDasharray="15, 8" className="animate-[spin_12s_linear_infinite_reverse]" />
+        
+        {/* Network connections */}
+        <line x1="25" y1="25" x2="50" y2="50" stroke="rgba(0, 240, 255, 0.3)" strokeWidth="1.5" />
+        <line x1="75" y1="25" x2="50" y2="50" stroke="rgba(0, 240, 255, 0.3)" strokeWidth="1.5" />
+        <line x1="50" y1="78" x2="50" y2="50" stroke="rgba(0, 114, 255, 0.3)" strokeWidth="1.5" />
+        
+        {/* Core node */}
+        <circle cx="50" cy="50" r="7" fill="#050505" stroke="#00F0FF" strokeWidth="2.2" />
+        <circle cx="50" cy="50" r="3" fill="#00F0FF" className="animate-ping" />
+
+        {/* Orbit nodes */}
+        <circle cx="25" cy="25" r="4.5" fill="#0072FF" />
+        <circle cx="75" cy="25" r="4.5" fill="#00F0FF" />
+        <circle cx="50" cy="78" r="4.5" fill="#0072FF" />
+      </svg>
+    </div>
+  );
+}
+
+// 3. Client Expansion: Global Nodes
+function GlobalNodesAnimation() {
+  return (
+    <svg viewBox="0 0 100 100" className="w-16 h-16 text-[#0072FF] mx-auto">
+      {/* Globe grid */}
+      <circle cx="50" cy="50" r="35" fill="none" stroke="rgba(0, 114, 255, 0.25)" strokeWidth="2" />
+      <ellipse cx="50" cy="50" rx="35" ry="12" fill="none" stroke="rgba(0, 114, 255, 0.2)" strokeWidth="1.5" />
+      <ellipse cx="50" cy="50" rx="12" ry="35" fill="none" stroke="rgba(0, 114, 255, 0.2)" strokeWidth="1.5" />
+      
+      {/* Blinking connection lines */}
+      <line x1="25" y1="35" x2="75" y2="65" stroke="rgba(0, 240, 255, 0.4)" strokeWidth="1.5" strokeDasharray="4, 2" />
+      <line x1="25" y1="65" x2="75" y2="35" stroke="rgba(0, 240, 255, 0.4)" strokeWidth="1.5" strokeDasharray="4, 2" />
+
+      {/* Nodes */}
+      <circle cx="25" cy="35" r="4" fill="#00F0FF" className="animate-pulse" />
+      <circle cx="75" cy="65" r="4" fill="#00F0FF" />
+      <circle cx="50" cy="15" r="3.5" fill="#0072FF" />
+      <circle cx="50" cy="85" r="3.5" fill="#0072FF" />
+    </svg>
+  );
+}
+
+// 4. Training Launch: Graduation Cap node
+function GraduationCapAnimation() {
+  return (
+    <svg viewBox="0 0 100 100" className="w-16 h-16 text-brand mx-auto animate-[float-slow_4s_ease-in-out_infinite]">
+      {/* Cap diamond */}
+      <polygon points="50,22 82,35 50,48 18,35" fill="none" stroke="#00F0FF" strokeWidth="2.2" />
+      {/* Cap skull */}
+      <path d="M 32,41 L 32,60 Q 50,70 68,60 L 68,41" fill="none" stroke="#0072FF" strokeWidth="2" />
+      {/* Tassel */}
+      <path d="M 82,35 L 82,52 Q 78,56 76,56" fill="none" stroke="#00F0FF" strokeWidth="1.5" />
+      <circle cx="76" cy="56" r="2" fill="#00F0FF" />
+      
+      {/* Data curves underneath */}
+      <path d="M 20,78 Q 50,65 80,78" fill="none" stroke="rgba(0, 240, 255, 0.25)" strokeWidth="2" strokeDasharray="4, 4" />
+      <circle cx="50" cy="71" r="3" fill="#0072FF" />
+    </svg>
+  );
+}
+
+export function AboutClientContent({ pageData }: AboutClientProps) {
+  // Parse experience highlights
+  const parsedStats = (pageData.impact || []).map((imp) => {
     const m = imp.match(/^([\d,]+)(\+)?\s*(.*)$/);
-    const num = m ? parseInt(m[1].replace(/,/g, ""), 10) : 0;
+    const num = m ? parseInt(m[1].replace(/,/g, ""), 10) : 16;
     const suffix = m && m[2] ? "+" : "";
     const label = m ? m[3] : imp;
     return { num, suffix, label };
   });
 
+  // Filter out the experience stat specifically for the Hero section
+  const expStat = parsedStats.find(s => s.label.toLowerCase().includes("experience")) || { num: 16, suffix: "+", label: "Years Experience" };
+  const otherStats = parsedStats.filter(s => !s.label.toLowerCase().includes("experience"));
+
   return (
-    <div className="w-full bg-[#0A0A0E] text-slate-100 relative min-h-screen">
+    <div className="w-full bg-[#050505] text-slate-150 relative min-h-screen">
       {/* 1. HERO SECTION — Asymmetric Split Screen */}
-      <section className="relative min-h-screen flex items-center pt-24 md:pt-32 pb-16 overflow-hidden border-b border-white/5">
-        {/* Background Grid Pattern */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:4rem_4rem] pointer-events-none" />
-        {/* Radial ambient backlights */}
-        <div className="absolute top-[20%] left-[-10%] w-[500px] h-[500px] bg-brand/10 rounded-full blur-[140px] pointer-events-none" />
-        <div className="absolute bottom-[10%] right-[-10%] w-[600px] h-[600px] bg-corporate/10 rounded-full blur-[160px] pointer-events-none" />
+      <section className="relative min-h-screen flex items-center pt-28 pb-16 overflow-hidden border-b border-white/5">
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:4rem_4rem] pointer-events-none" />
+        
+        {/* Glowing backdrop spotlights */}
+        <div className="absolute top-[20%] left-[-10%] w-[500px] h-[500px] bg-brand/8 rounded-full blur-[140px] pointer-events-none animate-pulse duration-[8s]" />
+        <div className="absolute bottom-[10%] right-[-10%] w-[600px] h-[600px] bg-corporate/8 rounded-full blur-[160px] pointer-events-none animate-pulse duration-[10s]" />
 
         <Container className="relative z-10 w-full">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
             
-            {/* Left Column: Interactive scrolling text layout */}
-            <div className="lg:col-span-6 flex flex-col justify-center space-y-6">
-              <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-brand px-3 py-1 bg-brand/10 rounded-full w-fit border border-brand/20">
-                Pioneering Data & AI
+            {/* Left Column: Glowing Typography & Stats Pill */}
+            <div className="lg:col-span-6 flex flex-col justify-center space-y-8 text-left">
+              <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-brand px-3.5 py-1.5 bg-brand/10 rounded-full w-fit border border-brand/20">
+                Strategic Intelligence
               </span>
               
-              <h1 className="font-display font-bold text-4xl sm:text-5xl lg:text-6xl leading-[1.1] tracking-tight text-white mb-6">
-                Redefining the <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand to-corporate">Future of Analytics</span>
+              <h1 className="font-display font-bold text-4xl sm:text-5xl lg:text-6xl leading-[1.08] tracking-tight text-white">
+                About <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand via-corporate to-brand animate-[signature-flow_6s_linear_infinite] bg-[size:200%_auto]">KVJ Analytics</span>
               </h1>
 
-              {/* Scrolling Text reveal container */}
-              <div className="space-y-4 max-w-xl pr-4">
-                <ScrollRevealParagraph index={0}>
+              {/* Scrolling text reveal paragraphs */}
+              <div className="space-y-2 max-w-xl">
+                <ScrollRevealParagraph>
                   {pageData.intro}
                 </ScrollRevealParagraph>
-                <ScrollRevealParagraph index={1}>
-                  We bridge the gap between complex raw data and strategic board decisions using deep cognitive engineering.
-                </ScrollRevealParagraph>
-                <ScrollRevealParagraph index={2}>
-                  From automated pipelines to custom machine learning integrations, we elevate organizational intelligence.
+                <ScrollRevealParagraph>
+                  We synthesize human auditing expertise with modular machine pipelines to ensure data translates seamlessly into high-yield decisions.
                 </ScrollRevealParagraph>
               </div>
 
-              <div className="pt-6 flex flex-wrap gap-4">
-                <Button variant="accent" href="#stats" className="group">
-                  <span>Explore Impact</span>
-                  <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                </Button>
-                <Button variant="outline" href="/contact">
-                  Request a Demo
-                </Button>
-              </div>
+              {/* 16+ Years Experience Pill (cyan border + count-up) */}
+              <Reveal delay={300}>
+                <div className="rounded-full border border-brand/35 bg-[#0A0A0C]/75 backdrop-blur-xl px-7 py-3.5 shadow-[0_8px_32px_rgba(0,240,255,0.14)] hover:border-brand transition-all duration-300 flex items-center gap-4 w-fit group">
+                  <div className="text-3xl md:text-4xl font-extrabold font-display leading-none text-transparent bg-clip-text bg-gradient-to-r from-brand to-corporate">
+                    <CountUp value={expStat.num} suffix={expStat.suffix} />
+                  </div>
+                  <div className="text-xs font-bold uppercase tracking-wider text-slate-350 group-hover:text-white transition-colors">
+                    {expStat.label}
+                  </div>
+                </div>
+              </Reveal>
             </div>
 
-            {/* Right Column: 3D data pipeline dynamic visual & float badges */}
-            <div className="lg:col-span-6 relative flex items-center justify-center min-h-[450px] md:min-h-[500px]">
-              
-              {/* Loop Animated 3D Pipeline SVG Graphic */}
-              <div className="relative w-full max-w-[450px] aspect-square rounded-full border border-white/5 bg-[#12121A]/30 backdrop-blur-3xl flex items-center justify-center shadow-2xl p-6">
-                
-                {/* Floating, glowing badges that pulse gently */}
-                {/* Badge 1: Analytics (Top Left) */}
-                <div className="absolute -top-4 -left-6 z-20 animate-[float-slow_6s_ease-in-out_infinite] group">
-                  <div className="bg-[#12121A]/85 backdrop-blur-md border border-brand/20 hover:border-brand px-4 py-2.5 rounded-2xl flex items-center gap-2.5 shadow-[0_0_20px_rgba(0,240,255,0.15)] hover:shadow-[0_0_25px_rgba(0,240,255,0.3)] transition-all duration-300">
-                    <div className="p-1.5 rounded-lg bg-brand/10 text-brand">
-                      <LineChart className="w-4 h-4 animate-pulse" />
-                    </div>
-                    <div>
-                      <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider leading-none">Decision Intel</div>
-                      <div className="text-xs font-bold text-white mt-0.5">Analytics</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Badge 2: Automation (Bottom Right) */}
-                <div className="absolute -bottom-4 -right-4 z-20 animate-[float-slow_5s_ease-in-out_infinite_1.5s] group">
-                  <div className="bg-[#12121A]/85 backdrop-blur-md border border-corporate/25 hover:border-corporate px-4 py-2.5 rounded-2xl flex items-center gap-2.5 shadow-[0_0_20px_rgba(0,114,255,0.15)] hover:shadow-[0_0_25px_rgba(0,114,255,0.3)] transition-all duration-300">
-                    <div className="p-1.5 rounded-lg bg-corporate/10 text-corporate">
-                      <Cpu className="w-4 h-4 animate-spin duration-3000" />
-                    </div>
-                    <div>
-                      <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider leading-none">AI Pipelines</div>
-                      <div className="text-xs font-bold text-white mt-0.5">Automation</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Badge 3: Training (Top Right) */}
-                <div className="absolute top-[30%] -right-8 z-20 animate-[float-slow_7s_ease-in-out_infinite_3s] group">
-                  <div className="bg-[#12121A]/85 backdrop-blur-md border border-brand/20 hover:border-brand px-4 py-2.5 rounded-2xl flex items-center gap-2.5 shadow-[0_0_20px_rgba(0,240,255,0.15)] hover:shadow-[0_0_25px_rgba(0,240,255,0.3)] transition-all duration-300">
-                    <div className="p-1.5 rounded-lg bg-brand/10 text-brand">
-                      <GraduationCap className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider leading-none">Knowledge</div>
-                      <div className="text-xs font-bold text-white mt-0.5">Training</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 3D Isometric Pipeline SVG drawing */}
-                <svg viewBox="0 0 400 400" className="w-full h-full">
-                  <defs>
-                    <linearGradient id="cyberGlow" x1="0" y1="0" x2="1" y2="1">
-                      <stop offset="0%" stopColor="#00F0FF" />
-                      <stop offset="50%" stopColor="#0072FF" />
-                      <stop offset="100%" stopColor="#00F0FF" />
-                    </linearGradient>
-                    <filter id="glow-heavy" x="-30%" y="-30%" width="160%" height="160%">
-                      <feGaussianBlur stdDeviation="8" result="blur" />
-                      <feMerge>
-                        <feMergeNode in="blur" />
-                        <feMergeNode in="SourceGraphic" />
-                      </feMerge>
-                    </filter>
-                    <filter id="glow-light" x="-10%" y="-10%" width="120%" height="120%">
-                      <feGaussianBlur stdDeviation="3" result="blur" />
-                      <feMerge>
-                        <feMergeNode in="blur" />
-                        <feMergeNode in="SourceGraphic" />
-                      </feMerge>
-                    </filter>
-                  </defs>
-
-                  {/* Outer Orbit HUD */}
-                  <circle cx="200" cy="200" r="170" fill="none" stroke="rgba(0, 240, 255, 0.05)" strokeWidth="1" strokeDasharray="10, 5" />
-                  <circle cx="200" cy="200" r="160" fill="none" stroke="rgba(0, 114, 255, 0.08)" strokeWidth="2" strokeDasharray="40, 20" className="animate-[spin_40s_linear_infinite]" />
-
-                  {/* Isometric Grid Floor (back layer) */}
-                  <g opacity="0.12" transform="rotate(30, 200, 200)">
-                    {Array.from({ length: 9 }).map((_, i) => (
-                      <line key={`v-${i}`} x1={40 + i * 40} y1="40" x2={40 + i * 40} y2="360" stroke="#00F0FF" strokeWidth="1" />
-                    ))}
-                    {Array.from({ length: 9 }).map((_, i) => (
-                      <line key={`h-${i}`} x1="40" y1={40 + i * 40} x2="360" y2={40 + i * 40} stroke="#00F0FF" strokeWidth="1" />
-                    ))}
-                  </g>
-
-                  {/* Data Pipeline Streams (Glowing Lines) */}
-                  {/* Pipeline path 1: Left to Right S-curve */}
-                  <path 
-                    d="M 50 180 C 120 180, 120 280, 200 280 C 280 280, 280 120, 350 120" 
-                    fill="none" 
-                    stroke="url(#cyberGlow)" 
-                    strokeWidth="3" 
-                    opacity="0.8"
-                    filter="url(#glow-light)"
-                  />
-                  {/* Pipeline path 2: Right to Left S-curve */}
-                  <path 
-                    d="M 350 280 C 280 280, 280 120, 200 120 C 120 120, 120 220, 50 220" 
-                    fill="none" 
-                    stroke="rgba(0, 114, 255, 0.5)" 
-                    strokeWidth="2" 
-                    strokeDasharray="8 6"
-                  />
-
-                  {/* Central Cognitive Core (AI Brain Sphere) */}
-                  <g transform="translate(200, 200)">
-                    {/* Glowing outer aura */}
-                    <circle cx="0" cy="0" r="45" fill="rgba(0, 240, 255, 0.04)" stroke="rgba(0, 240, 255, 0.15)" strokeWidth="1" filter="url(#glow-heavy)" />
-                    <circle cx="0" cy="0" r="32" fill="rgba(0, 114, 255, 0.08)" stroke="rgba(0, 114, 255, 0.3)" strokeWidth="1.5" />
-                    
-                    {/* Inner core */}
-                    <circle cx="0" cy="0" r="18" fill="#0A0A0E" stroke="#00F0FF" strokeWidth="2.5" filter="url(#glow-light)" />
-                    <circle cx="0" cy="0" r="6" fill="#00F0FF" className="animate-ping" />
-                    <circle cx="0" cy="0" r="5" fill="#00F0FF" />
-
-                    {/* Orbiting particles */}
-                    <g className="animate-[spin_10s_linear_infinite]">
-                      <circle cx="28" cy="0" r="3" fill="#00F0FF" />
-                      <line x1="0" y1="0" x2="28" y2="0" stroke="rgba(0, 240, 255, 0.3)" strokeWidth="1" />
-                    </g>
-                    <g className="animate-[spin_15s_linear_infinite_reverse]">
-                      <circle cx="0" cy="-35" r="3" fill="#0072FF" />
-                      <line x1="0" y1="0" x2="0" y2="-35" stroke="rgba(0, 114, 255, 0.3)" strokeWidth="1" />
-                    </g>
-                  </g>
-
-                  {/* Flowing Data Packets along path 1 */}
-                  {/* Packet 1 */}
-                  <circle r="5" fill="#FFF" filter="url(#glow-light)">
-                    <animateMotion 
-                      dur="5s" 
-                      repeatCount="indefinite" 
-                      path="M 50 180 C 120 180, 120 280, 200 280 C 280 280, 280 120, 350 120"
-                    />
-                  </circle>
-                  {/* Packet 2 (delayed) */}
-                  <circle r="4" fill="#00F0FF">
-                    <animateMotion 
-                      dur="5s" 
-                      begin="1.8s"
-                      repeatCount="indefinite" 
-                      path="M 50 180 C 120 180, 120 280, 200 280 C 280 280, 280 120, 350 120"
-                    />
-                  </circle>
-
-                  {/* Flowing Data Packets along path 2 */}
-                  <circle r="4.5" fill="#0072FF" filter="url(#glow-light)">
-                    <animateMotion 
-                      dur="4s" 
-                      repeatCount="indefinite" 
-                      path="M 350 280 C 280 280, 280 120, 200 120 C 120 120, 120 220, 50 220"
-                    />
-                  </circle>
-
-                  {/* Connecting lines from Core to badging target points */}
-                  <line x1="200" y1="200" x2="60" y2="80" stroke="rgba(0, 240, 255, 0.15)" strokeWidth="1.5" strokeDasharray="3 3" />
-                  <line x1="200" y1="200" x2="330" y2="150" stroke="rgba(0, 240, 255, 0.15)" strokeWidth="1.5" strokeDasharray="3 3" />
-                  <line x1="200" y1="200" x2="320" y2="330" stroke="rgba(0, 114, 255, 0.15)" strokeWidth="1.5" strokeDasharray="3 3" />
-                </svg>
-              </div>
-
+            {/* Right Column: Holographic Brain Circuit Projection */}
+            <div className="lg:col-span-6 flex items-center justify-center">
+              <HolographicBrain />
             </div>
+
           </div>
         </Container>
       </section>
 
-      {/* 2. STATS SECTION — Countup Scroll-triggered */}
-      <section id="stats" className="py-24 md:py-32 relative bg-[#0D0D14] border-b border-white/5 overflow-hidden">
+      {/* 2. THE JOURNEY (Timeline Section) */}
+      <section className="py-24 md:py-36 relative bg-[#08080A] border-b border-white/5 overflow-hidden">
         {/* Glow */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[350px] bg-brand/5 rounded-full blur-[130px] pointer-events-none" />
-        
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[350px] bg-[#0072FF]/5 rounded-full blur-[130px] pointer-events-none" />
+
         <Container className="relative z-10">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-brand">Metrics of Excellence</span>
+          <div className="text-center max-w-3xl mx-auto mb-20">
+            <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-brand">Our Legacy</span>
             <h2 className="font-display font-bold text-3xl md:text-5xl text-white mt-3 mb-6">
-              Proven Capabilities, Measurable Impact
+              The Journey of Innovation
             </h2>
             <p className="text-slate-400 font-light text-base md:text-lg">
-              {pageData.reachLine || "We deliver strategic advantages across global markets with data systems designed to scale."}
+              Tracing our evolution from a core automation consultancy into a multi-disciplinary analytics powerhouse.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {parsedStats.map((stat, idx) => (
-              <div 
-                key={idx} 
-                className="bg-[#12121A]/50 backdrop-blur-md border border-white/5 hover:border-brand/20 p-8 rounded-3xl transition-all duration-300 group hover:-translate-y-1"
-              >
-                <div className="text-[44px] md:text-[54px] font-bold text-white font-display leading-none mb-3 flex items-baseline">
-                  <CountUp value={stat.num} suffix={stat.suffix} className="text-transparent bg-clip-text bg-gradient-to-r from-brand to-corporate" />
-                </div>
-                <div className="text-sm font-semibold text-slate-400 group-hover:text-slate-200 transition-colors">
-                  {stat.label}
-                </div>
-                <div className="w-12 h-[2px] bg-gradient-to-r from-brand to-transparent mt-4 opacity-50 group-hover:w-full transition-all duration-300" />
+          {/* Timeline Layout */}
+          <div className="relative max-w-5xl mx-auto">
+            {/* Timeline Center track (shifts left on mobile) */}
+            <div className="absolute left-4 lg:left-1/2 top-0 bottom-0 w-[2px] bg-gradient-to-b from-brand via-corporate to-brand -translate-x-1/2 opacity-25" />
+
+            {/* Milestone 1: 2010 - Founding */}
+            <div className="relative grid grid-cols-1 lg:grid-cols-12 gap-8 mb-20">
+              <div className="lg:col-span-5 lg:text-right flex flex-col justify-center order-2 lg:order-1 pl-10 lg:pl-0">
+                <Reveal>
+                  <span className="text-xs font-mono font-bold text-brand block mb-1">STAGE 01 // 2010</span>
+                  <h3 className="text-2xl font-bold text-white mb-3">Startup Founding</h3>
+                  <p className="text-sm text-slate-400 leading-relaxed font-light">
+                    KVJ Analytics was established in Kerala, focused initially on custom report compilation, Excel auditing, and automating manual enterprise workflows.
+                  </p>
+                </Reveal>
               </div>
-            ))}
+              <div className="lg:col-span-2 flex items-center justify-start lg:justify-center order-1 lg:order-2 z-10 pl-2 lg:pl-0">
+                <div className="w-10 h-10 rounded-full bg-[#050505] border-2 border-brand flex items-center justify-center shadow-[0_0_15px_rgba(0,240,255,0.3)] animate-pulse">
+                  <span className="w-3.5 h-3.5 rounded-full bg-brand" />
+                </div>
+              </div>
+              <div className="lg:col-span-5 flex items-center order-3 pl-10 lg:pl-8">
+                <Reveal className="p-6 bg-[#0A0A0C]/50 border border-white/5 rounded-2xl w-full">
+                  <GarageCircuitAnimation />
+                </Reveal>
+              </div>
+            </div>
+
+            {/* Milestone 2: 2015 - Expansion */}
+            <div className="relative grid grid-cols-1 lg:grid-cols-12 gap-8 mb-20">
+              <div className="lg:col-span-5 flex items-center order-3 lg:order-1 pl-10 lg:pl-0 pr-0 lg:pr-8">
+                <Reveal className="p-6 bg-[#0A0A0C]/50 border border-white/5 rounded-2xl w-full">
+                  <GlobalNodesAnimation />
+                </Reveal>
+              </div>
+              <div className="lg:col-span-2 flex items-center justify-start lg:justify-center order-1 lg:order-2 z-10 pl-2 lg:pl-0">
+                <div className="w-10 h-10 rounded-full bg-[#050505] border-2 border-corporate flex items-center justify-center shadow-[0_0_15px_rgba(0,114,255,0.3)]">
+                  <span className="w-3.5 h-3.5 rounded-full bg-corporate" />
+                </div>
+              </div>
+              <div className="lg:col-span-5 flex flex-col justify-center order-2 pl-10 lg:pl-0">
+                <Reveal>
+                  <span className="text-xs font-mono font-bold text-corporate block mb-1">STAGE 02 // 2015</span>
+                  <h3 className="text-2xl font-bold text-white mb-3">Enterprise Operations</h3>
+                  <p className="text-sm text-slate-400 leading-relaxed font-light">
+                    Expanded operations across South India, delivering custom dashboard infrastructures, database pipelines, and spreadsheet risk-auditing models.
+                  </p>
+                </Reveal>
+              </div>
+            </div>
+
+            {/* Milestone 3: 2020 - AI Integration */}
+            <div className="relative grid grid-cols-1 lg:grid-cols-12 gap-8 mb-20">
+              <div className="lg:col-span-5 lg:text-right flex flex-col justify-center order-2 lg:order-1 pl-10 lg:pl-0">
+                <Reveal>
+                  <span className="text-xs font-mono font-bold text-brand block mb-1">STAGE 03 // 2020</span>
+                  <h3 className="text-2xl font-bold text-white mb-3">Cognitive Analytics &amp; AI</h3>
+                  <p className="text-sm text-slate-400 leading-relaxed font-light">
+                    Integrated machine learning and cognitive algorithms, establishing automated pipeline workflows that convert raw datastreams into predictive business insights.
+                  </p>
+                </Reveal>
+              </div>
+              <div className="lg:col-span-2 flex items-center justify-start lg:justify-center order-1 lg:order-2 z-10 pl-2 lg:pl-0">
+                <div className="w-10 h-10 rounded-full bg-[#050505] border-2 border-brand flex items-center justify-center shadow-[0_0_15px_rgba(0,240,255,0.3)] animate-pulse">
+                  <span className="w-3.5 h-3.5 rounded-full bg-brand" />
+                </div>
+              </div>
+              <div className="lg:col-span-5 flex items-center order-3 pl-10 lg:pl-8">
+                <Reveal className="p-6 bg-[#0A0A0C]/50 border border-white/5 rounded-2xl w-full">
+                  <NeuralNetworkAnimation />
+                </Reveal>
+              </div>
+            </div>
+
+            {/* Milestone 4: 2024 - Training Launch */}
+            <div className="relative grid grid-cols-1 lg:grid-cols-12 gap-8">
+              <div className="lg:col-span-5 flex items-center order-3 lg:order-1 pl-10 lg:pl-0 pr-0 lg:pr-8">
+                <Reveal className="p-6 bg-[#0A0A0C]/50 border border-white/5 rounded-2xl w-full">
+                  <GraduationCapAnimation />
+                </Reveal>
+              </div>
+              <div className="lg:col-span-2 flex items-center justify-start lg:justify-center order-1 lg:order-2 z-10 pl-2 lg:pl-0">
+                <div className="w-10 h-10 rounded-full bg-[#050505] border-2 border-corporate flex items-center justify-center shadow-[0_0_15px_rgba(0,114,255,0.3)]">
+                  <span className="w-3.5 h-3.5 rounded-full bg-corporate" />
+                </div>
+              </div>
+              <div className="lg:col-span-5 flex flex-col justify-center order-2 pl-10 lg:pl-0">
+                <Reveal>
+                  <span className="text-xs font-mono font-bold text-corporate block mb-1">STAGE 04 // 2024</span>
+                  <h3 className="text-2xl font-bold text-white mb-3">Academic &amp; Training Divisions</h3>
+                  <p className="text-sm text-slate-400 leading-relaxed font-light">
+                    Launched structured training frameworks and partnerships with top universities, delivering certified outcomes in Power BI, Excel analytics, and Python automation.
+                  </p>
+                </Reveal>
+              </div>
+            </div>
+
           </div>
         </Container>
       </section>
 
-      {/* 3. SPECIALIZATIONS SECTION — Glowing Tabs / Cards */}
-      <section className="py-24 md:py-32 relative overflow-hidden bg-[#0A0A0E] border-b border-white/5">
+      {/* 3. CORE PILLARS (Vision, Mission, Values) */}
+      <section className="py-24 md:py-36 relative bg-[#050505] border-b border-white/5 overflow-hidden">
         <Container className="relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
-            <div className="lg:col-span-4 space-y-6">
-              <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-brand">What We Specialize In</span>
-              <h2 className="font-display font-bold text-3xl md:text-4xl text-white">
-                Core Domains of Strategic Innovation
-              </h2>
-              <p className="text-slate-400 font-light text-sm md:text-base leading-relaxed">
-                KVJ Analytics transforms industrial workflows by injecting state-of-the-art data modeling and cognitive engines. Here is how we specialize.
-              </p>
-              
-              <div className="hidden lg:flex flex-col gap-2.5 pt-4">
-                {specializations.map((spec, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => setActiveTab(idx)}
-                    className={`text-left px-5 py-3.5 rounded-2xl border text-sm font-semibold transition-all duration-300 ${
-                      activeTab === idx
-                        ? "bg-brand/10 border-brand/40 text-white shadow-[0_0_15px_rgba(0,240,255,0.1)]"
-                        : "bg-[#12121A]/40 border-white/5 text-slate-400 hover:border-white/10 hover:text-slate-200"
-                    }`}
-                  >
-                    {spec}
-                  </button>
-                ))}
-              </div>
-            </div>
+          <div className="text-center max-w-3xl mx-auto mb-20">
+            <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-brand">Our Foundations</span>
+            <h2 className="font-display font-bold text-3xl md:text-5xl text-white mt-3 mb-6">
+              Our Core Pillars
+            </h2>
+            <p className="text-slate-400 font-light text-base md:text-lg">
+              Three fundamental vectors driving our engineering standards and training excellence.
+            </p>
+          </div>
 
-            <div className="lg:col-span-8">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {specializations.map((spec, idx) => {
-                  const icons = [LineChart, Cpu, GraduationCap, Database];
-                  const Icon = icons[idx % icons.length];
-                  
-                  return (
-                    <div
-                      key={idx}
-                      className={`p-8 rounded-3xl border transition-all duration-500 flex flex-col justify-between h-[230px] group ${
-                        activeTab === idx || activeTab === -1
-                          ? "bg-[#12121A] border-brand/30 shadow-[0_0_30px_rgba(0,240,255,0.05)]"
-                          : "bg-[#12121A]/40 border-white/5 opacity-70 hover:opacity-100"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className={`p-3 rounded-2xl ${
-                          activeTab === idx ? "bg-brand/15 text-brand" : "bg-white/5 text-slate-400"
-                        }`}>
-                          <Icon className="w-6 h-6" />
-                        </div>
-                        <span className="text-xs font-mono text-slate-500 font-bold">0{idx + 1}</span>
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-bold text-white mb-2 group-hover:text-brand transition-colors">
-                          {spec}
-                        </h3>
-                        <p className="text-xs text-slate-400 leading-relaxed font-light">
-                          Empowering enterprise decision makers with robust tools engineered to convert complexity into clear pathways.
-                        </p>
-                      </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            {/* Vision Pillar */}
+            <Reveal delay={0}>
+              <div className="bg-[#0A0A0C]/75 border border-white/5 rounded-[32px] p-8 md:p-9 backdrop-blur-xl flex flex-col justify-between h-[360px] group hover:border-[#0072FF]/40 transition-all duration-300">
+                <div className="flex items-start justify-between">
+                  <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-brand">
+                    <Compass className="w-6 h-6 animate-[spin_10s_linear_infinite]" />
+                  </div>
+                  <span className="text-xs font-mono text-slate-650 font-bold">PILLAR 01</span>
+                </div>
+                <div>
+                  <h3 className="text-2xl font-bold text-white mb-3 group-hover:text-brand transition-colors group-hover:text-shadow-[0_0_15px_rgba(0,240,255,0.4)]">
+                    Vision
+                  </h3>
+                  <p className="text-sm text-slate-400 leading-relaxed font-light">
+                    To establish a cognitive standard where complexity is automated and strategic strategies are backed by clean, verified data.
+                  </p>
+                </div>
+              </div>
+            </Reveal>
+
+            {/* Mission Pillar */}
+            <Reveal delay={100}>
+              <div className="bg-[#0A0A0C]/75 border border-white/5 rounded-[32px] p-8 md:p-9 backdrop-blur-xl flex flex-col justify-between h-[360px] group hover:border-[#0072FF]/40 transition-all duration-300">
+                <div className="flex items-start justify-between">
+                  <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-brand">
+                    <Target className="w-6 h-6 animate-pulse" />
+                  </div>
+                  <span className="text-xs font-mono text-slate-650 font-bold">PILLAR 02</span>
+                </div>
+                <div>
+                  <h3 className="text-2xl font-bold text-white mb-3 group-hover:text-brand transition-colors group-hover:text-shadow-[0_0_15px_rgba(0,240,255,0.4)]">
+                    Mission
+                  </h3>
+                  <p className="text-sm text-slate-400 leading-relaxed font-light">
+                    Deploying custom analytics and automation to eliminate manual errors and raise job-relevant corporate outcomes.
+                  </p>
+                </div>
+              </div>
+            </Reveal>
+
+            {/* Values Pillar */}
+            <Reveal delay={200}>
+              <div className="bg-[#0A0A0C]/75 border border-white/5 rounded-[32px] p-8 md:p-9 backdrop-blur-xl flex flex-col justify-between h-[360px] group hover:border-[#0072FF]/40 transition-all duration-300">
+                <div className="flex items-start justify-between">
+                  <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-brand">
+                    <Workflow className="w-6 h-6" />
+                  </div>
+                  <span className="text-xs font-mono text-slate-650 font-bold">PILLAR 03</span>
+                </div>
+                <div>
+                  <h3 className="text-2xl font-bold text-white mb-3 group-hover:text-brand transition-colors group-hover:text-shadow-[0_0_15px_rgba(0,240,255,0.4)]">
+                    Values
+                  </h3>
+                  <p className="text-sm text-slate-400 leading-relaxed font-light">
+                    Sustained auditing integrity, engineering modular structures, and delivering clear value that converts complexity to clarity.
+                  </p>
+                </div>
+              </div>
+            </Reveal>
+          </div>
+        </Container>
+      </section>
+
+      {/* 4. EXPERTISE & TEAM SECTION */}
+      <section className="py-24 md:py-36 relative bg-[#08080A] overflow-hidden">
+        {/* Parallax background floating particles */}
+        <div className="absolute inset-0 pointer-events-none opacity-20 z-0">
+          <svg className="w-full h-full" viewBox="0 0 1000 1000">
+            <circle cx="150" cy="150" r="3" fill="#00F0FF" className="animate-pulse" />
+            <circle cx="850" cy="200" r="2.5" fill="#0072FF" className="animate-pulse" />
+            <circle cx="500" cy="800" r="3" fill="#00F0FF" className="animate-pulse" />
+            <circle cx="200" cy="700" r="2" fill="#0072FF" />
+            <circle cx="800" cy="750" r="3.5" fill="#00F0FF" />
+          </svg>
+        </div>
+
+        <Container className="relative z-10">
+          <div className="text-center max-w-3xl mx-auto mb-20">
+            <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-brand">The Experts</span>
+            <h2 className="font-display font-bold text-3xl md:text-5xl text-white mt-3 mb-6">
+              Our Core Team &amp; Skillsets
+            </h2>
+            <p className="text-slate-400 font-light text-base md:text-lg">
+              KVJ Analytics is led by seasoned database architects, financial auditors, and corporate skill educators.
+            </p>
+          </div>
+
+          {/* Grid of Team Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            {/* Team Member 1 */}
+            <Reveal delay={0}>
+              <div className="bg-[#0A0A0C]/70 border border-white/5 rounded-3xl p-8 flex flex-col items-center text-center relative overflow-hidden group hover:border-[#0072FF]/40 transition-all duration-500 min-h-[340px]">
+                {/* Circular profile placeholder with glowing neon halo */}
+                <div className="relative w-28 h-28 rounded-full flex items-center justify-center p-1.5 bg-gradient-to-tr from-brand to-corporate mb-6 transition-transform duration-300 group-hover:scale-105">
+                  <div className="w-full h-full rounded-full bg-[#050505] flex items-center justify-center text-white text-3xl font-bold font-display">
+                    JT
+                  </div>
+                </div>
+
+                <h3 className="text-xl font-bold text-white mb-1 group-hover:text-brand transition-colors">Ajay Thomas</h3>
+                <span className="text-xs text-brand font-mono font-bold uppercase tracking-wider mb-4">Founder &amp; Principal Architect</span>
+                
+                <p className="text-xs text-slate-400 leading-relaxed font-light mb-6">
+                  16+ years auditing data models, custom scripting process workflows, and guiding university curriculums.
+                </p>
+
+                {/* Skill Badges (Slide-up Overlay on Hover) */}
+                <div className="absolute inset-x-0 bottom-0 bg-[#0A0A0C] border-t border-white/10 p-6 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300 flex items-center justify-center gap-4">
+                  <div className="flex flex-col items-center">
+                    <span className="text-[9px] font-mono text-slate-400 uppercase mb-2">Expertise</span>
+                    <div className="flex gap-2">
+                      <span className="px-2.5 py-1 rounded bg-[#0072FF]/10 border border-[#0072FF]/20 text-[10px] font-mono text-white">Power BI</span>
+                      <span className="px-2.5 py-1 rounded bg-brand/10 border border-brand/20 text-[10px] font-mono text-white">Python</span>
+                      <span className="px-2.5 py-1 rounded bg-brand/10 border border-brand/20 text-[10px] font-mono text-white">Excel</span>
                     </div>
-                  );
-                })}
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-        </Container>
-      </section>
+            </Reveal>
 
-      {/* 4. VISION SECTION — High-Tech Holographic Statement */}
-      <section className="py-24 md:py-32 relative bg-[#0D0D14] overflow-hidden">
-        {/* Abstract glowing waves */}
-        <div className="absolute inset-x-0 bottom-0 h-40 bg-[radial-gradient(ellipse_at_bottom,rgba(0,240,255,0.08),transparent)] pointer-events-none" />
-        
-        <Container className="relative z-10">
-          <div className="max-w-4xl mx-auto text-center space-y-8">
-            <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-brand">
-              {pageData.vision?.heading || "Our Core Vision"}
-            </span>
-            <blockquote className="font-display font-medium text-2xl sm:text-3xl md:text-4xl text-white leading-relaxed tracking-tight text-shadow-[0_0_30px_rgba(255,255,255,0.1)]">
-              &ldquo;{pageData.vision?.body || "To establish a cognitive global standard in data accessibility, automating human error out of strategy execution."}&rdquo;
-            </blockquote>
-            <div className="flex items-center justify-center gap-3">
-              <span className="w-8 h-[1px] bg-brand/50" />
-              <span className="text-[10px] uppercase font-mono tracking-widest text-slate-400">KVJ Analytics Directive</span>
-              <span className="w-8 h-[1px] bg-brand/50" />
-            </div>
+            {/* Team Member 2 */}
+            <Reveal delay={100}>
+              <div className="bg-[#0A0A0C]/70 border border-white/5 rounded-3xl p-8 flex flex-col items-center text-center relative overflow-hidden group hover:border-[#0072FF]/40 transition-all duration-500 min-h-[340px]">
+                <div className="relative w-28 h-28 rounded-full flex items-center justify-center p-1.5 bg-gradient-to-tr from-brand to-corporate mb-6 transition-transform duration-300 group-hover:scale-105">
+                  <div className="w-full h-full rounded-full bg-[#050505] flex items-center justify-center text-white text-3xl font-bold font-display">
+                    KV
+                  </div>
+                </div>
+
+                <h3 className="text-xl font-bold text-white mb-1 group-hover:text-brand transition-colors">KV Jose</h3>
+                <span className="text-xs text-brand font-mono font-bold uppercase tracking-wider mb-4">Director of Academic Programs</span>
+                
+                <p className="text-xs text-slate-400 leading-relaxed font-light mb-6">
+                  Spearheading university collaborations, certified labs, and student placement analytics structures.
+                </p>
+
+                {/* Skill Badges (Slide-up Overlay on Hover) */}
+                <div className="absolute inset-x-0 bottom-0 bg-[#0A0A0C] border-t border-white/10 p-6 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300 flex items-center justify-center gap-4">
+                  <div className="flex flex-col items-center">
+                    <span className="text-[9px] font-mono text-slate-400 uppercase mb-2">Expertise</span>
+                    <div className="flex gap-2">
+                      <span className="px-2.5 py-1 rounded bg-[#0072FF]/10 border border-[#0072FF]/20 text-[10px] font-mono text-white">Analytics</span>
+                      <span className="px-2.5 py-1 rounded bg-brand/10 border border-brand/20 text-[10px] font-mono text-white">L&amp;D</span>
+                      <span className="px-2.5 py-1 rounded bg-brand/10 border border-brand/20 text-[10px] font-mono text-white">Academic</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Reveal>
+
+            {/* Team Member 3 */}
+            <Reveal delay={200}>
+              <div className="bg-[#0A0A0C]/70 border border-white/5 rounded-3xl p-8 flex flex-col items-center text-center relative overflow-hidden group hover:border-[#0072FF]/40 transition-all duration-500 min-h-[340px]">
+                <div className="relative w-28 h-28 rounded-full flex items-center justify-center p-1.5 bg-gradient-to-tr from-brand to-corporate mb-6 transition-transform duration-300 group-hover:scale-105">
+                  <div className="w-full h-full rounded-full bg-[#050505] flex items-center justify-center text-white text-3xl font-bold font-display">
+                    SA
+                  </div>
+                </div>
+
+                <h3 className="text-xl font-bold text-white mb-1 group-hover:text-brand transition-colors">Saji Augustine</h3>
+                <span className="text-xs text-brand font-mono font-bold uppercase tracking-wider mb-4">Senior Automation Consultant</span>
+                
+                <p className="text-xs text-slate-400 leading-relaxed font-light mb-6">
+                  Esterifying SQL databases, custom reporting scripts, and spreadsheet optimization engines.
+                </p>
+
+                {/* Skill Badges (Slide-up Overlay on Hover) */}
+                <div className="absolute inset-x-0 bottom-0 bg-[#0A0A0C] border-t border-white/10 p-6 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300 flex items-center justify-center gap-4">
+                  <div className="flex flex-col items-center">
+                    <span className="text-[9px] font-mono text-slate-400 uppercase mb-2">Expertise</span>
+                    <div className="flex gap-2">
+                      <span className="px-2.5 py-1 rounded bg-[#0072FF]/10 border border-[#0072FF]/20 text-[10px] font-mono text-white">SQL</span>
+                      <span className="px-2.5 py-1 rounded bg-brand/10 border border-brand/20 text-[10px] font-mono text-white">VBA</span>
+                      <span className="px-2.5 py-1 rounded bg-brand/10 border border-brand/20 text-[10px] font-mono text-white">ETL</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Reveal>
           </div>
         </Container>
       </section>
