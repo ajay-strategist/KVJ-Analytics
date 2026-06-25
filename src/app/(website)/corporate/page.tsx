@@ -105,6 +105,8 @@ export default async function CorporateSolutionsPage() {
                 iconName = "corp-spreadsheet";
               } else if (service.slug === "dashboard-development") {
                 iconName = "corp-dashboard";
+              } else if (service.slug === "app-development") {
+                iconName = "corp-app";
               } else if (service.slug === "process-automation") {
                 iconName = "corp-process";
               } else if (service.slug === "corporate-training") {

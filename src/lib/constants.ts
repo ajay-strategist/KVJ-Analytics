@@ -116,9 +116,9 @@ export const FALLBACK_ABOUT = {
   reachLine:
     "Our services and training programs have reached clients across Kerala, India, UAE, Oman, USA, and Europe.",
   impact: [
-    "16+ Years of Experience",
     "50,000+ Young Professionals Trained",
     "5,000+ Senior Professionals Trained",
+    "Industry-Oriented Learning Ecosystem",
     "Trusted Corporate & Academic Partnerships",
   ],
   vision: {
@@ -182,6 +182,18 @@ export const FALLBACK_CORPORATE = {
       ]
     },
     {
+      title: "App Development",
+      slug: "app-development",
+      shortDescription:
+        "Custom business applications for reporting, workflow, and operational management.",
+      details: [
+        "Build customized operational applications matching your exact workflow.",
+        "Secure data sharing and roles-based access control.",
+        "Integrate custom database connectors and scheduled background jobs.",
+        "Responsive dashboard layers accessible on desktop and mobile."
+      ]
+    },
+    {
       title: "Process Automation",
       slug: "process-automation",
       shortDescription:
@@ -210,7 +222,7 @@ export const FALLBACK_CORPORATE = {
 
 export const FALLBACK_EDUCATION = {
   heading: "Educational Solutions",
-  strapline: "Industry-Ready Talent. Built Faster.",
+  strapline: "Building Industry-Ready Learning Systems",
   intro:
     "KVJ Analytics helps institutions bridge the gap between academics and industry through practical training, automation, and analytics platforms.",
   services: [
@@ -273,10 +285,11 @@ export const FALLBACK_PRODUCTS = [
     description:
       "Grade Scope automates student progress reports, placement reports, training reports, and institutional analytics.",
     keyFeatures: [
-      "Single-click PDF scorecard generation.",
-      "Multi-cohort progress analytics showing performance gaps.",
-      "NAAC and board-audit compliance reports.",
-      "Secure database synchronization across departments.",
+      "Automated Reporting",
+      "Student Progress Tracking",
+      "Placement Analytics",
+      "Performance Monitoring",
+      "Centralized Data Management"
     ],
   },
   {
@@ -286,16 +299,17 @@ export const FALLBACK_PRODUCTS = [
     description:
       "Protrix helps teachers generate, manage, and evaluate practical assignments while helping students practice and improve skills.",
     keyFeatures: [
-      "Automatic grading of spreadsheet assignments with immediate feedback loops.",
-      "Randomized question blocks preventing copy-pasting among students.",
-      "Detailed instructor dashboards outlining completion speed and score spreads.",
-      "Custom grade export integrations to common learning systems.",
+      "Assignment Automation",
+      "Automated Evaluation",
+      "Excel-Based Learning",
+      "Practical Skill Assessment",
+      "Time-Saving Evaluation System"
     ],
   },
 ];
 
 export const FALLBACK_PRODUCTS_PAGE = {
-  heading: "Our EdTech Products",
+  heading: "Our Products",
   intro: "Automate Reporting. Elevate Institutions.",
   products: FALLBACK_PRODUCTS
 };
@@ -316,4 +330,3 @@ export const FALLBACK_CONTACT = {
     "Institutional Collaborations",
   ],
 };
-

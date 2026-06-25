@@ -214,29 +214,38 @@ function SolutionGrid({
           const desc = SOLUTION_DESC[item.title] || "Tailored solutions engineered around measurable business outcomes.";
           
           // Determine the most appropriate premium iconName based on the title
-          let iconName: "visualization" | "automation" | "education" = "visualization";
+          let iconName = "corp-vis";
           const titleLower = item.title.toLowerCase();
           
           if (isEdu) {
-            if (titleLower.includes("analytics") || titleLower.includes("platform")) {
-              iconName = "visualization";
+            if (titleLower.includes("curriculum")) {
+              iconName = "edu-curriculum";
+            } else if (titleLower.includes("analytics") || titleLower.includes("platform")) {
+              iconName = "edu-analytics";
+            } else if (titleLower.includes("assessment")) {
+              iconName = "edu-assessment";
+            } else if (titleLower.includes("certification") || titleLower.includes("cert")) {
+              iconName = "edu-cert";
             } else {
-              iconName = "education";
+              // Training & Certification, Training Programs, or any other training
+              iconName = "edu-training";
             }
           } else {
-            if (
-              titleLower.includes("automation") ||
-              titleLower.includes("spreadsheet") ||
-              titleLower.includes("excel") ||
-              titleLower.includes("report")
-            ) {
-              iconName = "automation";
-            } else if (titleLower.includes("training") || titleLower.includes("certification")) {
-              iconName = "education";
-            } else {
-              iconName = idx % 2 === 0 ? "visualization" : "automation";
+            if (titleLower.includes("report")) {
+              iconName = "corp-report";
+            } else if (titleLower.includes("spreadsheet") || titleLower.includes("consulting")) {
+              iconName = "corp-spreadsheet";
+            } else if (titleLower.includes("dashboard") || titleLower.includes("visualization") || titleLower.includes("data vis")) {
+              iconName = "corp-dashboard";
+            } else if (titleLower.includes("app")) {
+              iconName = "corp-app";
+            } else if (titleLower.includes("process") || titleLower.includes("automation")) {
+              iconName = "corp-process";
+            } else if (titleLower.includes("training")) {
+              iconName = "corp-training";
             }
           }
+
 
           return (
             <Reveal key={idx} delay={(idx % 3) * 90}>

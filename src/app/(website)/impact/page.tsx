@@ -14,13 +14,13 @@ import { GraduationCap, Briefcase, ShoppingBag, Users, Truck, Settings, Trending
 export const revalidate = 3600;
 
 const FALLBACK_IMPACT = {
-  heading: "Our Impact & Reach",
+  heading: "Our Impact",
   intro:
     "For over 16 years, KVJ Analytics has delivered analytics, automation, and training solutions to corporates and educational institutions.",
   highlights: [
-    "16+ Years of Experience",
     "50,000+ Young Professionals Trained",
     "5,000+ Senior Professionals Trained",
+    "Clients Across India & International Markets",
     "Services Delivered in UAE, Oman, USA & Europe",
   ],
   industriesServed: [
