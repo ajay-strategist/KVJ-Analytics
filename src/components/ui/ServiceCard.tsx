@@ -290,6 +290,14 @@ function EduAnalyticsIcon() {
 }
 
 const ICONS: Record<string, React.ComponentType> = {
+  // Compatibility keys (original mapping)
+  report: CorpReportIcon,
+  visualization: CorpVisIcon,
+  spreadsheet: CorpSpreadsheetIcon,
+  process: CorpProcessIcon,
+  education: EduTrainingIcon,
+  automation: CorpProcessIcon,
+
   // Corporate
   "corp-report": CorpReportIcon,
   "corp-vis": CorpVisIcon,
