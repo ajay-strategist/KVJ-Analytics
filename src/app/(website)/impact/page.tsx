@@ -89,7 +89,7 @@ export default async function ImpactPage() {
           </div>
 
           {/* Highlights Band */}
-          <div className="bg-white border border-line/80 rounded-card py-6 px-6 max-w-5xl mx-auto mb-20 shadow-soft relative overflow-hidden">
+          <div className="bg-card border border-line/80 rounded-card py-6 px-6 max-w-5xl mx-auto mb-20 shadow-soft relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-1 signature-gradient" />
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 divide-y sm:divide-y-0 sm:divide-x divide-line">
               {(page.highlights || FALLBACK_IMPACT.highlights).map((hl: string, idx: number) => (
@@ -109,7 +109,7 @@ export default async function ImpactPage() {
               {(page.industriesServed || FALLBACK_IMPACT.industriesServed).map((ind: string, idx: number) => (
                 <span
                   key={idx}
-                  className="px-6 py-3.5 rounded-full text-base font-bold bg-white text-ink border border-line/80 shadow-soft hover:border-brand hover:text-brand hover:-translate-y-1 transition-all duration-300 flex items-center space-x-2.5"
+                  className="px-6 py-3.5 rounded-full text-base font-bold bg-card text-ink border border-line/80 shadow-soft hover:border-brand hover:text-brand hover:-translate-y-1 transition-all duration-300 flex items-center space-x-2.5"
                 >
                   {getIndustryIcon(ind)}
                   <span>{ind}</span>

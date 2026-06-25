@@ -6,6 +6,7 @@
  */
 
 import { createClient } from "@supabase/supabase-js";
+import { mockSupabaseClient } from "./mockSupabase";
 
 // ---------------------------------------------------------------------------
 // Supabase anon client (read-only, used by public page server components)
@@ -13,7 +14,9 @@ import { createClient } from "@supabase/supabase-js";
 function getAnonClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !key) return null;
+  if (!url || !key || url === "https://placeholder.supabase.co") {
+    return mockSupabaseClient as any;
+  }
   return createClient(url, key, { auth: { persistSession: false } });
 }
 

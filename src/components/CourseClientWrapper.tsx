@@ -332,6 +332,26 @@ export function CourseClientWrapper({ course, modules }: CourseClientWrapperProp
                     );
                   })}
                 </div>
+
+                {/* Module Assessment(s) */}
+                {enrolled && mockTests.filter((t) => t.module_id === mod.id).length > 0 && (
+                  <div className="mt-4 pt-4 border-t border-line space-y-2">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate">Module Assessment</p>
+                    {mockTests.filter((t) => t.module_id === mod.id).map((test) => (
+                      <a
+                        key={test.id}
+                        href={`/training/${course.slug}/tests/${test.id}`}
+                        className="flex items-center justify-between p-3.5 rounded-lg border border-cta/30 bg-cta/5 hover:bg-cta/10 transition-all"
+                      >
+                        <span className="flex items-center gap-2 text-sm font-semibold text-ink">
+                          <Clock className="w-4 h-4 text-cta-600" />
+                          {test.title}
+                        </span>
+                        <span className="text-xs font-bold text-cta-600 whitespace-nowrap">Take Assessment →</span>
+                      </a>
+                    ))}
+                  </div>
+                )}
               </Card>
             ))}
           </div>
@@ -354,11 +374,11 @@ export function CourseClientWrapper({ course, modules }: CourseClientWrapperProp
               <div className="py-6 flex justify-center">
                 <Loader2 className="w-6 h-6 animate-spin text-brand" />
               </div>
-            ) : mockTests.length === 0 ? (
+            ) : mockTests.filter((t) => !t.module_id).length === 0 ? (
               <p className="text-xs text-slate italic">No certification tests scheduled for this course yet.</p>
             ) : (
               <div className="space-y-4">
-                {mockTests.map((test) => {
+                {mockTests.filter((t) => !t.module_id).map((test) => {
                   const testAttempts = attempts.filter((a) => a.test_id === test.id);
                   const bestAttempt = testAttempts.length > 0
                     ? testAttempts.sort((a, b) => b.score - a.score)[0]

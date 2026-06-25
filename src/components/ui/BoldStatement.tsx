@@ -16,10 +16,11 @@ export function BoldStatement({
   const Tag = as || (variant === "hero" ? "h1" : variant);
 
   const variantClasses = {
-    hero: "text-[40px] sm:text-[52px] lg:text-[68px] font-extrabold tracking-[-0.03em] leading-[1.02] font-display text-ink",
-    h1: "text-[32px] lg:text-[46px] font-extrabold tracking-[-0.025em] leading-[1.1] font-display text-ink",
-    h2: "text-[26px] lg:text-[36px] font-bold tracking-[-0.02em] leading-[1.15] font-display text-ink",
-    h3: "text-[20px] lg:text-[25px] font-bold tracking-[-0.015em] leading-[1.25] font-display text-ink",
+    // Space Grotesk display — medium weight, tight tracking, on dark.
+    hero: "text-[40px] sm:text-[50px] lg:text-[62px] font-medium tracking-[-0.025em] leading-[1.08] font-display text-ink",
+    h1: "text-[34px] lg:text-[54px] font-medium tracking-[-0.025em] leading-[1.1] font-display text-ink",
+    h2: "text-[28px] lg:text-[44px] font-medium tracking-[-0.02em] leading-[1.12] font-display text-ink",
+    h3: "text-[20px] lg:text-[27px] font-medium tracking-[-0.015em] leading-[1.3] font-display text-ink",
   };
 
   return (

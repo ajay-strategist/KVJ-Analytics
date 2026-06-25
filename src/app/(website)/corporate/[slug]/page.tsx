@@ -37,7 +37,7 @@ export default async function CorporateServiceDetailPage({
   ];
 
   return (
-    <Section background="default" className="bg-white relative overflow-hidden">
+    <Section background="default" className="bg-base relative overflow-hidden">
       <div className="absolute inset-0 bg-grid-pattern opacity-45 pointer-events-none" />
       <div className="absolute top-20 right-0 w-96 h-96 bg-brand/5 rounded-full blur-3xl pointer-events-none" />
 

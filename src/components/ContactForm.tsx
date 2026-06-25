@@ -131,7 +131,7 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
             value={formData.name}
             onChange={handleChange}
             placeholder="e.g. John Doe"
-            className="w-full px-4 py-3 rounded-input border border-line bg-surface/30 focus:bg-white focus-glow text-sm transition-all font-medium placeholder:text-slate/40"
+            className="w-full px-4 py-3 rounded-input border border-line bg-surface focus:bg-white focus:border-brand/60 text-ink text-sm transition-all font-medium placeholder:text-slate/40"
           />
         </div>
         <div>
@@ -146,7 +146,7 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
             value={formData.organization}
             onChange={handleChange}
             placeholder="e.g. Acme Corp"
-            className="w-full px-4 py-3 rounded-input border border-line bg-surface/30 focus:bg-white focus-glow text-sm transition-all font-medium placeholder:text-slate/40"
+            className="w-full px-4 py-3 rounded-input border border-line bg-surface focus:bg-white focus:border-brand/60 text-ink text-sm transition-all font-medium placeholder:text-slate/40"
           />
         </div>
       </div>
@@ -164,7 +164,7 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
             value={formData.email}
             onChange={handleChange}
             placeholder="e.g. john@company.com"
-            className="w-full px-4 py-3 rounded-input border border-line bg-surface/30 focus:bg-white focus-glow text-sm transition-all font-medium placeholder:text-slate/40"
+            className="w-full px-4 py-3 rounded-input border border-line bg-surface focus:bg-white focus:border-brand/60 text-ink text-sm transition-all font-medium placeholder:text-slate/40"
           />
         </div>
         <div>
@@ -179,7 +179,7 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
             value={formData.phone}
             onChange={handleChange}
             placeholder="e.g. 9961813730"
-            className="w-full px-4 py-3 rounded-input border border-line bg-surface/30 focus:bg-white focus-glow text-sm transition-all font-medium placeholder:text-slate/40"
+            className="w-full px-4 py-3 rounded-input border border-line bg-surface focus:bg-white focus:border-brand/60 text-ink text-sm transition-all font-medium placeholder:text-slate/40"
           />
         </div>
       </div>
@@ -194,7 +194,7 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
           required
           value={formData.serviceInterest}
           onChange={handleChange}
-          className="w-full px-4 py-3 rounded-input border border-line bg-surface/30 focus:bg-white focus-glow text-sm transition-all font-medium"
+          className="w-full px-4 py-3 rounded-input border border-line bg-surface focus:bg-white focus:border-brand/60 text-ink text-sm transition-all font-medium"
         >
           <option value="">-- Select Interest Category --</option>
           {inquiryAreas.map((area, idx) => (
@@ -220,7 +220,7 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
           value={formData.message}
           onChange={handleChange}
           placeholder="Briefly describe your requirements or the systems you'd like audited/automated..."
-          className="w-full px-4 py-3 rounded-input border border-line bg-surface/30 focus:bg-white focus-glow text-sm transition-all resize-y font-medium placeholder:text-slate/40"
+          className="w-full px-4 py-3 rounded-input border border-line bg-surface focus:bg-white focus:border-brand/60 text-ink text-sm transition-all resize-y font-medium placeholder:text-slate/40"
         />
       </div>
 

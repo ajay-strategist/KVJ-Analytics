@@ -57,9 +57,9 @@ const FALLBACK_COURSES: Record<
 export default async function CourseDetailPage({
   params,
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }) {
-  const { slug } = params;
+  const { slug } = await params;
 
   // 1. Fetch Course details from Supabase
   let course: any = null;
@@ -114,12 +114,12 @@ export default async function CourseDetailPage({
   }
 
   const id = course?.id || `fallback-id-${slug}`;
-  const title = course?.title || fallback.title;
-  const segment = course?.segment || fallback.segment;
-  const summary = course?.summary || fallback.summary;
-  const priceINR = course?.price_inr !== undefined ? Number(course.price_inr) : fallback.priceINR;
-  const isPaid = course?.is_paid !== undefined ? !!course.is_paid : fallback.isPaid;
-  const introduction = course?.introduction || fallback.introduction;
+  const title = course?.title || fallback?.title || "Untitled Course";
+  const segment = course?.segment || fallback?.segment || "college";
+  const summary = course?.summary || fallback?.summary || "";
+  const priceINR = course?.price_inr !== undefined ? Number(course.price_inr) : (fallback?.priceINR ?? 0);
+  const isPaid = course?.is_paid !== undefined ? !!course.is_paid : (fallback?.isPaid ?? false);
+  const introduction = course?.introduction || fallback?.introduction || "";
 
   // Build modules list from fallback if not present in DB
   let modules = dbModules;
@@ -139,7 +139,7 @@ export default async function CourseDetailPage({
   }
 
   return (
-    <Section background="default" className="bg-white relative overflow-hidden">
+    <Section background="default" className="bg-base relative overflow-hidden">
       <div className="absolute inset-0 bg-grid-pattern opacity-45 pointer-events-none" />
       <div className="absolute top-20 right-0 w-96 h-96 bg-brand/5 rounded-full blur-3xl pointer-events-none" />
 

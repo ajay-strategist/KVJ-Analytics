@@ -19,6 +19,8 @@ import {
   ToggleLeft,
   ToggleRight,
   RefreshCw,
+  Maximize2,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -59,6 +61,15 @@ export default function AdminBatchesPage() {
   
   // Rotating Timer state
   const [secondsLeft, setSecondsLeft] = useState(30);
+
+  // Full-screen "present code" mode
+  const [presentId, setPresentId] = useState<string | null>(null);
+  useEffect(() => {
+    if (!presentId) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setPresentId(null); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [presentId]);
 
   // Form state to add new batch
   const [showAddForm, setShowAddForm] = useState(false);
@@ -529,17 +540,28 @@ export default function AdminBatchesPage() {
 
                         {/* Toggler Actions */}
                         <td className="p-4 text-center">
-                          <button
-                            onClick={() => handleToggleActive(batch.id, batch.active)}
-                            className="text-slate hover:text-brand transition-colors p-1"
-                            title={batch.active ? "Deactivate Batch Code" : "Activate Batch Code"}
-                          >
-                            {batch.active ? (
-                              <ToggleRight className="w-9 h-9 text-brand cursor-pointer" />
-                            ) : (
-                              <ToggleLeft className="w-9 h-9 text-slate cursor-pointer" />
+                          <div className="flex items-center justify-center gap-1">
+                            {batch.active && !isExpired && (
+                              <button
+                                onClick={() => setPresentId(batch.id)}
+                                className="text-slate hover:text-brand transition-colors p-1.5 rounded-lg hover:bg-brand/5 cursor-pointer"
+                                title="Present code in full screen"
+                              >
+                                <Maximize2 className="w-5 h-5" />
+                              </button>
                             )}
-                          </button>
+                            <button
+                              onClick={() => handleToggleActive(batch.id, batch.active)}
+                              className="text-slate hover:text-brand transition-colors p-1"
+                              title={batch.active ? "Deactivate Batch Code" : "Activate Batch Code"}
+                            >
+                              {batch.active ? (
+                                <ToggleRight className="w-9 h-9 text-brand cursor-pointer" />
+                              ) : (
+                                <ToggleLeft className="w-9 h-9 text-slate cursor-pointer" />
+                              )}
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -550,6 +572,54 @@ export default function AdminBatchesPage() {
           )}
         </div>
       </div>
+
+      {/* Full-screen "present code" mode */}
+      {(() => {
+        const pb = presentId ? batches.find((b) => b.id === presentId) : null;
+        if (!pb) return null;
+        const expired = new Date(pb.valid_to).getTime() < Date.now();
+        return (
+          <div
+            className="fixed inset-0 z-[200] flex flex-col items-center justify-center text-white p-8 text-center"
+            style={{ background: "linear-gradient(135deg, #0B1635 0%, #16284f 55%, #1A56DB 130%)" }}
+          >
+            <button
+              onClick={() => setPresentId(null)}
+              className="absolute top-6 right-6 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors cursor-pointer"
+              title="Close (Esc)"
+            >
+              <X className="w-7 h-7" />
+            </button>
+
+            <p className="text-sm md:text-base font-bold uppercase tracking-[0.3em] text-white/60 mb-3">
+              {pb.college_name}
+            </p>
+            <h2 className="text-2xl md:text-4xl font-bold font-display mb-10">
+              {getCourseTitle(pb.course_slug)}
+            </h2>
+
+            <p className="text-sm font-bold uppercase tracking-[0.3em] text-cta mb-4">Access Code</p>
+            {pb.active && !expired ? (
+              <div
+                className="font-mono font-extrabold tracking-[0.15em] leading-none"
+                style={{ fontSize: "clamp(4rem, 22vw, 18rem)" }}
+              >
+                {pb.currentCode}
+              </div>
+            ) : (
+              <div className="text-3xl font-bold text-white/70">{expired ? "Expired" : "Inactive"}</div>
+            )}
+
+            <div className="mt-12 flex items-center gap-3 text-white/70">
+              <Clock className="w-5 h-5" />
+              <span className="text-lg font-semibold">
+                New code in <span className="text-cta font-mono font-bold">{secondsLeft}s</span>
+              </span>
+            </div>
+            <p className="mt-8 text-white/40 text-xs uppercase tracking-[0.3em]">Press Esc to exit</p>
+          </div>
+        );
+      })()}
     </div>
   );
 }

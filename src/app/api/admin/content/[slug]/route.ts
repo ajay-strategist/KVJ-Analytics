@@ -17,6 +17,7 @@ import {
   FALLBACK_PRODUCTS_PAGE,
   FALLBACK_CONTACT
 } from "@/lib/constants";
+import { adminToken } from "@/lib/adminAuth";
 
 // ---------------------------------------------------------------------------
 // Service-role admin client (write access)
@@ -24,7 +25,9 @@ import {
 function getAdminClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) return null;
+  if (!url || !key || url === "https://placeholder.supabase.co") {
+    return require("@/lib/mockSupabase").mockSupabaseClient;
+  }
   return createClient(url, key, { auth: { persistSession: false } });
 }
 
@@ -32,7 +35,7 @@ function getAdminClient() {
 // Auth guard (same pattern as all other admin API routes)
 // ---------------------------------------------------------------------------
 function isAuthorized(req: NextRequest) {
-  return req.cookies.get("admin_session")?.value === "authenticated";
+  return req.cookies.get("admin_session")?.value === adminToken();
 }
 
 // ---------------------------------------------------------------------------

@@ -1,12 +1,10 @@
 import React from "react";
-import Link from "next/link";
-import { ArrowRight, Cpu, Layers } from "lucide-react";
+import { ArrowRight, Cpu, Layers, Check } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { Section } from "@/components/ui/Section";
-import { Eyebrow } from "@/components/ui/Eyebrow";
-import { BoldStatement } from "@/components/ui/BoldStatement";
-import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { Reveal } from "@/components/ui/Reveal";
+import { RevealText } from "@/components/ui/RevealText";
 import { getPageContent, mergePageContent } from "@/lib/content";
 import { FALLBACK_PRODUCTS_PAGE } from "@/lib/constants";
 
@@ -18,103 +16,77 @@ export default async function ProductsPage() {
   const products = page.products && page.products.length > 0 ? page.products : FALLBACK_PRODUCTS_PAGE.products;
 
   return (
-    <Section background="default" className="bg-white relative overflow-hidden">
-      <div className="absolute inset-0 bg-grid-pattern opacity-45 pointer-events-none" />
-      <div className="absolute top-20 left-0 w-96 h-96 bg-brand/5 rounded-full blur-3xl pointer-events-none" />
+    <>
+      {/* ───── HERO (premium light) ───── */}
+      <section className="hero-dark hero-grid hero-bleed relative overflow-hidden bg-gradient-hero">
+        <div className="blob animate-blob absolute -top-24 right-[10%] w-[34rem] h-[34rem] bg-brand/10 pointer-events-none" />
+        <div className="blob animate-blob absolute bottom-[-10rem] left-[2%] w-[26rem] h-[26rem] bg-education/8 pointer-events-none" style={{ animationDelay: "3s" }} />
+        <Container className="relative z-10 py-24 md:py-32 text-center">
+          <Reveal>
+            <p className="text-[13px] uppercase tracking-[0.2em] text-education mb-5 font-bold">Proprietary Software Solutions</p>
+          </Reveal>
+          <RevealText
+            as="h1"
+            text={page.heading}
+            className="font-display font-medium text-[40px] sm:text-[54px] lg:text-[64px] leading-[1.06] tracking-[-0.025em] mb-6 max-w-[18ch] mx-auto text-ink"
+          />
+          <Reveal delay={150}>
+            <p className="text-xl md:text-2xl signature-gradient-text font-medium">{page.intro}</p>
+          </Reveal>
+        </Container>
+      </section>
 
-      <Container className="relative z-10">
-        <div className="max-w-4xl mx-auto text-center mb-20">
-          <Eyebrow segment="education" className="mb-4">
-            Proprietary Software Solutions
-          </Eyebrow>
-          <BoldStatement variant="hero" className="mb-6">
-            {page.heading}
-          </BoldStatement>
-          <p className="text-xl md:text-2xl font-bold font-display signature-gradient-text mb-6">
-            {page.intro}
-          </p>
-        </div>
+      {/* ───── PRODUCT CARDS ───── */}
+      <Section background="default" className="relative bg-aurora overflow-hidden">
+        <Container className="relative z-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-7 max-w-5xl mx-auto">
+            {products.map((product: any, idx: number) => {
+              const isGradeScope = product.slug === "grade-scope";
+              const accent = isGradeScope ? "brand" : "education";
+              const accentText = isGradeScope ? "text-brand" : "text-education";
+              const Icon = isGradeScope ? Layers : Cpu;
+              return (
+                <Reveal key={idx} delay={idx * 110}>
+                  <div className="card-premium group relative flex h-full flex-col overflow-hidden p-8 md:p-9">
+                    {/* top accent line */}
+                    <div className={`absolute inset-x-0 top-0 h-[3px] ${isGradeScope ? "bg-brand" : "bg-education"}`} />
+                    <div className={`pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full opacity-0 blur-3xl transition-opacity duration-500 group-hover:opacity-100 ${isGradeScope ? "bg-brand/25" : "bg-education/25"}`} />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 max-w-5xl mx-auto">
-          {products.map((product: any, idx: number) => {
-            const isGradeScope = product.slug === "grade-scope";
-            const shadowHover = isGradeScope 
-              ? "hover:shadow-[0_12px_32px_rgba(29,78,216,0.12)]"
-              : "hover:shadow-[0_12px_32px_rgba(13,148,136,0.12)]";
-            return (
-              <Card
-                key={idx}
-                hoverLift
-                className={`flex flex-col justify-between h-full border-t-4 p-8 relative overflow-hidden group transition-all duration-300 ${shadowHover} ${
-                  isGradeScope ? "border-t-brand" : "border-t-education"
-                }`}
-              >
-                <div>
-                  <div className="flex items-center space-x-3.5 mb-6">
-                    <div
-                      className={`p-3 rounded-xl ${
-                        isGradeScope
-                          ? "bg-brand/10 text-brand"
-                          : "bg-education/10 text-education"
-                      }`}
-                    >
-                      {isGradeScope ? (
-                        <Layers className="w-6 h-6" />
-                      ) : (
-                        <Cpu className="w-6 h-6" />
-                      )}
-                    </div>
-                    <div>
-                      <h3 className="text-2xl font-bold font-display text-ink leading-tight group-hover:text-brand transition-colors duration-200">
-                        {product.name}
-                      </h3>
-                      <span className="text-[10px] font-bold text-slate uppercase tracking-widest block mt-0.5">
-                        software platform
+                    <div className="relative flex items-center gap-4 mb-6">
+                      <span className={`grid h-14 w-14 place-items-center rounded-2xl border ${isGradeScope ? "bg-brand/10 border-brand/20 text-brand" : "bg-education/10 border-education/20 text-education"}`}>
+                        <Icon className="h-6 w-6 icon-anim" />
                       </span>
-                    </div>
-                  </div>
-                  
-                  <p className="text-sm font-semibold text-slate/85 mb-4 italic">
-                    {product.tagline}
-                  </p>
-                  
-                  <p className="text-base text-slate leading-relaxed mb-6 font-medium">
-                    {product.description}
-                  </p>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-8">
-                    {product.keyFeatures.map((feat: string, fIdx: number) => (
-                      <div
-                        key={fIdx}
-                        className="flex items-center space-x-2 bg-surface/50 px-3.5 py-2.5 rounded-lg border border-line/60"
-                      >
-                        <div
-                          className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                            isGradeScope ? "bg-brand" : "bg-education"
-                          }`}
-                        />
-                        <span className="text-xs font-bold text-ink leading-none">{feat}</span>
+                      <div>
+                        <h3 className={`text-2xl font-medium text-ink leading-tight transition-colors duration-300 ${isGradeScope ? "group-hover:text-brand" : "group-hover:text-education"}`}>
+                          {product.name}
+                        </h3>
+                        <span className="text-[10px] font-semibold text-muted uppercase tracking-[0.18em]">Software Platform</span>
                       </div>
-                    ))}
-                  </div>
-                </div>
+                    </div>
 
-                <Button
-                  href={`/products/${product.slug}`}
-                  className={`w-full py-3.5 text-center font-bold border-2 rounded-btn transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center space-x-1 ${
-                    isGradeScope
-                      ? "border-brand text-brand hover:bg-brand/5 hover:shadow-sm"
-                      : "border-education text-education hover:bg-education/5 hover:shadow-sm"
-                  }`}
-                >
-                  <span>Request Demo & Details</span>
-                  <span>→</span>
-                </Button>
-              </Card>
-            );
-          })}
-        </div>
-      </Container>
-    </Section>
+                    <p className="relative text-sm font-medium text-slate mb-4 italic">{product.tagline}</p>
+                    <p className="relative text-[15px] text-slate font-light leading-relaxed mb-7">{product.description}</p>
+
+                    <div className="relative grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-8">
+                      {product.keyFeatures.map((feat: string, fIdx: number) => (
+                        <div key={fIdx} className="flex items-start gap-2.5 rounded-xl border border-line bg-white/[0.02] px-3.5 py-3">
+                          <Check className={`mt-0.5 h-4 w-4 shrink-0 ${accentText}`} />
+                          <span className="text-[12.5px] font-medium text-ink/90 leading-snug">{feat}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <Button href={`/products/${product.slug}`} variant="accent" className="relative mt-auto w-full">
+                      Request Demo &amp; Details
+                      <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1.5" />
+                    </Button>
+                  </div>
+                </Reveal>
+              );
+            })}
+          </div>
+        </Container>
+      </Section>
+    </>
   );
 }

@@ -19,32 +19,32 @@ export default async function ContactPage() {
   const inquiryAreas = page.inquiryAreas || FALLBACK_CONTACT.inquiryAreas;
 
   return (
-    <section className="mesh-hero relative overflow-hidden py-20 md:py-28">
-      <div className="blob animate-blob absolute -top-24 right-[-4rem] w-[26rem] h-[26rem] bg-brand/10 pointer-events-none" />
-      <div className="blob animate-blob absolute bottom-[-6rem] left-[-4rem] w-[22rem] h-[22rem] bg-education/10 pointer-events-none" style={{ animationDelay: "4s" }} />
+    <section className="mesh-hero hero-grid hero-bleed relative overflow-hidden pt-12 pb-20 md:pt-16 md:pb-28 bg-gradient-hero text-ink">
+      <div className="blob animate-blob absolute -top-24 right-[-4rem] w-[28rem] h-[28rem] bg-brand/10 pointer-events-none" />
+      <div className="blob animate-blob absolute bottom-[-6rem] left-[-4rem] w-[24rem] h-[24rem] bg-education/8 pointer-events-none" style={{ animationDelay: "4s" }} />
 
       <Container className="relative z-10">
         {/* Centered header */}
         <Reveal className="max-w-3xl mx-auto text-center mb-12 md:mb-14">
-          <BoldStatement variant="h1" className="mb-4">
+          <BoldStatement variant="h1" className="mb-4 text-ink">
             {page.heading}
           </BoldStatement>
-          <p className="text-xl md:text-2xl font-bold font-display signature-gradient-text mb-5">
+          <p className="text-xl md:text-2xl font-medium signature-gradient-text mb-5">
             {page.strapline}
           </p>
-          <p className="text-lg text-slate leading-relaxed">{page.intro}</p>
+          <p className="text-lg text-slate font-light leading-relaxed">{page.intro}</p>
         </Reveal>
 
         {/* Unified two-panel card */}
-        <Reveal className="max-w-6xl mx-auto rounded-card overflow-hidden shadow-xl border border-line bg-white">
+        <Reveal className="max-w-6xl mx-auto rounded-card overflow-hidden shadow-xl border border-line bg-card">
           <div className="grid lg:grid-cols-12">
-            {/* Info panel (navy) */}
+            {/* Info panel (violet) */}
             <div
               className="lg:col-span-5 relative overflow-hidden p-8 sm:p-10 text-white flex flex-col"
-              style={{ background: "linear-gradient(150deg, #0B1635 0%, #16284f 55%, #1A56DB 130%)" }}
+              style={{ background: "linear-gradient(150deg, #160E2E 0%, #241356 55%, #4B2FB8 130%)" }}
             >
-              <div className="absolute -top-20 -right-16 w-64 h-64 rounded-full blur-3xl pointer-events-none animate-blob" style={{ background: "rgba(26,86,219,0.35)" }} />
-              <div className="absolute -bottom-24 -left-12 w-64 h-64 rounded-full blur-3xl pointer-events-none animate-blob" style={{ background: "rgba(249,115,22,0.16)", animationDelay: "3s" }} />
+              <div className="absolute -top-20 -right-16 w-64 h-64 rounded-full blur-3xl pointer-events-none animate-blob" style={{ background: "rgba(124,92,255,0.4)" }} />
+              <div className="absolute -bottom-24 -left-12 w-64 h-64 rounded-full blur-3xl pointer-events-none animate-blob" style={{ background: "rgba(45,214,206,0.18)", animationDelay: "3s" }} />
 
               <div className="relative z-10 flex flex-col h-full">
                 {/* Brand block */}

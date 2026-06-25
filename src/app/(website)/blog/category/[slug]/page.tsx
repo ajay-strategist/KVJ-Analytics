@@ -57,9 +57,9 @@ const FALLBACK_POSTS = [
 export default async function CategoryFilterPage({
   params,
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }) {
-  const { slug } = params;
+  const { slug } = await params;
 
   // Query category info
   const categoryInfo = await client
@@ -118,13 +118,13 @@ export default async function CategoryFilterPage({
 
         {/* List Grid */}
         {posts.length === 0 ? (
-          <div className="p-12 text-center text-slate max-w-md mx-auto bg-white border border-line/80 rounded-card shadow-soft">
+          <div className="p-12 text-center text-slate max-w-md mx-auto bg-card border border-line/80 rounded-card shadow-soft">
             <p className="text-base font-semibold">No posts in this category yet.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl">
             {posts.map((post: any, idx: number) => (
-              <Card key={idx} hoverLift className="flex flex-col justify-between h-full border-line/80 p-6 bg-white shadow-soft relative overflow-hidden">
+              <Card key={idx} hoverLift className="flex flex-col justify-between h-full border-line/80 p-6 bg-card shadow-soft relative overflow-hidden">
                 <div className="absolute top-0 left-0 right-0 h-1 bg-surface" />
                 <div>
                   <div className="text-[10px] font-bold text-corporate uppercase tracking-wider mb-2">

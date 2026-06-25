@@ -4,7 +4,9 @@ import { createClient } from "@supabase/supabase-js";
 function getAdmin() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) return null;
+  if (!url || !key || url === "https://placeholder.supabase.co") {
+    return require("@/lib/mockSupabase").mockSupabaseClient;
+  }
   return createClient(url, key, { auth: { persistSession: false } });
 }
 
@@ -37,6 +39,8 @@ function stripAnswers(type: string, config: any) {
         return nb;
       });
     }
+  } else if (type === "matrix") {
+    delete c.correct;
   } else if (type === "code") {
     if (c.testCases) {
       c.testCases = c.testCases.map((tc: any) => {
@@ -56,6 +60,7 @@ function getCorrectAnswerLabel(type: string, config: any) {
   if (type === "dragdrop") return `Correct matches: ${JSON.stringify(config.correctPairs)}`;
   if (type === "sequence") return `Correct order index sequence: ${config.correctOrder?.join(", ")}`;
   if (type === "fillblank") return `Blanks: ${config.blanks?.map((b: any, i: number) => `[Blank ${i + 1}: ${b.accepted?.join(" or ")}]`).join(", ")}`;
+  if (type === "matrix") return `Rows → correct columns: ${(config.correct || []).map((cols: number[], i: number) => `[${config.rows?.[i] ?? "Row " + (i + 1)}: ${(cols || []).map((ci) => config.columns?.[ci] ?? ci).join(", ")}]`).join("; ")}`;
   if (type === "code") return "Passes all test cases.";
   return "";
 }
@@ -189,7 +194,7 @@ export async function GET(
     }
 
     // 5. Strip correct answers from config
-    const strippedQuestions = (dbQuestions || []).map((q) => {
+    const strippedQuestions = (dbQuestions || []).map((q: any) => {
       return {
         id: q.id,
         type: q.type,
@@ -364,6 +369,17 @@ export async function POST(
             const accepted = config.blanks[idx].accepted || [];
             const cleanAns = (ans || "").toString().trim().toLowerCase();
             return accepted.map((a: string) => a.trim().toLowerCase()).includes(cleanAns);
+          });
+      } else if (q.type === "matrix") {
+        // studentAns: number[][] — selected column indexes per row.
+        // config.correct: number[][] — correct column indexes per row.
+        const correctRows = config.correct || [];
+        isCorrect = Array.isArray(studentAns) &&
+          studentAns.length === correctRows.length &&
+          correctRows.every((correctCols: number[], rowIdx: number) => {
+            const picked = Array.isArray(studentAns[rowIdx]) ? studentAns[rowIdx].map((x: any) => Number(x)) : [];
+            const want = (correctCols || []).map((x: any) => Number(x));
+            return picked.length === want.length && want.every((c: number) => picked.includes(c));
           });
       } else if (q.type === "code") {
         if (!process.env.JUDGE0_URL) {

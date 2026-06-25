@@ -1,17 +1,21 @@
 import type { Metadata } from "next";
-import { Sora, Inter } from "next/font/google";
+import { Space_Grotesk, Inter } from "next/font/google";
 import "./globals.css";
+import { SmoothScroll } from "@/components/SmoothScroll";
 
-const sora = Sora({
+// Premium dark theme pairing: Space Grotesk (display/headings) + Inter (body).
+const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
-  variable: "--font-sora",
-  weight: ["600", "700", "800"],
+  variable: "--font-space",
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
 });
 
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
-  weight: ["400", "500", "600", "700"],
+  weight: ["300", "400", "500", "600"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -36,9 +40,10 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${sora.variable} ${inter.variable} h-full antialiased`}
+      className={`${spaceGrotesk.variable} ${inter.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-surface text-ink font-body">
+      <body className="min-h-full flex flex-col bg-base text-ink font-body">
+        <SmoothScroll />
         {children}
       </body>
     </html>

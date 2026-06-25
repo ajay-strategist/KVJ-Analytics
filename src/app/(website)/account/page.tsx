@@ -131,7 +131,7 @@ function CoursePortalView({ course, activityResults, refreshResults, onClose }: 
     <Section background="default" className="bg-surface/30 min-h-screen py-6 px-4">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Top Navbar Takeover */}
-        <div className="bg-white border border-line rounded-card p-5 shadow-soft flex flex-col md:flex-row md:items-center justify-between gap-4 relative overflow-hidden">
+        <div className="bg-card border border-line rounded-card p-5 shadow-soft flex flex-col md:flex-row md:items-center justify-between gap-4 relative overflow-hidden">
           <div className="absolute top-0 left-0 right-0 h-1.5 signature-gradient" />
           <div className="flex items-center space-x-3">
             <button
@@ -172,7 +172,7 @@ function CoursePortalView({ course, activityResults, refreshResults, onClose }: 
         {/* Portal Body */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Left Sidebar Curriculum Selector */}
-          <div className="lg:col-span-4 bg-white border border-line rounded-card p-5 shadow-soft space-y-5">
+          <div className="lg:col-span-4 bg-card border border-line rounded-card p-5 shadow-soft space-y-5">
             <div className="border-b border-line pb-3">
               <h3 className="font-bold font-display text-ink text-sm uppercase tracking-wide">
                 Course Syllabus
@@ -254,7 +254,7 @@ function CoursePortalView({ course, activityResults, refreshResults, onClose }: 
             )}
 
             {activeLesson ? (
-              <div className="bg-white border border-line rounded-card p-6 shadow-soft space-y-4 flex flex-col">
+              <div className="bg-card border border-line rounded-card p-6 shadow-soft space-y-4 flex flex-col">
                 <div className="flex items-center justify-between border-b border-line pb-3">
                   <div>
                     <span className="text-[10px] font-bold text-slate uppercase tracking-wider block">
@@ -294,7 +294,7 @@ function CoursePortalView({ course, activityResults, refreshResults, onClose }: 
                     key={activeLesson.id}
                     sandbox="allow-scripts allow-same-origin"
                     srcDoc={activeLesson.content_html}
-                    className="w-full min-h-[580px] bg-white border border-line rounded-xl shadow-inner mt-2"
+                    className="w-full min-h-[580px] bg-card border border-line rounded-xl shadow-inner mt-2"
                   />
                 ) : (
                   <div className="min-h-[300px] flex items-center justify-center border-dashed border-2 border-line rounded-xl text-slate text-xs italic">
@@ -333,7 +333,7 @@ function CoursePortalView({ course, activityResults, refreshResults, onClose }: 
                 </div>
               </div>
             ) : (
-              <div className="bg-white border border-line rounded-card p-10 text-center shadow-soft min-h-[450px] flex flex-col justify-center items-center">
+              <div className="bg-card border border-line rounded-card p-10 text-center shadow-soft min-h-[450px] flex flex-col justify-center items-center">
                 <GraduationCap className="w-16 h-16 text-brand/20 mx-auto mb-4" />
                 <h3 className="text-xl font-bold font-display text-ink">Welcome to the Learning Portal</h3>
                 <p className="text-xs text-slate max-w-sm mx-auto mt-2 leading-relaxed font-medium">
@@ -715,7 +715,7 @@ function StudentAccountDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-[80vh] flex items-center justify-center bg-white">
+      <div className="min-h-[80vh] flex items-center justify-center bg-card">
         <div className="text-center">
           <Loader2 className="w-10 h-10 animate-spin text-brand mx-auto mb-4" />
           <p className="text-sm font-semibold text-slate font-display">Loading Student Portal...</p>
@@ -729,7 +729,7 @@ function StudentAccountDashboard() {
     return (
       <Section background="default" className="bg-surface/30 min-h-[85vh] flex items-center py-16">
         <Container className="max-w-md">
-          <Card className="p-8 md:p-10 border-line/80 shadow-xl relative overflow-hidden bg-white">
+          <Card className="p-8 md:p-10 border-line/80 shadow-xl relative overflow-hidden bg-card">
             <div className="absolute top-0 left-0 right-0 h-1.5 signature-gradient" />
 
             <div className="text-center mb-8">
@@ -764,7 +764,7 @@ function StudentAccountDashboard() {
                       value={authName}
                       onChange={(e) => setAuthName(e.target.value)}
                       placeholder="Rahul Kumar"
-                      className="w-full px-4 py-3 rounded-input border border-line bg-surface/50 text-sm focus:outline-none focus:bg-white focus-glow transition-all duration-200 text-ink placeholder:text-muted"
+                      className="w-full px-4 py-3 rounded-input border border-line bg-surface/50 text-sm focus:outline-none focus:bg-card focus-glow transition-all duration-200 text-ink placeholder:text-muted"
                     />
                   </div>
                   <div>
@@ -777,7 +777,7 @@ function StudentAccountDashboard() {
                       value={authPhone}
                       onChange={(e) => setAuthPhone(e.target.value)}
                       placeholder="e.g. 9961813730"
-                      className="w-full px-4 py-3 rounded-input border border-line bg-surface/50 text-sm focus:outline-none focus:bg-white focus-glow transition-all duration-200 text-ink placeholder:text-muted"
+                      className="w-full px-4 py-3 rounded-input border border-line bg-surface/50 text-sm focus:outline-none focus:bg-card focus-glow transition-all duration-200 text-ink placeholder:text-muted"
                     />
                   </div>
                   <div>
@@ -790,7 +790,7 @@ function StudentAccountDashboard() {
                       value={authOrg}
                       onChange={(e) => setAuthOrg(e.target.value)}
                       placeholder="Cochin Institute of Technology"
-                      className="w-full px-4 py-3 rounded-input border border-line bg-surface/50 text-sm focus:outline-none focus:bg-white focus-glow transition-all duration-200 text-ink placeholder:text-muted"
+                      className="w-full px-4 py-3 rounded-input border border-line bg-surface/50 text-sm focus:outline-none focus:bg-card focus-glow transition-all duration-200 text-ink placeholder:text-muted"
                     />
                   </div>
                 </>
@@ -806,7 +806,7 @@ function StudentAccountDashboard() {
                   value={authEmail}
                   onChange={(e) => setAuthEmail(e.target.value)}
                   placeholder="name@email.com"
-                  className="w-full px-4 py-3 rounded-input border border-line bg-surface/50 text-sm focus:outline-none focus:bg-white focus-glow transition-all duration-200 text-ink placeholder:text-muted"
+                  className="w-full px-4 py-3 rounded-input border border-line bg-surface/50 text-sm focus:outline-none focus:bg-card focus-glow transition-all duration-200 text-ink placeholder:text-muted"
                 />
               </div>
 
@@ -820,7 +820,7 @@ function StudentAccountDashboard() {
                   value={authPassword}
                   onChange={(e) => setAuthPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full px-4 py-3 rounded-input border border-line bg-surface/50 text-sm focus:outline-none focus:bg-white focus-glow transition-all duration-200 text-ink placeholder:text-muted"
+                  className="w-full px-4 py-3 rounded-input border border-line bg-surface/50 text-sm focus:outline-none focus:bg-card focus-glow transition-all duration-200 text-ink placeholder:text-muted"
                 />
               </div>
 
@@ -881,7 +881,7 @@ function StudentAccountDashboard() {
     return (
       <Section background="default" className="bg-surface/30 min-h-[90vh] py-12">
         <Container className="max-w-4xl">
-          <div className="bg-white border border-line/80 rounded-card p-6 shadow-soft mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4 relative overflow-hidden">
+          <div className="bg-card border border-line/80 rounded-card p-6 shadow-soft mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4 relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-1 signature-gradient" />
             <div>
               <span className="text-[10px] font-bold text-education uppercase tracking-wider block">
@@ -942,7 +942,7 @@ function StudentAccountDashboard() {
                       The passing grade requires at least <strong className="text-ink">{testResults.passMark} marks</strong>.
                     </p>
                     <div className="mt-6">
-                      <Button href="/account" variant="secondary" className="px-6 py-2.5 text-xs font-bold bg-white">
+                      <Button href="/account" variant="secondary" className="px-6 py-2.5 text-xs font-bold bg-card">
                         Return to Student Dashboard
                       </Button>
                     </div>
@@ -958,7 +958,7 @@ function StudentAccountDashboard() {
                   return (
                     <Card
                       key={qIdx}
-                      className={`p-6 md:p-8 border border-line/80 bg-white shadow-soft transition-colors ${
+                      className={`p-6 md:p-8 border border-line/80 bg-card shadow-soft transition-colors ${
                         gradedQ
                           ? gradedQ.isCorrect
                             ? "border-l-4 border-success bg-success/5"
@@ -996,7 +996,7 @@ function StudentAccountDashboard() {
                                 } else if (isStudentAnswer) {
                                   optionStyle = "bg-error/10 border-error text-error line-through";
                                 } else {
-                                  optionStyle = "bg-white border-line text-slate opacity-60";
+                                  optionStyle = "bg-card border-line text-slate opacity-60";
                                 }
                               }
 
@@ -1008,7 +1008,7 @@ function StudentAccountDashboard() {
                                   disabled={submittingTest || !!testResults}
                                   className={`w-full text-left p-4 rounded-lg border text-sm transition-all duration-200 flex items-center space-x-3 cursor-pointer ${optionStyle}`}
                                 >
-                                  <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold font-mono shrink-0 transition-colors ${isSelected ? "bg-brand text-white" : "border border-slate/30 bg-white"}`}>
+                                  <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold font-mono shrink-0 transition-colors ${isSelected ? "bg-brand text-white" : "border border-slate/30 bg-card"}`}>
                                     {String.fromCharCode(65 + oIdx)}
                                   </span>
                                   <span>{option}</span>
@@ -1024,7 +1024,7 @@ function StudentAccountDashboard() {
               </div>
 
               {!testResults && (
-                <div className="bg-white border border-line/80 rounded-card p-6 shadow-soft flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="bg-card border border-line/80 rounded-card p-6 shadow-soft flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                   <div className="text-xs text-slate max-w-md leading-relaxed">
                     Once submitted, answers are graded on the KVJ Server. You cannot redo the test session. Double check all options.
                   </div>
@@ -1073,7 +1073,7 @@ function StudentAccountDashboard() {
     <Section background="default" className="bg-surface/30 min-h-[85vh] py-12">
       <Container>
         {/* Top Profile Header */}
-        <div className="bg-white border border-line/80 rounded-card p-6 md:p-8 shadow-soft flex flex-col md:flex-row items-center justify-between gap-6 mb-10 relative overflow-hidden">
+        <div className="bg-card border border-line/80 rounded-card p-6 md:p-8 shadow-soft flex flex-col md:flex-row items-center justify-between gap-6 mb-10 relative overflow-hidden">
           <div className="absolute top-0 left-0 right-0 h-1.5 signature-gradient" />
           <div className="flex items-center space-x-5">
             <div className="w-16 h-16 rounded-full signature-gradient flex items-center justify-center text-white text-2xl font-bold font-display shadow-md">
@@ -1091,7 +1091,7 @@ function StudentAccountDashboard() {
 
           <button
             onClick={handleSignOut}
-            className="flex items-center text-xs font-bold text-slate hover:text-error transition-all bg-white hover:bg-error/5 border border-line rounded-btn px-4 py-2.5 shadow-sm hover:shadow cursor-pointer active:scale-95"
+            className="flex items-center text-xs font-bold text-slate hover:text-error transition-all bg-card hover:bg-error/5 border border-line rounded-btn px-4 py-2.5 shadow-sm hover:shadow cursor-pointer active:scale-95"
           >
             <LogOut className="w-4 h-4 mr-2" />
             Sign Out Account
@@ -1126,7 +1126,7 @@ function StudentAccountDashboard() {
             ) : (
               <div className="space-y-6">
                 {coursesData.map((course) => (
-                  <Card key={course.slug} hoverLift={false} className="border-line p-6 bg-white shadow-soft">
+                  <Card key={course.slug} hoverLift={false} className="border-line p-6 bg-card shadow-soft">
                     <div className="border-b border-line pb-4 mb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                       <div>
                         <span className={`px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider text-white ${course.segment === "corporate" ? "bg-corporate" : "bg-education"}`}>
@@ -1195,7 +1195,7 @@ function StudentAccountDashboard() {
             </div>
 
             {testAttempts.length === 0 ? (
-              <Card className="p-6 border-line bg-white text-center shadow-soft">
+              <Card className="p-6 border-line bg-card text-center shadow-soft">
                 <Award className="w-10 h-10 text-slate/30 mx-auto mb-2.5" />
                 <p className="text-xs text-slate">No mock tests submitted yet.</p>
               </Card>
@@ -1211,7 +1211,7 @@ function StudentAccountDashboard() {
                   return (
                     <div
                       key={attempt.id}
-                      className={`p-4 rounded-lg border bg-white flex items-center justify-between shadow-soft hover:shadow-md transition-all duration-200 ${
+                      className={`p-4 rounded-lg border bg-card flex items-center justify-between shadow-soft hover:shadow-md transition-all duration-200 ${
                         attempt.passed ? "border-success/30" : "border-error/30"
                       }`}
                     >
@@ -1251,7 +1251,7 @@ export default function StudentAccountPage() {
   return (
     <React.Suspense
       fallback={
-        <div className="min-h-[80vh] flex items-center justify-center bg-white">
+        <div className="min-h-[80vh] flex items-center justify-center bg-card">
           <div className="text-center">
             <Loader2 className="w-10 h-10 animate-spin text-brand mx-auto mb-4" />
             <p className="text-sm font-semibold text-slate font-display">Loading Student Portal...</p>

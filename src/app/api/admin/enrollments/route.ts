@@ -1,16 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { adminToken } from "@/lib/adminAuth";
 
 function getAdminClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) return null;
+  if (!url || !key || url === "https://placeholder.supabase.co") {
+    return require("@/lib/mockSupabase").mockSupabaseClient;
+  }
   return createClient(url, key, { auth: { persistSession: false } });
 }
 
 function isAuthorized(req: NextRequest) {
   const session = req.cookies.get("admin_session")?.value;
-  return session === "authenticated";
+  return session === adminToken();
 }
 
 export async function GET(req: NextRequest) {
@@ -84,7 +87,23 @@ export async function GET(req: NextRequest) {
 
     if (orderError) throw orderError;
 
-    return NextResponse.json({ enrollments, attempts, orders });
+    // 4. Fetch activity (practice) scores with student name + lesson title
+    const { data: activityResults, error: activityError } = await supabaseAdmin
+      .from("activity_results")
+      .select(`
+        id,
+        score,
+        max_score,
+        course_slug,
+        submitted_at,
+        profiles ( name, organization ),
+        lessons ( title )
+      `)
+      .order("submitted_at", { ascending: false });
+
+    if (activityError) throw activityError;
+
+    return NextResponse.json({ enrollments, attempts, orders, activityResults: activityResults || [] });
   } catch (error: any) {
     console.error("Failed to fetch admin learning records:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });

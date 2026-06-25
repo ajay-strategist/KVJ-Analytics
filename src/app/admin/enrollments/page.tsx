@@ -69,12 +69,13 @@ export default function AdminEnrollmentsPage() {
   
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [attempts, setAttempts] = useState<TestAttempt[]>([]);
+  const [activityResults, setActivityResults] = useState<any[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   // Sub-tabs within reporting console
-  const [activeTab, setActiveTab] = useState<"enrollments" | "attempts" | "orders">("enrollments");
+  const [activeTab, setActiveTab] = useState<"enrollments" | "attempts" | "activity" | "orders">("enrollments");
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
@@ -98,6 +99,7 @@ export default function AdminEnrollmentsPage() {
 
       setEnrollments(data.enrollments || []);
       setAttempts(data.attempts || []);
+      setActivityResults(data.activityResults || []);
       setOrders(data.orders || []);
     } catch (err: any) {
       setError(err.message || "Failed to fetch student data reports.");
@@ -294,6 +296,7 @@ export default function AdminEnrollmentsPage() {
             {[
               { id: "enrollments", label: "Enrollments", count: enrollments.length, icon: Users },
               { id: "attempts", label: "Mock Test Results", count: attempts.length, icon: Award },
+              { id: "activity", label: "Activity Scores", count: activityResults.length, icon: Award },
               { id: "orders", label: "Orders & Payments", count: orders.length, icon: CreditCard },
             ].map((tab) => (
               <button
@@ -478,6 +481,53 @@ export default function AdminEnrollmentsPage() {
                           <td className="p-4 text-slate text-xs whitespace-nowrap">
                             {dateStr}
                           </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          )}
+
+          {/* TAB: ACTIVITY SCORES */}
+          {activeTab === "activity" && (
+            <div className="overflow-x-auto">
+              {activityResults.length === 0 ? (
+                <div className="p-12 text-center text-slate">
+                  <Award className="w-12 h-12 mx-auto mb-4 opacity-30 text-slate" />
+                  <p className="text-base font-semibold">No activity scores recorded yet.</p>
+                </div>
+              ) : (
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-surface border-b border-line text-xs font-bold uppercase tracking-wider text-slate">
+                      <th className="p-4 pl-6">Student Name</th>
+                      <th className="p-4">College / Organization</th>
+                      <th className="p-4">Activity</th>
+                      <th className="p-4">Course</th>
+                      <th className="p-4 text-center">Score</th>
+                      <th className="p-4">Submitted Date</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-line text-[14px]">
+                    {activityResults.map((r) => {
+                      const dateStr = new Date(r.submitted_at).toLocaleDateString("en-IN", {
+                        day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit",
+                      });
+                      return (
+                        <tr key={r.id} className="hover:bg-surface/30 transition-colors">
+                          <td className="p-4 pl-6"><div className="font-bold text-ink">{r.profiles?.name}</div></td>
+                          <td className="p-4">
+                            <div className="flex items-center space-x-1.5 font-semibold text-slate">
+                              <Building className="w-3.5 h-3.5 opacity-55" />
+                              <span>{r.profiles?.organization || "—"}</span>
+                            </div>
+                          </td>
+                          <td className="p-4 font-semibold text-ink">{r.lessons?.title || "—"}</td>
+                          <td className="p-4 font-mono font-bold text-xs text-brand">{r.course_slug}</td>
+                          <td className="p-4 text-center font-bold text-ink">{r.score} / {r.max_score}</td>
+                          <td className="p-4 text-slate text-xs whitespace-nowrap">{dateStr}</td>
                         </tr>
                       );
                     })}

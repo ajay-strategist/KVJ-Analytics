@@ -62,9 +62,9 @@ const FALLBACK_POSTS: Record<string, { title: string; date: string; category: st
 export default async function BlogPostDetailPage({
   params,
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }) {
-  const { slug } = params;
+  const { slug } = await params;
 
   // Query Sanity for post
   const post = await client
@@ -109,7 +109,7 @@ export default async function BlogPostDetailPage({
           <span>Back to Insights</span>
         </Link>
 
-        <Card className="p-8 md:p-12 border border-line/80 shadow-soft bg-white relative overflow-hidden max-w-4xl mx-auto">
+        <Card className="p-8 md:p-12 border border-line/80 shadow-soft bg-base relative overflow-hidden max-w-4xl mx-auto">
           {/* Top gradient bar */}
           <div className="absolute top-0 left-0 right-0 h-1.5 signature-gradient" />
 

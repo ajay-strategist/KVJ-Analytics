@@ -92,7 +92,7 @@ export default async function BlogPage() {
         {/* Featured Post Card */}
         {featuredPost && (
           <div className="max-w-5xl mx-auto mb-16">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-white border border-line/80 rounded-card overflow-hidden p-6 md:p-8 shadow-soft hover:shadow-hover-lift hover:-translate-y-1 transition-all duration-300 relative">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-card border border-line/80 rounded-card overflow-hidden p-6 md:p-8 shadow-soft hover:shadow-hover-lift hover:-translate-y-1 transition-all duration-300 relative">
               <div className="absolute top-0 left-0 right-0 h-1.5 signature-gradient" />
               {/* Image box */}
               <div className="lg:col-span-6 overflow-hidden rounded-xl aspect-[16/10] relative bg-brand/5">
@@ -113,7 +113,7 @@ export default async function BlogPage() {
                 <div className="absolute top-4 left-4 z-10">
                   <Link
                     href={`/blog/category/${featuredPost.category?.slug}`}
-                    className="px-3 py-1 rounded bg-white text-brand font-bold text-xs shadow-sm uppercase tracking-wider hover:bg-brand hover:text-white transition-colors duration-200"
+                    className="px-3 py-1 rounded bg-card text-brand font-bold text-xs shadow-sm uppercase tracking-wider hover:bg-brand hover:text-white transition-colors duration-200"
                   >
                     {featuredPost.category?.title}
                   </Link>
@@ -173,7 +173,7 @@ export default async function BlogPage() {
                 <Card
                   key={idx}
                   hoverLift
-                  className="flex flex-col justify-between h-full border-line/80 p-6 bg-white shadow-soft relative overflow-hidden"
+                  className="flex flex-col justify-between h-full border-line/80 p-6 bg-card shadow-soft relative overflow-hidden"
                 >
                   <div className="absolute top-0 left-0 right-0 h-1 bg-surface" />
                   <div>
@@ -196,7 +196,7 @@ export default async function BlogPage() {
                       <div className="absolute top-3 left-3 z-10">
                         <Link
                           href={`/blog/category/${post.category?.slug}`}
-                          className="px-2.5 py-0.5 rounded bg-white text-brand font-bold text-[10px] shadow-sm uppercase tracking-wider hover:bg-brand hover:text-white transition-colors duration-200"
+                          className="px-2.5 py-0.5 rounded bg-card text-brand font-bold text-[10px] shadow-sm uppercase tracking-wider hover:bg-brand hover:text-white transition-colors duration-200"
                         >
                           {post.category?.title}
                         </Link>

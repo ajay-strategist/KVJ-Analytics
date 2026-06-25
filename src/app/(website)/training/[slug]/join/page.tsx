@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { ArrowLeft, Key, User, Phone, Building, CheckSquare, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { Container } from "@/components/ui/Container";
@@ -12,12 +12,9 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { supabase } from "@/lib/supabase";
 
-export default function CollegeJoinPage({
-  params,
-}: {
-  params: { slug: string };
-}) {
-  const { slug } = params;
+export default function CollegeJoinPage() {
+  const routeParams = useParams<{ slug: string }>();
+  const slug = routeParams?.slug as string;
   const router = useRouter();
 
   const [user, setUser] = React.useState<any>(null);
@@ -135,7 +132,7 @@ export default function CollegeJoinPage({
 
   if (success) {
     return (
-      <Section background="default" className="bg-white min-h-[70vh] flex items-center justify-center">
+      <Section background="default" className="bg-card min-h-[70vh] flex items-center justify-center">
         <Container>
           <div className="bg-success/5 border border-success/30 rounded-card p-10 text-center flex flex-col items-center max-w-lg mx-auto shadow-sm animate-fade-up">
             <CheckCircle2 className="w-16 h-16 text-success mb-6" />
@@ -189,7 +186,7 @@ export default function CollegeJoinPage({
 
           <form
             onSubmit={handleSubmit}
-            className="bg-white p-8 md:p-10 rounded-card border border-line/80 shadow-soft space-y-6 relative overflow-hidden"
+            className="bg-card p-8 md:p-10 rounded-card border border-line/80 shadow-soft space-y-6 relative overflow-hidden"
           >
             {/* Decorative Top Accent Bar */}
             <div className="absolute top-0 left-0 right-0 h-1.5 signature-gradient" />
@@ -224,7 +221,7 @@ export default function CollegeJoinPage({
                         value={formData.email}
                         onChange={handleChange}
                         placeholder="name@email.com"
-                        className="w-full pl-10 pr-4 py-3 rounded-input border border-line bg-surface/50 text-sm focus:outline-none focus:bg-white focus-glow transition-all duration-200 text-ink placeholder:text-muted"
+                        className="w-full pl-10 pr-4 py-3 rounded-input border border-line bg-surface/50 text-sm focus:outline-none focus:bg-card focus-glow transition-all duration-200 text-ink placeholder:text-muted"
                       />
                       <User className="w-4 h-4 text-slate absolute left-3.5 top-3.5" />
                     </div>
@@ -243,7 +240,7 @@ export default function CollegeJoinPage({
                         value={formData.password}
                         onChange={handleChange}
                         placeholder="••••••••"
-                        className="w-full pl-10 pr-4 py-3 rounded-input border border-line bg-surface/50 text-sm focus:outline-none focus:bg-white focus-glow transition-all duration-200 text-ink placeholder:text-muted"
+                        className="w-full pl-10 pr-4 py-3 rounded-input border border-line bg-surface/50 text-sm focus:outline-none focus:bg-card focus-glow transition-all duration-200 text-ink placeholder:text-muted"
                       />
                       <Key className="w-4 h-4 text-slate absolute left-3.5 top-3.5" />
                     </div>
@@ -266,7 +263,7 @@ export default function CollegeJoinPage({
                     value={formData.name}
                     onChange={handleChange}
                     placeholder="e.g. Rahul Kumar"
-                    className="w-full pl-10 pr-4 py-3 rounded-input border border-line bg-surface/50 text-sm focus:outline-none focus:bg-white focus-glow transition-all duration-200 text-ink placeholder:text-muted"
+                    className="w-full pl-10 pr-4 py-3 rounded-input border border-line bg-surface/50 text-sm focus:outline-none focus:bg-card focus-glow transition-all duration-200 text-ink placeholder:text-muted"
                   />
                   <User className="w-4 h-4 text-slate absolute left-3.5 top-3.5" />
                 </div>
@@ -285,7 +282,7 @@ export default function CollegeJoinPage({
                     value={formData.phone}
                     onChange={handleChange}
                     placeholder="e.g. 9961813730"
-                    className="w-full pl-10 pr-4 py-3 rounded-input border border-line bg-surface/50 text-sm focus:outline-none focus:bg-white focus-glow transition-all duration-200 text-ink placeholder:text-muted"
+                    className="w-full pl-10 pr-4 py-3 rounded-input border border-line bg-surface/50 text-sm focus:outline-none focus:bg-card focus-glow transition-all duration-200 text-ink placeholder:text-muted"
                   />
                   <Phone className="w-4 h-4 text-slate absolute left-3.5 top-3.5" />
                 </div>
@@ -305,7 +302,7 @@ export default function CollegeJoinPage({
                   value={formData.organization}
                   onChange={handleChange}
                   placeholder="e.g. Cochin College of Technology"
-                  className="w-full pl-10 pr-4 py-3 rounded-input border border-line bg-surface/50 text-sm focus:outline-none focus:bg-white focus-glow transition-all duration-200 text-ink placeholder:text-muted"
+                  className="w-full pl-10 pr-4 py-3 rounded-input border border-line bg-surface/50 text-sm focus:outline-none focus:bg-card focus-glow transition-all duration-200 text-ink placeholder:text-muted"
                 />
                 <Building className="w-4 h-4 text-slate absolute left-3.5 top-3.5" />
               </div>
@@ -326,7 +323,7 @@ export default function CollegeJoinPage({
                   value={formData.code}
                   onChange={handleChange}
                   placeholder="000000"
-                  className="w-full pl-10 pr-4 py-3.5 rounded-input border border-line bg-surface/50 focus:bg-white text-center font-mono font-bold text-lg tracking-[0.2em] focus:outline-none focus-glow transition-all duration-200 text-ink placeholder:text-muted/60"
+                  className="w-full pl-10 pr-4 py-3.5 rounded-input border border-line bg-surface/50 focus:bg-card text-center font-mono font-bold text-lg tracking-[0.2em] focus:outline-none focus-glow transition-all duration-200 text-ink placeholder:text-muted/60"
                 />
                 <Key className="w-4 h-4 text-slate absolute left-3.5 top-[18px]" />
               </div>

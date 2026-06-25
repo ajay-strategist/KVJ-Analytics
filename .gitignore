@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# fuse hidden files
+.fuse_hidden*
+.*.fuse_hidden*

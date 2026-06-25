@@ -1,10 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
+import { adminToken } from "@/lib/adminAuth";
 
 export async function POST(req: NextRequest) {
   try {
     const { username, password } = await req.json();
-    const adminUsername = process.env.ADMIN_USERNAME || "mail@thestrategist.co.in";
-    const adminPassword = process.env.ADMIN_PASSWORD || "AjayThomas@1";
+    const adminUsername = process.env.ADMIN_USERNAME;
+    const adminPassword = process.env.ADMIN_PASSWORD;
+
+    // No hardcoded fallback — refuse if not configured server-side.
+    if (!adminUsername || !adminPassword) {
+      return NextResponse.json(
+        { error: "Admin credentials are not configured on the server." },
+        { status: 500 }
+      );
+    }
 
     if (username !== adminUsername || password !== adminPassword) {
       return NextResponse.json(
@@ -13,11 +22,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Create session cookie
+    // Create session cookie with a non-forgeable secret token.
     const response = NextResponse.json({ success: true });
 
-    // Set HTTP-only secure cookie
-    response.cookies.set("admin_session", "authenticated", {
+    response.cookies.set("admin_session", adminToken(), {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",

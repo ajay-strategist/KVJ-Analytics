@@ -1,21 +1,21 @@
 import React from "react";
 import Link from "next/link";
-import { 
-  ArrowRight, 
+import {
+  ArrowRight,
   Sparkles,
   FileSpreadsheet,
   BarChart3,
   TableProperties,
   LayoutDashboard,
   Cpu,
-  GraduationCap
+  GraduationCap,
 } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { Section } from "@/components/ui/Section";
-import { Eyebrow } from "@/components/ui/Eyebrow";
 import { BoldStatement } from "@/components/ui/BoldStatement";
-import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { Reveal } from "@/components/ui/Reveal";
+import { RevealText } from "@/components/ui/RevealText";
 import { getPageContent, mergePageContent } from "@/lib/content";
 import { FALLBACK_CORPORATE } from "@/lib/constants";
 
@@ -39,78 +39,79 @@ export default async function CorporateSolutionsPage() {
   };
 
   return (
-    <Section background="default" className="bg-white relative overflow-hidden">
-      <div className="absolute inset-0 bg-grid-pattern opacity-45 pointer-events-none" />
-      <div className="absolute -top-32 right-0 w-[500px] h-[500px] bg-corporate/5 rounded-full blur-3xl pointer-events-none" />
-      
-      <Container className="relative z-10">
-        <div className="max-w-4xl mx-auto text-center mb-20">
-          <Eyebrow segment="corporate" className="mb-4">
-            For Businesses & Corporates
-          </Eyebrow>
-          <BoldStatement variant="h1" className="mb-6">
-            {page.heading}
-          </BoldStatement>
-          <p className="text-xl md:text-2xl font-bold font-display signature-gradient-text mb-6">
-            {page.strapline}
-          </p>
-          <p className="text-lg md:text-xl text-slate font-medium leading-relaxed max-w-2xl mx-auto">
-            {page.intro}
-          </p>
-        </div>
+    <>
+      {/* ───── HERO (premium light) ───── */}
+      <section className="hero-dark hero-grid hero-bleed relative overflow-hidden bg-gradient-hero">
+        <div className="blob animate-blob absolute -top-24 right-[6%] w-[34rem] h-[34rem] bg-brand/10 pointer-events-none" />
+        <div className="blob animate-blob absolute bottom-[-10rem] left-[-6rem] w-[24rem] h-[24rem] bg-brand/8 pointer-events-none" style={{ animationDelay: "3s" }} />
+        <Container className="relative z-10 py-24 md:py-32 text-center">
+          <Reveal>
+            <p className="text-[13px] uppercase tracking-[0.2em] text-brand mb-5 font-bold">For Businesses &amp; Corporates</p>
+          </Reveal>
+          <RevealText
+            as="h1"
+            text={page.heading}
+            className="font-display font-medium text-[40px] sm:text-[54px] lg:text-[64px] leading-[1.06] tracking-[-0.025em] mb-6 max-w-[18ch] mx-auto text-ink"
+          />
+          <Reveal delay={150}>
+            <p className="text-xl md:text-2xl signature-gradient-text font-medium mb-6">{page.strapline}</p>
+            <p className="text-lg text-slate font-light leading-relaxed max-w-2xl mx-auto">{page.intro}</p>
+          </Reveal>
+        </Container>
+      </section>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-          {services.map((service: any, idx: number) => {
-            const IconComponent = getIcon(service.slug);
-            return (
-              <Card
-                key={idx}
-                hoverLift
-                className="flex flex-col justify-between h-full border-t-4 border-t-corporate border-line/80 relative overflow-hidden group hover:shadow-[0_12px_32px_rgba(37,99,235,0.12)] transition-all duration-300"
-              >
-                <div>
-                  <div className="flex items-center justify-between mb-6">
-                    <span className="text-[10px] font-bold text-corporate/80 uppercase tracking-widest">
-                      corporate service
-                    </span>
-                    <div className="w-8 h-8 rounded-lg bg-corporate/5 text-corporate flex items-center justify-center">
-                      <IconComponent className="w-4.5 h-4.5" />
+      {/* ───── SERVICES GRID ───── */}
+      <Section background="default" className="relative bg-aurora overflow-hidden">
+        <Container className="relative z-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-7 max-w-6xl mx-auto">
+            {services.map((service: any, idx: number) => {
+              const Icon = getIcon(service.slug);
+              return (
+                <Reveal key={idx} delay={(idx % 3) * 90}>
+                  <Link
+                    href={`/corporate/${service.slug}`}
+                    className="card-premium group relative flex h-full flex-col p-7 md:p-8 overflow-hidden"
+                  >
+                    <div className="pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full bg-brand/20 opacity-0 blur-3xl transition-opacity duration-500 group-hover:opacity-100" />
+                    <div className="relative mb-6 flex items-center justify-between">
+                      <span className="grid h-12 w-12 place-items-center rounded-2xl bg-brand/10 border border-brand/20 text-brand transition-all duration-300 group-hover:bg-brand/20">
+                        <Icon className="h-5 w-5 icon-anim" />
+                      </span>
+                      <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted">Corporate Service</span>
                     </div>
-                  </div>
-                  <h3 className="text-xl font-bold font-display text-ink mb-3 group-hover:text-corporate transition-colors duration-200">
-                    {service.title}
-                  </h3>
-                  <p className="text-sm text-slate font-medium leading-relaxed mb-6">
-                    {service.shortDescription}
-                  </p>
-                </div>
-                <Link
-                  href={`/corporate/${service.slug}`}
-                  className="inline-flex items-center text-sm font-bold text-corporate hover:underline mt-auto group/link"
-                >
-                  <span className="mr-1.5">Read Service Details</span>
-                  <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover/link:translate-x-1" />
-                </Link>
-              </Card>
-            );
-          })}
-        </div>
+                    <h3 className="relative text-[20px] md:text-[22px] font-medium text-ink mb-3 transition-colors duration-300 group-hover:text-brand">
+                      {service.title}
+                    </h3>
+                    <p className="relative text-[14px] text-slate font-light leading-relaxed mb-6">
+                      {service.shortDescription}
+                    </p>
+                    <div className="relative mt-auto inline-flex items-center gap-2 text-[14px] font-medium text-brand">
+                      Read Service Details
+                      <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1.5" />
+                    </div>
+                  </Link>
+                </Reveal>
+              );
+            })}
+          </div>
 
-        {/* Closing Quick Form Link */}
-        <div className="mt-24 text-center max-w-2xl mx-auto border border-line/80 rounded-card p-10 bg-surface/40 relative overflow-hidden shadow-soft hover:shadow-hover-lift hover:-translate-y-1 transition-all duration-300">
-          <div className="absolute -top-12 -left-12 w-48 h-48 bg-corporate/5 rounded-full blur-2xl pointer-events-none" />
-          <div className="absolute -bottom-12 -right-12 w-48 h-48 bg-brand/5 rounded-full blur-2xl pointer-events-none" />
-          <h4 className="text-xl font-bold font-display text-ink mb-4 relative z-10">
-            Looking for a custom automation report or dashboards?
-          </h4>
-          <p className="text-base text-slate mb-8 max-w-lg mx-auto relative z-10 font-medium">
-            We provide full-spectrum consultation, audit, development, and training integration tailored to your company.
-          </p>
-          <Button href="/contact" className="relative z-10 px-8 py-3.5 bg-cta hover:bg-cta-600 text-white border-none shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 font-bold">
-            Schedule a Free Discovery Session
-          </Button>
-        </div>
-      </Container>
-    </Section>
+          {/* Closing CTA card */}
+          <Reveal className="mt-20 md:mt-24 max-w-3xl mx-auto">
+            <div className="card-premium relative overflow-hidden p-10 md:p-12 text-center">
+              <div className="bg-radial-glow pointer-events-none absolute -top-16 left-1/2 h-56 w-72 -translate-x-1/2" />
+              <h4 className="relative text-2xl md:text-3xl font-medium text-ink mb-4">
+                Looking for custom automation, reports or dashboards?
+              </h4>
+              <p className="relative text-base text-slate font-light mb-8 max-w-lg mx-auto">
+                We provide full-spectrum consultation, audit, development, and training integration tailored to your company.
+              </p>
+              <Button href="/contact" variant="accent" className="relative">
+                Schedule a Free Discovery Session
+              </Button>
+            </div>
+          </Reveal>
+        </Container>
+      </Section>
+    </>
   );
 }

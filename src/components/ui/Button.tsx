@@ -3,7 +3,7 @@ import Link from "next/link";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode;
-  variant?: "primary" | "secondary" | "ghost";
+  variant?: "primary" | "secondary" | "ghost" | "light" | "accent";
   href?: string;
   className?: string;
 }
@@ -16,18 +16,24 @@ export function Button({
   ...props
 }: ButtonProps) {
   const baseClasses =
-    "group/btn relative inline-flex items-center justify-center gap-2 font-body text-[15px] font-bold tracking-tight transition-all duration-300 ease-out focus:outline-none focus-visible:ring-4 focus-visible:ring-brand/25 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer will-change-transform";
+    "group/btn relative inline-flex items-center justify-center gap-2.5 font-body text-[15px] font-medium transition-all duration-300 ease-out focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer";
 
   const variantClasses = {
-    // Orange primary — premium gradient + animated sheen + layered shadow
+    // Primary: filled brand gradient pill (main CTA on light pages)
     primary:
-      "sheen text-white rounded-btn px-7 py-3.5 hover:-translate-y-0.5 active:translate-y-0 border-none [background:var(--gradient-orange)] [box-shadow:0_8px_22px_rgba(249,115,22,0.32)] hover:[box-shadow:0_14px_34px_rgba(249,115,22,0.42)]",
-    // Royal blue outline secondary — refined
+      "bg-gradient-to-r from-brand to-brand-700 text-white rounded-full px-7 py-3.5 shadow-[0_8px_24px_rgba(123,97,255,0.22)] hover:shadow-[0_16px_36px_rgba(123,97,255,0.35)] hover:-translate-y-0.5 sheen transition-all duration-300",
+    // Secondary: glass/outline card that has sheen
     secondary:
-      "bg-white/60 text-brand border border-brand/25 hover:border-brand/50 hover:bg-brand/5 rounded-btn px-7 py-3 shadow-soft hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 backdrop-blur-sm",
-    // Ghost — inline link-style
+      "border border-line bg-white/50 text-ink rounded-full px-7 py-3.5 hover:border-brand/40 hover:text-brand hover:-translate-y-0.5 sheen shadow-sm transition-all duration-300",
+    // Text link + arrow nudge (accent)
     ghost:
-      "bg-transparent text-brand hover:text-brand-700 px-4 py-2 hover:translate-x-1",
+      "bg-transparent text-brand hover:text-accent-bright px-0 py-2 transition-colors",
+    // White glass pill for hero overlays (dark text)
+    light:
+      "bg-white/70 backdrop-blur-md text-ink border border-white/90 rounded-full px-7 py-3.5 shadow-[0_8px_24px_rgba(123,97,255,0.06)] hover:-translate-y-0.5 hover:shadow-[0_16px_36px_rgba(123,97,255,0.12)] hover:border-brand/40 sheen transition-all duration-300",
+    // Accent: filled brand gradient with glow (same as primary, kept for emphasis)
+    accent:
+      "bg-gradient-to-r from-brand to-brand-700 text-white rounded-full px-7 py-3.5 shadow-[0_10px_30px_rgba(123,97,255,0.26)] hover:shadow-[0_16px_42px_rgba(123,97,255,0.40)] hover:-translate-y-0.5 sheen transition-all duration-300",
   };
 
   const finalClasses = `${baseClasses} ${variantClasses[variant]} ${className}`;

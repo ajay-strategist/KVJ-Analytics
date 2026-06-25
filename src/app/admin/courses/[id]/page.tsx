@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useRef } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, usePathname, useParams } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -36,7 +36,7 @@ interface Lesson {
   id: string;
   module_id: string;
   title: string;
-  kind: "material" | "activity";
+  kind: "theory" | "activity";
   content_html: string;
   max_score: number | null;
   display_order: number;
@@ -63,11 +63,131 @@ interface Course {
   display_order: number;
 }
 
-export default function AdminCourseDetailsPage({
-  params,
+type LessonValues = {
+  title: string;
+  kind: "theory" | "activity";
+  content_html: string;
+  max_score: number | null;
+};
+
+/**
+ * Self-contained lesson editor. Holds its OWN local state so typing in the
+ * HTML field does NOT re-render the (very large) course builder on every
+ * keystroke. Commits to the parent only when "Save Lesson" is clicked.
+ */
+const LessonEditor = React.memo(function LessonEditor({
+  initial,
+  onSave,
+  onCancel,
 }: {
-  params: { id: string };
+  initial: LessonValues;
+  onSave: (values: LessonValues) => void;
+  onCancel: () => void;
 }) {
+  const [title, setTitle] = React.useState(initial.title || "");
+  const [kind, setKind] = React.useState<"theory" | "activity">(initial.kind || "theory");
+  const [contentHtml, setContentHtml] = React.useState(initial.content_html || "");
+  const [maxScore, setMaxScore] = React.useState<number>(initial.max_score ?? 100);
+  const [importing, setImporting] = React.useState(false);
+  const fileId = React.useId();
+
+  const importHtml = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImporting(true);
+    try {
+      const text = await file.text();
+      setContentHtml(text);
+    } finally {
+      setImporting(false);
+      e.target.value = "";
+    }
+  };
+
+  return (
+    <div className="space-y-4 pt-1">
+      <div className="flex items-center justify-between border-b border-line/60 pb-2">
+        <h4 className="text-xs font-bold text-ink uppercase tracking-wider">Lesson Details</h4>
+        <button type="button" onClick={onCancel} className="cursor-pointer">
+          <X className="w-4 h-4 text-slate hover:text-ink" />
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-[10px] font-bold uppercase tracking-wider text-slate mb-1">Lesson Title *</label>
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className="w-full px-3 py-2 rounded-lg border border-line bg-white text-sm"
+          />
+        </div>
+        <div>
+          <label className="block text-[10px] font-bold uppercase tracking-wider text-slate mb-1">Material Type</label>
+          <select
+            value={kind}
+            onChange={(e) => setKind(e.target.value as "theory" | "activity")}
+            className="w-full px-3 py-2 rounded-lg border border-line bg-white text-sm"
+          >
+            <option value="theory">Theory (HTML)</option>
+            <option value="activity">Interactive Activity (HTML)</option>
+          </select>
+        </div>
+
+        {kind === "activity" && (
+          <div>
+            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate mb-1">Max Score *</label>
+            <input
+              type="number"
+              value={maxScore}
+              onChange={(e) => setMaxScore(Number(e.target.value))}
+              className="w-full px-3 py-2 rounded-lg border border-line bg-white text-sm"
+            />
+          </div>
+        )}
+
+        <div className="md:col-span-2">
+          <div className="flex items-center justify-between mb-1">
+            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">Lesson Content (HTML Source)</label>
+            <div className="flex items-center gap-1.5">
+              <input type="file" id={fileId} accept=".html,.htm" className="hidden" onChange={importHtml} />
+              <label htmlFor={fileId} className="cursor-pointer px-2 py-1 bg-white border border-line hover:border-brand/40 text-brand text-[10px] font-bold rounded flex items-center gap-1 shadow-sm shrink-0">
+                {importing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
+                <span>Import HTML file</span>
+              </label>
+            </div>
+          </div>
+          <textarea
+            rows={12}
+            placeholder="<div>Paste lesson HTML markup here...</div>"
+            value={contentHtml}
+            onChange={(e) => setContentHtml(e.target.value)}
+            className="w-full px-3 py-2 border border-line bg-white rounded-lg text-xs font-mono resize-y"
+          />
+        </div>
+      </div>
+
+      <div className="flex gap-2 justify-end">
+        <Button
+          onClick={() => {
+            if (!title.trim()) { alert("Lesson title is required."); return; }
+            onSave({ title: title.trim(), kind, content_html: contentHtml, max_score: kind === "activity" ? maxScore : null });
+          }}
+          className="px-4 py-2 bg-brand text-white text-xs font-bold flex items-center gap-1"
+        >
+          <Check className="w-3.5 h-3.5" />
+          Save Lesson
+        </Button>
+        <Button onClick={onCancel} variant="secondary" className="px-3 py-2 text-xs">Cancel</Button>
+      </div>
+    </div>
+  );
+});
+
+export default function AdminCourseDetailsPage() {
+  const routeParams = useParams<{ id: string }>();
+  const courseId = routeParams?.id as string;
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -98,7 +218,7 @@ export default function AdminCourseDetailsPage({
 
   // Editing test details
   const [editingTestId, setEditingTestId] = useState<string | null>(null);
-  const [testForm, setTestForm] = useState({ title: "", duration_mins: 30, pass_mark: 0 });
+  const [testForm, setTestForm] = useState<{ title: string; duration_mins: number; pass_mark: number; module_id: string | null }>({ title: "", duration_mins: 30, pass_mark: 0, module_id: null });
 
   // Editing question details
   const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null);
@@ -140,7 +260,7 @@ export default function AdminCourseDetailsPage({
 
   useEffect(() => {
     fetchCourseDetails();
-  }, [params.id]);
+  }, [courseId]);
 
   useEffect(() => {
     if (selectedTestId) {
@@ -154,7 +274,7 @@ export default function AdminCourseDetailsPage({
     setLoading(true);
     setError("");
     try {
-      const res = await fetch(`/api/admin/courses/${params.id}`);
+      const res = await fetch(`/api/admin/courses/${courseId}`);
       if (res.status === 401) {
         router.push("/admin");
         return;
@@ -187,6 +307,8 @@ export default function AdminCourseDetailsPage({
       defaultConfig = { items: ["Item 1", "Item 2"], correctOrder: [0, 1] };
     } else if (type === "fillblank") {
       defaultConfig = { template: "The capital of France is {{1}}.", blanks: [{ mode: "text", accepted: ["Paris"] }] };
+    } else if (type === "matrix") {
+      defaultConfig = { rows: ["Row 1", "Row 2"], columns: ["Column A", "Column B"], multiple: false, correct: [[0], [1]] };
     } else if (type === "code") {
       defaultConfig = { language: "python", starterCode: "# Write your Python code here\n", testCases: [{ stdin: "", expectedOutput: "" }] };
     }
@@ -203,8 +325,8 @@ export default function AdminCourseDetailsPage({
     const isNew = editingTestId === "new";
     const method = isNew ? "POST" : "PATCH";
     const body = isNew
-      ? { ...testForm, course_id: course.id, display_order: mockTests.length + 1 }
-      : { ...testForm, id: editingTestId };
+      ? { ...testForm, module_id: testForm.module_id || null, course_id: course.id, display_order: mockTests.length + 1 }
+      : { ...testForm, module_id: testForm.module_id || null, id: editingTestId };
 
     try {
       const res = await fetch("/api/admin/tests", {
@@ -476,7 +598,7 @@ export default function AdminCourseDetailsPage({
     setLessonForm({
       module_id: moduleId,
       title: "",
-      kind: "material",
+      kind: "theory",
       content_html: "",
       max_score: 100,
       display_order: order,
@@ -488,18 +610,26 @@ export default function AdminCourseDetailsPage({
     setLessonForm(lesson);
   };
 
-  const handleSaveLesson = async () => {
-    if (!lessonForm.title?.trim()) {
+  const handleSaveLesson = async (values: LessonValues) => {
+    if (!values.title?.trim()) {
       alert("Lesson title is required.");
       return;
     }
     const isNew = editingLessonId?.startsWith("new-");
-    const method = isNew ? "POST" : "PATCH";
+    let body: any;
+    if (isNew) {
+      const moduleId = editingLessonId!.replace("new-", "");
+      const mod = curriculum.find((m) => m.id === moduleId);
+      const order = mod && mod.lessons.length > 0 ? Math.max(...mod.lessons.map((l) => l.display_order)) + 1 : 1;
+      body = { module_id: moduleId, display_order: order, ...values };
+    } else {
+      body = { id: editingLessonId, ...values };
+    }
     try {
       const res = await fetch("/api/admin/lessons", {
-        method,
+        method: isNew ? "POST" : "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(isNew ? lessonForm : { id: editingLessonId, ...lessonForm }),
+        body: JSON.stringify(body),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Save failed");
@@ -991,133 +1121,24 @@ export default function AdminCourseDetailsPage({
                                         </div>
                                       </div>
                                     ) : (
-                                      /* Inline Lesson Edit Form */
-                                      <div className="space-y-4 pt-1">
-                                        <div className="flex items-center justify-between border-b border-line/60 pb-2">
-                                          <h4 className="text-xs font-bold text-ink uppercase tracking-wider">
-                                            Edit Lesson details
-                                          </h4>
-                                          <button type="button" onClick={() => setEditingLessonId(null)} className="cursor-pointer">
-                                            <X className="w-4 h-4 text-slate hover:text-ink" />
-                                          </button>
-                                        </div>
-
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                          <div>
-                                            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate mb-1">
-                                              Lesson Title *
-                                            </label>
-                                            <input
-                                              type="text"
-                                              required
-                                              value={lessonForm.title}
-                                              onChange={(e) =>
-                                                setLessonForm((prev) => ({ ...prev, title: e.target.value }))
-                                              }
-                                              className="w-full px-3 py-2 rounded-lg border border-line bg-white text-sm"
-                                            />
-                                          </div>
-                                          <div>
-                                            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate mb-1">
-                                              Lesson Kind
-                                            </label>
-                                            <select
-                                              value={lessonForm.kind}
-                                              onChange={(e: any) =>
-                                                setLessonForm((prev) => ({ ...prev, kind: e.target.value }))
-                                              }
-                                              className="w-full px-3 py-2 rounded-lg border border-line bg-white text-sm"
-                                            >
-                                              <option value="material">Study Material (HTML)</option>
-                                              <option value="activity">Interactive Activity (HTML)</option>
-                                            </select>
-                                          </div>
-
-                                          {lessonForm.kind === "activity" && (
-                                            <div>
-                                              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate mb-1">
-                                                Max Score *
-                                              </label>
-                                              <input
-                                                type="number"
-                                                required
-                                                value={lessonForm.max_score || 0}
-                                                onChange={(e) =>
-                                                  setLessonForm((prev) => ({
-                                                    ...prev,
-                                                    max_score: Number(e.target.value),
-                                                  }))
-                                                }
-                                                className="w-full px-3 py-2 rounded-lg border border-line bg-white text-sm"
-                                              />
-                                            </div>
-                                          )}
-
-                                          <div className="md:col-span-2">
-                                            <div className="flex items-center justify-between mb-1">
-                                              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">
-                                                Lesson Content (HTML Source Code)
-                                              </label>
-                                              <div className="flex items-center gap-1.5">
-                                                <input
-                                                  type="file"
-                                                  id={`html-file-${les.id}`}
-                                                  accept=".html"
-                                                  className="hidden"
-                                                  onChange={handleHtmlFileChange}
-                                                />
-                                                <label
-                                                  htmlFor={`html-file-${les.id}`}
-                                                  className="cursor-pointer px-2 py-1 bg-white border border-line hover:border-brand/40 text-brand text-[10px] font-bold rounded flex items-center gap-1 shadow-sm shrink-0"
-                                                >
-                                                  {uploadingHtml ? (
-                                                    <Loader2 className="w-3 h-3 animate-spin" />
-                                                  ) : (
-                                                    <Upload className="w-3 h-3" />
-                                                  )}
-                                                  <span>Import HTML file</span>
-                                                </label>
-                                              </div>
-                                            </div>
-                                            <textarea
-                                              rows={12}
-                                              placeholder="<div>Paste lesson HTML markup here...</div>"
-                                              value={lessonForm.content_html}
-                                              onChange={(e) =>
-                                                setLessonForm((prev) => ({
-                                                  ...prev,
-                                                  content_html: e.target.value,
-                                                }))
-                                              }
-                                              className="w-full px-3 py-2 border border-line bg-white rounded-lg text-xs font-mono resize-y"
-                                            />
-                                          </div>
-                                        </div>
-
-                                        <div className="flex gap-2 justify-end">
-                                          <Button
-                                            onClick={handleSaveLesson}
-                                            className="px-4 py-2 bg-brand text-white text-xs font-bold flex items-center gap-1"
-                                          >
-                                            <Check className="w-3.5 h-3.5" />
-                                            Save Lesson
-                                          </Button>
-                                          <Button
-                                            onClick={() => {
-                                              setEditingLessonId(null);
-                                              setLessonForm({});
-                                            }}
-                                            variant="secondary"
-                                            className="px-3 py-2 text-xs"
-                                          >
-                                            Cancel
-                                          </Button>
-                                        </div>
-                                      </div>
+                                      <LessonEditor
+                                        initial={{ title: les.title, kind: les.kind, content_html: les.content_html, max_score: les.max_score }}
+                                        onSave={handleSaveLesson}
+                                        onCancel={() => { setEditingLessonId(null); setLessonForm({}); }}
+                                      />
                                     )}
                                   </div>
                                 );
                               })
+                            )}
+                            {editingLessonId === `new-${mod.id}` && (
+                              <div className="border border-brand/40 bg-brand/5 rounded-lg p-3 mt-2">
+                                <LessonEditor
+                                  initial={{ title: "", kind: "theory", content_html: "", max_score: 100 }}
+                                  onSave={handleSaveLesson}
+                                  onCancel={() => { setEditingLessonId(null); setLessonForm({}); }}
+                                />
+                              </div>
                             )}
                           </div>
                         </div>
@@ -1137,7 +1158,7 @@ export default function AdminCourseDetailsPage({
                           <Button
                             onClick={() => {
                               setEditingTestId("new");
-                              setTestForm({ title: "", duration_mins: 30, pass_mark: 0 });
+                              setTestForm({ title: "", duration_mins: 30, pass_mark: 0, module_id: null });
                             }}
                             className="px-3.5 py-1.5 bg-brand text-white text-xs font-bold flex items-center gap-1"
                           >
@@ -1188,6 +1209,20 @@ export default function AdminCourseDetailsPage({
                                 className="w-full px-3 py-2 rounded border border-line bg-white text-sm"
                               />
                             </div>
+                          </div>
+                          <div className="mb-4">
+                            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate mb-1">Attach To</label>
+                            <select
+                              value={testForm.module_id || ""}
+                              onChange={(e) => setTestForm({ ...testForm, module_id: e.target.value || null })}
+                              className="w-full px-3 py-2 rounded border border-line bg-white text-sm"
+                            >
+                              <option value="">Course-level Mock Test (final exam)</option>
+                              {curriculum.map((m) => (
+                                <option key={m.id} value={m.id}>Module Assessment — {m.title}</option>
+                              ))}
+                            </select>
+                            <p className="text-[10px] text-slate mt-1">Leave as &quot;Course-level&quot; for a final Mock Test, or pick a module to make this that module&apos;s assessment.</p>
                           </div>
                           <div className="flex gap-2 justify-end">
                             <Button type="submit" className="px-4 py-2 bg-brand text-white text-xs font-bold">
@@ -1259,7 +1294,7 @@ export default function AdminCourseDetailsPage({
                                   type="button"
                                   onClick={() => {
                                     setEditingTestId(test.id);
-                                    setTestForm({ title: test.title, duration_mins: test.duration_mins, pass_mark: test.pass_mark });
+                                    setTestForm({ title: test.title, duration_mins: test.duration_mins, pass_mark: test.pass_mark, module_id: test.module_id ?? null });
                                   }}
                                   className="p-1.5 border border-line rounded hover:bg-surface cursor-pointer text-slate hover:text-ink"
                                   title="Edit Test Settings"
@@ -1347,6 +1382,7 @@ export default function AdminCourseDetailsPage({
                                       <option value="dragdrop">Drag &amp; Drop Matching</option>
                                       <option value="sequence">Sequence Reordering</option>
                                       <option value="fillblank">Fill in the Blanks</option>
+                                      <option value="matrix">Matrix / Grid</option>
                                       <option value="code">Sandbox Code Execution</option>
                                     </select>
                                   </div>
@@ -1805,6 +1841,100 @@ export default function AdminCourseDetailsPage({
                                           </div>
                                         </div>
                                       ))}
+                                    </div>
+                                  )}
+
+                                  {questionForm.type === "matrix" && (
+                                    <div className="space-y-4">
+                                      <label className="flex items-center gap-2 text-xs font-semibold text-slate">
+                                        <input
+                                          type="checkbox"
+                                          checked={!!questionForm.config?.multiple}
+                                          onChange={(e) => setQuestionForm((prev: any) => ({ ...prev, config: { ...prev.config, multiple: e.target.checked } }))}
+                                        />
+                                        Allow multiple correct columns per row
+                                      </label>
+
+                                      <div>
+                                        <label className="block text-[10px] font-bold uppercase tracking-wider text-slate mb-1">Rows</label>
+                                        {(questionForm.config?.rows || []).map((row: string, rIdx: number) => (
+                                          <div key={rIdx} className="flex items-center gap-2 mb-2">
+                                            <input
+                                              value={row}
+                                              onChange={(e) => setQuestionForm((prev: any) => { const rows = [...prev.config.rows]; rows[rIdx] = e.target.value; return { ...prev, config: { ...prev.config, rows } }; })}
+                                              className="flex-1 px-3 py-2 rounded border border-line bg-white text-sm"
+                                            />
+                                            <button type="button" className="text-error text-xs font-bold px-2"
+                                              onClick={() => setQuestionForm((prev: any) => ({ ...prev, config: { ...prev.config, rows: prev.config.rows.filter((_: any, i: number) => i !== rIdx), correct: (prev.config.correct || []).filter((_: any, i: number) => i !== rIdx) } }))}>✕</button>
+                                          </div>
+                                        ))}
+                                        <button type="button" className="text-brand text-xs font-bold"
+                                          onClick={() => setQuestionForm((prev: any) => ({ ...prev, config: { ...prev.config, rows: [...(prev.config.rows || []), `Row ${(prev.config.rows?.length || 0) + 1}`], correct: [...(prev.config.correct || []), []] } }))}>+ Add Row</button>
+                                      </div>
+
+                                      <div>
+                                        <label className="block text-[10px] font-bold uppercase tracking-wider text-slate mb-1">Columns</label>
+                                        {(questionForm.config?.columns || []).map((col: string, cIdx: number) => (
+                                          <div key={cIdx} className="flex items-center gap-2 mb-2">
+                                            <input
+                                              value={col}
+                                              onChange={(e) => setQuestionForm((prev: any) => { const columns = [...prev.config.columns]; columns[cIdx] = e.target.value; return { ...prev, config: { ...prev.config, columns } }; })}
+                                              className="flex-1 px-3 py-2 rounded border border-line bg-white text-sm"
+                                            />
+                                            <button type="button" className="text-error text-xs font-bold px-2"
+                                              onClick={() => setQuestionForm((prev: any) => ({ ...prev, config: { ...prev.config, columns: prev.config.columns.filter((_: any, i: number) => i !== cIdx), correct: (prev.config.correct || []).map((cols: number[]) => (cols || []).filter((c) => c !== cIdx).map((c) => (c > cIdx ? c - 1 : c))) } }))}>✕</button>
+                                          </div>
+                                        ))}
+                                        <button type="button" className="text-brand text-xs font-bold"
+                                          onClick={() => setQuestionForm((prev: any) => ({ ...prev, config: { ...prev.config, columns: [...(prev.config.columns || []), `Column ${(prev.config.columns?.length || 0) + 1}`] } }))}>+ Add Column</button>
+                                      </div>
+
+                                      <div>
+                                        <label className="block text-[10px] font-bold uppercase tracking-wider text-slate mb-2">Mark the correct cell(s)</label>
+                                        <div className="overflow-x-auto">
+                                          <table className="text-sm border border-line">
+                                            <thead>
+                                              <tr>
+                                                <th className="p-2 border border-line bg-surface"></th>
+                                                {(questionForm.config?.columns || []).map((col: string, cIdx: number) => (
+                                                  <th key={cIdx} className="p-2 border border-line bg-surface text-xs font-semibold whitespace-nowrap">{col}</th>
+                                                ))}
+                                              </tr>
+                                            </thead>
+                                            <tbody>
+                                              {(questionForm.config?.rows || []).map((row: string, rIdx: number) => (
+                                                <tr key={rIdx}>
+                                                  <td className="p-2 border border-line text-xs font-semibold whitespace-nowrap">{row}</td>
+                                                  {(questionForm.config?.columns || []).map((col: string, cIdx: number) => {
+                                                    const sel = (questionForm.config?.correct?.[rIdx] || []).includes(cIdx);
+                                                    return (
+                                                      <td key={cIdx} className="p-2 border border-line text-center">
+                                                        <input
+                                                          type={questionForm.config?.multiple ? "checkbox" : "radio"}
+                                                          name={`matrix-row-${rIdx}`}
+                                                          checked={sel}
+                                                          onChange={() => setQuestionForm((prev: any) => {
+                                                            const correct = (prev.config.correct || []).map((c: number[]) => [...(c || [])]);
+                                                            while (correct.length <= rIdx) correct.push([]);
+                                                            if (prev.config.multiple) {
+                                                              const set = new Set<number>(correct[rIdx]);
+                                                              if (set.has(cIdx)) set.delete(cIdx); else set.add(cIdx);
+                                                              correct[rIdx] = Array.from(set).sort((a, b) => a - b);
+                                                            } else {
+                                                              correct[rIdx] = [cIdx];
+                                                            }
+                                                            return { ...prev, config: { ...prev.config, correct } };
+                                                          })}
+                                                        />
+                                                      </td>
+                                                    );
+                                                  })}
+                                                </tr>
+                                              ))}
+                                            </tbody>
+                                          </table>
+                                        </div>
+                                      </div>
                                     </div>
                                   )}
 

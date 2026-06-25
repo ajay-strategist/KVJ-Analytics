@@ -1,17 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { generateTOTPAtCounter, generateBase32Secret } from "@/lib/totp";
+import { adminToken } from "@/lib/adminAuth";
 
 function getAdminClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) return null;
+  if (!url || !key || url === "https://placeholder.supabase.co") {
+    return require("@/lib/mockSupabase").mockSupabaseClient;
+  }
   return createClient(url, key, { auth: { persistSession: false } });
 }
 
 function isAuthorized(req: NextRequest) {
   const session = req.cookies.get("admin_session")?.value;
-  return session === "authenticated";
+  return session === adminToken();
 }
 
 export async function GET(req: NextRequest) {

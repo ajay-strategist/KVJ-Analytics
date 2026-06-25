@@ -49,7 +49,7 @@ function DraggableItem({ id, text }: { id: string; text: string }) {
       style={style}
       {...listeners}
       {...attributes}
-      className="p-3 border border-line bg-white rounded-lg cursor-grab active:cursor-grabbing text-xs font-semibold shadow-sm select-none hover:border-brand/40"
+      className="p-3 border border-line bg-card rounded-lg cursor-grab active:cursor-grabbing text-xs font-semibold shadow-sm select-none hover:border-brand/40"
     >
       {text}
     </div>
@@ -78,7 +78,7 @@ function DroppableSlot({
       <div
         ref={setNodeRef}
         className={`w-1/2 p-3 border rounded-lg min-h-[46px] flex items-center justify-between text-xs font-semibold transition-all relative ${
-          isOver ? "border-brand bg-brand/5 border-dashed" : "border-line bg-white"
+          isOver ? "border-brand bg-brand/5 border-dashed" : "border-line bg-card"
         }`}
       >
         {matchedItem ? (
@@ -113,7 +113,7 @@ function SortableSeqItem({ id, text }: { id: string; text: string }) {
       style={style}
       {...attributes}
       {...listeners}
-      className="p-3 border border-line bg-white rounded-lg cursor-grab active:cursor-grabbing text-xs font-semibold shadow-sm flex items-center gap-2 select-none hover:border-brand/40"
+      className="p-3 border border-line bg-card rounded-lg cursor-grab active:cursor-grabbing text-xs font-semibold shadow-sm flex items-center gap-2 select-none hover:border-brand/40"
     >
       <GripVertical className="w-4 h-4 text-slate shrink-0" />
       <span className="text-ink">{text}</span>
@@ -185,6 +185,9 @@ export default function TestTakingPage({
             defaultAnswers[q.id] = [...(q.config.items || [])];
           } else if (q.type === "fillblank") {
             defaultAnswers[q.id] = Array(q.config.blanks?.length || 0).fill("");
+          } else if (q.type === "matrix") {
+            // One selection-array per row
+            defaultAnswers[q.id] = (q.config.rows || []).map(() => []);
           } else if (q.type === "code") {
             defaultAnswers[q.id] = q.config.starterCode || "";
           }
@@ -272,7 +275,7 @@ export default function TestTakingPage({
   if (error) {
     return (
       <div className="min-h-screen bg-surface p-8 flex items-center justify-center font-body">
-        <div className="text-center bg-white border border-line p-8 rounded-card max-w-sm shadow-soft">
+        <div className="text-center bg-card border border-line p-8 rounded-card max-w-sm shadow-soft">
           <AlertTriangle className="w-12 h-12 text-error mx-auto mb-3" />
           <h3 className="font-bold text-ink text-base">Access Error</h3>
           <p className="text-xs text-slate mt-2">{error}</p>
@@ -289,7 +292,7 @@ export default function TestTakingPage({
     return (
       <Section background="default" className="bg-surface/50 min-h-screen flex items-center py-12 font-body">
         <Container className="max-w-xl mx-auto">
-          <Card className="p-8 border-line bg-white shadow-soft space-y-6">
+          <Card className="p-8 border-line bg-card shadow-soft space-y-6">
             <div className="border-b border-line pb-4 text-center">
               <span className="px-2.5 py-1 bg-brand/10 text-brand text-[9px] font-bold uppercase tracking-wider rounded border border-brand/20">
                 timed certification exam
@@ -346,7 +349,7 @@ export default function TestTakingPage({
       <Section className="bg-surface/50 min-h-screen py-12 font-body">
         <Container className="max-w-4xl mx-auto space-y-8">
           {/* Summary Scorecard */}
-          <Card className={`p-8 border-line bg-white shadow-soft border-t-8 ${
+          <Card className={`p-8 border-line bg-card shadow-soft border-t-8 ${
             gradedResult.passed ? "border-success" : "border-error"
           }`}>
             <div className="text-center space-y-4">
@@ -397,7 +400,7 @@ export default function TestTakingPage({
               if (!res) return null;
 
               return (
-                <Card key={q.id} className="p-6 border-line bg-white shadow-soft space-y-4">
+                <Card key={q.id} className="p-6 border-line bg-card shadow-soft space-y-4">
                   <div className="flex items-center justify-between border-b border-line pb-3">
                     <div className="flex items-center gap-2">
                       <span className="w-6 h-6 rounded bg-brand/10 text-brand text-[11px] font-bold flex items-center justify-center">
@@ -437,7 +440,7 @@ export default function TestTakingPage({
                     <div>
                       <span className="text-slate font-bold block mb-1">Your Submitted Response:</span>
                       {q.type === "code" ? (
-                        <pre className="p-2 border bg-white rounded font-mono text-[10px] overflow-x-auto max-h-40 whitespace-pre-wrap">{res.studentAnswer || "Not answered."}</pre>
+                        <pre className="p-2 border bg-card rounded font-mono text-[10px] overflow-x-auto max-h-40 whitespace-pre-wrap">{res.studentAnswer || "Not answered."}</pre>
                       ) : q.type === "dragdrop" ? (
                         <div className="space-y-1">
                           {(res.studentAnswer || []).map((p: any, pidx: number) => (
@@ -449,7 +452,7 @@ export default function TestTakingPage({
                       ) : q.type === "sequence" ? (
                         <div className="flex items-center gap-1.5 flex-wrap">
                           {(res.studentAnswer || []).map((val: string, sidx: number) => (
-                            <span key={sidx} className="px-2 py-1 bg-white border border-line rounded text-[10px] font-semibold">
+                            <span key={sidx} className="px-2 py-1 bg-card border border-line rounded text-[10px] font-semibold">
                               {sidx + 1}. {val}
                             </span>
                           ))}
@@ -477,7 +480,7 @@ export default function TestTakingPage({
                         <span className="text-slate font-bold block mb-1">Sandbox Execution Logs:</span>
                         <div className="space-y-2">
                           {res.codeResults.map((tc: any, tcIdx: number) => (
-                            <div key={tcIdx} className="border border-line/60 p-2 rounded bg-white text-[10px]">
+                            <div key={tcIdx} className="border border-line/60 p-2 rounded bg-card text-[10px]">
                               <div className="flex justify-between font-bold text-slate">
                                 <span>Test case #{tcIdx + 1}</span>
                                 <span className={tc.passed ? "text-success" : "text-error"}>
@@ -557,7 +560,7 @@ export default function TestTakingPage({
     <Section className="bg-surface/50 min-h-screen py-6 font-body">
       <Container className="max-w-7xl mx-auto space-y-6">
         {/* Sticky Header with Timer */}
-        <div className="sticky top-0 z-40 bg-white border border-line rounded-xl p-4 shadow-soft flex items-center justify-between gap-4">
+        <div className="sticky top-0 z-40 bg-card border border-line rounded-xl p-4 shadow-soft flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <Link href={`/training/${params.slug}`} className="p-2 border border-line rounded-lg text-slate hover:text-ink shrink-0 cursor-pointer">
               <ArrowLeft className="w-4 h-4" />
@@ -593,7 +596,7 @@ export default function TestTakingPage({
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           {/* Question Nav Map (Left) */}
           <div className="lg:col-span-3 space-y-4">
-            <Card className="p-5 border-line bg-white shadow-soft space-y-4">
+            <Card className="p-5 border-line bg-card shadow-soft space-y-4">
               <h3 className="text-xs font-bold text-ink uppercase tracking-wider border-b border-line pb-2 mb-2">
                 Exam Navigation Map
               </h3>
@@ -608,6 +611,8 @@ export default function TestTakingPage({
                     isAnswered = Array.isArray(ans) && ans.length > 0;
                   } else if (q.type === "fillblank") {
                     isAnswered = Array.isArray(ans) && ans.some((s: string) => s.trim().length > 0);
+                  } else if (q.type === "matrix") {
+                    isAnswered = Array.isArray(ans) && ans.some((row: any) => Array.isArray(row) && row.length > 0);
                   } else if (q.type === "code") {
                     isAnswered = typeof ans === "string" && ans.trim().length > 0;
                   }
@@ -615,7 +620,7 @@ export default function TestTakingPage({
                   const isCurrent = idx === currentQuestionIndex;
                   const isFlagged = flaggedQuestions[q.id];
 
-                  let btnClass = "border-line bg-white text-ink hover:border-slate/40";
+                  let btnClass = "border-line bg-card text-ink hover:border-slate/40";
                   if (isCurrent) btnClass = "border-brand bg-brand/5 text-brand ring-2 ring-brand/20";
                   else if (isFlagged) btnClass = "border-corporate bg-corporate/5 text-corporate";
                   else if (isAnswered) btnClass = "border-success bg-success/5 text-success";
@@ -635,7 +640,7 @@ export default function TestTakingPage({
 
               <div className="pt-3 border-t border-line/60 space-y-2 text-[10px] font-bold uppercase tracking-wider text-slate">
                 <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 rounded border border-line bg-white shrink-0" />
+                  <span className="w-3 h-3 rounded border border-line bg-card shrink-0" />
                   <span>Unvisited</span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -656,7 +661,7 @@ export default function TestTakingPage({
 
           {/* Question Workspace (Right) */}
           <div className="lg:col-span-9 space-y-6">
-            <Card className="p-6 border-line bg-white shadow-soft space-y-6">
+            <Card className="p-6 border-line bg-card shadow-soft space-y-6">
               {/* Question metadata */}
               <div className="flex items-center justify-between border-b border-line pb-3">
                 <div className="flex items-center gap-2">
@@ -679,7 +684,7 @@ export default function TestTakingPage({
                     className={`p-1.5 border rounded-lg transition-all cursor-pointer ${
                       flaggedQuestions[currentQuestion.id]
                         ? "border-corporate bg-corporate/5 text-corporate"
-                        : "border-line bg-white text-slate hover:text-ink"
+                        : "border-line bg-card text-slate hover:text-ink"
                     }`}
                     title="Flag for review"
                   >
@@ -704,7 +709,7 @@ export default function TestTakingPage({
                           key={idx}
                           onClick={() => setAnswers(prev => ({ ...prev, [currentQuestion.id]: idx }))}
                           className={`p-4 border rounded-xl cursor-pointer transition-all flex items-center gap-3 ${
-                            isSelected ? "border-brand bg-brand/5" : "border-line bg-white hover:border-slate/40"
+                            isSelected ? "border-brand bg-brand/5" : "border-line bg-card hover:border-slate/40"
                           }`}
                         >
                           <input
@@ -735,7 +740,7 @@ export default function TestTakingPage({
                             setAnswers(prev => ({ ...prev, [currentQuestion.id]: next }));
                           }}
                           className={`p-4 border rounded-xl cursor-pointer transition-all flex items-center gap-3 ${
-                            isSelected ? "border-brand bg-brand/5" : "border-line bg-white hover:border-slate/40"
+                            isSelected ? "border-brand bg-brand/5" : "border-line bg-card hover:border-slate/40"
                           }`}
                         >
                           <input
@@ -761,7 +766,7 @@ export default function TestTakingPage({
                           type="button"
                           onClick={() => setAnswers(prev => ({ ...prev, [currentQuestion.id]: val }))}
                           className={`flex-1 py-4 border rounded-xl font-bold transition-all text-center cursor-pointer ${
-                            isSelected ? "border-brand bg-brand/5 text-brand" : "border-line bg-white hover:border-slate/40 text-slate"
+                            isSelected ? "border-brand bg-brand/5 text-brand" : "border-line bg-card hover:border-slate/40 text-slate"
                           }`}
                         >
                           {val ? "True" : "False"}
@@ -859,7 +864,7 @@ export default function TestTakingPage({
                                   next[blankIdx] = e.target.value;
                                   setAnswers(prev => ({ ...prev, [currentQuestion.id]: next }));
                                 }}
-                                className="inline-block mx-1.5 px-2.5 py-1 rounded border border-line bg-white text-xs font-semibold focus:outline-none focus:border-brand"
+                                className="inline-block mx-1.5 px-2.5 py-1 rounded border border-line bg-card text-xs font-semibold focus:outline-none focus:border-brand"
                               >
                                 <option value="">-- select --</option>
                                 {(blank.options || []).map((o: string) => (
@@ -879,7 +884,7 @@ export default function TestTakingPage({
                                   next[blankIdx] = e.target.value;
                                   setAnswers(prev => ({ ...prev, [currentQuestion.id]: next }));
                                 }}
-                                className="inline-block mx-1.5 px-2.5 py-1 rounded border border-line bg-white text-xs font-semibold w-32 focus:outline-none focus:border-brand"
+                                className="inline-block mx-1.5 px-2.5 py-1 rounded border border-line bg-card text-xs font-semibold w-32 focus:outline-none focus:border-brand"
                               />
                             );
                           }
@@ -887,6 +892,54 @@ export default function TestTakingPage({
                         return <span key={index}>{part}</span>;
                       });
                     })()}
+                  </div>
+                )}
+
+                {currentQuestion.type === "matrix" && (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm border border-line rounded-xl overflow-hidden">
+                      <thead>
+                        <tr className="bg-surface/50">
+                          <th className="p-3 border border-line text-left"></th>
+                          {(currentQuestion.config.columns || []).map((col: string, cIdx: number) => (
+                            <th key={cIdx} className="p-3 border border-line text-xs font-bold text-ink text-center whitespace-nowrap">{col}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(currentQuestion.config.rows || []).map((row: string, rIdx: number) => (
+                          <tr key={rIdx}>
+                            <td className="p-3 border border-line text-sm font-semibold text-ink">{row}</td>
+                            {(currentQuestion.config.columns || []).map((col: string, cIdx: number) => {
+                              const rowAns: number[] = (answers[currentQuestion.id]?.[rIdx]) || [];
+                              const checked = rowAns.includes(cIdx);
+                              return (
+                                <td key={cIdx} className="p-3 border border-line text-center">
+                                  <input
+                                    type={currentQuestion.config.multiple ? "checkbox" : "radio"}
+                                    name={`matrix-${currentQuestion.id}-row-${rIdx}`}
+                                    checked={checked}
+                                    onChange={() => setAnswers((prev) => {
+                                      const grid = ((prev[currentQuestion.id] || []) as number[][]).map((r) => [...(r || [])]);
+                                      while (grid.length <= rIdx) grid.push([]);
+                                      if (currentQuestion.config.multiple) {
+                                        const set = new Set<number>(grid[rIdx]);
+                                        if (set.has(cIdx)) set.delete(cIdx); else set.add(cIdx);
+                                        grid[rIdx] = Array.from(set).sort((a, b) => a - b);
+                                      } else {
+                                        grid[rIdx] = [cIdx];
+                                      }
+                                      return { ...prev, [currentQuestion.id]: grid };
+                                    })}
+                                    className="w-4 h-4 accent-brand cursor-pointer"
+                                  />
+                                </td>
+                              );
+                            })}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 )}
 
@@ -898,7 +951,7 @@ export default function TestTakingPage({
                         {currentQuestion.config.language} Sandbox compiler
                       </span>
                     </div>
-                    <div className="border border-line rounded-b-xl overflow-hidden bg-white">
+                    <div className="border border-line rounded-b-xl overflow-hidden bg-card">
                       <CodeMirror
                         value={answers[currentQuestion.id] || ""}
                         height="320px"
@@ -912,7 +965,7 @@ export default function TestTakingPage({
             </Card>
 
             {/* Bottom Nav Bar */}
-            <div className="flex justify-between items-center bg-white border border-line p-4 rounded-xl shadow-soft">
+            <div className="flex justify-between items-center bg-card border border-line p-4 rounded-xl shadow-soft">
               <Button
                 disabled={currentQuestionIndex === 0}
                 onClick={() => setCurrentQuestionIndex(prev => prev - 1)}

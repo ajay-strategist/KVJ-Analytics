@@ -46,7 +46,7 @@ export function SegmentCard({
   return (
     <Link
       href={href}
-      className={`group block bg-card rounded-card border border-line p-8 shadow-soft transition-all duration-300 ${c.shadowHover} hover:-translate-y-1.5 ${c.bgHover} border-l-4 ${c.border} offering-card offeringCard`}
+      className={`group block card-premium p-8 transition-all duration-300 ${c.shadowHover} ${c.bgHover} border-l-4 ${c.border} offering-card offeringCard`}
     >
       <div className="flex flex-col h-full justify-between">
         <div>

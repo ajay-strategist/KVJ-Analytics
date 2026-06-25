@@ -12,7 +12,7 @@ export default function TermsPage() {
       <div className="absolute inset-0 bg-grid-pattern opacity-60 pointer-events-none" />
       
       <Container className="relative z-10 max-w-4xl">
-        <Card className="p-8 md:p-12 border-line/80 shadow-soft bg-white relative overflow-hidden">
+        <Card className="p-8 md:p-12 border-line/80 shadow-soft bg-base relative overflow-hidden">
           {/* Top gradient bar */}
           <div className="absolute top-0 left-0 right-0 h-1 signature-gradient" />
 
