@@ -89,14 +89,16 @@ export default async function HomePage() {
                   Analytics   ·   Automation   ·   Training   ·   EdTech
                 </p>
               </Reveal>
-              <RevealText
-                as="h1"
-                text="Transforming Data Into Decisions"
-                className="font-display font-bold text-[44px] sm:text-[62px] lg:text-[76px] leading-[1.05] tracking-[-0.025em] mb-8 text-[#0B1F3A]"
-              />
+              <Reveal>
+                <h1 className="font-display font-bold text-[44px] sm:text-[62px] lg:text-[70px] leading-[1.08] tracking-[-0.025em] mb-8 text-[#0B1F3A]">
+                  Transforming Data <br />
+                  <span>into Decisions.</span>
+                  <span className="text-slate-400 font-medium">Faster.</span>
+                </h1>
+              </Reveal>
               <Reveal delay={180}>
                 <p className="text-[18px] md:text-[21px] font-light text-[#475569] leading-[1.6] max-w-xl mb-10">
-                  {hp.hero?.intro || FALLBACK_HOME_PAGE.hero.intro}
+                  Premium, futuristic light theme UI with excellent visibility and so clear differentiation of services.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-5 items-start sm:items-center">
                   {/* Navy background with gold hover glow */}
@@ -163,47 +165,54 @@ export default async function HomePage() {
               <span className="text-[11px] uppercase tracking-[0.25em] text-[#D4AF37] font-bold">Solutions for Enterprise</span>
               <h2 className="text-3xl md:text-4xl font-bold font-display text-[#0B1F3A] mt-2 mb-4">Corporate Solutions</h2>
               <p className="text-[#475569] font-light text-base leading-relaxed">
-                Streamline operational pipelines, automate dashboard updates, and eliminate manual spreadsheet redundancies.
+                Custom: data analytics solutions -&gt; and process solution, clear differentiation of services.
               </p>
             </Reveal>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-              {corporateSolutions.slice(0, 6).map((item, idx) => {
-                const desc = CORP_DESC[item.title] || "Tailored corporate solution engineered to optimize workflow and analytics output.";
-                
-                // Icon matching
-                let iconName = "corp-vis";
-                const titleLower = item.title.toLowerCase();
-                if (titleLower.includes("report")) iconName = "corp-report";
-                else if (titleLower.includes("spreadsheet") || titleLower.includes("consulting")) iconName = "corp-spreadsheet";
-                else if (titleLower.includes("dashboard") || titleLower.includes("visualization")) iconName = "corp-dashboard";
-                else if (titleLower.includes("app")) iconName = "corp-app";
-                else if (titleLower.includes("process") || titleLower.includes("automation")) iconName = "corp-process";
-                else if (titleLower.includes("training")) iconName = "corp-training";
-
-                return (
-                  <Reveal key={idx} delay={(idx % 3) * 90}>
-                    <ServiceCard
-                      title={item.title}
-                      description={desc}
-                      href="/corporate"
-                      iconName={iconName}
-                      tag="Corporate Solution"
-                      variant="corporate"
-                    />
-                  </Reveal>
-                );
-              })}
+              <Reveal delay={0}>
+                <ServiceCard
+                  title="Data Visualization"
+                  description="Real-time dashboards and visual insights for KPI tracking and faster decisions."
+                  href="/corporate"
+                  iconName="corp-vis"
+                  tag="Corporate Solution"
+                  variant="corporate"
+                  glow={false}
+                />
+              </Reveal>
+              <Reveal delay={90}>
+                <ServiceCard
+                  title="Process Automation"
+                  description="Cut manual effort with intelligent workflow and process automation."
+                  href="/corporate"
+                  iconName="corp-process"
+                  tag="Corporate Solution"
+                  variant="corporate"
+                  glow={true}
+                />
+              </Reveal>
+              <Reveal delay={180}>
+                <ServiceCard
+                  title="Spreadsheet Consulting"
+                  description="Advanced Excel systems, automation, validation and optimization solutions."
+                  href="/corporate"
+                  iconName="corp-spreadsheet"
+                  tag="Corporate Solution"
+                  variant="corporate"
+                  glow={false}
+                />
+              </Reveal>
             </div>
           </div>
 
-          {/* Educational segment (exactly 3 items: Training, Certification, Curriculum) */}
+          {/* Educational segment (exactly 3 items: Training Programs, Certification, Curriculum Development) */}
           <div className="mt-32">
-            <Reveal className="mb-14 max-w-3xl text-left border-l-4 border-[#0096C7] pl-5">
+            <Reveal className="mb-14 max-w-3xl text-left border-l-4 border-[#06B6D4] pl-5">
               <span className="text-[11px] uppercase tracking-[0.25em] text-[#8B5CF6] font-bold">Solutions for Academia</span>
-              <h2 className="text-3xl md:text-4xl font-bold font-display text-[#0096C7] mt-2 mb-4">Educational Solutions</h2>
+              <h2 className="text-3xl md:text-4xl font-bold font-display text-[#06B6D4] mt-2 mb-4">Educational Solutions</h2>
               <p className="text-[#475569] font-light text-base leading-relaxed">
-                Build employability, introduce industry-relevant courses, and standardize practical technical testing.
+                Learn how templata training programs and certification prorecourcers and how educational solutions.
               </p>
             </Reveal>
 

@@ -353,6 +353,7 @@ interface ServiceCardProps {
   tag: string;
   delay?: number;
   variant?: "corporate" | "education" | "dark";
+  glow?: boolean;
 }
 
 export function ServiceCard({
@@ -364,6 +365,7 @@ export function ServiceCard({
   tag,
   delay = 0,
   variant = "dark",
+  glow = false,
 }: ServiceCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [mousePos, setMousePos] = useState({ x: -1000, y: -1000 });
@@ -410,12 +412,12 @@ export function ServiceCard({
   let linkStyle = {};
 
   if (variant === "corporate") {
-    containerClass = "bg-white border border-[#0B1F3A]/10 text-[#0F172A] shadow-[0_4px_24px_rgba(11,31,58,0.03)]";
-    hoverShadow = "0 18px 48px rgba(212, 175, 55, 0.15)";
-    borderGlowColor = "rgba(212, 175, 55, 0.75)"; // Gold
-    iconContainerBase = "bg-[#0B1F3A]/5 border border-[#0B1F3A]/10 text-[#0B1F3A]";
-    iconContainerHover = "bg-[#D4AF37]/10 border-[#D4AF37] text-[#D4AF37] shadow-[0_0_15px_rgba(212,175,55,0.2)]";
-    tagColorClass = "text-slate-500";
+    containerClass = "bg-white border-2 border-[#D4AF37]/70 text-[#0F172A]";
+    hoverShadow = "0 20px 48px rgba(212, 175, 55, 0.4)";
+    borderGlowColor = "rgba(212, 175, 55, 0.9)"; // Gold
+    iconContainerBase = "bg-[#0B1F3A] text-[#D4AF37] rounded-full border-2 border-[#D4AF37]/30 shadow-inner";
+    iconContainerHover = "bg-[#0B1F3A] text-[#D4AF37] rounded-full border-2 border-[#D4AF37] shadow-[0_0_15px_rgba(212,175,55,0.4)]";
+    tagColorClass = "text-slate-500 font-semibold";
     titleStyle = {
       color: isHovered ? "#D4AF37" : "#0B1F3A",
     };
@@ -423,12 +425,12 @@ export function ServiceCard({
       color: isHovered ? "#D4AF37" : "#94A3B8",
     };
   } else if (variant === "education") {
-    containerClass = "bg-white border border-[#00F0FF]/25 text-[#0F172A] shadow-[0_4px_24px_rgba(0,240,255,0.03)]";
-    hoverShadow = "0 18px 48px rgba(139, 92, 246, 0.15)";
+    containerClass = "bg-white text-[#0F172A] shadow-[0_4px_24px_rgba(0,240,255,0.03)]";
+    hoverShadow = "0 18px 48px rgba(139, 92, 246, 0.2)";
     borderGlowColor = "rgba(139, 92, 246, 0.75)"; // Purple
     iconContainerBase = "bg-[#00F0FF]/5 border border-[#00F0FF]/25 text-[#0096C7]";
     iconContainerHover = "bg-[#8B5CF6]/10 border-[#8B5CF6] text-[#8B5CF6] shadow-[0_0_15px_rgba(139,92,246,0.2)]";
-    tagColorClass = "text-slate-500";
+    tagColorClass = "text-slate-500 font-semibold";
     titleStyle = {
       color: isHovered ? "#8B5CF6" : "#0096C7",
     };
@@ -455,6 +457,19 @@ export function ServiceCard({
     };
   }
 
+  // Set card styling overrides (for gradients, glow, etc.)
+  let cardInnerStyle: React.CSSProperties = {
+    boxShadow: isHovered ? hoverShadow : (glow ? "0 0 28px rgba(212, 175, 55, 0.55)" : "none"),
+  };
+
+  if (variant === "education") {
+    cardInnerStyle = {
+      ...cardInnerStyle,
+      background: "linear-gradient(white, white) padding-box, linear-gradient(135deg, #00F0FF, #8B5CF6) border-box",
+      border: "2.5px solid transparent",
+    };
+  }
+
   return (
     <div
       ref={cardRef}
@@ -476,26 +491,26 @@ export function ServiceCard({
       >
         <div
           className={`relative h-full flex flex-col justify-between p-8 rounded-[24px] overflow-hidden transition-all duration-500 ${containerClass}`}
-          style={{
-            boxShadow: isHovered ? hoverShadow : "none",
-          }}
+          style={cardInnerStyle}
         >
           {/* Cursor-tracking border glow */}
-          <div
-            className="absolute inset-0 pointer-events-none rounded-[24px] transition-opacity duration-300"
-            style={{
-              opacity: isHovered ? 1 : 0,
-              background: `radial-gradient(180px circle at ${mousePos.x}px ${mousePos.y}px, ${borderGlowColor}, transparent 75%)`,
-              padding: "1.5px",
-              WebkitMask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
-              WebkitMaskComposite: "xor",
-              maskComposite: "exclude",
-            }}
-          />
+          {variant !== "education" && (
+            <div
+              className="absolute inset-0 pointer-events-none rounded-[24px] transition-opacity duration-300"
+              style={{
+                opacity: isHovered ? 1 : 0,
+                background: `radial-gradient(180px circle at ${mousePos.x}px ${mousePos.y}px, ${borderGlowColor}, transparent 75%)`,
+                padding: "1.5px",
+                WebkitMask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+                WebkitMaskComposite: "xor",
+                maskComposite: "exclude",
+              }}
+            />
+          )}
 
           {/* Icon Container */}
           <div
-            className={`w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-300 ${
+            className={`w-16 h-16 ${variant === "corporate" ? "rounded-full" : "rounded-2xl"} flex items-center justify-center transition-all duration-300 ${
               isHovered ? iconContainerHover : iconContainerBase
             }`}
             style={{
