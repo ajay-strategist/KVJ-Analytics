@@ -44,10 +44,10 @@ export function Footer({ siteSettings = FALLBACK_SITE_SETTINGS }: FooterProps) {
                 className="h-8 md:h-10 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
               />
             </Link>
-            <p className={`text-sm font-semibold mb-6 leading-relaxed ${isLightHome ? "text-[#0B1F3A]" : "text-slate"}`}>
+            <p className="text-sm font-semibold mb-6 leading-relaxed text-[#0B1F3A]">
               {tagline}
             </p>
-            <p className={`text-sm leading-relaxed mb-8 max-w-sm font-light ${isLightHome ? "text-[#475569]" : "text-slate/80"}`}>
+            <p className="text-sm leading-relaxed mb-8 max-w-sm font-light text-slate">
               {description}
             </p>
             {/* Regions badge strip */}
@@ -55,11 +55,7 @@ export function Footer({ siteSettings = FALLBACK_SITE_SETTINGS }: FooterProps) {
               {siteSettings.regionsServed.map((region, idx) => (
                 <span
                   key={idx}
-                  className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border transition-all duration-200 cursor-default ${
-                    isLightHome
-                      ? "bg-slate-100 text-[#475569] border-slate-200 hover:bg-[#0B1F3A]/5 hover:text-[#0B1F3A] hover:border-[#0B1F3A]/30"
-                      : "bg-slate/5 text-slate/85 border border-line hover:bg-brand/5 hover:text-brand hover:border-brand/30"
-                  }`}
+                  className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border transition-all duration-200 cursor-default bg-slate-100 text-slate border-slate-200 hover:bg-[#0B1F3A]/5 hover:text-[#0B1F3A] hover:border-[#0B1F3A]/30"
                 >
                   {region}
                 </span>
@@ -70,9 +66,7 @@ export function Footer({ siteSettings = FALLBACK_SITE_SETTINGS }: FooterProps) {
           {/* Dynamic Link Columns */}
           {columns.map((column, idx) => (
             <div key={idx} className="lg:col-span-3">
-              <h4 className={`text-xs font-bold uppercase tracking-widest mb-6 border-b pb-2.5 font-display ${
-                isLightHome ? "text-[#0B1F3A] border-slate-200" : "text-ink border-line"
-              }`}>
+              <h4 className="text-xs font-bold uppercase tracking-widest mb-6 border-b pb-2.5 font-display text-[#0B1F3A] border-slate-200">
                 {column.heading}
               </h4>
               <ul className="space-y-3">
@@ -80,11 +74,7 @@ export function Footer({ siteSettings = FALLBACK_SITE_SETTINGS }: FooterProps) {
                   <li key={lIdx}>
                     <Link
                       href={link.href}
-                      className={`text-sm hover:translate-x-1.5 transition-all duration-200 block ${
-                        isLightHome
-                          ? "text-[#475569] hover:text-[#0B1F3A]"
-                          : "text-slate hover:text-brand"
-                      }`}
+                      className="text-sm hover:translate-x-1.5 transition-all duration-200 block text-slate hover:text-[#0B1F3A]"
                     >
                       {link.label}
                     </Link>
@@ -96,15 +86,13 @@ export function Footer({ siteSettings = FALLBACK_SITE_SETTINGS }: FooterProps) {
 
           {/* Contact Details Column */}
           <div className="lg:col-span-3">
-            <h4 className={`text-xs font-bold uppercase tracking-widest mb-6 border-b pb-2.5 font-display ${
-              isLightHome ? "text-[#0B1F3A] border-slate-200" : "text-ink border-line"
-            }`}>
+            <h4 className="text-xs font-bold uppercase tracking-widest mb-6 border-b pb-2.5 font-display text-[#0B1F3A] border-slate-200">
               Contact Us
             </h4>
             <ul className="space-y-4">
               <li className="flex items-start">
                 <MapPin className="w-4 h-4 text-brand mr-3 shrink-0 mt-1" />
-                <span className={`text-xs leading-relaxed ${isLightHome ? "text-[#475569]" : "text-slate"}`}>
+                <span className="text-xs leading-relaxed text-slate">
                   {contact.address}
                 </span>
               </li>
@@ -112,9 +100,7 @@ export function Footer({ siteSettings = FALLBACK_SITE_SETTINGS }: FooterProps) {
                 <Mail className="w-4 h-4 text-brand mr-3 shrink-0" />
                 <a
                   href={`mailto:${contact.email}`}
-                  className={`text-xs transition-colors duration-150 ${
-                    isLightHome ? "text-[#475569] hover:text-[#0B1F3A]" : "text-slate hover:text-brand"
-                  }`}
+                  className="text-xs transition-colors duration-150 text-slate hover:text-[#0B1F3A]"
                 >
                   {contact.email}
                 </a>
@@ -126,9 +112,7 @@ export function Footer({ siteSettings = FALLBACK_SITE_SETTINGS }: FooterProps) {
                     <a
                       key={pIdx}
                       href={`tel:${phone}`}
-                      className={`text-xs transition-colors duration-150 ${
-                        isLightHome ? "text-[#475569] hover:text-[#0B1F3A]" : "text-slate hover:text-brand"
-                      }`}
+                      className="text-xs transition-colors duration-150 text-slate hover:text-[#0B1F3A]"
                     >
                       {phone}
                     </a>
@@ -140,36 +124,24 @@ export function Footer({ siteSettings = FALLBACK_SITE_SETTINGS }: FooterProps) {
         </div>
 
         {/* Bottom Bar: Copyright & Legal */}
-        <div className={`border-t pt-8 flex flex-col md:flex-row items-center justify-between gap-4 ${
-          isLightHome ? "border-slate-200" : "border-line"
-        }`}>
-          <div className={`flex flex-col sm:flex-row items-center gap-2 sm:gap-6 text-xs ${
-            isLightHome ? "text-[#475569]" : "text-slate/75"
-          }`}>
+        <div className="border-t pt-8 flex flex-col md:flex-row items-center justify-between gap-4 border-slate-200">
+          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-6 text-xs text-slate">
             <span>&copy; {new Date().getFullYear()} KVJ Analytics. All Rights Reserved.</span>
-            <span className={`px-2.5 py-1 rounded text-[10px] font-mono font-bold tracking-tight border ${
-              isLightHome
-                ? "bg-slate-100 border-slate-200 text-[#475569]"
-                : "bg-slate/5 border-line text-slate/85"
-            }`}>
+            <span className="px-2.5 py-1 rounded text-[10px] font-mono font-bold tracking-tight border bg-slate-100 border-slate-200 text-slate">
               GSTIN: {contact.gstNumber}
             </span>
           </div>
           <div className="flex items-center space-x-6">
             <Link
               href="/privacy"
-              className={`text-xs hover:translate-y-[-1px] transition-all duration-150 inline-flex items-center ${
-                isLightHome ? "text-[#475569] hover:text-[#0B1F3A]" : "text-slate hover:text-brand"
-              }`}
+              className="text-xs hover:translate-y-[-1px] transition-all duration-150 inline-flex items-center text-slate hover:text-[#0B1F3A]"
             >
               <ShieldAlert className="w-3.5 h-3.5 mr-1.5" />
               Privacy Policy
             </Link>
             <Link
               href="/terms"
-              className={`text-xs hover:translate-y-[-1px] transition-all duration-150 inline-flex items-center ${
-                isLightHome ? "text-[#475569] hover:text-[#0B1F3A]" : "text-slate hover:text-brand"
-              }`}
+              className="text-xs hover:translate-y-[-1px] transition-all duration-150 inline-flex items-center text-slate hover:text-[#0B1F3A]"
             >
               <FileText className="w-3.5 h-3.5 mr-1.5" />
               Terms & Conditions

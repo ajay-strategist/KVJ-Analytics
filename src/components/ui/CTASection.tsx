@@ -58,10 +58,10 @@ export function CTASection({
       <div className="bg-radial-glow pointer-events-none absolute left-1/2 top-0 h-[34rem] w-[44rem] -translate-x-1/2 -translate-y-1/3 opacity-30" />
       <div className="bg-radial-glow-teal pointer-events-none absolute -bottom-32 right-[8%] h-[24rem] w-[24rem] opacity-30" />
       <Container className="relative z-10 text-center flex flex-col items-center">
-        <BoldStatement variant="h2" className="mb-6 max-w-3xl">
+        <BoldStatement variant="h2" className="mb-6 max-w-3xl text-white">
           {title}
         </BoldStatement>
-        <p className="text-[17px] md:text-[19px] font-light text-slate max-w-2xl leading-relaxed mb-10">
+        <p className="text-[17px] md:text-[19px] font-light text-white/70 max-w-2xl leading-relaxed mb-10">
           {description}
         </p>
         <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
@@ -69,7 +69,7 @@ export function CTASection({
             {primaryCtaText}
           </Button>
           {secondaryCtaText && secondaryCtaHref && (
-            <Button href={secondaryCtaHref} variant="secondary" className="w-full sm:w-auto">
+            <Button href={secondaryCtaHref} variant="secondary" className="w-full sm:w-auto !text-white hover:!text-[#00F0FF]">
               {secondaryCtaText} →
             </Button>
           )}
