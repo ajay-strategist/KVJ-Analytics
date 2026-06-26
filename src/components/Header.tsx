@@ -47,14 +47,19 @@ export function Header({ siteSettings = FALLBACK_SITE_SETTINGS }: HeaderProps) {
   // Routes whose top section is a dark hero → header may be transparent (white) at the top.
   const HERO_ROUTES = new Set(["/", "/about", "/corporate", "/education", "/products", "/training", "/contact"]);
   const overHero = HERO_ROUTES.has(pathname) && !scrolled;
+  const isLightHome = pathname === "/";
+
+  // Header background / border styling
+  let headerBgClass = "py-3 bg-[#0A0A0E]/85 backdrop-blur-xl border-line shadow-[0_8px_30px_rgba(0,0,0,0.5)]";
+  if (overHero) {
+    headerBgClass = "py-5 bg-transparent border-transparent";
+  } else if (isLightHome) {
+    headerBgClass = "py-3 bg-white/85 backdrop-blur-xl border-slate-200/60 shadow-[0_8px_30px_rgba(0,0,0,0.05)]";
+  }
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] w-full border-b ${
-        overHero
-          ? "py-5 bg-transparent border-transparent"
-          : "py-3 bg-[#0A0A0E]/85 backdrop-blur-xl border-line shadow-[0_8px_30px_rgba(0,0,0,0.5)]"
-      }`}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] w-full border-b ${headerBgClass}`}
     >
       <div className="w-full pl-3 pr-4 sm:pl-4 sm:pr-6 lg:pr-8 flex items-center justify-between">
         {/* Brand Logo — always normal colors over light bases */}
@@ -73,8 +78,13 @@ export function Header({ siteSettings = FALLBACK_SITE_SETTINGS }: HeaderProps) {
               pathname === item.href ||
               (item.href !== "/" && pathname.startsWith(item.href));
  
-            const inactive = "text-slate hover:text-ink";
-            const active = "text-ink after:scale-x-100";
+            let inactive = "text-slate hover:text-ink";
+            let active = "text-ink after:scale-x-100";
+ 
+            if (isLightHome) {
+              inactive = "text-[#475569] hover:text-[#0B1F3A]";
+              active = "text-[#0B1F3A] after:bg-[#0B1F3A] after:scale-x-100";
+            }
  
             return (
               <Link
@@ -95,15 +105,19 @@ export function Header({ siteSettings = FALLBACK_SITE_SETTINGS }: HeaderProps) {
           <a
             href={`tel:${contact.phones[0]}`}
             className={`hidden xl:flex items-center whitespace-nowrap text-[13px] font-medium transition-all duration-200 px-4 py-2 rounded-full border ${
-              overHero
-                ? "text-slate hover:text-ink border-line hover:border-brand/40 bg-white/5"
-                : "text-slate hover:text-ink border-line hover:border-brand/40 bg-[#12121A]/80"
+              isLightHome
+                ? overHero
+                  ? "text-[#475569] hover:text-[#0B1F3A] border-slate-200 hover:border-[#0B1F3A]/40 bg-slate-50/50"
+                  : "text-[#475569] hover:text-[#0B1F3A] border-slate-200/60 hover:border-[#0B1F3A]/40 bg-white/80"
+                : overHero
+                  ? "text-slate hover:text-ink border-line hover:border-brand/40 bg-white/5"
+                  : "text-slate hover:text-ink border-line hover:border-brand/40 bg-[#12121A]/80"
             }`}
           >
             <PhoneCall className="w-3.5 h-3.5 mr-2 text-brand flex-shrink-0" />
             <span>Call</span>
           </a>
-          <Button variant="accent" href="/contact" className="px-5 py-2.5 text-[13px] xl:text-sm">
+          <Button variant={isLightHome ? "corporate" : "accent"} href="/contact" className="px-5 py-2.5 text-[13px] xl:text-sm">
             Request Demo
           </Button>
         </div>
@@ -111,7 +125,9 @@ export function Header({ siteSettings = FALLBACK_SITE_SETTINGS }: HeaderProps) {
         {/* Mobile Menu Button */}
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="lg:hidden p-2 rounded-lg focus:outline-none transition-colors text-ink hover:bg-white/5"
+          className={`lg:hidden p-2 rounded-lg focus:outline-none transition-colors ${
+            isLightHome ? "text-[#0B1F3A] hover:bg-slate-100" : "text-ink hover:bg-white/5"
+          }`}
           aria-label="Toggle navigation menu"
         >
           {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -120,7 +136,11 @@ export function Header({ siteSettings = FALLBACK_SITE_SETTINGS }: HeaderProps) {
 
       {/* Mobile Menu Panel */}
       {mobileMenuOpen && (
-        <div className="lg:hidden absolute top-full left-0 right-0 bg-[#0A0A0E]/95 backdrop-blur-xl border-b border-line shadow-lg animate-fade-in py-6 px-4 space-y-4 max-h-[85vh] overflow-y-auto">
+        <div className={`lg:hidden absolute top-full left-0 right-0 backdrop-blur-xl border-b shadow-lg animate-fade-in py-6 px-4 space-y-4 max-h-[85vh] overflow-y-auto ${
+          isLightHome
+            ? "bg-white/95 border-slate-200 text-[#0F172A]"
+            : "bg-[#0A0A0E]/95 border-line text-ink"
+        }`}>
           <div className="flex flex-col space-y-2">
             {navItems.map((item, idx) => {
               const isActive = pathname === item.href;
@@ -130,7 +150,13 @@ export function Header({ siteSettings = FALLBACK_SITE_SETTINGS }: HeaderProps) {
                   href={item.href}
                   onClick={() => setMobileMenuOpen(false)}
                   className={`px-4 py-3 rounded-xl text-base font-medium transition-all ${
-                    isActive ? "text-brand bg-brand/10" : "text-slate hover:bg-white/5 hover:text-ink"
+                    isLightHome
+                      ? isActive
+                        ? "text-[#0B1F3A] bg-[#0B1F3A]/10 font-bold"
+                        : "text-[#475569] hover:bg-slate-50 hover:text-[#0B1F3A]"
+                      : isActive
+                        ? "text-brand bg-brand/10"
+                        : "text-slate hover:bg-white/5 hover:text-ink"
                   }`}
                 >
                   {item.label}
@@ -138,15 +164,19 @@ export function Header({ siteSettings = FALLBACK_SITE_SETTINGS }: HeaderProps) {
               );
             })}
           </div>
-          <div className="border-t border-line pt-4 flex flex-col space-y-3">
+          <div className={`border-t pt-4 flex flex-col space-y-3 ${isLightHome ? "border-slate-200" : "border-line"}`}>
             <a
               href={`tel:${contact.phones[0]}`}
-              className="flex items-center justify-center w-full px-4 py-3 rounded-full bg-[#12121A] text-sm font-medium text-ink border border-line hover:bg-white/5 transition-all duration-200"
+              className={`flex items-center justify-center w-full px-4 py-3 rounded-full text-sm font-medium border transition-all duration-200 ${
+                isLightHome
+                  ? "bg-slate-50 text-[#0B1F3A] border-slate-200 hover:bg-slate-100"
+                  : "bg-[#12121A] text-ink border border-line hover:bg-white/5"
+              }`}
             >
               <PhoneCall className="w-4 h-4 mr-2 text-brand" />
               Call Us
             </a>
-            <Button variant="accent" href="/contact" className="w-full py-3.5">
+            <Button variant={isLightHome ? "corporate" : "accent"} href="/contact" className="w-full py-3.5">
               Request Demo
             </Button>
           </div>

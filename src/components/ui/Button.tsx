@@ -5,7 +5,7 @@ import Link from "next/link";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode;
-  variant?: "primary" | "secondary" | "ghost" | "light" | "accent";
+  variant?: "primary" | "secondary" | "ghost" | "light" | "accent" | "corporate" | "education";
   href?: string;
   className?: string;
 }
@@ -51,6 +51,12 @@ export function Button({
     // Accent: continuous liquid glow button for highlights
     accent:
       "animate-liquid-glow bg-gradient-to-r from-brand to-corporate text-white rounded-full px-7 py-3.5 shadow-[0_8px_25px_rgba(0,240,255,0.25)] hover:shadow-[0_16px_36px_rgba(0,240,255,0.45)] hover:-translate-y-0.5 transition-all duration-300 border border-brand/50 font-bold",
+    // Corporate: Deep Navy background with Metallic Gold hover glow
+    corporate:
+      "bg-[#0B1F3A] text-white rounded-full px-7 py-3.5 shadow-[0_4px_12px_rgba(11,31,58,0.15)] hover:shadow-[0_0_22px_rgba(212,175,55,0.5)] border border-[#0B1F3A] hover:border-[#D4AF37] hover:scale-[1.02] hover:-translate-y-0.5 transition-all duration-300",
+    // Education: Vibrant Cyan background with Electric Purple hover glow
+    education:
+      "bg-[#00F0FF] text-[#0B1F3A] rounded-full px-7 py-3.5 shadow-[0_4px_12px_rgba(0,240,255,0.15)] hover:shadow-[0_0_22px_rgba(139,92,246,0.6)] border border-[#00F0FF] hover:border-[#8B5CF6] hover:scale-[1.02] hover:-translate-y-0.5 transition-all duration-300 font-bold",
   };
 
   // Combine magnetic translate transform

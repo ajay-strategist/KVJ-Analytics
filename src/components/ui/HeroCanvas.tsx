@@ -4,11 +4,14 @@ import { useEffect, useRef } from "react";
 
 /**
  * A highly interactive, futuristic WebGL-style node network background using HTML5 Canvas.
- * Particles float dynamically, connect when close, and react to cursor movement
- * by drawing neon cyan connector lines and responding to soft attraction forces.
- * Optimized for dark theme with neon cyan and electric blue styling.
+ * Particles float dynamically, connect when close, and react to cursor movement.
+ * Optimized for dark theme with neon cyan/blue styling, and light theme with cyan/gold styling.
  */
-export function HeroCanvas() {
+interface HeroCanvasProps {
+  theme?: "light" | "dark";
+}
+
+export function HeroCanvas({ theme = "dark" }: HeroCanvasProps) {
   const ref = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -17,6 +20,7 @@ export function HeroCanvas() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
+    const isLight = theme === "light";
     const reduce =
       typeof window !== "undefined" &&
       window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
@@ -46,9 +50,13 @@ export function HeroCanvas() {
       for (let i = 0; i < nodeCount; i++) {
         const x = Math.random() * width;
         const y = Math.random() * height;
-        // Random neon cyan or electric blue nodes
+        // Random colors based on theme
         const isCyan = Math.random() > 0.45;
-        const color = isCyan ? "rgba(0, 240, 255, 0.85)" : "rgba(0, 114, 255, 0.75)";
+        let color = isCyan ? "rgba(0, 240, 255, 0.85)" : "rgba(0, 114, 255, 0.75)";
+        if (isLight) {
+          color = isCyan ? "rgba(0, 180, 216, 0.75)" : "rgba(212, 175, 55, 0.65)";
+        }
+
         nodes.push({
           x,
           y,
@@ -146,10 +154,18 @@ export function HeroCanvas() {
             ctx.beginPath();
             ctx.moveTo(n1.x, n1.y);
             ctx.lineTo(n2.x, n2.y);
-            // Draw in soft cyan/blue neon outline
-            ctx.strokeStyle = n1.color.includes("240") 
-              ? `rgba(0, 240, 255, ${alpha})`
-              : `rgba(0, 114, 255, ${alpha})`;
+            
+            // Set gradient stroke style based on theme
+            if (isLight) {
+              ctx.strokeStyle = n1.color.includes("180")
+                ? `rgba(0, 180, 216, ${alpha})`
+                : `rgba(212, 175, 55, ${alpha})`;
+            } else {
+              ctx.strokeStyle = n1.color.includes("240") 
+                ? `rgba(0, 240, 255, ${alpha})`
+                : `rgba(0, 114, 255, ${alpha})`;
+            }
+
             ctx.lineWidth = 0.5;
             ctx.stroke();
           }
@@ -165,8 +181,9 @@ export function HeroCanvas() {
             ctx.beginPath();
             ctx.moveTo(n1.x, n1.y);
             ctx.lineTo(mouse.x, mouse.y);
-            // Draw glowing neon cyan connection to cursor
-            ctx.strokeStyle = `rgba(0, 240, 255, ${alpha})`;
+            ctx.strokeStyle = isLight 
+              ? `rgba(0, 180, 216, ${alpha})` 
+              : `rgba(0, 240, 255, ${alpha})`;
             ctx.lineWidth = 0.85;
             ctx.stroke();
           }
@@ -178,13 +195,19 @@ export function HeroCanvas() {
         ctx.fillStyle = n1.color;
         ctx.fill();
         
-        // Add subtle neon cyan/blue aura on nodes
+        // Add subtle aura on nodes
         if (!reduce) {
           ctx.beginPath();
           ctx.arc(n1.x, n1.y, n1.radius * 2.2, 0, Math.PI * 2);
-          ctx.fillStyle = n1.color.includes("240")
-            ? "rgba(0, 240, 255, 0.06)"
-            : "rgba(0, 114, 255, 0.05)";
+          if (isLight) {
+            ctx.fillStyle = n1.color.includes("180")
+              ? "rgba(0, 180, 216, 0.06)"
+              : "rgba(212, 175, 55, 0.05)";
+          } else {
+            ctx.fillStyle = n1.color.includes("240")
+              ? "rgba(0, 240, 255, 0.06)"
+              : "rgba(0, 114, 255, 0.05)";
+          }
           ctx.fill();
         }
       }
@@ -200,7 +223,7 @@ export function HeroCanvas() {
     };
 
     return cleanup;
-  }, []);
+  }, [theme]);
 
   return <canvas ref={ref} className="w-full h-full block" aria-hidden />;
 }
