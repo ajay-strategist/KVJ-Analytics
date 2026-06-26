@@ -385,7 +385,7 @@ function CourseCard({ course }: { course: Course }) {
 
       <div className="border-t border-[#0B1F3A]/10 pt-4 flex items-center justify-between mt-auto">
         <div>
-          <span className="text-[9px] font-mono text-slate-450 uppercase tracking-[0.12em] block leading-none">
+          <span className="text-[9px] font-mono text-slate-600 uppercase tracking-[0.12em] block leading-none">
             {course.isPaid ? "Investment" : "Program Code"}
           </span>
           <span className="text-base font-bold text-[#0B1F3A] font-mono mt-1.5 block">

@@ -109,7 +109,7 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
     );
   }
 
-  const inputClasses = "peer w-full px-0 pt-6 pb-2 rounded-none border-none border-b border-[#0B1F3A]/10 bg-transparent focus:border-b-brand text-[#0F172A] text-sm transition-all outline-none";
+  const inputClasses = "peer w-full px-0 pt-6 pb-2 rounded-none border-b border-[#0B1F3A]/30 bg-transparent focus:border-b-brand text-[#0F172A] text-sm transition-all outline-none";
 
   return (
     <form onSubmit={handleSubmit} className="w-full space-y-8 relative">
@@ -156,7 +156,7 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
             className={`absolute left-0 top-4 text-xs font-bold uppercase tracking-wider transition-all pointer-events-none origin-left ${
               focusedField === "name" || formData.name
                 ? "transform -translate-y-2.5 scale-75 text-brand"
-                : "transform translate-y-0 scale-100 text-slate-500"
+                : "transform translate-y-0 scale-100 text-slate-700"
             }`}
           >
             Your Name *
@@ -181,7 +181,7 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
             className={`absolute left-0 top-4 text-xs font-bold uppercase tracking-wider transition-all pointer-events-none origin-left ${
               focusedField === "organization" || formData.organization
                 ? "transform -translate-y-2.5 scale-75 text-brand"
-                : "transform translate-y-0 scale-100 text-slate-500"
+                : "transform translate-y-0 scale-100 text-slate-700"
             }`}
           >
             Organization Name *
@@ -208,7 +208,7 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
             className={`absolute left-0 top-4 text-xs font-bold uppercase tracking-wider transition-all pointer-events-none origin-left ${
               focusedField === "email" || formData.email
                 ? "transform -translate-y-2.5 scale-75 text-brand"
-                : "transform translate-y-0 scale-100 text-slate-500"
+                : "transform translate-y-0 scale-100 text-slate-700"
             }`}
           >
             Email Address *
@@ -233,7 +233,7 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
             className={`absolute left-0 top-4 text-xs font-bold uppercase tracking-wider transition-all pointer-events-none origin-left ${
               focusedField === "phone" || formData.phone
                 ? "transform -translate-y-2.5 scale-75 text-brand"
-                : "transform translate-y-0 scale-100 text-slate-500"
+                : "transform translate-y-0 scale-100 text-slate-700"
             }`}
           >
             Phone Number *
@@ -251,9 +251,9 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
           onChange={handleChange}
           onFocus={() => setFocusedField("serviceInterest")}
           onBlur={() => setFocusedField("")}
-          className="peer w-full px-0 pt-6 pb-2 rounded-none border-none border-b border-[#0B1F3A]/10 bg-transparent focus:border-b-brand text-[#0F172A] text-sm transition-all outline-none appearance-none cursor-pointer"
+          className="peer w-full px-0 pt-6 pb-2 rounded-none border-b border-[#0B1F3A]/30 bg-transparent focus:border-b-brand text-[#0F172A] text-sm transition-all outline-none appearance-none cursor-pointer"
         >
-          <option value="" className="bg-white text-slate-500">-- Select Interest Category --</option>
+          <option value="" className="bg-white text-slate-600">-- Select Interest Category --</option>
           {inquiryAreas.map((area, idx) => (
             <option key={idx} value={area} className="bg-white text-[#0F172A]">
               {area}
@@ -268,13 +268,13 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
           className={`absolute left-0 top-4 text-xs font-bold uppercase tracking-wider transition-all pointer-events-none origin-left ${
             focusedField === "serviceInterest" || formData.serviceInterest
               ? "transform -translate-y-2.5 scale-75 text-brand"
-              : "transform translate-y-0 scale-100 text-slate-500"
+              : "transform translate-y-0 scale-100 text-slate-700"
           }`}
         >
           Service Interested In *
         </label>
-        <div className="absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none border-l border-[#0B1F3A]/10 pl-3">
-          <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none border-l border-[#0B1F3A]/30 pl-3">
+          <svg className="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
           </svg>
         </div>
@@ -291,14 +291,14 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
           onChange={handleChange}
           onFocus={() => setFocusedField("message")}
           onBlur={() => setFocusedField("")}
-          className="peer w-full px-0 pt-6 pb-2 rounded-none border-none border-b border-[#0B1F3A]/10 bg-transparent focus:border-b-brand text-[#0F172A] text-sm transition-all outline-none resize-none"
+          className="peer w-full px-0 pt-6 pb-2 rounded-none border-b border-[#0B1F3A]/30 bg-transparent focus:border-b-brand text-[#0F172A] text-sm transition-all outline-none resize-none"
         />
         <label
           htmlFor="message"
           className={`absolute left-0 top-4 text-xs font-bold uppercase tracking-wider transition-all pointer-events-none origin-left ${
             focusedField === "message" || formData.message
               ? "transform -translate-y-2.5 scale-75 text-brand"
-              : "transform translate-y-0 scale-100 text-slate-500"
+              : "transform translate-y-0 scale-100 text-slate-700"
           }`}
         >
           How can we help you? *

@@ -14,14 +14,17 @@ export function HeroDashboardCanvas() {
   const requestRef = useRef<number | null>(null);
   const lastTimeRef = useRef<number | null>(null);
 
-  // Flight path configuration coordinates (in relative px inside our 450x320 viewport)
-  // Alert point (peak of purple line)
-  const startX = 185;
-  const startY = 110;
+  // Flight path configuration coordinates (in relative px inside our 520x340 viewport)
+  const alertLocalX = 185;
+  const alertLocalY = 110;
+
+  // Alert point (peak of purple line relative to container)
+  const startX = 193; // 8px (left offset) + 185px (local alert x)
+  const startY = 186; // 32px (top offset) + 36px (header) + 8px (padding) + 110px (local alert y)
   const startZ = 10;
 
   // Inbox folder entry slot
-  const endX = 350;
+  const endX = 418; // 362px (folder left) + 56px (entry offset)
   const endY = 160;
   const endZ = -10;
 
@@ -163,7 +166,7 @@ export function HeroDashboardCanvas() {
 
       {/* 3D Transform Container */}
       <div 
-        className="relative w-[460px] h-[340px] transition-transform duration-500 ease-out"
+        className="relative w-[520px] h-[340px] transition-transform duration-500 ease-out"
         style={{
           perspective: "1200px",
           transformStyle: "preserve-3d",
@@ -178,7 +181,7 @@ export function HeroDashboardCanvas() {
         >
           {/* ════════════ 1. LEFT SIDE: DATA DASHBOARD GLASS CARD ════════════ */}
           <div 
-            className="absolute left-4 top-8 w-[270px] h-[240px] rounded-2xl bg-white/75 border border-slate-200/50 shadow-[0_16px_36px_rgba(11,31,58,0.06)] backdrop-blur-xl transition-all duration-300"
+            className="absolute left-2 top-8 w-[270px] h-[240px] rounded-2xl bg-white/75 border border-slate-200/50 shadow-[0_16px_36px_rgba(11,31,58,0.06)] backdrop-blur-xl transition-all duration-300"
             style={{
               transform: "translateZ(0px)",
               transformStyle: "preserve-3d",
@@ -256,8 +259,8 @@ export function HeroDashboardCanvas() {
               <div 
                 className="absolute w-8 h-8 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center"
                 style={{
-                  left: `${startX}px`,
-                  top: `${startY}px`,
+                  left: `${alertLocalX}px`,
+                  top: `${alertLocalY}px`,
                   transform: "translateZ(8px)",
                 }}
               >
@@ -342,7 +345,7 @@ export function HeroDashboardCanvas() {
 
           {/* ════════════ 3. RIGHT SIDE: 3D GLASS FOLDER "INBOX" ════════════ */}
           <div 
-            className="absolute right-4 top-12 w-[150px] h-[190px] flex flex-col justify-end"
+            className="absolute right-2 top-12 w-[150px] h-[190px] flex flex-col justify-end"
             style={{
               transform: `translate3d(0px, 0px, 20px) scale(${isImpacted ? 1.06 : 1.0})`,
               transition: isImpacted ? "transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275)" : "transform 0.5s ease",
