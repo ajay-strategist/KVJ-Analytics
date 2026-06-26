@@ -58,7 +58,7 @@ const ScrollRevealParagraph = ({ children }: { children: React.ReactNode }) => {
       ref={ref}
       className="transition-all duration-700 ease-out py-6 border-l-2 pl-6 cursor-default"
       style={{
-        borderColor: isActive ? "#00F0FF" : "rgba(255, 255, 255, 0.05)",
+        borderColor: isActive ? "#06B6D4" : "rgba(11, 31, 58, 0.08)",
         opacity: isActive ? 1 : 0.25,
         transform: isActive ? "translateX(10px) scale(1.02)" : "translateX(0) scale(1)",
       }}
@@ -66,8 +66,8 @@ const ScrollRevealParagraph = ({ children }: { children: React.ReactNode }) => {
       <div 
         className="font-display font-medium text-xl sm:text-2xl md:text-3xl transition-all duration-500"
         style={{
-          color: isActive ? "#FFFFFF" : "#9CA3AF",
-          textShadow: isActive ? "0 0 15px rgba(0, 240, 255, 0.45)" : "none"
+          color: isActive ? "#0B1F3A" : "#64748B",
+          textShadow: isActive ? "0 0 10px rgba(6, 182, 212, 0.15)" : "none"
         }}
       >
         {children}
@@ -110,8 +110,8 @@ const ScrollRevealMilestoneText = ({ children }: { children: React.ReactNode }) 
       className="transition-all duration-500 ease-out"
       style={{
         opacity: isActive ? 1 : 0.35,
-        color: isActive ? "#FFFFFF" : "#9CA3AF",
-        textShadow: isActive ? "0 0 10px rgba(0, 240, 255, 0.3)" : "none",
+        color: isActive ? "#0F172A" : "#64748B",
+        textShadow: isActive ? "0 0 10px rgba(6, 182, 212, 0.15)" : "none",
         transform: isActive ? "scale(1.01)" : "scale(1)",
         transformOrigin: "left center"
       }}
@@ -142,8 +142,8 @@ function HolographicBrain() {
         </defs>
 
         {/* Outer hud circle */}
-        <circle cx="200" cy="200" r="170" fill="none" stroke="rgba(0, 240, 255, 0.08)" strokeWidth="1" strokeDasharray="5, 8" />
-        <circle cx="200" cy="200" r="160" fill="none" stroke="rgba(0, 114, 255, 0.05)" strokeWidth="1.5" strokeDasharray="30, 20" className="animate-[spin_30s_linear_infinite]" />
+        <circle cx="200" cy="200" r="170" fill="none" stroke="rgba(11, 31, 58, 0.06)" strokeWidth="1" strokeDasharray="5, 8" />
+        <circle cx="200" cy="200" r="160" fill="none" stroke="rgba(11, 31, 58, 0.04)" strokeWidth="1.5" strokeDasharray="30, 20" className="animate-[spin_30s_linear_infinite]" />
 
         {/* Brain Hemispheres - Left & Right circuit lines */}
         <g filter="url(#brainGlow)" strokeWidth="2.2" strokeLinecap="round" fill="none">
@@ -239,7 +239,7 @@ function NeuralNetworkAnimation() {
         <line x1="50" y1="78" x2="50" y2="50" stroke="rgba(0, 114, 255, 0.3)" strokeWidth="1.5" />
         
         {/* Core node */}
-        <circle cx="50" cy="50" r="7" fill="#050505" stroke="#D4AF37" strokeWidth="2.2" /> {/* Gold target node */}
+        <circle cx="50" cy="50" r="7" fill="white" stroke="#D4AF37" strokeWidth="2.2" /> {/* Gold target node */}
         <circle cx="50" cy="50" r="3" fill="#D4AF37" className="animate-ping" />
 
         {/* Orbit nodes */}
@@ -318,7 +318,7 @@ function VisionCompass() {
         <g className="animate-[float-slow_4s_ease-in-out_infinite]" style={{ transformOrigin: "50px 50px" }}>
           <polygon points="50,15 55,50 45,50" fill="#D4AF37" filter="drop-shadow(0 0 4px rgba(212, 175, 55, 0.6))" /> {/* Gold North */}
           <polygon points="50,85 55,50 45,50" fill="#0072FF" /> {/* Blue South */}
-          <circle cx="50" cy="50" r="4.5" fill="#050505" stroke="#FFFFFF" strokeWidth="1" />
+          <circle cx="50" cy="50" r="4.5" fill="white" stroke="#0B1F3A" strokeWidth="1" />
         </g>
       </svg>
     </div>
@@ -358,29 +358,29 @@ function ValuesTechChain() {
     <div className="relative w-12 h-12 mx-auto flex items-center justify-center">
       <svg viewBox="0 0 100 100" className="w-full h-full overflow-visible">
         {/* Connection tracks */}
-        <path d="M 25 75 L 50 25 L 75 75 Z" fill="none" stroke="rgba(255, 255, 255, 0.08)" strokeWidth="2" />
+        <path d="M 25 75 L 50 25 L 75 75 Z" fill="none" stroke="rgba(11, 31, 58, 0.08)" strokeWidth="2" />
         
         {/* Sequential dash lightups */}
-        <path d="M 25 75 L 50 25" fill="none" stroke="#00F0FF" strokeWidth="2" className="animate-[dash_3s_linear_infinite]" strokeDasharray="60" strokeDashoffset="60" />
+        <path d="M 25 75 L 50 25" fill="none" stroke="#06B6D4" strokeWidth="2" className="animate-[dash_3s_linear_infinite]" strokeDasharray="60" strokeDashoffset="60" />
         <path d="M 50 25 L 75 75" fill="none" stroke="#D4AF37" strokeWidth="2" className="animate-[dash_3s_linear_infinite_1s]" strokeDasharray="60" strokeDashoffset="60" />
-        <path d="M 75 75 L 25 75" fill="none" stroke="#0072FF" strokeWidth="2" className="animate-[dash_3s_linear_infinite_2s]" strokeDasharray="60" strokeDashoffset="60" />
+        <path d="M 75 75 L 25 75" fill="none" stroke="#2563EB" strokeWidth="2" className="animate-[dash_3s_linear_infinite_2s]" strokeDasharray="60" strokeDashoffset="60" />
 
         {/* Node 1: Integrity */}
         <g>
-          <circle cx="25" cy="75" r="7" fill="#050505" stroke="#00F0FF" strokeWidth="2" />
-          <circle cx="25" cy="75" r="3" fill="#00F0FF" className="animate-[pulse_1.5s_infinite]" />
+          <circle cx="25" cy="75" r="7" fill="white" stroke="#06B6D4" strokeWidth="2" />
+          <circle cx="25" cy="75" r="3" fill="#06B6D4" className="animate-[pulse_1.5s_infinite]" />
         </g>
         
         {/* Node 2: Excellence (Gold) */}
         <g>
-          <circle cx="50" cy="25" r="7" fill="#050505" stroke="#D4AF37" strokeWidth="2" />
+          <circle cx="50" cy="25" r="7" fill="white" stroke="#D4AF37" strokeWidth="2" />
           <circle cx="50" cy="25" r="3" fill="#D4AF37" className="animate-[pulse_1.5s_infinite_0.5s]" />
         </g>
         
         {/* Node 3: Value Clarity */}
         <g>
-          <circle cx="75" cy="75" r="7" fill="#050505" stroke="#0072FF" strokeWidth="2" />
-          <circle cx="75" cy="75" r="3" fill="#0072FF" className="animate-[pulse_1.5s_infinite_1s]" />
+          <circle cx="75" cy="75" r="7" fill="white" stroke="#2563EB" strokeWidth="2" />
+          <circle cx="75" cy="75" r="3" fill="#2563EB" className="animate-[pulse_1.5s_infinite_1s]" />
         </g>
       </svg>
     </div>
@@ -514,7 +514,7 @@ export function AboutClientContent({ pageData }: AboutClientProps) {
   const expStat = parsedStats.find(s => s.label.toLowerCase().includes("experience")) || { num: 16, suffix: "+", label: "Years Experience" };
 
   return (
-    <div className="w-full bg-[#050505] text-slate-150 relative min-h-screen">
+    <div className="w-full bg-[#FAFAFC] text-[#0F172A] relative min-h-screen">
       {/* Self-contained keyframe styles */}
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes arrow-strike {
@@ -551,12 +551,12 @@ export function AboutClientContent({ pageData }: AboutClientProps) {
       `}} />
 
       {/* 1. HERO SECTION — Asymmetric Split Screen */}
-      <section className="relative min-h-screen flex items-center pt-28 pb-16 overflow-hidden border-b border-white/5">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:4rem_4rem] pointer-events-none" />
+      <section className="relative min-h-screen flex items-center pt-28 pb-16 overflow-hidden border-b border-slate-100">
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(11,31,58,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(11,31,58,0.01)_1px,transparent_1px)] bg-[size:4rem_4rem] pointer-events-none" />
         
         {/* Glowing backdrop spotlights */}
-        <div className="absolute top-[20%] left-[-10%] w-[500px] h-[500px] bg-brand/8 rounded-full blur-[140px] pointer-events-none animate-pulse duration-[8s]" />
-        <div className="absolute bottom-[10%] right-[-10%] w-[600px] h-[600px] bg-corporate/8 rounded-full blur-[160px] pointer-events-none animate-pulse duration-[10s]" />
+        <div className="absolute top-[20%] left-[-10%] w-[500px] h-[500px] bg-brand/3 rounded-full blur-[140px] pointer-events-none animate-pulse duration-[8s]" />
+        <div className="absolute bottom-[10%] right-[-10%] w-[600px] h-[600px] bg-corporate/3 rounded-full blur-[160px] pointer-events-none animate-pulse duration-[10s]" />
 
         <Container className="relative z-10 w-full">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
@@ -567,7 +567,7 @@ export function AboutClientContent({ pageData }: AboutClientProps) {
                 Strategic Intelligence
               </span>
               
-              <h1 className="font-display font-bold text-4xl sm:text-5xl lg:text-6xl leading-[1.08] tracking-tight text-white">
+              <h1 className="font-display font-bold text-4xl sm:text-5xl lg:text-6xl leading-[1.08] tracking-tight text-[#0B1F3A]">
                 About <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand via-corporate to-brand animate-[signature-flow_6s_linear_infinite] bg-[size:200%_auto]">KVJ Analytics</span>
               </h1>
 
@@ -581,13 +581,13 @@ export function AboutClientContent({ pageData }: AboutClientProps) {
                 </ScrollRevealParagraph>
               </div>
 
-              {/* 16+ Years Experience Pill (cyan border + count-up) */}
+              {/* 16+ Years Experience Pill */}
               <Reveal delay={300}>
-                <div className="rounded-full border border-brand/35 bg-[#0A0A0C]/75 backdrop-blur-xl px-7 py-3.5 shadow-[0_8px_32px_rgba(0,240,255,0.14)] hover:border-brand transition-all duration-300 flex items-center gap-4 w-fit group">
-                  <div className="text-3xl md:text-4xl font-extrabold font-display leading-none text-transparent bg-clip-text bg-gradient-to-r from-brand to-corporate">
+                <div className="rounded-full border border-brand/30 bg-white backdrop-blur-xl px-7 py-3.5 shadow-[0_8px_30px_rgba(11,31,58,0.03)] hover:border-brand transition-all duration-300 flex items-center gap-4 w-fit group">
+                  <div className="text-3xl md:text-4xl font-extrabold font-display leading-none text-[#0B1F3A]">
                     <CountUp value={expStat.num} suffix={expStat.suffix} />
                   </div>
-                  <div className="text-xs font-bold uppercase tracking-wider text-slate-350 group-hover:text-white transition-colors">
+                  <div className="text-xs font-bold uppercase tracking-wider text-slate-500 group-hover:text-[#0B1F3A] transition-colors">
                     {expStat.label}
                   </div>
                 </div>
@@ -604,17 +604,17 @@ export function AboutClientContent({ pageData }: AboutClientProps) {
       </section>
 
       {/* 2. THE JOURNEY (Timeline Section) */}
-      <section className="py-24 md:py-36 relative bg-[#08080A] border-b border-white/5 overflow-hidden">
+      <section className="py-24 md:py-36 relative bg-[#FAFAFC] border-b border-slate-100 overflow-hidden">
         {/* Glow */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[350px] bg-[#0072FF]/5 rounded-full blur-[130px] pointer-events-none" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[350px] bg-[#1D4ED8]/3 rounded-full blur-[130px] pointer-events-none" />
 
         <Container className="relative z-10">
           <div className="text-center max-w-3xl mx-auto mb-20">
             <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-brand">Our Legacy</span>
-            <h2 className="font-display font-bold text-3xl md:text-5xl text-white mt-3 mb-6">
+            <h2 className="font-display font-bold text-3xl md:text-5xl text-[#0B1F3A] mt-3 mb-6">
               The Journey of Innovation
             </h2>
-            <p className="text-slate-400 font-light text-base md:text-lg">
+            <p className="text-slate-500 font-light text-base md:text-lg">
               Tracing our evolution from a core automation consultancy into a multi-disciplinary analytics powerhouse.
             </p>
           </div>
@@ -622,14 +622,14 @@ export function AboutClientContent({ pageData }: AboutClientProps) {
           {/* Timeline Layout */}
           <div className="relative max-w-5xl mx-auto">
             {/* Timeline Center track (shifts left on mobile) */}
-            <div className="absolute left-4 lg:left-1/2 top-0 bottom-0 w-[2px] bg-gradient-to-b from-brand via-corporate to-brand -translate-x-1/2 opacity-25" />
+            <div className="absolute left-4 lg:left-1/2 top-0 bottom-0 w-[2px] bg-gradient-to-b from-brand via-corporate to-brand -translate-x-1/2 opacity-15" />
 
             {/* Milestone 1: 2010 - Founding */}
             <div className="relative grid grid-cols-1 lg:grid-cols-12 gap-8 mb-20">
               <div className="lg:col-span-5 lg:text-right flex flex-col justify-center order-2 lg:order-1 pl-10 lg:pl-0">
                 <Reveal>
                   <span className="text-xs font-mono font-bold text-brand block mb-1">STAGE 01 // 2010</span>
-                  <h3 className="text-2xl font-bold text-white mb-3">Startup Founding</h3>
+                  <h3 className="text-2xl font-bold text-[#0B1F3A] mb-3">Startup Founding</h3>
                   <ScrollRevealMilestoneText>
                     <p className="text-sm leading-relaxed font-light">
                       KVJ Analytics was established in Kerala, focused initially on custom report compilation, Excel auditing, and automating manual enterprise workflows.
@@ -638,12 +638,12 @@ export function AboutClientContent({ pageData }: AboutClientProps) {
                 </Reveal>
               </div>
               <div className="lg:col-span-2 flex items-center justify-start lg:justify-center order-1 lg:order-2 z-10 pl-2 lg:pl-0">
-                <div className="w-10 h-10 rounded-full bg-[#050505] border-2 border-brand flex items-center justify-center shadow-[0_0_15px_rgba(0,240,255,0.3)] animate-pulse">
+                <div className="w-10 h-10 rounded-full bg-white border-2 border-brand flex items-center justify-center shadow-[0_0_15px_rgba(29,78,216,0.15)] animate-pulse">
                   <span className="w-3.5 h-3.5 rounded-full bg-brand" />
                 </div>
               </div>
               <div className="lg:col-span-5 flex items-center order-3 pl-10 lg:pl-8">
-                <Reveal className="p-6 bg-[#0A0A0C]/50 border border-white/5 rounded-2xl w-full">
+                <Reveal className="p-6 bg-white border border-[#0B1F3A]/8 rounded-2xl w-full shadow-sm">
                   <GarageCircuitAnimation />
                 </Reveal>
               </div>
@@ -652,19 +652,19 @@ export function AboutClientContent({ pageData }: AboutClientProps) {
             {/* Milestone 2: 2015 - Expansion */}
             <div className="relative grid grid-cols-1 lg:grid-cols-12 gap-8 mb-20">
               <div className="lg:col-span-5 flex items-center order-3 lg:order-1 pl-10 lg:pl-0 pr-0 lg:pr-8">
-                <Reveal className="p-6 bg-[#0A0A0C]/50 border border-white/5 rounded-2xl w-full">
+                <Reveal className="p-6 bg-white border border-[#0B1F3A]/8 rounded-2xl w-full shadow-sm">
                   <GlobalNodesAnimation />
                 </Reveal>
               </div>
               <div className="lg:col-span-2 flex items-center justify-start lg:justify-center order-1 lg:order-2 z-10 pl-2 lg:pl-0">
-                <div className="w-10 h-10 rounded-full bg-[#050505] border-2 border-corporate flex items-center justify-center shadow-[0_0_15px_rgba(0,114,255,0.3)]">
+                <div className="w-10 h-10 rounded-full bg-white border-2 border-corporate flex items-center justify-center shadow-[0_0_15px_rgba(11,31,58,0.1)]">
                   <span className="w-3.5 h-3.5 rounded-full bg-corporate" />
                 </div>
               </div>
               <div className="lg:col-span-5 flex flex-col justify-center order-2 pl-10 lg:pl-0">
                 <Reveal>
                   <span className="text-xs font-mono font-bold text-corporate block mb-1">STAGE 02 // 2015</span>
-                  <h3 className="text-2xl font-bold text-white mb-3">Enterprise Operations</h3>
+                  <h3 className="text-2xl font-bold text-[#0B1F3A] mb-3">Enterprise Operations</h3>
                   <ScrollRevealMilestoneText>
                     <p className="text-sm leading-relaxed font-light">
                       Expanded operations across South India, delivering custom dashboard infrastructures, database pipelines, and spreadsheet risk-auditing models.
@@ -679,7 +679,7 @@ export function AboutClientContent({ pageData }: AboutClientProps) {
               <div className="lg:col-span-5 lg:text-right flex flex-col justify-center order-2 lg:order-1 pl-10 lg:pl-0">
                 <Reveal>
                   <span className="text-xs font-mono font-bold text-brand block mb-1">STAGE 03 // 2020</span>
-                  <h3 className="text-2xl font-bold text-white mb-3">Cognitive Analytics &amp; AI</h3>
+                  <h3 className="text-2xl font-bold text-[#0B1F3A] mb-3">Cognitive Analytics &amp; AI</h3>
                   <ScrollRevealMilestoneText>
                     <p className="text-sm leading-relaxed font-light">
                       Integrated machine learning and cognitive algorithms, establishing automated pipeline workflows that convert raw datastreams into predictive business insights.
@@ -688,12 +688,12 @@ export function AboutClientContent({ pageData }: AboutClientProps) {
                 </Reveal>
               </div>
               <div className="lg:col-span-2 flex items-center justify-start lg:justify-center order-1 lg:order-2 z-10 pl-2 lg:pl-0">
-                <div className="w-10 h-10 rounded-full bg-[#050505] border-2 border-brand flex items-center justify-center shadow-[0_0_15px_rgba(0,240,255,0.3)] animate-pulse">
+                <div className="w-10 h-10 rounded-full bg-white border-2 border-brand flex items-center justify-center shadow-[0_0_15px_rgba(29,78,216,0.15)] animate-pulse">
                   <span className="w-3.5 h-3.5 rounded-full bg-brand" />
                 </div>
               </div>
               <div className="lg:col-span-5 flex items-center order-3 pl-10 lg:pl-8">
-                <Reveal className="p-6 bg-[#0A0A0C]/50 border border-white/5 rounded-2xl w-full">
+                <Reveal className="p-6 bg-white border border-[#0B1F3A]/8 rounded-2xl w-full shadow-sm">
                   <NeuralNetworkAnimation />
                 </Reveal>
               </div>
@@ -702,19 +702,19 @@ export function AboutClientContent({ pageData }: AboutClientProps) {
             {/* Milestone 4: 2024 - Training Launch */}
             <div className="relative grid grid-cols-1 lg:grid-cols-12 gap-8">
               <div className="lg:col-span-5 flex items-center order-3 lg:order-1 pl-10 lg:pl-0 pr-0 lg:pr-8">
-                <Reveal className="p-6 bg-[#0A0A0C]/50 border border-white/5 rounded-2xl w-full">
+                <Reveal className="p-6 bg-white border border-[#0B1F3A]/8 rounded-2xl w-full shadow-sm">
                   <GraduationCapAnimation />
                 </Reveal>
               </div>
               <div className="lg:col-span-2 flex items-center justify-start lg:justify-center order-1 lg:order-2 z-10 pl-2 lg:pl-0">
-                <div className="w-10 h-10 rounded-full bg-[#050505] border-2 border-corporate flex items-center justify-center shadow-[0_0_15px_rgba(0,114,255,0.3)]">
+                <div className="w-10 h-10 rounded-full bg-white border-2 border-corporate flex items-center justify-center shadow-[0_0_15px_rgba(11,31,58,0.1)]">
                   <span className="w-3.5 h-3.5 rounded-full bg-corporate" />
                 </div>
               </div>
               <div className="lg:col-span-5 flex flex-col justify-center order-2 pl-10 lg:pl-0">
                 <Reveal>
                   <span className="text-xs font-mono font-bold text-corporate block mb-1">STAGE 04 // 2024</span>
-                  <h3 className="text-2xl font-bold text-white mb-3">Academic &amp; Training Divisions</h3>
+                  <h3 className="text-2xl font-bold text-[#0B1F3A] mb-3">Academic &amp; Training Divisions</h3>
                   <ScrollRevealMilestoneText>
                     <p className="text-sm leading-relaxed font-light">
                       Launched structured training frameworks and partnerships with top universities, delivering certified outcomes in Power BI, Excel analytics, and Python automation.
@@ -729,14 +729,14 @@ export function AboutClientContent({ pageData }: AboutClientProps) {
       </section>
 
       {/* 3. CORE PILLARS (Vision, Mission, Values) */}
-      <section className="py-24 md:py-36 relative bg-[#050505] border-b border-white/5 overflow-hidden">
+      <section className="py-24 md:py-36 relative bg-[#FAFAFC] border-b border-slate-100 overflow-hidden">
         <Container className="relative z-10">
           <div className="text-center max-w-3xl mx-auto mb-20">
             <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-brand">Our Foundations</span>
-            <h2 className="font-display font-bold text-3xl md:text-5xl text-white mt-3 mb-6">
+            <h2 className="font-display font-bold text-3xl md:text-5xl text-[#0B1F3A] mt-3 mb-6">
               Our Core Pillars
             </h2>
-            <p className="text-slate-400 font-light text-base md:text-lg">
+            <p className="text-slate-500 font-light text-base md:text-lg">
               Three fundamental vectors driving our engineering standards and training excellence.
             </p>
           </div>
@@ -744,9 +744,9 @@ export function AboutClientContent({ pageData }: AboutClientProps) {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {/* Vision Pillar */}
             <Reveal delay={0}>
-              <div className="bg-[#0A0A0C]/75 border border-white/5 rounded-[32px] p-8 md:p-9 backdrop-blur-xl flex flex-col justify-between h-[360px] group hover:border-[#0072FF]/40 transition-all duration-300 relative overflow-hidden">
+              <div className="bg-white border border-[#0B1F3A]/8 rounded-[32px] p-8 md:p-9 shadow-soft flex flex-col justify-between h-[360px] group hover:border-[#0072FF]/40 transition-all duration-300 relative overflow-hidden">
                 {/* Shifting Particle Background */}
-                <div className="absolute inset-0 z-0 pointer-events-none opacity-20 group-hover:opacity-60 transition-opacity duration-500">
+                <div className="absolute inset-0 z-0 pointer-events-none opacity-20 group-hover:opacity-40 transition-opacity duration-500">
                   <svg className="w-full h-full" viewBox="0 0 200 360">
                     <g className="transition-all duration-700 ease-out">
                       {/* Particles shift towards top left on hover */}
@@ -761,16 +761,16 @@ export function AboutClientContent({ pageData }: AboutClientProps) {
                 </div>
                 
                 <div className="flex items-start justify-between relative z-10">
-                  <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-brand">
+                  <div className="w-14 h-14 rounded-2xl bg-[#0072FF]/5 border border-[#0072FF]/10 flex items-center justify-center text-brand">
                     <VisionCompass />
                   </div>
-                  <span className="text-xs font-mono text-slate-500 font-bold">PILLAR 01</span>
+                  <span className="text-xs font-mono text-slate-400 font-bold">PILLAR 01</span>
                 </div>
                 <div className="relative z-10">
-                  <h3 className="text-2xl font-bold text-white mb-3 group-hover:text-brand transition-all duration-300 group-hover:text-shadow-[0_0_15px_rgba(0,240,255,0.4)]">
+                  <h3 className="text-2xl font-bold text-[#0B1F3A] mb-3 group-hover:text-brand transition-all duration-300">
                     Vision
                   </h3>
-                  <p className="text-sm text-slate-400 leading-relaxed font-light transition-all duration-300 group-hover:text-white group-hover:text-shadow-[0_0_8px_rgba(255,255,255,0.15)]">
+                  <p className="text-sm text-slate-500 leading-relaxed font-light transition-all duration-300 group-hover:text-[#0B1F3A]">
                     To establish a cognitive standard where complexity is automated and strategic strategies are backed by clean, verified data.
                   </p>
                 </div>
@@ -779,9 +779,9 @@ export function AboutClientContent({ pageData }: AboutClientProps) {
 
             {/* Mission Pillar */}
             <Reveal delay={100}>
-              <div className="bg-[#0A0A0C]/75 border border-white/5 rounded-[32px] p-8 md:p-9 backdrop-blur-xl flex flex-col justify-between h-[360px] group hover:border-[#0072FF]/40 transition-all duration-300 relative overflow-hidden">
+              <div className="bg-white border border-[#0B1F3A]/8 rounded-[32px] p-8 md:p-9 shadow-soft flex flex-col justify-between h-[360px] group hover:border-[#0072FF]/40 transition-all duration-300 relative overflow-hidden">
                 {/* Shifting Particle Background */}
-                <div className="absolute inset-0 z-0 pointer-events-none opacity-20 group-hover:opacity-60 transition-opacity duration-500">
+                <div className="absolute inset-0 z-0 pointer-events-none opacity-20 group-hover:opacity-40 transition-opacity duration-500">
                   <svg className="w-full h-full" viewBox="0 0 200 360">
                     <g className="transition-all duration-700 ease-out">
                       <circle cx="40" cy="60" r="1.5" fill="#00F0FF" className="transition-transform duration-700 group-hover:translate-x-[10px] group-hover:translate-y-[10px]" />
@@ -795,16 +795,16 @@ export function AboutClientContent({ pageData }: AboutClientProps) {
                 </div>
 
                 <div className="flex items-start justify-between relative z-10">
-                  <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-brand">
+                  <div className="w-14 h-14 rounded-2xl bg-[#0072FF]/5 border border-[#0072FF]/10 flex items-center justify-center text-brand">
                     <MissionTarget />
                   </div>
-                  <span className="text-xs font-mono text-slate-500 font-bold">PILLAR 02</span>
+                  <span className="text-xs font-mono text-slate-400 font-bold">PILLAR 02</span>
                 </div>
                 <div className="relative z-10">
-                  <h3 className="text-2xl font-bold text-white mb-3 group-hover:text-brand transition-all duration-300 group-hover:text-shadow-[0_0_15px_rgba(0,240,255,0.4)]">
+                  <h3 className="text-2xl font-bold text-[#0B1F3A] mb-3 group-hover:text-brand transition-all duration-300">
                     Mission
                   </h3>
-                  <p className="text-sm text-slate-400 leading-relaxed font-light transition-all duration-300 group-hover:text-white group-hover:text-shadow-[0_0_8px_rgba(255,255,255,0.15)]">
+                  <p className="text-sm text-slate-500 leading-relaxed font-light transition-all duration-300 group-hover:text-[#0B1F3A]">
                     Deploying custom analytics and automation to eliminate manual errors and raise job-relevant corporate outcomes.
                   </p>
                 </div>
@@ -813,9 +813,9 @@ export function AboutClientContent({ pageData }: AboutClientProps) {
 
             {/* Values Pillar */}
             <Reveal delay={200}>
-              <div className="bg-[#0A0A0C]/75 border border-white/5 rounded-[32px] p-8 md:p-9 backdrop-blur-xl flex flex-col justify-between h-[360px] group hover:border-[#0072FF]/40 transition-all duration-300 relative overflow-hidden">
+              <div className="bg-white border border-[#0B1F3A]/8 rounded-[32px] p-8 md:p-9 shadow-soft flex flex-col justify-between h-[360px] group hover:border-[#0072FF]/40 transition-all duration-300 relative overflow-hidden">
                 {/* Shifting Particle Background */}
-                <div className="absolute inset-0 z-0 pointer-events-none opacity-20 group-hover:opacity-60 transition-opacity duration-500">
+                <div className="absolute inset-0 z-0 pointer-events-none opacity-20 group-hover:opacity-40 transition-opacity duration-500">
                   <svg className="w-full h-full" viewBox="0 0 200 360">
                     <g className="transition-all duration-700 ease-out">
                       <circle cx="35" cy="55" r="1.5" fill="#00F0FF" className="transition-transform duration-700 group-hover:translate-x-[15px] group-hover:translate-y-[15px]" />
@@ -829,16 +829,16 @@ export function AboutClientContent({ pageData }: AboutClientProps) {
                 </div>
 
                 <div className="flex items-start justify-between relative z-10">
-                  <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-brand">
+                  <div className="w-14 h-14 rounded-2xl bg-[#0072FF]/5 border border-[#0072FF]/10 flex items-center justify-center text-brand">
                     <ValuesTechChain />
                   </div>
-                  <span className="text-xs font-mono text-slate-500 font-bold">PILLAR 03</span>
+                  <span className="text-xs font-mono text-slate-400 font-bold">PILLAR 03</span>
                 </div>
                 <div className="relative z-10">
-                  <h3 className="text-2xl font-bold text-white mb-3 group-hover:text-brand transition-all duration-300 group-hover:text-shadow-[0_0_15px_rgba(0,240,255,0.4)]">
+                  <h3 className="text-2xl font-bold text-[#0B1F3A] mb-3 group-hover:text-brand transition-all duration-300">
                     Values
                   </h3>
-                  <p className="text-sm text-slate-400 leading-relaxed font-light transition-all duration-300 group-hover:text-white group-hover:text-shadow-[0_0_8px_rgba(255,255,255,0.15)]">
+                  <p className="text-sm text-slate-500 leading-relaxed font-light transition-all duration-300 group-hover:text-[#0B1F3A]">
                     Sustained auditing integrity, engineering modular structures, and delivering clear value that converts complexity to clarity.
                   </p>
                 </div>
@@ -849,7 +849,7 @@ export function AboutClientContent({ pageData }: AboutClientProps) {
       </section>
 
       {/* 4. EXPERTISE & TEAM SECTION */}
-      <section className="py-24 md:py-36 relative bg-[#08080A] overflow-hidden">
+      <section className="py-24 md:py-36 relative bg-white overflow-hidden">
         {/* Parallax background floating particles */}
         <div className="absolute inset-0 pointer-events-none opacity-20 z-0">
           <svg className="w-full h-full" viewBox="0 0 1000 1000">
@@ -864,10 +864,10 @@ export function AboutClientContent({ pageData }: AboutClientProps) {
         <Container className="relative z-10">
           <div className="text-center max-w-3xl mx-auto mb-20">
             <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-brand">The Experts</span>
-            <h2 className="font-display font-bold text-3xl md:text-5xl text-white mt-3 mb-6">
+            <h2 className="font-display font-bold text-3xl md:text-5xl text-[#0B1F3A] mt-3 mb-6">
               Our Core Team &amp; Skillsets
             </h2>
-            <p className="text-slate-400 font-light text-base md:text-lg">
+            <p className="text-slate-500 font-light text-base md:text-lg">
               KVJ Analytics is led by seasoned database architects, financial auditors, and corporate skill educators.
             </p>
           </div>
@@ -876,42 +876,42 @@ export function AboutClientContent({ pageData }: AboutClientProps) {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {/* Team Member 1 */}
             <Reveal delay={0}>
-              <div className="bg-[#0A0A0C]/70 border border-white/5 rounded-3xl p-8 flex flex-col items-center text-center relative overflow-hidden group hover:border-[#0072FF]/40 transition-all duration-500 min-h-[340px]">
+              <div className="bg-white border border-[#0B1F3A]/8 rounded-3xl p-8 flex flex-col items-center text-center relative overflow-hidden group hover:border-[#0072FF]/40 transition-all duration-500 shadow-soft hover:shadow-hover-lift min-h-[340px]">
                 {/* Circular profile placeholder with glowing neon halo */}
                 <div className="relative w-28 h-28 rounded-full flex items-center justify-center p-1.5 bg-gradient-to-tr from-brand to-corporate mb-6 transition-all duration-500 group-hover:scale-105 group-hover:rotate-2">
-                  <div className="w-full h-full rounded-full bg-[#050505] flex items-center justify-center text-white text-3xl font-bold font-display border border-white/10">
+                  <div className="w-full h-full rounded-full bg-white flex items-center justify-center text-[#0B1F3A] text-3xl font-bold font-display border border-slate-200">
                     JT
                   </div>
                 </div>
 
-                <h3 className="text-xl font-bold text-white mb-1 group-hover:text-brand transition-colors">Ajay Thomas</h3>
+                <h3 className="text-xl font-bold text-[#0B1F3A] mb-1 group-hover:text-brand transition-colors">Ajay Thomas</h3>
                 <span className="text-xs text-brand font-mono font-bold uppercase tracking-wider mb-4">Founder &amp; Principal Architect</span>
                 
-                <p className="text-xs text-slate-400 leading-relaxed font-light mb-6">
+                <p className="text-xs text-slate-500 leading-relaxed font-light mb-6">
                   16+ years auditing data models, custom scripting process workflows, and guiding university curriculums.
                 </p>
 
                 {/* Skill Badges (Slide-up Overlay on Hover) */}
-                <div className="absolute inset-x-0 bottom-0 bg-[#0A0A0C] border-t border-white/10 p-6 transform translate-y-full group-hover:translate-y-0 transition-transform duration-350 flex flex-col items-center">
+                <div className="absolute inset-x-0 bottom-0 bg-white border-t border-[#0B1F3A]/10 p-6 transform translate-y-full group-hover:translate-y-0 transition-transform duration-350 flex flex-col items-center">
                   <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest mb-3">Key Skillsets</span>
                   <div className="flex items-center gap-5">
                     <div className="flex flex-col items-center gap-1 group/badge">
-                      <div className="p-2 rounded-xl bg-white/5 border border-white/10 group-hover/badge:border-brand/40 group-hover/badge:bg-brand/5 transition-all duration-350">
+                      <div className="p-2 rounded-xl bg-slate-50 border border-slate-200 group-hover/badge:border-brand/40 group-hover/badge:bg-brand/5 transition-all duration-350">
                         <PowerBIBadge />
                       </div>
-                      <span className="text-[9px] font-mono text-slate-400 group-hover/badge:text-white transition-colors">Power BI</span>
+                      <span className="text-[9px] font-mono text-slate-500 group-hover/badge:text-[#0B1F3A] transition-colors">Power BI</span>
                     </div>
                     <div className="flex flex-col items-center gap-1 group/badge">
-                      <div className="p-2 rounded-xl bg-white/5 border border-white/10 group-hover/badge:border-brand/40 group-hover/badge:bg-brand/5 transition-all duration-350">
+                      <div className="p-2 rounded-xl bg-slate-50 border border-slate-200 group-hover/badge:border-brand/40 group-hover/badge:bg-brand/5 transition-all duration-350">
                         <PythonBadge />
                       </div>
-                      <span className="text-[9px] font-mono text-slate-400 group-hover/badge:text-white transition-colors">Python</span>
+                      <span className="text-[9px] font-mono text-slate-500 group-hover/badge:text-[#0B1F3A] transition-colors">Python</span>
                     </div>
                     <div className="flex flex-col items-center gap-1 group/badge">
-                      <div className="p-2 rounded-xl bg-white/5 border border-white/10 group-hover/badge:border-brand/40 group-hover/badge:bg-brand/5 transition-all duration-350">
+                      <div className="p-2 rounded-xl bg-slate-50 border border-slate-200 group-hover/badge:border-brand/40 group-hover/badge:bg-brand/5 transition-all duration-350">
                         <ExcelBadge />
                       </div>
-                      <span className="text-[9px] font-mono text-slate-400 group-hover/badge:text-white transition-colors">Excel</span>
+                      <span className="text-[9px] font-mono text-slate-500 group-hover/badge:text-[#0B1F3A] transition-colors">Excel</span>
                     </div>
                   </div>
                 </div>
@@ -920,41 +920,41 @@ export function AboutClientContent({ pageData }: AboutClientProps) {
 
             {/* Team Member 2 */}
             <Reveal delay={100}>
-              <div className="bg-[#0A0A0C]/70 border border-white/5 rounded-3xl p-8 flex flex-col items-center text-center relative overflow-hidden group hover:border-[#0072FF]/40 transition-all duration-500 min-h-[340px]">
+              <div className="bg-white border border-[#0B1F3A]/8 rounded-3xl p-8 flex flex-col items-center text-center relative overflow-hidden group hover:border-[#0072FF]/40 transition-all duration-500 shadow-soft hover:shadow-hover-lift min-h-[340px]">
                 <div className="relative w-28 h-28 rounded-full flex items-center justify-center p-1.5 bg-gradient-to-tr from-brand to-corporate mb-6 transition-all duration-500 group-hover:scale-105 group-hover:rotate-2">
-                  <div className="w-full h-full rounded-full bg-[#050505] flex items-center justify-center text-white text-3xl font-bold font-display border border-white/10">
+                  <div className="w-full h-full rounded-full bg-white flex items-center justify-center text-[#0B1F3A] text-3xl font-bold font-display border border-slate-200">
                     KV
                   </div>
                 </div>
 
-                <h3 className="text-xl font-bold text-white mb-1 group-hover:text-brand transition-colors">KV Jose</h3>
+                <h3 className="text-xl font-bold text-[#0B1F3A] mb-1 group-hover:text-brand transition-colors">KV Jose</h3>
                 <span className="text-xs text-brand font-mono font-bold uppercase tracking-wider mb-4">Director of Academic Programs</span>
                 
-                <p className="text-xs text-slate-400 leading-relaxed font-light mb-6">
+                <p className="text-xs text-slate-500 leading-relaxed font-light mb-6">
                   Spearheading university collaborations, certified labs, and student placement analytics structures.
                 </p>
 
                 {/* Skill Badges (Slide-up Overlay on Hover) */}
-                <div className="absolute inset-x-0 bottom-0 bg-[#0A0A0C] border-t border-white/10 p-6 transform translate-y-full group-hover:translate-y-0 transition-transform duration-350 flex flex-col items-center">
+                <div className="absolute inset-x-0 bottom-0 bg-white border-t border-[#0B1F3A]/10 p-6 transform translate-y-full group-hover:translate-y-0 transition-transform duration-350 flex flex-col items-center">
                   <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest mb-3">Key Skillsets</span>
                   <div className="flex items-center gap-5">
                     <div className="flex flex-col items-center gap-1 group/badge">
-                      <div className="p-2 rounded-xl bg-white/5 border border-white/10 group-hover/badge:border-brand/40 group-hover/badge:bg-brand/5 transition-all duration-350">
+                      <div className="p-2 rounded-xl bg-slate-50 border border-slate-200 group-hover/badge:border-brand/40 group-hover/badge:bg-brand/5 transition-all duration-350">
                         <AnalyticsBadge />
                       </div>
-                      <span className="text-[9px] font-mono text-slate-400 group-hover/badge:text-white transition-colors">Analytics</span>
+                      <span className="text-[9px] font-mono text-slate-500 group-hover/badge:text-[#0B1F3A] transition-colors">Analytics</span>
                     </div>
                     <div className="flex flex-col items-center gap-1 group/badge">
-                      <div className="p-2 rounded-xl bg-white/5 border border-white/10 group-hover/badge:border-brand/40 group-hover/badge:bg-brand/5 transition-all duration-350">
+                      <div className="p-2 rounded-xl bg-slate-50 border border-slate-200 group-hover/badge:border-brand/40 group-hover/badge:bg-brand/5 transition-all duration-350">
                         <LDBadge />
                       </div>
-                      <span className="text-[9px] font-mono text-slate-400 group-hover/badge:text-white transition-colors">L&amp;D</span>
+                      <span className="text-[9px] font-mono text-slate-500 group-hover/badge:text-[#0B1F3A] transition-colors">L&amp;D</span>
                     </div>
                     <div className="flex flex-col items-center gap-1 group/badge">
-                      <div className="p-2 rounded-xl bg-white/5 border border-white/10 group-hover/badge:border-brand/40 group-hover/badge:bg-brand/5 transition-all duration-350">
+                      <div className="p-2 rounded-xl bg-slate-50 border border-slate-200 group-hover/badge:border-brand/40 group-hover/badge:bg-brand/5 transition-all duration-350">
                         <AcademicBadge />
                       </div>
-                      <span className="text-[9px] font-mono text-slate-400 group-hover/badge:text-white transition-colors">Academic</span>
+                      <span className="text-[9px] font-mono text-slate-500 group-hover/badge:text-[#0B1F3A] transition-colors">Academic</span>
                     </div>
                   </div>
                 </div>
@@ -963,41 +963,41 @@ export function AboutClientContent({ pageData }: AboutClientProps) {
 
             {/* Team Member 3 */}
             <Reveal delay={200}>
-              <div className="bg-[#0A0A0C]/70 border border-white/5 rounded-3xl p-8 flex flex-col items-center text-center relative overflow-hidden group hover:border-[#0072FF]/40 transition-all duration-500 min-h-[340px]">
+              <div className="bg-white border border-[#0B1F3A]/8 rounded-3xl p-8 flex flex-col items-center text-center relative overflow-hidden group hover:border-[#0072FF]/40 transition-all duration-500 shadow-soft hover:shadow-hover-lift min-h-[340px]">
                 <div className="relative w-28 h-28 rounded-full flex items-center justify-center p-1.5 bg-gradient-to-tr from-brand to-corporate mb-6 transition-all duration-500 group-hover:scale-105 group-hover:rotate-2">
-                  <div className="w-full h-full rounded-full bg-[#050505] flex items-center justify-center text-white text-3xl font-bold font-display border border-white/10">
+                  <div className="w-full h-full rounded-full bg-white flex items-center justify-center text-[#0B1F3A] text-3xl font-bold font-display border border-slate-200">
                     SA
                   </div>
                 </div>
 
-                <h3 className="text-xl font-bold text-white mb-1 group-hover:text-brand transition-colors">Saji Augustine</h3>
+                <h3 className="text-xl font-bold text-[#0B1F3A] mb-1 group-hover:text-brand transition-colors">Saji Augustine</h3>
                 <span className="text-xs text-brand font-mono font-bold uppercase tracking-wider mb-4">Senior Automation Consultant</span>
                 
-                <p className="text-xs text-slate-400 leading-relaxed font-light mb-6">
+                <p className="text-xs text-slate-500 leading-relaxed font-light mb-6">
                   Esterifying SQL databases, custom reporting scripts, and spreadsheet optimization engines.
                 </p>
 
                 {/* Skill Badges (Slide-up Overlay on Hover) */}
-                <div className="absolute inset-x-0 bottom-0 bg-[#0A0A0C] border-t border-white/10 p-6 transform translate-y-full group-hover:translate-y-0 transition-transform duration-350 flex flex-col items-center">
+                <div className="absolute inset-x-0 bottom-0 bg-white border-t border-[#0B1F3A]/10 p-6 transform translate-y-full group-hover:translate-y-0 transition-transform duration-350 flex flex-col items-center">
                   <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest mb-3">Key Skillsets</span>
                   <div className="flex items-center gap-5">
                     <div className="flex flex-col items-center gap-1 group/badge">
-                      <div className="p-2 rounded-xl bg-white/5 border border-white/10 group-hover/badge:border-brand/40 group-hover/badge:bg-brand/5 transition-all duration-350">
+                      <div className="p-2 rounded-xl bg-slate-50 border border-slate-200 group-hover/badge:border-brand/40 group-hover/badge:bg-brand/5 transition-all duration-350">
                         <SQLBadge />
                       </div>
-                      <span className="text-[9px] font-mono text-slate-400 group-hover/badge:text-white transition-colors">SQL</span>
+                      <span className="text-[9px] font-mono text-slate-500 group-hover/badge:text-[#0B1F3A] transition-colors">SQL</span>
                     </div>
                     <div className="flex flex-col items-center gap-1 group/badge">
-                      <div className="p-2 rounded-xl bg-white/5 border border-white/10 group-hover/badge:border-brand/40 group-hover/badge:bg-brand/5 transition-all duration-350">
+                      <div className="p-2 rounded-xl bg-slate-50 border border-slate-200 group-hover/badge:border-brand/40 group-hover/badge:bg-brand/5 transition-all duration-350">
                         <VBABadge />
                       </div>
-                      <span className="text-[9px] font-mono text-slate-400 group-hover/badge:text-white transition-colors">VBA</span>
+                      <span className="text-[9px] font-mono text-slate-500 group-hover/badge:text-[#0B1F3A] transition-colors">VBA</span>
                     </div>
                     <div className="flex flex-col items-center gap-1 group/badge">
-                      <div className="p-2 rounded-xl bg-white/5 border border-white/10 group-hover/badge:border-brand/40 group-hover/badge:bg-brand/5 transition-all duration-350">
+                      <div className="p-2 rounded-xl bg-slate-50 border border-slate-200 group-hover/badge:border-brand/40 group-hover/badge:bg-brand/5 transition-all duration-350">
                         <ETLBadge />
                       </div>
-                      <span className="text-[9px] font-mono text-slate-400 group-hover/badge:text-white transition-colors">ETL</span>
+                      <span className="text-[9px] font-mono text-slate-500 group-hover/badge:text-[#0B1F3A] transition-colors">ETL</span>
                     </div>
                   </div>
                 </div>

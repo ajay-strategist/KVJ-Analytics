@@ -13,7 +13,7 @@ interface FooterProps {
 
 export function Footer({ siteSettings = FALLBACK_SITE_SETTINGS }: FooterProps) {
   const pathname = usePathname();
-  const isLightHome = pathname === "/";
+  const isLightHome = true;
   const description = siteSettings.footerDescription || FALLBACK_SITE_SETTINGS.footerDescription;
   const tagline = siteSettings.footerTagline || FALLBACK_SITE_SETTINGS.footerTagline;
   const contact = siteSettings.contactInfo || FALLBACK_SITE_SETTINGS.contactInfo;

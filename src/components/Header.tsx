@@ -47,7 +47,7 @@ export function Header({ siteSettings = FALLBACK_SITE_SETTINGS }: HeaderProps) {
   // Routes whose top section is a dark hero → header may be transparent (white) at the top.
   const HERO_ROUTES = new Set(["/", "/about", "/corporate", "/education", "/products", "/training", "/contact"]);
   const overHero = HERO_ROUTES.has(pathname) && !scrolled;
-  const isLightHome = pathname === "/";
+  const isLightHome = true;
 
   // Header background / border styling
   let headerBgClass = "py-3 bg-[#0A0A0E]/85 backdrop-blur-xl border-line shadow-[0_8px_30px_rgba(0,0,0,0.5)]";

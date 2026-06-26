@@ -34,15 +34,15 @@ export default async function CorporateSolutionsPage() {
         }
       `}} />
 
-      {/* ───── HERO (futuristic obsidian dark) ───── */}
-      <section className="relative overflow-hidden bg-[#050505]">
+      {/* ───── HERO (premium light theme) ───── */}
+      <section className="relative overflow-hidden bg-[#FAFAFC] text-[#0F172A]">
         {/* Subtle, slow-moving glowing data grid lines */}
         <div 
           className="absolute inset-0 pointer-events-none z-0"
           style={{
             backgroundImage: `
-              linear-gradient(to right, rgba(0, 240, 255, 0.04) 1px, transparent 1px),
-              linear-gradient(to bottom, rgba(0, 240, 255, 0.04) 1px, transparent 1px)
+              linear-gradient(to right, rgba(11, 31, 58, 0.02) 1px, transparent 1px),
+              linear-gradient(to bottom, rgba(11, 31, 58, 0.02) 1px, transparent 1px)
             `,
             backgroundSize: "60px 60px",
             maskImage: "radial-gradient(ellipse at center, black, transparent 80%)",
@@ -52,7 +52,7 @@ export default async function CorporateSolutionsPage() {
         />
 
         {/* WebGL-style 3D animated dashboard graphic behind the text */}
-        <div className="absolute inset-0 z-0 flex items-center justify-center opacity-30 pointer-events-none overflow-hidden">
+        <div className="absolute inset-0 z-0 flex items-center justify-center opacity-25 pointer-events-none overflow-hidden">
           <div className="relative w-full max-w-[600px]">
             <CorporateHeroGraphic />
           </div>
@@ -60,31 +60,31 @@ export default async function CorporateSolutionsPage() {
 
         <Container className="relative z-10 py-24 md:py-32 text-center">
           <Reveal>
-            <p className="text-[13px] uppercase tracking-[0.2em] text-[#00F0FF] mb-5 font-bold">
+            <p className="text-[13px] uppercase tracking-[0.2em] text-[#D4AF37] mb-5 font-bold">
               For Businesses &amp; Corporates
             </p>
           </Reveal>
           <RevealText
             as="h1"
             text={page.heading}
-            className="font-display font-medium text-[40px] sm:text-[54px] lg:text-[64px] leading-[1.06] tracking-[-0.025em] mb-6 max-w-[18ch] mx-auto text-white"
+            className="font-display font-medium text-[40px] sm:text-[54px] lg:text-[64px] leading-[1.06] tracking-[-0.025em] mb-6 max-w-[18ch] mx-auto text-[#0B1F3A]"
           />
           <Reveal delay={150}>
-            <p className="text-xl md:text-2xl signature-gradient-text font-medium mb-6">{page.strapline}</p>
-            <p className="text-lg text-slate-400 font-light leading-relaxed max-w-2xl mx-auto">{page.intro}</p>
+            <p className="text-xl md:text-2xl text-[#D4AF37] font-medium mb-6">{page.strapline}</p>
+            <p className="text-lg text-[#475569] font-light leading-relaxed max-w-2xl mx-auto">{page.intro}</p>
           </Reveal>
         </Container>
       </section>
 
       {/* ───── SERVICES GRID ───── */}
-      <Section className="relative bg-[#050505] overflow-hidden z-10 border-t border-white/5">
+      <Section className="relative bg-white overflow-hidden z-10 border-t border-slate-100">
         {/* Subtle background grid background */}
         <div 
           className="absolute inset-0 pointer-events-none opacity-20"
           style={{
             backgroundImage: `
-              linear-gradient(to right, rgba(0, 114, 255, 0.03) 1px, transparent 1px),
-              linear-gradient(to bottom, rgba(0, 114, 255, 0.03) 1px, transparent 1px)
+              linear-gradient(to right, rgba(11, 31, 58, 0.015) 1px, transparent 1px),
+              linear-gradient(to bottom, rgba(11, 31, 58, 0.015) 1px, transparent 1px)
             `,
             backgroundSize: "80px 80px",
             maskImage: "radial-gradient(ellipse at center, black, transparent 90%)",
@@ -121,7 +121,7 @@ export default async function CorporateSolutionsPage() {
                     href={`/corporate/${service.slug}`}
                     iconName={iconName}
                     tag="Corporate Solution"
-                    accentColor="cyan"
+                    variant="corporate"
                   />
                 </Reveal>
               );
@@ -130,31 +130,31 @@ export default async function CorporateSolutionsPage() {
 
           {/* Closing CTA card - Sleek Wide Glassmorphic Banner */}
           <Reveal className="mt-20 md:mt-24 max-w-3xl mx-auto">
-            <div className="relative overflow-hidden p-10 md:p-12 text-center rounded-[32px] bg-black/60 border border-white/5 backdrop-blur-[32px] shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+            <div className="relative overflow-hidden p-10 md:p-12 text-center rounded-[32px] bg-white/70 border border-[#0B1F3A]/10 backdrop-blur-[32px] shadow-[0_20px_50px_rgba(11,31,58,0.03)]">
               {/* Breathing background glow */}
               <div 
-                className="absolute -inset-10 bg-gradient-to-r from-cyan-500/10 via-blue-500/10 to-indigo-500/10 rounded-[40px] blur-[80px] pointer-events-none"
+                className="absolute -inset-10 bg-gradient-to-r from-[#D4AF37]/5 via-[#0B1F3A]/5 to-slate-200/10 rounded-[40px] blur-[80px] pointer-events-none"
                 style={{
                   animation: "breathingGlow 8s ease-in-out infinite alternate",
                 }}
               />
               
-              <h4 className="relative z-10 text-2xl md:text-3xl font-medium text-white mb-4">
+              <h4 className="relative z-10 text-2xl md:text-3xl font-medium text-[#0B1F3A] mb-4">
                 Looking for custom automation, reports or dashboards?
               </h4>
-              <p className="relative z-10 text-base text-slate-400 font-light mb-8 max-w-lg mx-auto leading-relaxed">
+              <p className="relative z-10 text-base text-[#475569] font-light mb-8 max-w-lg mx-auto leading-relaxed">
                 We provide full-spectrum consultation, audit, development, and training integration tailored to your company.
               </p>
               
               <div className="relative z-10 inline-block overflow-visible mt-2">
                 {/* Ripple rings */}
-                <span className="absolute -inset-2 rounded-full border border-cyan-500/40 animate-[ripple_3s_ease-out_infinite] pointer-events-none z-0" />
-                <span className="absolute -inset-4 rounded-full border border-blue-500/25 animate-[ripple_3s_ease-out_infinite_1.5s] pointer-events-none z-0" />
+                <span className="absolute -inset-2 rounded-full border border-[#D4AF37]/20 animate-[ripple_3s_ease-out_infinite] pointer-events-none z-0" />
+                <span className="absolute -inset-4 rounded-full border border-[#0B1F3A]/10 animate-[ripple_3s_ease-out_infinite_1.5s] pointer-events-none z-0" />
                 
                 <Button 
                   href="/contact" 
-                  variant="accent" 
-                  className="relative z-10 shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:shadow-[0_0_35px_rgba(6,182,212,0.7)]"
+                  variant="corporate" 
+                  className="relative z-10 shadow-[0_0_20px_rgba(212,175,55,0.15)] hover:shadow-[0_0_35px_rgba(212,175,55,0.35)]"
                 >
                   Schedule a Free Discovery Session
                 </Button>

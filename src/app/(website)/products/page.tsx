@@ -15,7 +15,7 @@ export default async function ProductsPage() {
   const products = page.products && page.products.length > 0 ? page.products : FALLBACK_PRODUCTS_PAGE.products;
 
   return (
-    <div className="w-full bg-[#050505] text-slate-100 relative min-h-screen overflow-hidden">
+    <div className="w-full bg-[#FAFAFC] text-[#0F172A] relative min-h-screen overflow-hidden">
       {/* 3D scrolling grid style keyframe */}
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes grid-move {
@@ -32,8 +32,8 @@ export default async function ProductsPage() {
         }
         .grid-plane {
           background-image: 
-            linear-gradient(rgba(0, 240, 255, 0.07) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(0, 240, 255, 0.07) 1px, transparent 1px);
+            linear-gradient(rgba(11, 31, 58, 0.04) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(11, 31, 58, 0.04) 1px, transparent 1px);
           background-size: 60px 60px;
           transform: rotateX(75deg);
           transform-origin: top center;
@@ -54,16 +54,16 @@ export default async function ProductsPage() {
       {/* Data streams overlay */}
       <div className="absolute inset-0 z-0 pointer-events-none opacity-20">
         <svg className="w-full h-full" viewBox="0 0 1000 1000">
-          <line x1="200" y1="0" x2="200" y2="1000" stroke="rgba(0, 240, 255, 0.2)" strokeWidth="1" strokeDasharray="10, 20" />
-          <line x1="500" y1="0" x2="500" y2="1000" stroke="rgba(0, 114, 255, 0.15)" strokeWidth="1" strokeDasharray="5, 15" />
-          <line x1="800" y1="0" x2="800" y2="1000" stroke="rgba(0, 240, 255, 0.2)" strokeWidth="1" strokeDasharray="15, 25" />
+          <line x1="200" y1="0" x2="200" y2="1000" stroke="rgba(11, 31, 58, 0.05)" strokeWidth="1" strokeDasharray="10, 20" />
+          <line x1="500" y1="0" x2="500" y2="1000" stroke="rgba(11, 31, 58, 0.04)" strokeWidth="1" strokeDasharray="5, 15" />
+          <line x1="800" y1="0" x2="800" y2="1000" stroke="rgba(11, 31, 58, 0.05)" strokeWidth="1" strokeDasharray="15, 25" />
         </svg>
       </div>
 
       {/* ───── HERO ───── */}
-      <section className="relative overflow-hidden pt-28 pb-16 border-b border-white/5">
-        <div className="blob animate-blob absolute -top-24 right-[10%] w-[34rem] h-[34rem] bg-brand/10 pointer-events-none blur-[100px]" />
-        <div className="blob animate-blob absolute bottom-[-10rem] left-[2%] w-[26rem] h-[26rem] bg-corporate/8 pointer-events-none blur-[90px]" style={{ animationDelay: "3s" }} />
+      <section className="relative overflow-hidden pt-28 pb-16 border-b border-slate-100">
+        <div className="blob animate-blob absolute -top-24 right-[10%] w-[34rem] h-[34rem] bg-brand/5 pointer-events-none blur-[100px]" />
+        <div className="blob animate-blob absolute bottom-[-10rem] left-[2%] w-[26rem] h-[26rem] bg-corporate/5 pointer-events-none blur-[90px]" style={{ animationDelay: "3s" }} />
         
         <Container className="relative z-10 text-center">
           <Reveal>
@@ -74,7 +74,7 @@ export default async function ProductsPage() {
           <RevealText
             as="h1"
             text={page.heading}
-            className="font-display font-bold text-4xl sm:text-5xl lg:text-6xl leading-[1.08] tracking-tight text-white mb-6 max-w-[18ch] mx-auto"
+            className="font-display font-bold text-4xl sm:text-5xl lg:text-6xl leading-[1.08] tracking-tight text-[#0B1F3A] mb-6 max-w-[18ch] mx-auto"
           />
           <Reveal delay={150}>
             <p className="text-xl md:text-2xl font-medium text-transparent bg-clip-text bg-gradient-to-r from-brand via-corporate to-brand animate-[signature-flow_6s_linear_infinite] bg-[size:200%_auto] max-w-2xl mx-auto mb-4">
@@ -85,7 +85,7 @@ export default async function ProductsPage() {
       </section>
 
       {/* ───── PRODUCT CARDS ───── */}
-      <section className="py-20 relative bg-[#050505]/40 overflow-hidden">
+      <section className="py-20 relative bg-transparent overflow-hidden">
         <Container className="relative z-10">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
             {products.map((product: any, idx: number) => {
