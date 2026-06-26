@@ -265,10 +265,10 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
         </select>
         <label
           htmlFor="serviceInterest"
-          className={`absolute left-0 top-4 text-xs font-bold uppercase tracking-wider transition-all pointer-events-none origin-left ${
-            focusedField === "serviceInterest" || formData.serviceInterest
-              ? "transform -translate-y-2.5 scale-75 text-brand"
-              : "transform translate-y-0 scale-100 text-slate-700"
+          className={`absolute left-0 top-4 text-xs font-bold uppercase tracking-wider transition-all pointer-events-none origin-left transform -translate-y-2.5 scale-75 ${
+            focusedField === "serviceInterest"
+              ? "text-brand"
+              : "text-slate-700"
           }`}
         >
           Service Interested In *
