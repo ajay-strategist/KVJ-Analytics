@@ -3,6 +3,7 @@ import Link from "next/link";
 import {
   ArrowRight, ArrowDown, BarChart3, LayoutDashboard, Table2,
   AppWindow, Workflow, GraduationCap, Award, BookOpen, LineChart, ClipboardCheck,
+  CheckCircle2,
 } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { Section } from "@/components/ui/Section";
@@ -16,14 +17,10 @@ import { HeroCanvas } from "@/components/ui/HeroCanvas";
 import { HeroVisual } from "@/components/ui/HeroVisual";
 import { CountUp } from "@/components/ui/CountUp";
 import { ServiceCard } from "@/components/ui/ServiceCard";
-import { client } from "@/sanity/lib/client";
-import { homePageQuery, clientsQuery } from "@/sanity/lib/queries";
+import { getPageContent, mergePageContent } from "@/lib/content";
 import { FALLBACK_HOME_PAGE } from "@/lib/constants";
 
 export const revalidate = 3600;
-
-const CORP_ICONS = [BarChart3, LayoutDashboard, Table2, AppWindow, Workflow, GraduationCap];
-const EDU_ICONS = [Award, BookOpen, LineChart, ClipboardCheck];
 
 // Short descriptors so each card reads as a designed tile (not an empty image slot)
 const SOLUTION_DESC: Record<string, string> = {
@@ -39,18 +36,28 @@ const SOLUTION_DESC: Record<string, string> = {
   "Assessment Automation": "Automated assignment generation, grading and feedback at scale.",
 };
 
-export default async function HomePage() {
-  const hpData = await client.fetch(homePageQuery).catch((err) => {
-    console.warn("Sanity fetch error in HomePage:", err);
-    return null;
-  });
-  const clientsData = await client.fetch(clientsQuery).catch(() => null);
+// Default CTA values used when admin hasn't customised the section yet
+const DEFAULT_CTA = {
+  title: "Let's Build Smarter Systems Together",
+  description:
+    "Whether you are a corporate organization looking for automation and analytics solutions or an educational institution seeking industry-oriented learning platforms, KVJ Analytics is ready to support your transformation journey.",
+  primaryCtaText: "Contact Our Team",
+  primaryCtaHref: "/contact",
+  secondaryCtaText: "Request a Demo",
+  secondaryCtaHref: "/contact",
+};
 
-  const hp = hpData || FALLBACK_HOME_PAGE;
-  const clients = clientsData || [];
+export default async function HomePage() {
+  // ── Fetch from Supabase page_content (same as all other pages) ──────────────
+  const storedData = await getPageContent("home");
+  const hp = mergePageContent(storedData, FALLBACK_HOME_PAGE);
+
   const corporateSolutions = hp.corporateSolutions || FALLBACK_HOME_PAGE.corporateSolutions;
   const educationalSolutions = hp.educationalSolutions || FALLBACK_HOME_PAGE.educationalSolutions;
   const highlights = hp.keyHighlights || FALLBACK_HOME_PAGE.keyHighlights;
+
+  // Merge CTA section: admin-saved values win over defaults
+  const cta = { ...DEFAULT_CTA, ...(hp as any).cta };
 
   const subheadParts = (hp.hero?.subhead || FALLBACK_HOME_PAGE.hero.subhead)
     .split("•").map((s: string) => s.trim()).filter(Boolean);
@@ -71,9 +78,9 @@ export default async function HomePage() {
 
         <Container className="relative z-10 py-24 md:py-32">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
-            <div className="lg:col-span-7 max-w-2xl">
+            <div className="lg:col-span-6 max-w-xl">
               <Reveal>
-                <p className="text-[12px] md:text-[13px] uppercase tracking-[0.22em] text-slate/75 font-semibold mb-8">
+                <p className="text-[12px] md:text-[13px] uppercase tracking-[0.22em] text-slate-200 font-semibold mb-8">
                   {subheadParts.join("   ·   ")}
                 </p>
               </Reveal>
@@ -83,14 +90,14 @@ export default async function HomePage() {
                 className="font-display font-medium text-[42px] sm:text-[60px] lg:text-[76px] leading-[1.06] tracking-[-0.025em] mb-8 max-w-[16ch] text-ink text-left"
               />
               <Reveal delay={180}>
-                <p className="text-[18px] md:text-[22px] font-light text-slate leading-[1.6] max-w-2xl mb-12 text-left">
+                <p className="text-[18px] md:text-[22px] font-light text-slate-200 leading-[1.6] max-w-2xl mb-12 text-left">
                   {hp.hero?.intro || FALLBACK_HOME_PAGE.hero.intro}
                 </p>
                 <div className="flex flex-col sm:flex-row gap-5 items-start sm:items-center">
                   <Button href={hp.hero?.primaryCta?.href || "/contact"} variant="accent">
                     {hp.hero?.primaryCta?.label || "Get Started"}
                   </Button>
-                  <Link href="/about" className="group inline-flex items-center gap-2 text-[16px] text-slate hover:text-brand transition-colors font-medium">
+                  <Link href="/about" className="group inline-flex items-center gap-2 text-[16px] text-slate-200 hover:text-brand transition-colors font-medium">
                     About Us
                     <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1.5" />
                   </Link>
@@ -99,56 +106,92 @@ export default async function HomePage() {
             </div>
             
             {/* Layered 3D holographic charts floating on the right */}
-            <div className="lg:col-span-5 relative hidden lg:block">
+            <div className="lg:col-span-6 relative hidden lg:block w-full">
               <HeroVisual />
             </div>
           </div>
         </Container>
  
         {/* Scroll indicator */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-slate/60">
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-slate-300">
           <span className="text-[10px] uppercase tracking-[0.25em]">Scroll</span>
           <ArrowDown className="w-4 h-4 animate-scroll-hint text-brand" />
         </div>
       </section>
  
-      {/* ───── STATS — animated count-up inside glassmorphic pills ───── */}
-      <section className="relative bg-[#08080A] border-b border-white/5 py-12 overflow-hidden">
-        <div className="bg-radial-glow pointer-events-none absolute left-1/4 top-1/2 h-72 w-72 -translate-y-1/2 opacity-30" />
-        <Container className="relative z-10">
-          <div className="flex flex-wrap justify-center gap-5 md:gap-7">
-            {highlights.map((hl: string, idx: number) => {
+      {/* ───── STATS — contained standout banner ───── */}
+      <section className="relative py-12 md:py-16">
+        <Container>
+          <Reveal variant="scale">
+            <div className="relative overflow-hidden rounded-[28px] border border-white/10 bg-gradient-to-r from-[#050912] via-[#0B0F19] to-[#050912] px-6 py-12 md:px-12 md:py-14 shadow-[0_30px_80px_rgba(0,0,0,0.45)]">
+              {/* top hairline accent + inner radial glow */}
+              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand/60 to-transparent pointer-events-none" />
+              <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-brand/8 via-transparent to-transparent opacity-60" />
+              <div className="relative z-10">
+          {(() => {
+            const stats = highlights.filter((hl: string) => hl.match(/^([\d,]+)/));
+            const textHighlights = highlights.filter((hl: string) => !hl.match(/^([\d,]+)/));
+            
+            const renderPill = (hl: string, idx: number, isStat: boolean) => {
               const m = hl.match(/^([\d,]+)(\+)?\s*(.*)$/);
               const num = m ? parseInt(m[1].replace(/,/g, ""), 10) : null;
               const suffix = m && m[2] ? "+" : "";
               const label = m ? m[3] : hl;
+              
+              const isNumber = num !== null;
+              
               return (
                 <Reveal key={idx} delay={idx * 90}>
-                  <div className="rounded-full border border-white/5 hover:border-corporate/40 bg-[#0A0A0C]/70 backdrop-blur-xl px-8 py-3.5 shadow-[0_8px_32px_rgba(0,0,0,0.4)] transition-all duration-300 flex items-center justify-center gap-4 group cursor-default">
-                    {num !== null ? (
+                  <div 
+                    className={`border backdrop-blur-xl px-8 py-3.5 transition-all duration-300 flex items-center justify-center gap-4 group cursor-default ${
+                      isNumber 
+                        ? "rounded-full border-white/5 hover:border-blue-500/40 bg-[#0A0A0C]/90 shadow-[0_8px_32px_rgba(0,0,0,0.4)]" 
+                        : "rounded-xl border-cyan-500/50 hover:border-cyan-400 bg-cyan-950/60 shadow-[0_0_15px_rgba(6,182,212,0.3)]"
+                    }`}
+                  >
+                    {isNumber ? (
                       <div className="text-2xl md:text-3xl font-bold font-display leading-none text-transparent bg-clip-text bg-gradient-to-r from-brand to-corporate">
                         <CountUp value={num} suffix={suffix} />
                       </div>
-                    ) : null}
-                    <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 group-hover:text-slate-200 transition-colors">
+                    ) : (
+                      <CheckCircle2 className="w-5 h-5 text-brand drop-shadow-[0_0_8px_rgba(0,240,255,0.8)]" />
+                    )}
+                    <div 
+                      className={`text-[11px] font-bold uppercase tracking-wider transition-colors ${
+                        isNumber ? "text-slate-400 group-hover:text-slate-200" : "text-white group-hover:text-brand"
+                      }`}
+                    >
                       {label}
                     </div>
                   </div>
                 </Reveal>
               );
-            })}
-          </div>
+            };
+
+            return (
+              <div className="flex flex-col gap-6 md:gap-8">
+                {/* Row 1: Statistics */}
+                <div className="flex flex-wrap justify-center gap-5 md:gap-7">
+                  {stats.map((hl: string, idx: number) => renderPill(hl, idx, true))}
+                </div>
+                
+                {/* Row 2: Text Highlights */}
+                <div className="flex flex-wrap justify-center gap-5 md:gap-7">
+                  {textHighlights.map((hl: string, idx: number) => renderPill(hl, idx, false))}
+                </div>
+              </div>
+            );
+          })()}
+              </div>
+            </div>
+          </Reveal>
         </Container>
       </section>
 
       {/* ───── WHAT WE DO — solution cards ───── */}
       <Section background="default" className="relative bg-aurora overflow-hidden">
         <Container className="relative z-10">
-          <Reveal className="mb-14 md:mb-20 max-w-3xl">
-            <p className="text-[13px] uppercase tracking-[0.22em] text-slate mb-5">What We Do</p>
-            <BoldStatement variant="h1">Two audiences. One standard of engineering.</BoldStatement>
-          </Reveal>
-
+          {/* The What We Do label was removed as requested */}
           <SolutionGrid label="Corporate Solutions" href="/corporate" items={corporateSolutions} accent="corporate" />
           <div className="mt-24 md:mt-32">
             <SolutionGrid label="Educational Solutions" href="/education" items={educationalSolutions} accent="education" />
@@ -157,30 +200,61 @@ export default async function HomePage() {
       </Section>
 
       {/* ───── CLIENTS ───── */}
-      <ClientLogoCarousel clients={clients} />
+      <ClientLogoCarousel clients={[]} />
 
-      {/* ───── WHY KVJ ───── */}
-      <section className="bg-surface border-t border-line">
-        <Container className="py-24 md:py-36">
-          <Reveal className="max-w-4xl">
-            <p className="text-[13px] uppercase tracking-[0.22em] text-slate mb-6">Why KVJ Analytics</p>
-            <BoldStatement variant="h2" className="mb-7">
-              {hp.whyUs?.strapline || FALLBACK_HOME_PAGE.whyUs.strapline}
+      {/* ───── WHY KVJ — contained standout banner ───── */}
+      <section className="py-16 md:py-24">
+        <Container>
+          <Reveal variant="scale">
+            <div className="relative overflow-hidden rounded-[28px] border border-white/10 bg-gradient-to-br from-brand/12 via-[#0B0F19] to-corporate/10 px-8 py-14 md:px-16 md:py-20 shadow-[0_30px_80px_rgba(0,0,0,0.5)]">
+              {/* accent rail + glows + hairline */}
+              <span className="absolute left-0 top-10 bottom-10 w-[3px] rounded-full bg-gradient-to-b from-brand to-corporate" />
+              <div className="absolute -top-24 right-[6%] h-72 w-72 rounded-full bg-brand/20 blur-[100px] pointer-events-none" />
+              <div className="absolute -bottom-24 left-[10%] h-60 w-60 rounded-full bg-corporate/15 blur-[100px] pointer-events-none" />
+              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand/60 to-transparent pointer-events-none" />
+              <div className="relative max-w-4xl">
+                <p className="text-[13px] uppercase tracking-[0.22em] text-slate-200 mb-6 font-semibold">Why KVJ Analytics</p>
+                <BoldStatement variant="h2" className="mb-7">
+              {(() => {
+                const text = hp.whyUs?.strapline || FALLBACK_HOME_PAGE.whyUs.strapline;
+                if (text.includes(".")) {
+                  return text
+                    .split(".")
+                    .filter(Boolean)
+                    .map((word: string, idx: number, arr: string[]) => (
+                      <React.Fragment key={idx}>
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand to-corporate">
+                          {word.trim()}
+                        </span>
+                        {idx < arr.length - 1 && (
+                          <span className="inline-block w-2.5 h-2.5 rounded-full bg-brand/40 mx-3 md:mx-4 mb-1.5" />
+                        )}
+                      </React.Fragment>
+                    ));
+                }
+                return (
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand to-corporate">
+                    {text}
+                  </span>
+                );
+              })()}
             </BoldStatement>
-            <p className="text-[18px] md:text-[22px] font-light text-slate leading-[1.6]">
-              {hp.whyUs?.body || FALLBACK_HOME_PAGE.whyUs.body}
-            </p>
+                <p className="text-[18px] md:text-[22px] font-light text-slate-200 leading-[1.6]">
+                  {hp.whyUs?.body || FALLBACK_HOME_PAGE.whyUs.body}
+                </p>
+              </div>
+            </div>
           </Reveal>
         </Container>
       </section>
 
       <CTASection
-        title="Let's Build Smarter Systems Together"
-        description="Whether you are a corporate organization looking for automation and analytics solutions or an educational institution seeking industry-oriented learning platforms, KVJ Analytics is ready to support your transformation journey."
-        primaryCtaText="Contact Our Team"
-        primaryCtaHref="/contact"
-        secondaryCtaText="Request a Demo"
-        secondaryCtaHref="/contact"
+        title={cta.title}
+        description={cta.description}
+        primaryCtaText={cta.primaryCtaText}
+        primaryCtaHref={cta.primaryCtaHref}
+        secondaryCtaText={cta.secondaryCtaText}
+        secondaryCtaHref={cta.secondaryCtaHref}
       />
     </>
   );
@@ -254,7 +328,6 @@ function SolutionGrid({
                 description={desc}
                 href={href}
                 iconName={iconName}
-                tag={isEdu ? "Academic Solution" : "Corporate Solution"}
                 accentColor={isEdu ? "cyan" : "blue"}
               />
             </Reveal>

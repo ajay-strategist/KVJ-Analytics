@@ -31,10 +31,10 @@ export function Footer({ siteSettings = FALLBACK_SITE_SETTINGS }: FooterProps) {
                 className="h-8 md:h-10 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
               />
             </Link>
-            <p className="text-sm font-semibold text-slate mb-6 leading-relaxed">
+            <p className="text-sm font-semibold text-slate-200 mb-6 leading-relaxed">
               {tagline}
             </p>
-            <p className="text-sm text-slate/80 leading-relaxed mb-8 max-w-sm font-light">
+            <p className="text-sm text-slate-300 leading-relaxed mb-8 max-w-sm font-light">
               {description}
             </p>
             {/* Regions badge strip */}
@@ -42,7 +42,7 @@ export function Footer({ siteSettings = FALLBACK_SITE_SETTINGS }: FooterProps) {
               {siteSettings.regionsServed.map((region, idx) => (
                 <span
                   key={idx}
-                  className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate/5 text-slate/85 border border-line hover:bg-brand/5 hover:text-brand hover:border-brand/30 transition-all duration-200 cursor-default"
+                  className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-white/5 text-slate-200 border border-white/10 hover:bg-brand/5 hover:text-brand hover:border-brand/30 transition-all duration-200 cursor-default"
                 >
                   {region}
                 </span>
@@ -61,7 +61,7 @@ export function Footer({ siteSettings = FALLBACK_SITE_SETTINGS }: FooterProps) {
                   <li key={lIdx}>
                     <Link
                       href={link.href}
-                      className="text-sm text-slate hover:text-brand hover:translate-x-1.5 transition-all duration-200 block"
+                      className="text-sm text-slate-300 hover:text-brand hover:translate-x-1.5 transition-all duration-200 block"
                     >
                       {link.label}
                     </Link>
@@ -79,7 +79,7 @@ export function Footer({ siteSettings = FALLBACK_SITE_SETTINGS }: FooterProps) {
             <ul className="space-y-4">
               <li className="flex items-start">
                 <MapPin className="w-4 h-4 text-brand mr-3 shrink-0 mt-1" />
-                <span className="text-xs text-slate leading-relaxed">
+                <span className="text-xs text-slate-200 leading-relaxed">
                   {contact.address}
                 </span>
               </li>
@@ -87,7 +87,7 @@ export function Footer({ siteSettings = FALLBACK_SITE_SETTINGS }: FooterProps) {
                 <Mail className="w-4 h-4 text-brand mr-3 shrink-0" />
                 <a
                   href={`mailto:${contact.email}`}
-                  className="text-xs text-slate hover:text-brand transition-colors duration-150"
+                  className="text-xs text-slate-200 hover:text-brand transition-colors duration-150"
                 >
                   {contact.email}
                 </a>
@@ -99,7 +99,7 @@ export function Footer({ siteSettings = FALLBACK_SITE_SETTINGS }: FooterProps) {
                     <a
                       key={pIdx}
                       href={`tel:${phone}`}
-                      className="text-xs text-slate hover:text-brand transition-colors duration-150"
+                      className="text-xs text-slate-200 hover:text-brand transition-colors duration-150"
                     >
                       {phone}
                     </a>
@@ -112,23 +112,23 @@ export function Footer({ siteSettings = FALLBACK_SITE_SETTINGS }: FooterProps) {
 
         {/* Bottom Bar: Copyright & Legal */}
         <div className="border-t border-line pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-6 text-xs text-slate/75">
+          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-6 text-xs text-slate-300">
             <span>&copy; {new Date().getFullYear()} KVJ Analytics. All Rights Reserved.</span>
-            <span className="bg-slate/5 border border-line px-2.5 py-1 rounded text-[10px] font-mono font-bold tracking-tight text-slate/85">
+            <span className="bg-white/5 border border-white/10 px-2.5 py-1 rounded text-[10px] font-mono font-bold tracking-tight text-slate-200">
               GSTIN: {contact.gstNumber}
             </span>
           </div>
           <div className="flex items-center space-x-6">
             <Link
               href="/privacy"
-              className="text-xs text-slate hover:text-brand hover:translate-y-[-1px] transition-all duration-150 inline-flex items-center"
+              className="text-xs text-slate-300 hover:text-brand hover:translate-y-[-1px] transition-all duration-150 inline-flex items-center"
             >
               <ShieldAlert className="w-3.5 h-3.5 mr-1.5" />
               Privacy Policy
             </Link>
             <Link
               href="/terms"
-              className="text-xs text-slate hover:text-brand hover:translate-y-[-1px] transition-all duration-150 inline-flex items-center"
+              className="text-xs text-slate-300 hover:text-brand hover:translate-y-[-1px] transition-all duration-150 inline-flex items-center"
             >
               <FileText className="w-3.5 h-3.5 mr-1.5" />
               Terms & Conditions

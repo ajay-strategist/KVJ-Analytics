@@ -224,7 +224,35 @@ const FLOATING_CLASSES = [
   "animate-[float-tag-1_7s_ease-in-out_infinite_3s]",
 ];
 
-export function TrainingClientContent({ courses }: { courses: Course[] }) {
+interface TrainingContent {
+  eyebrow?: string;
+  heading?: string;
+  strapline?: string;
+  intro?: string;
+  exploreLabel?: string;
+  trainingAreasTitle?: string;
+  trainingAreas?: string[];
+  approachTitle?: string;
+  approach?: string[];
+  coursesEyebrow?: string;
+  coursesHeading?: string;
+}
+
+export function TrainingClientContent({ courses, content }: { courses: Course[]; content?: TrainingContent }) {
+  // Editable content with safe fallbacks (admin-managed via CMS)
+  const c = {
+    eyebrow: content?.eyebrow || "Training & Academy",
+    heading: content?.heading || "Training & Skill Development",
+    strapline: content?.strapline || "Practical Learning With Industry Relevance",
+    intro: content?.intro || "Our programs are designed to build real-world skills through hands-on learning, live datasets, and practical assignments.",
+    exploreLabel: content?.exploreLabel || "Explore Our Courses",
+    trainingAreasTitle: content?.trainingAreasTitle || "Training Areas",
+    trainingAreas: content?.trainingAreas?.length ? content.trainingAreas : TRAINING_AREAS,
+    approachTitle: content?.approachTitle || "Our Approach",
+    approach: content?.approach?.length ? content.approach : OUR_APPROACH,
+    coursesEyebrow: content?.coursesEyebrow || "Active Programs",
+    coursesHeading: content?.coursesHeading || "Explore Our Courses",
+  };
   return (
     <div className="w-full bg-[#050505] text-slate-100 relative min-h-screen">
       {/* Page-wide training keyframes */}
@@ -262,25 +290,24 @@ export function TrainingClientContent({ courses }: { courses: Course[] }) {
           <div className="max-w-3xl mx-auto text-center mb-16">
             <Reveal>
               <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-brand px-3.5 py-1.5 bg-brand/10 rounded-full w-fit border border-brand/20 mx-auto block mb-6">
-                Training &amp; Academy
+                {c.eyebrow}
               </span>
             </Reveal>
             <RevealText
               as="h1"
-              text="Training & Skill Development"
+              text={c.heading}
               className="font-display font-bold text-4xl sm:text-5xl lg:text-6xl leading-[1.08] tracking-tight text-white mb-5"
             />
             <Reveal delay={150}>
               <p className="text-xl md:text-2xl font-medium text-transparent bg-clip-text bg-gradient-to-r from-brand via-corporate to-brand animate-[signature-flow_6s_linear_infinite] bg-[size:200%_auto] mb-5">
-                Practical Learning With Industry Relevance
+                {c.strapline}
               </p>
               <p className="text-lg text-slate-400 font-light leading-relaxed max-w-2xl mx-auto">
-                Our programs are designed to build real-world skills through hands-on learning, live
-                datasets, and practical assignments.
+                {c.intro}
               </p>
               <div className="mt-8 flex justify-center">
                 <Button href="#courses" variant="accent">
-                  Explore Our Courses
+                  {c.exploreLabel}
                   <ChevronDown className="w-4 h-4 ml-1.5 inline-block" />
                 </Button>
               </div>
@@ -296,10 +323,10 @@ export function TrainingClientContent({ courses }: { courses: Course[] }) {
                 <span className="grid place-items-center h-12 w-12 rounded-2xl bg-brand/10 border border-brand/20 text-brand">
                   <LayoutGrid className="w-6 h-6" />
                 </span>
-                <h2 className="text-2xl font-bold text-white">Training Areas</h2>
+                <h2 className="text-2xl font-bold text-white">{c.trainingAreasTitle}</h2>
               </div>
               <div className="flex flex-wrap gap-4 items-center justify-start relative py-4">
-                {TRAINING_AREAS.map((area, idx) => (
+                {c.trainingAreas.map((area, idx) => (
                   <span
                     key={area}
                     className={`px-5 py-2.5 rounded-full text-xs font-mono font-bold uppercase tracking-wider bg-[#0A0A0C] text-brand border border-brand/25 cursor-default hover:border-brand hover:shadow-[0_0_15px_rgba(0,240,255,0.4)] hover:scale-105 transition-all duration-300 ${
@@ -318,10 +345,10 @@ export function TrainingClientContent({ courses }: { courses: Course[] }) {
                 <span className="grid place-items-center h-12 w-12 rounded-2xl bg-corporate/10 border border-corporate/20 text-corporate">
                   <Target className="w-6 h-6" />
                 </span>
-                <h2 className="text-2xl font-bold text-white">Our Approach</h2>
+                <h2 className="text-2xl font-bold text-white">{c.approachTitle}</h2>
               </div>
               <ul className="space-y-4">
-                {OUR_APPROACH.map((item, idx) => (
+                {c.approach.map((item, idx) => (
                   <li key={item} className="flex items-center gap-4">
                     <ScrollDrawCheckmark delay={idx * 150} />
                     <span className="text-sm font-mono text-slate-300">{item}</span>
@@ -339,10 +366,10 @@ export function TrainingClientContent({ courses }: { courses: Course[] }) {
         <Container>
           <div className="text-center max-w-2xl mx-auto mb-16">
             <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-brand px-3 py-1 bg-brand/10 rounded-full border border-brand/20">
-              Active Programs
+              {c.coursesEyebrow}
             </span>
             <h2 className="font-display font-bold text-3xl md:text-5xl text-white mt-5">
-              Explore Our Courses
+              {c.coursesHeading}
             </h2>
           </div>
 

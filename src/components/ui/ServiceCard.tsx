@@ -393,7 +393,7 @@ interface ServiceCardProps {
   href: string;
   iconName: string;
   accentColor?: "cyan" | "blue";
-  tag: string;
+  tag?: string;
   delay?: number;
 }
 
@@ -515,9 +515,11 @@ export function ServiceCard({
             }}
             className="mt-8 flex-grow text-left"
           >
-            <span className="text-[10px] uppercase font-bold tracking-[0.25em] text-slate-500">
-              {tag}
-            </span>
+            {tag && (
+              <span className="text-[10px] uppercase font-bold tracking-[0.25em] text-slate-300">
+                {tag}
+              </span>
+            )}
             <h3
               className="text-xl font-bold mt-2 mb-3 transition-colors duration-300"
               style={{
@@ -528,17 +530,17 @@ export function ServiceCard({
             >
               {title}
             </h3>
-            <p className="text-sm text-slate-400 font-light leading-relaxed">
+            <p className="text-sm text-slate-200 font-light leading-relaxed">
               {description}
             </p>
           </div>
 
           <div
-            className="mt-6 flex items-center gap-2 text-sm font-semibold transition-all duration-300 text-slate-400"
+            className="mt-6 flex items-center gap-2 text-sm font-semibold transition-all duration-300 text-slate-200"
             style={{
               color: isHovered 
                 ? accentColor === "cyan" ? "#00F0FF" : "#0072FF"
-                : "#9CA3AF",
+                : "#E5E7EB",
               transform: isHovered ? "translateZ(25px)" : "translateZ(0)",
             }}
           >

@@ -10,7 +10,16 @@ import { getPageContent, mergePageContent } from "@/lib/content";
 import { FALLBACK_CORPORATE } from "@/lib/constants";
 import CorporateHeroGraphic from "@/components/CorporateHeroGraphic";
 
+import { pageMeta } from "@/lib/seo";
+
 export const revalidate = 3600;
+export const metadata = pageMeta({
+  title: "Corporate Solutions — Report Automation, Power BI & Data Analytics",
+  description:
+    "Automate reports, build Power BI dashboards, and optimize workflows with KVJ Analytics. Data visualization, process automation, spreadsheet consulting and corporate training for enterprise teams.",
+  path: "/corporate",
+  keywords: ["report automation", "Power BI dashboards", "data visualization", "process automation", "corporate training", "business intelligence consulting"],
+});
 
 export default async function CorporateSolutionsPage() {
   const pageData = await getPageContent("corporate");

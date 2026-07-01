@@ -1,6 +1,10 @@
 import React from "react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { ScrollProgress } from "@/components/ScrollProgress";
+import { CursorGlow } from "@/components/CursorGlow";
+import { IntroLoader } from "@/components/IntroLoader";
+import { WhatsAppFloat } from "@/components/WhatsAppFloat";
 import { getPageContent, mergePageContent } from "@/lib/content";
 import { FALLBACK_SITE_SETTINGS } from "@/lib/constants";
 
@@ -17,11 +21,15 @@ export default async function WebsiteLayout({
 
   return (
     <div className="min-h-screen flex flex-col justify-between">
+      <IntroLoader />
+      <ScrollProgress />
+      <CursorGlow />
       <Header siteSettings={siteSettings} />
       <main className="flex-grow pt-[73px] md:pt-[81px]">
         {children}
       </main>
       <Footer siteSettings={siteSettings} />
+      <WhatsAppFloat phone={(siteSettings.contactInfo?.phones?.[0] || "9961813730").replace(/\D/g, "").replace(/^(?!91)/, "91")} />
     </div>
   );
 }

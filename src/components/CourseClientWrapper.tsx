@@ -2,7 +2,20 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Lock, BookOpen, Layers, CheckCircle2, ChevronRight, Loader2, PlayCircle, ShieldCheck, AlertCircle, Clock } from "lucide-react";
+import {
+  Lock,
+  BookOpen,
+  CheckCircle2,
+  ChevronRight,
+  Loader2,
+  PlayCircle,
+  ShieldCheck,
+  AlertCircle,
+  Clock,
+  Award,
+  Tag,
+  Percent,
+} from "lucide-react";
 import { Button } from "./ui/Button";
 import { Card } from "./ui/Card";
 import { supabase } from "@/lib/supabase";
@@ -12,6 +25,7 @@ interface Lesson {
   title: string;
   kind: "material" | "activity";
   max_score: number | null;
+  video_url?: string | null;
 }
 
 interface Module {
@@ -27,10 +41,86 @@ interface CourseClientWrapperProps {
     slug: string;
     segment: string;
     summary: string;
-    priceINR: number;
+    banner_url?: string | null;
+    duration?: string | null;
+    fee_inr: number;
+    offer_price_inr?: number | null;
+    offer_label?: string | null;
+    offer_expiry?: string | null;
+    is_locked: boolean;
     isPaid: boolean;
+    introduction?: string | null;
+    syllabus?: string[] | null;
   };
   modules: Module[];
+}
+
+// Live Countdown Component
+function OfferCountdown({ expiryDate, pulse = false }: { expiryDate: string; pulse?: boolean }) {
+  const [timeLeft, setTimeLeft] = useState<{
+    days: number;
+    hours: number;
+    minutes: number;
+    seconds: number;
+  } | null>(null);
+
+  useEffect(() => {
+    const calculateTimeLeft = () => {
+      const difference = +new Date(expiryDate) - +new Date();
+      if (difference <= 0) {
+        return null;
+      }
+      return {
+        days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+        minutes: Math.floor((difference / 1000 / 60) % 60),
+        seconds: Math.floor((difference / 1000) % 60),
+      };
+    };
+
+    setTimeLeft(calculateTimeLeft());
+    const interval = setInterval(() => {
+      setTimeLeft(calculateTimeLeft());
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [expiryDate]);
+
+  if (!timeLeft) return null;
+
+  return (
+    <div
+      id="offer-countdown"
+      className={`bg-[#00F0FF]/5 border border-[#00F0FF]/25 rounded-2xl p-4 flex flex-col items-center justify-center space-y-2.5 shadow-[0_0_15px_rgba(0,240,255,0.05)] w-full transition-all duration-500 ${
+        pulse ? "ring-2 ring-[#00F0FF] scale-105 shadow-[0_0_25px_rgba(0,240,255,0.25)] bg-[#00F0FF]/15" : ""
+      }`}
+    >
+      <span className="text-[10px] font-bold uppercase tracking-widest text-[#00F0FF] flex items-center gap-1.5 font-mono">
+        <Clock className="w-3.5 h-3.5 animate-pulse" /> Offer Ends In
+      </span>
+      <div className="flex gap-4 text-white font-mono text-xl font-bold">
+        <div className="flex flex-col items-center">
+          <span className="text-[#00F0FF]">{String(timeLeft.days).padStart(2, "0")}</span>
+          <span className="text-[8px] text-zinc-500 font-sans uppercase font-bold tracking-wider mt-1">Days</span>
+        </div>
+        <span className="text-[#00F0FF]/30">:</span>
+        <div className="flex flex-col items-center">
+          <span className="text-[#00F0FF]">{String(timeLeft.hours).padStart(2, "0")}</span>
+          <span className="text-[8px] text-zinc-500 font-sans uppercase font-bold tracking-wider mt-1">Hours</span>
+        </div>
+        <span className="text-[#00F0FF]/30">:</span>
+        <div className="flex flex-col items-center">
+          <span className="text-[#00F0FF]">{String(timeLeft.minutes).padStart(2, "0")}</span>
+          <span className="text-[8px] text-zinc-500 font-sans uppercase font-bold tracking-wider mt-1">Mins</span>
+        </div>
+        <span className="text-[#00F0FF]/30">:</span>
+        <div className="flex flex-col items-center">
+          <span className="text-[#00F0FF]">{String(timeLeft.seconds).padStart(2, "0")}</span>
+          <span className="text-[8px] text-zinc-500 font-sans uppercase font-bold tracking-wider mt-1">Secs</span>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export function CourseClientWrapper({ course, modules }: CourseClientWrapperProps) {
@@ -39,19 +129,14 @@ export function CourseClientWrapper({ course, modules }: CourseClientWrapperProp
   const [enrolled, setEnrolled] = useState(false);
   const [loading, setLoading] = useState(true);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
-  const [authError, setAuthError] = useState("");
+  const [unlockCode, setUnlockCode] = useState("");
+  const [unlockError, setUnlockError] = useState("");
+  const [unlockSuccess, setUnlockSuccess] = useState("");
+  const [unlockLoading, setUnlockLoading] = useState(false);
 
-  // Phase 3 - Mock Tests States
-  const [mockTests, setMockTests] = useState<any[]>([]);
-  const [attempts, setAttempts] = useState<any[]>([]);
-  const [loadingTests, setLoadingTests] = useState(false);
-
-  // Auth form states
-  const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
-  const [showAuthForm, setShowAuthForm] = useState(false);
+  // Offer interaction states
+  const [offerApplied, setOfferApplied] = useState(false);
+  const [pulseTimer, setPulseTimer] = useState(false);
 
   useEffect(() => {
     const getSession = async () => {
@@ -67,7 +152,7 @@ export function CourseClientWrapper({ course, modules }: CourseClientWrapperProp
     getSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      async (_event: any, session: any) => {
         setUser(session?.user || null);
         if (session?.user) {
           checkEnrollment(session.user.id);
@@ -101,72 +186,50 @@ export function CourseClientWrapper({ course, modules }: CourseClientWrapperProp
     }
   };
 
-  useEffect(() => {
-    if (enrolled && user) {
-      fetchStudentTestsAndAttempts();
-    }
-  }, [enrolled, user]);
-
-  const fetchStudentTestsAndAttempts = async () => {
-    setLoadingTests(true);
-    try {
-      const { data: tests, error: testsErr } = await supabase
-        .from("mock_tests")
-        .select("*")
-        .eq("course_id", course.id)
-        .order("display_order", { ascending: true });
-
-      if (testsErr) throw testsErr;
-      setMockTests(tests || []);
-
-      const { data: atts, error: attsErr } = await supabase
-        .from("test_attempts")
-        .select("*")
-        .eq("user_id", user.id);
-
-      if (attsErr) throw attsErr;
-      setAttempts(atts || []);
-    } catch (err) {
-      console.error("Failed to load student tests/attempts:", err);
-    } finally {
-      setLoadingTests(false);
-    }
-  };
-
-  const handleAuth = async (e: React.FormEvent) => {
+  const handleUnlockSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setAuthError("");
-    setLoading(true);
+    setUnlockError("");
+    setUnlockSuccess("");
 
+    if (!user) {
+      router.push(`/signin?redirect=/training/${course.slug}`);
+      return;
+    }
+
+    if (!unlockCode || unlockCode.length !== 6) {
+      setUnlockError("Access code must be exactly 6 digits.");
+      return;
+    }
+
+    setUnlockLoading(true);
     try {
-      if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: { name },
-          },
-        });
-        if (error) throw error;
-        alert("Registration successful! You are logged in.");
+      const response = await fetch("/api/unlock", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          code: unlockCode,
+          userId: user.id,
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to unlock course.");
       }
-      setShowAuthForm(false);
+
+      setUnlockSuccess(data.message || "Course successfully unlocked!");
+      setEnrolled(true);
+      router.refresh();
     } catch (err: any) {
-      setAuthError(err.message || "Authentication failed.");
-      setLoading(false);
+      setUnlockError(err.message || "Unlock failed.");
+    } finally {
+      setUnlockLoading(false);
     }
   };
 
   const handlePayment = async () => {
     if (!user) {
-      setIsLogin(true);
-      setShowAuthForm(true);
+      router.push(`/signin?redirect=/training/${course.slug}`);
       return;
     }
 
@@ -201,6 +264,8 @@ export function CourseClientWrapper({ course, modules }: CourseClientWrapperProp
         throw new Error("Razorpay SDK failed to load. Are you offline?");
       }
 
+      const finalPrice = course.offer_price_inr != null ? course.offer_price_inr : course.fee_inr;
+
       const options = {
         key: orderData.key,
         amount: orderData.amount,
@@ -220,14 +285,14 @@ export function CourseClientWrapper({ course, modules }: CourseClientWrapperProp
                 razorpay_signature: response.razorpay_signature,
                 user_id: user.id,
                 course_slug: course.slug,
-                amount: course.priceINR,
+                amount: finalPrice,
               }),
             });
 
             if (webhookVerify.ok) {
               setEnrolled(true);
               alert("Payment successful! Access granted.");
-              router.refresh();
+              router.push(`/training/${course.slug}/learn`);
             } else {
               alert("Payment validation failed. Please contact support.");
             }
@@ -242,7 +307,7 @@ export function CourseClientWrapper({ course, modules }: CourseClientWrapperProp
           email: user.email,
         },
         theme: {
-          color: "#1D4ED8",
+          color: "#0072FF",
         },
       };
 
@@ -255,277 +320,310 @@ export function CourseClientWrapper({ course, modules }: CourseClientWrapperProp
     }
   };
 
+  const handleFreeEnroll = async () => {
+    if (!user) {
+      router.push(`/signin?redirect=/training/${course.slug}`);
+      return;
+    }
+
+    setCheckoutLoading(true);
+    try {
+      const { error } = await supabase
+        .from("enrollments")
+        .upsert(
+          {
+            user_id: user.id,
+            course_slug: course.slug,
+            enrollment_method: "paid",
+            status: "active",
+          },
+          { onConflict: "user_id,course_slug" }
+        );
+
+      if (error) throw error;
+      setEnrolled(true);
+      alert("Enrolled successfully in free program!");
+      router.push(`/training/${course.slug}/learn`);
+    } catch (err: any) {
+      alert(err.message || "Enrollment failed.");
+    } finally {
+      setCheckoutLoading(false);
+    }
+  };
+
   if (loading) {
     return (
-      <div className="py-12 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-brand" />
+      <div className="py-24 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-[#00F0FF]" />
       </div>
     );
   }
 
+  const finalPrice = course.offer_price_inr != null ? course.offer_price_inr : course.fee_inr;
+  const isDiscounted = course.offer_price_inr != null && course.offer_price_inr < course.fee_inr;
+
+  // Build the clean syllabus list (topics only, no lessons cards)
+  const syllabusList =
+    course.syllabus && Array.isArray(course.syllabus) && course.syllabus.length > 0
+      ? course.syllabus
+      : modules.flatMap((m) => m.lessons.map((l) => l.title)).length > 0
+      ? modules.flatMap((m) => m.lessons.map((l) => l.title))
+      : [];
+
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
-      {/* 1. Gated Modules/Lessons Outline */}
-      <div className="lg:col-span-8 space-y-6">
-        <div className="border-b border-line pb-4">
-          <h3 className="text-xl font-bold font-display text-ink">
-            Course Curriculum & Lessons
-          </h3>
-          <p className="text-sm text-slate mt-1">
-            Build hands-on competencies through structured HTML modules, practice activities, and feedback.
+    <div className="max-w-6xl mx-auto w-full grid grid-cols-1 lg:grid-cols-3 gap-10 items-start">
+      {/* LEFT COLUMN: Main content (lg:col-span-2) */}
+      <div className="lg:col-span-2 space-y-10">
+        {/* 1. Header Info */}
+        <div className="space-y-4">
+          <div className="flex items-center">
+            <span className="text-[10px] font-bold font-mono tracking-widest text-[#00F0FF] uppercase px-3 py-1 rounded-full bg-[#00F0FF]/10 border border-[#00F0FF]/20">
+              {course.segment} program
+            </span>
+          </div>
+          <h1 className="font-display font-bold text-3xl sm:text-4xl lg:text-5xl text-white mt-2 leading-tight tracking-tight">
+            {course.title}
+          </h1>
+          <p className="text-zinc-400 font-light text-lg leading-relaxed mt-2">
+            {course.summary}
           </p>
         </div>
 
-        {modules.length === 0 ? (
-          <p className="text-slate text-sm italic">No modules scheduled for this syllabus yet.</p>
-        ) : (
-          <div className="space-y-6">
-            {modules.map((mod, modIdx) => (
-              <Card key={mod.id} hoverLift={false} className="border-line p-5 bg-white shadow-soft">
-                <h4 className="font-bold font-display text-ink text-base flex items-center gap-2 mb-4 border-b border-line pb-2.5">
-                  <span className="flex items-center justify-center w-6 h-6 text-[10px] font-bold rounded-lg bg-brand/10 text-brand">
-                    M{modIdx + 1}
-                  </span>
-                  {mod.title}
-                </h4>
+        {/* 2. Banner Image */}
+        <div className="relative w-full aspect-video rounded-3xl overflow-hidden border border-white/5 bg-zinc-950">
+          {course.banner_url && (
+            <img
+              src={course.banner_url}
+              alt={course.title}
+              className="w-full h-full object-cover"
+            />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#050505]/80 via-transparent to-transparent pointer-events-none" />
+        </div>
 
-                <div className="space-y-2.5">
-                  {mod.lessons.map((les) => {
-                    return (
-                      <div
-                        key={les.id}
-                        className={`flex items-center justify-between p-3.5 rounded-lg border transition-all ${
-                          enrolled
-                            ? "bg-white border-line hover:border-brand/40 shadow-sm"
-                            : "bg-surface/50 border-line opacity-75"
-                        }`}
-                      >
-                        <div className="flex items-center space-x-3">
-                          <div
-                            className={`p-1.5 rounded-lg shrink-0 ${
-                              enrolled ? "bg-brand/10 text-brand" : "bg-slate/10 text-slate"
-                            }`}
-                          >
-                            <BookOpen className="w-4 h-4" />
-                          </div>
-                          <div>
-                            <span className="text-sm font-semibold text-ink block">{les.title}</span>
-                            <span className="text-[10px] font-bold text-slate uppercase tracking-wider block mt-0.5">
-                              {les.kind === "activity" ? "Activity" : "Study Material"}
-                              {les.kind === "activity" && les.max_score ? ` • Max Score: ${les.max_score}` : ""}
-                            </span>
-                          </div>
-                        </div>
 
-                        {enrolled ? (
-                          <span className="flex items-center space-x-1 text-success text-xs font-bold uppercase tracking-wider">
-                            <CheckCircle2 className="w-4 h-4" />
-                            <span>Unlocked</span>
-                          </span>
-                        ) : (
-                          <div className="flex items-center space-x-1.5 text-slate text-xs font-bold uppercase tracking-wider">
-                            <Lock className="w-3.5 h-3.5 text-slate" />
-                            <span>Locked</span>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
+
+        {/* 4. Description */}
+        <div className="space-y-4 pt-2">
+          <h2 className="text-2xl font-bold font-display text-white border-b border-white/5 pb-2">Description</h2>
+          {course.introduction ? (
+            <div
+              className="prose prose-invert max-w-none text-zinc-400 font-light leading-relaxed space-y-4"
+              dangerouslySetInnerHTML={{ __html: course.introduction }}
+            />
+          ) : (
+            <p className="text-zinc-500 italic">No program introduction details uploaded yet.</p>
+          )}
+        </div>
+
+        {/* 5. Syllabus */}
+        <div className="space-y-4 pt-2">
+          <h2 className="text-2xl font-bold font-display text-white border-b border-white/5 pb-2">Syllabus</h2>
+          {syllabusList.length === 0 ? (
+            <p className="text-zinc-550 italic text-sm">No curriculum syllabus listed for this track yet.</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {syllabusList.map((item: string, index: number) => (
+                <div key={index} className="flex items-start gap-3.5 p-4 rounded-xl border border-white/5 bg-[#0A0A0C]/35 backdrop-blur-xl">
+                  <CheckCircle2 className="w-5 h-5 text-[#00F0FF] shrink-0 mt-0.5" />
+                  <span className="text-zinc-350 text-sm leading-relaxed font-light">{item}</span>
                 </div>
-
-                {/* Module Assessment(s) */}
-                {enrolled && mockTests.filter((t) => t.module_id === mod.id).length > 0 && (
-                  <div className="mt-4 pt-4 border-t border-line space-y-2">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate">Module Assessment</p>
-                    {mockTests.filter((t) => t.module_id === mod.id).map((test) => (
-                      <a
-                        key={test.id}
-                        href={`/training/${course.slug}/tests/${test.id}`}
-                        className="flex items-center justify-between p-3.5 rounded-lg border border-cta/30 bg-cta/5 hover:bg-cta/10 transition-all"
-                      >
-                        <span className="flex items-center gap-2 text-sm font-semibold text-ink">
-                          <Clock className="w-4 h-4 text-cta-600" />
-                          {test.title}
-                        </span>
-                        <span className="text-xs font-bold text-cta-600 whitespace-nowrap">Take Assessment →</span>
-                      </a>
-                    ))}
-                  </div>
-                )}
-              </Card>
-            ))}
-          </div>
-        )}
-
-        {/* Mock Tests Section */}
-        {enrolled && (
-          <div className="border-t border-line pt-8 mt-6 space-y-4">
-            <div className="border-b border-line pb-3">
-              <h3 className="text-lg font-bold font-display text-ink flex items-center gap-2">
-                <Clock className="w-5 h-5 text-brand" />
-                Professional Certification Mock Tests
-              </h3>
-              <p className="text-xs text-slate mt-1">
-                Take timed program examinations. Server auto-grading checks objectives and code correctness.
-              </p>
+              ))}
             </div>
-
-            {loadingTests ? (
-              <div className="py-6 flex justify-center">
-                <Loader2 className="w-6 h-6 animate-spin text-brand" />
-              </div>
-            ) : mockTests.filter((t) => !t.module_id).length === 0 ? (
-              <p className="text-xs text-slate italic">No certification tests scheduled for this course yet.</p>
-            ) : (
-              <div className="space-y-4">
-                {mockTests.filter((t) => !t.module_id).map((test) => {
-                  const testAttempts = attempts.filter((a) => a.test_id === test.id);
-                  const bestAttempt = testAttempts.length > 0
-                    ? testAttempts.sort((a, b) => b.score - a.score)[0]
-                    : null;
-
-                  return (
-                    <div key={test.id} className="bg-white border border-line rounded-xl p-5 shadow-soft flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                      <div className="space-y-1.5">
-                        <h4 className="text-sm font-bold text-ink flex items-center gap-2">
-                          {test.title}
-                        </h4>
-                        <div className="flex flex-wrap items-center gap-3 text-xs text-slate">
-                          <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {test.duration_mins} mins</span>
-                          <span>•</span>
-                          <span>Passing score: {test.pass_mark}</span>
-                          {bestAttempt && (
-                            <>
-                              <span>•</span>
-                              <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
-                                bestAttempt.passed
-                                  ? "bg-success/10 text-success border border-success/30"
-                                  : "bg-error/10 text-error border border-error/30"
-                              }`}>
-                                {bestAttempt.passed ? "Passed" : "Failed"} (Best: {bestAttempt.score}/{bestAttempt.max_score})
-                              </span>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex gap-2 shrink-0">
-                        <Button
-                          href={`/training/${course.slug}/tests/${test.id}`}
-                          className="py-2 px-4 bg-brand text-white text-xs font-bold"
-                        >
-                          {bestAttempt ? "Retake Exam" : "Start Exam"}
-                        </Button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        )}
-
-        {!enrolled && (
-          <div className="border-t border-line pt-8 mt-6">
-            <div className="bg-surface/40 border border-line rounded-xl p-5 flex items-center justify-between gap-4">
-              <div>
-                <span className="text-[9px] font-bold uppercase text-slate tracking-wider bg-slate/10 px-2 py-0.5 rounded border border-line">
-                  Phase 3 Placeholder
-                </span>
-                <h4 className="text-sm font-bold text-ink mt-2">Professional Certification Mock Tests</h4>
-                <p className="text-xs text-slate mt-1">
-                  Our server-graded certification mock tests will unlock in the next phase.
-                </p>
-              </div>
-              <span className="text-xs font-bold text-slate uppercase tracking-widest shrink-0 border border-line bg-white px-3 py-1.5 rounded-btn shadow-sm">
-                Coming Soon
-              </span>
-            </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
-      {/* 2. Sidebar Enrollment & Access Card */}
-      <div className="lg:col-span-4 lg:sticky lg:top-28">
+      {/* RIGHT COLUMN: Sticky enrollment panel (lg:col-span-1) */}
+      <div className="lg:col-span-1 lg:sticky lg:top-28 space-y-6 w-full">
+        {/* Countdown Timer at the top of the column */}
+        {isDiscounted && course.offer_expiry && (
+          <OfferCountdown expiryDate={course.offer_expiry} pulse={pulseTimer} />
+        )}
+
         {enrolled ? (
-          <Card hoverLift={false} className="border-l-4 border-success bg-success/5 p-8 text-center shadow-soft">
-            <div className="w-12 h-12 rounded-full bg-success/10 text-success flex items-center justify-center mx-auto mb-4 font-bold">
+          <Card hoverLift={false} className="border border-emerald-500/25 bg-emerald-500/5 p-8 text-center rounded-3xl relative overflow-hidden w-full">
+            <div className="absolute inset-0 bg-emerald-500/2 opacity-[0.02] pointer-events-none" />
+            <div className="w-12 h-12 rounded-full bg-emerald-500/10 text-emerald-400 flex items-center justify-center mx-auto mb-4 font-bold border border-emerald-500/20">
               ✓
             </div>
-            <h4 className="text-xl font-bold font-display text-ink mb-2">
+            <h4 className="text-xl font-bold font-display text-white mb-2">
               Program Unlocked
             </h4>
-            <p className="text-xs text-slate leading-relaxed mb-6">
-              You are enrolled in this training. You can view all HTML learning curriculum and submit activities.
+            <p className="text-xs text-zinc-400 font-light leading-relaxed mb-6">
+              You are enrolled in this training. You can view all learning modules and launch the dashboard player.
             </p>
             <Button
-              href={`/account?course=${course.slug}`}
-              variant="primary"
-              className="w-full py-3 flex items-center justify-center gap-1.5"
+              onClick={() => router.push(`/training/${course.slug}/learn`)}
+              className="w-full py-4 bg-gradient-to-r from-[#00F0FF] to-[#0072FF] text-black font-bold flex items-center justify-center gap-1.5 shadow-[0_4px_20px_rgba(0,240,255,0.15)] rounded-full text-center whitespace-nowrap block"
             >
               <ShieldCheck className="w-4 h-4" />
-              <span>Launch Course Portal</span>
+              <span>Launch Course Player</span>
             </Button>
           </Card>
         ) : (
-          <Card hoverLift={false} className="border-l-4 border-brand bg-surface/30 p-8 shadow-soft">
-            <h4 className="text-xl font-bold font-display text-ink mb-4">
-              Get Program Access
-            </h4>
-            <p className="text-sm text-slate leading-relaxed mb-6 font-medium">
-              Unlock modules, workbook sheets, and interactive assignments for this curriculum.
-            </p>
+          <Card hoverLift={false} className="border border-white/5 bg-[#0A0A0C]/55 backdrop-blur-xl p-8 rounded-3xl w-full flex flex-col space-y-6">
+            {/* Title / Header */}
+            <div>
+              <h4 className="text-xl font-bold font-display text-white">
+                Get Program Access
+              </h4>
+            </div>
 
-            {course.isPaid ? (
-              <div className="space-y-4 mb-6">
-                <div>
-                  <span className="text-[10px] font-bold text-slate uppercase tracking-wider block leading-none">
-                    Investment fee
-                  </span>
-                  <span className="text-3xl font-bold text-ink font-display mt-1 block">
-                    ₹{course.priceINR}
-                  </span>
+            {/* Duration block */}
+            <div>
+              <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider block font-mono">
+                Course Duration
+              </span>
+              <div className="flex items-center gap-2 mt-1.5 text-white font-semibold">
+                <Clock className="w-4 h-4 text-[#00F0FF] shrink-0" />
+                <span>{course.duration || "Self-Paced"}</span>
+              </div>
+            </div>
+
+            {/* Pricing block */}
+            <div>
+              <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider block font-mono">
+                Course Investment
+              </span>
+              {course.isPaid ? (
+                <div className="space-y-2 mt-2">
+                  <div className="flex items-baseline gap-2.5">
+                    <span className="text-3xl font-bold text-white font-display">
+                      ₹{finalPrice}
+                    </span>
+                    {isDiscounted && (
+                      <span className="text-zinc-500 line-through text-sm font-mono">
+                        ₹{course.fee_inr}
+                      </span>
+                    )}
+                  </div>
+                  {isDiscounted && course.offer_label && (
+                    <span className="text-xs font-bold text-[#00F0FF] mt-1 block">
+                      ★ {course.offer_label}
+                    </span>
+                  )}
                 </div>
+              ) : (
+                <div className="mt-2 text-zinc-300 text-sm font-semibold">
+                  Free Enrollment / Passcode Required
+                </div>
+              )}
+            </div>
+
+            {/* CTA Buttons */}
+            <div className="space-y-3">
+              {/* Register Now Button */}
+              {course.isPaid ? (
                 <Button
-                  onClick={handlePayment}
+                  variant="accent"
+                  onClick={finalPrice > 0 ? handlePayment : handleFreeEnroll}
                   disabled={checkoutLoading}
-                  variant="primary"
-                  className="w-full py-4 bg-cta hover:bg-cta-600 text-ink shadow-md font-bold flex items-center justify-center space-x-2"
+                  className="w-full py-4 text-center font-bold text-[15px] block whitespace-nowrap rounded-full shrink-0"
                 >
                   {checkoutLoading ? (
-                    <>
+                    <span className="flex items-center justify-center gap-2">
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Opening Pay Portal...</span>
-                    </>
+                      Initializing...
+                    </span>
                   ) : (
-                    <span>Enroll Now (Razorpay)</span>
+                    <span>Register Now</span>
                   )}
                 </Button>
-              </div>
-            ) : (
-              <div className="space-y-4 mb-6">
-                <p className="text-xs text-slate italic leading-relaxed">
-                  This program is offered through participating colleges. Enter your batch passcode inside the join section.
-                </p>
+              ) : null}
+
+              {/* Get Offer outline button */}
+              {isDiscounted && !offerApplied && (
                 <Button
-                  href={`/training/${course.slug}/join`}
-                  variant="primary"
-                  className="w-full py-4 bg-education hover:bg-teal-700 text-white shadow-md font-bold text-center"
+                  variant="secondary"
+                  onClick={() => {
+                    setOfferApplied(true);
+                    setPulseTimer(true);
+                    setTimeout(() => setPulseTimer(false), 2000);
+                    setTimeout(() => {
+                      document.getElementById("offer-countdown")?.scrollIntoView({ behavior: "smooth", block: "center" });
+                    }, 100);
+                  }}
+                  className="w-full py-4 text-center font-bold text-[15px] block whitespace-nowrap rounded-full shrink-0"
                 >
-                  Enter College Batch Code
+                  Get Offer
                 </Button>
+              )}
+
+              {/* Confirmation + copyable dummy coupon code */}
+              {offerApplied && isDiscounted && (
+                <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-2xl text-center space-y-2.5 animate-fadeIn">
+                  <div className="text-sm font-bold flex items-center justify-center gap-1.5">
+                    <span>Offer Applied ✓</span>
+                  </div>
+                  <div className="text-xs text-zinc-400 leading-relaxed">
+                    Use code{" "}
+                    <span
+                      className="font-mono font-bold text-white bg-zinc-800 px-2 py-0.5 rounded border border-white/10 select-all cursor-pointer hover:bg-zinc-700 transition-colors"
+                      title="Click to copy"
+                      onClick={() => {
+                        navigator.clipboard.writeText("EARLYBIRD30");
+                        alert("Coupon code EARLYBIRD30 copied to clipboard!");
+                      }}
+                    >
+                      EARLYBIRD30
+                    </span>{" "}
+                    at checkout for guaranteed pricing.
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Unlock Code section */}
+            {(course.is_locked || !course.isPaid) && (
+              <div className="border-t border-white/5 pt-6 space-y-4">
+                <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block font-mono">
+                  Have an unlock code?
+                </span>
+
+                {unlockError && (
+                  <div className="bg-rose-500/5 border border-rose-500/15 p-3 rounded-xl flex items-start space-x-2 text-rose-400">
+                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                    <span className="text-xs font-semibold">{unlockError}</span>
+                  </div>
+                )}
+
+                {unlockSuccess && (
+                  <div className="bg-emerald-500/5 border border-emerald-500/15 p-3 rounded-xl flex items-start space-x-2 text-emerald-400">
+                    <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+                    <span className="text-xs font-semibold">{unlockSuccess}</span>
+                  </div>
+                )}
+
+                <form onSubmit={handleUnlockSubmit} className="flex flex-col gap-2.5">
+                  <input
+                    type="text"
+                    maxLength={6}
+                    required
+                    value={unlockCode}
+                    onChange={(e) => setUnlockCode(e.target.value.replace(/\D/g, ""))}
+                    placeholder="6-digit passcode"
+                    className="w-full px-4 py-2.5 rounded-xl border border-white/5 text-sm bg-[#0E0E12] text-white placeholder-zinc-500 focus:outline-none focus:border-[#00F0FF]/40 text-center font-mono tracking-widest font-bold"
+                  />
+                  <Button
+                    type="submit"
+                    disabled={unlockLoading}
+                    className="w-full py-2.5 bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold flex items-center justify-center shrink-0 border border-white/5 rounded-xl"
+                  >
+                    {unlockLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Unlock Course"}
+                  </Button>
+                </form>
               </div>
             )}
 
+            {/* Login Link below card */}
             {!user && (
-              <div className="text-center border-t border-line pt-4 mt-6">
-                <p className="text-xs text-slate">
+              <div className="text-center border-t border-white/5 pt-4">
+                <p className="text-xs text-zinc-400 font-light">
                   Already enrolled?{" "}
                   <button
-                    onClick={() => {
-                      setIsLogin(true);
-                      setShowAuthForm(true);
-                    }}
-                    className="text-brand font-bold hover:underline cursor-pointer bg-transparent border-0"
+                    onClick={() => router.push(`/signin?redirect=/training/${course.slug}`)}
+                    className="text-[#00F0FF] font-bold hover:underline cursor-pointer bg-transparent border-0 font-sans"
                   >
                     Log In Here
                   </button>
@@ -535,102 +633,6 @@ export function CourseClientWrapper({ course, modules }: CourseClientWrapperProp
           </Card>
         )}
       </div>
-
-      {/* Auth Modal */}
-      {showAuthForm && (
-        <div className="fixed inset-0 z-50 bg-navy/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="max-w-md w-full bg-white rounded-card border border-line p-8 shadow-2xl relative">
-            <button
-              onClick={() => setShowAuthForm(false)}
-              className="absolute top-4 right-4 text-slate hover:text-ink font-bold text-lg cursor-pointer"
-            >
-              ✕
-            </button>
-            <h3 className="text-2xl font-bold font-display text-ink text-center mb-6">
-              {isLogin ? "Sign In to Student Account" : "Register Student Account"}
-            </h3>
-
-            {authError && (
-              <div className="bg-error/5 border border-error/20 p-4 rounded-lg flex items-start space-x-3 text-error mb-6">
-                <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-                <span className="text-sm font-semibold">{authError}</span>
-              </div>
-            )}
-
-            <form onSubmit={handleAuth} className="space-y-4">
-              {!isLogin && (
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate mb-1">
-                    Full Name
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="e.g. Rahul Kumar"
-                    className="w-full px-4 py-3 rounded-input border border-line text-sm bg-surface/50 focus:bg-white"
-                  />
-                </div>
-              )}
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate mb-1">
-                  Email Address
-                </label>
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="e.g. name@email.com"
-                  className="w-full px-4 py-3 rounded-input border border-line text-sm bg-surface/50 focus:bg-white"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate mb-1">
-                  Password
-                </label>
-                <input
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full px-4 py-3 rounded-input border border-line text-sm bg-surface/50 focus:bg-white"
-                />
-              </div>
-
-              <Button type="submit" className="w-full py-3.5 bg-brand hover:bg-brand-700 text-white font-bold">
-                {isLogin ? "Log In" : "Register & Log In"}
-              </Button>
-            </form>
-
-            <div className="text-center mt-6 pt-4 border-t border-line text-xs text-slate">
-              {isLogin ? (
-                <span>
-                  Don&apos;t have an account?{" "}
-                  <button
-                    onClick={() => setIsLogin(false)}
-                    className="text-brand font-bold hover:underline cursor-pointer bg-transparent border-0"
-                  >
-                    Register Here
-                  </button>
-                </span>
-              ) : (
-                <span>
-                  Already have an account?{" "}
-                  <button
-                    onClick={() => setIsLogin(true)}
-                    className="text-brand font-bold hover:underline cursor-pointer bg-transparent border-0"
-                  >
-                    Log In Here
-                  </button>
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

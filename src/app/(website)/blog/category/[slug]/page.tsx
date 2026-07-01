@@ -7,8 +7,7 @@ import { Section } from "@/components/ui/Section";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { BoldStatement } from "@/components/ui/BoldStatement";
 import { Card } from "@/components/ui/Card";
-import { client } from "@/sanity/lib/client";
-import { categoryBySlugQuery, postsByCategoryQuery } from "@/sanity/lib/queries";
+import { supabase } from "@/lib/supabase";
 
 export const revalidate = 3600;
 
@@ -61,30 +60,39 @@ export default async function CategoryFilterPage({
 }) {
   const { slug } = await params;
 
-  // Query category info
-  const categoryInfo = await client
-    .fetch(categoryBySlugQuery, { slug })
-    .catch(() => null);
+  // Posts in this category from Supabase
+  let postsData: any[] | null = null;
+  try {
+    const { data } = await supabase
+      .from("blog_posts")
+      .select("*")
+      .eq("category_slug", slug)
+      .eq("is_published", true)
+      .order("published_at", { ascending: false });
+    if (data) {
+      postsData = data.map((r: any) => ({
+        title: r.title,
+        slug: r.slug,
+        publishedAt: r.published_at,
+        author: { name: r.author_name || "KVJ Analytics", slug: r.author_slug },
+        category: { title: r.category_title, slug: r.category_slug },
+        description: r.description || "",
+      }));
+    }
+  } catch {
+    postsData = null;
+  }
 
   const fallbackCat = FALLBACK_CATEGORIES[slug];
+  const fallbackFiltered = FALLBACK_POSTS.filter((p) => p.category.slug === slug);
 
-  if (!categoryInfo && !fallbackCat) {
+  if ((!postsData || postsData.length === 0) && !fallbackCat && fallbackFiltered.length === 0) {
     notFound();
   }
 
-  // Query posts matching category
-  const postsData = await client
-    .fetch(postsByCategoryQuery, { slug })
-    .catch(() => null);
-
-  const categoryTitle = categoryInfo?.title || fallbackCat.title;
-  const categoryDesc = categoryInfo?.description || fallbackCat.desc;
-  
-  // Filter fallback posts
-  const posts =
-    postsData && postsData.length > 0
-      ? postsData
-      : FALLBACK_POSTS.filter((p) => p.category.slug === slug);
+  const posts = postsData && postsData.length > 0 ? postsData : fallbackFiltered;
+  const categoryTitle = posts[0]?.category?.title || fallbackCat?.title || "Insights";
+  const categoryDesc = fallbackCat?.desc || "Articles and insights from KVJ Analytics.";
 
   return (
     <Section background="default" className="bg-surface/30 relative overflow-hidden py-16 md:py-24">

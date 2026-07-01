@@ -23,6 +23,15 @@
   /* ---- Text (on dark) ---- */
   --color-ink:         #F3F4F6;   /* primary text */
   --color-slate:       #9CA3AF;   /* secondary text */
+  --color-slate-50:    #F8FAFC;
+  --color-slate-100:   #F1F5F9;
+  --color-slate-150:   #E5E7EB;
+  --color-slate-200:   #E2E8F0;
+  --color-slate-300:   #CBD5E1;
+  --color-slate-350:   #9CA3AF;
+  --color-slate-400:   #94A3B8;
+  --color-slate-500:   #64748B;
+  --color-slate-600:   #475569;
   --color-muted:       #6B7280;   /* captions / placeholders */
 
   /* ---- Accents: Glowing neon cyan primary + electric blue secondary ---- */
@@ -37,8 +46,8 @@
   --color-success:     #10B981;
   --color-error:       #EF4444;
 
-  --font-display: var(--font-space), "Space Grotesk", system-ui, sans-serif;
-  --font-body:    var(--font-inter), "Inter", system-ui, sans-serif;
+  --font-display: var(--font-plus-jakarta), "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-body:    var(--font-plus-jakarta), "Plus Jakarta Sans", system-ui, sans-serif;
 
   /* Premium organic shapes */
   --radius-card:  24px;
@@ -313,10 +322,40 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 
 .reveal {
   opacity: 0; transform: translateY(28px);
-  transition: opacity 0.8s cubic-bezier(0.22,1,0.36,1), transform 0.8s cubic-bezier(0.22,1,0.36,1);
+  transition: opacity 0.8s cubic-bezier(0.22,1,0.36,1), transform 0.8s cubic-bezier(0.22,1,0.36,1), filter 0.8s cubic-bezier(0.22,1,0.36,1);
   will-change: opacity, transform;
 }
 .reveal.is-visible { opacity: 1; transform: translateY(0); }
+
+/* Reveal variants */
+.reveal.rv-left  { transform: translateX(-46px); }
+.reveal.rv-right { transform: translateX(46px); }
+.reveal.rv-scale { transform: scale(0.9); }
+.reveal.rv-blur  { transform: translateY(20px); filter: blur(14px); }
+.reveal.rv-left.is-visible,
+.reveal.rv-right.is-visible,
+.reveal.rv-scale.is-visible { transform: none; }
+.reveal.rv-blur.is-visible  { transform: none; filter: blur(0); }
+
+/* Animated flowing gradient text (premium headings / accents) */
+.text-gradient-flow {
+  background: var(--gradient-signature);
+  background-size: 220% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: gradient-pan 6s ease infinite;
+}
+
+/* Soft pulsing glow */
+@keyframes glow-pulse { 0%,100% { opacity: 0.5; } 50% { opacity: 1; } }
+.animate-glow-pulse { animation: glow-pulse 3s ease-in-out infinite; }
+
+/* ── Intro loader (counter → wipe reveal) ── */
+@keyframes intro-bar-grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes intro-wipe-up { to { transform: translateY(-100%); } }
+.intro-wipe { animation: intro-wipe-up 0.9s cubic-bezier(0.76,0,0.24,1) forwards; }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }

@@ -109,7 +109,7 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
     );
   }
 
-  const inputClasses = "peer w-full px-0 pt-6 pb-2 rounded-none border-none border-b border-white/10 bg-transparent focus:border-b-brand text-white text-sm transition-all outline-none";
+  const inputClasses = "peer w-full px-0 pt-6 pb-2 rounded-none border-0 border-b border-white/10 bg-transparent focus:border-b-brand text-white text-sm transition-all outline-none";
 
   return (
     <form onSubmit={handleSubmit} className="w-full space-y-8 relative">
@@ -251,7 +251,7 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
           onChange={handleChange}
           onFocus={() => setFocusedField("serviceInterest")}
           onBlur={() => setFocusedField("")}
-          className="peer w-full px-0 pt-6 pb-2 rounded-none border-none border-b border-white/10 bg-transparent focus:border-b-brand text-white text-sm transition-all outline-none appearance-none cursor-pointer"
+          className="peer w-full px-0 pt-6 pb-2 rounded-none border-0 border-b border-white/10 bg-transparent focus:border-b-brand text-white text-sm transition-all outline-none appearance-none cursor-pointer"
         >
           <option value="" className="bg-[#050505] text-slate-500">-- Select Interest Category --</option>
           {inquiryAreas.map((area, idx) => (
@@ -265,10 +265,10 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
         </select>
         <label
           htmlFor="serviceInterest"
-          className={`absolute left-0 top-4 text-xs font-bold uppercase tracking-wider transition-all pointer-events-none origin-left ${
-            focusedField === "serviceInterest" || formData.serviceInterest
-              ? "transform -translate-y-2.5 scale-75 text-brand"
-              : "transform translate-y-0 scale-100 text-slate-500"
+          className={`absolute left-0 top-1.5 text-xs font-bold uppercase tracking-wider transition-all pointer-events-none origin-left transform -translate-y-2.5 scale-75 ${
+            focusedField === "serviceInterest"
+              ? "text-brand"
+              : "text-slate-500"
           }`}
         >
           Service Interested In *
@@ -291,7 +291,7 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
           onChange={handleChange}
           onFocus={() => setFocusedField("message")}
           onBlur={() => setFocusedField("")}
-          className="peer w-full px-0 pt-6 pb-2 rounded-none border-none border-b border-white/10 bg-transparent focus:border-b-brand text-white text-sm transition-all outline-none resize-none"
+          className="peer w-full px-0 pt-6 pb-2 rounded-none border-0 border-b border-white/10 bg-transparent focus:border-b-brand text-white text-sm transition-all outline-none resize-none"
         />
         <label
           htmlFor="message"

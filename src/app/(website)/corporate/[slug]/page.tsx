@@ -101,8 +101,8 @@ export default async function CorporateServiceDetailPage({
               
               <div className="space-y-3 mb-8 relative z-10">
                 {[
-                  "Over 16+ years of consulting expertise",
-                  "Serving India, UAE, Oman, Europe, & USA",
+                  `Over ${new Date().getFullYear() - 2010}+ years of consulting expertise`,
+                  "Serving Kerala, India, UAE, Oman, Europe, & USA",
                   "Scalable, non-programmer operated handoffs"
                 ].map((bullet, bIdx) => (
                   <div key={bIdx} className="flex items-center space-x-2 text-xs font-bold text-slate/85">
