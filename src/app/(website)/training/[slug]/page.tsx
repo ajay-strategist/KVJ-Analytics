@@ -1,23 +1,28 @@
 import React from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Clock, Award, CheckCircle, BookOpen } from "lucide-react";
 import { Container } from "@/components/ui/Container";
-import { Section } from "@/components/ui/Section";
-import { BoldStatement } from "@/components/ui/BoldStatement";
 import { CourseClientWrapper } from "@/components/CourseClientWrapper";
 import { supabase } from "@/lib/supabase";
 
-export const revalidate = 3600;
+export const revalidate = 120; // Revalidate every 2 minutes
 
 const FALLBACK_COURSES: Record<
   string,
   {
+    id?: string;
     title: string;
     segment: string;
     summary: string;
-    priceINR: number;
+    fee_inr: number;
+    offer_price_inr: number | null;
+    offer_label: string | null;
+    offer_expiry: string | null;
+    is_locked: boolean;
     isPaid: boolean;
+    duration: string;
+    banner_url: string;
     introduction: string;
     syllabus: string[];
   }
@@ -27,8 +32,14 @@ const FALLBACK_COURSES: Record<
     segment: "college",
     summary:
       "Master formula consolidation, reporting loops, and dashboard designs using real corporate MIS datasets.",
-    priceINR: 4999,
-    isPaid: false,
+    fee_inr: 4999,
+    offer_price_inr: 3499,
+    offer_label: "Early Bird 30% Off",
+    offer_expiry: new Date(Date.now() + 3 * 86400000).toISOString(),
+    is_locked: false,
+    isPaid: true,
+    duration: "6 Weeks",
+    banner_url: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800",
     introduction: "<h3>Advanced Excel Syllabus</h3><p>Master MIS consolidation and workflows.</p>",
     syllabus: [
       "Introduction to advanced nested formulas and logical criteria tests.",
@@ -42,8 +53,14 @@ const FALLBACK_COURSES: Record<
     segment: "corporate",
     summary:
       "Connect live data sources, design KPI tiles, and deploy interactive boards for senior executives.",
-    priceINR: 7999,
+    fee_inr: 7999,
+    offer_price_inr: 5999,
+    offer_label: "Special Launch Pricing",
+    offer_expiry: new Date(Date.now() + 5 * 86400000).toISOString(),
+    is_locked: false,
     isPaid: true,
+    duration: "8 Weeks",
+    banner_url: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=800",
     introduction: "<h3>Power BI Course Intro</h3><p>Learn to connect live data sources and deploy boards.</p>",
     syllabus: [
       "Data ingestion modeling: defining facts, dimensions, and relationships.",
@@ -86,19 +103,20 @@ export default async function CourseDetailPage({
         const { data: less, error: lessError } = await supabase
           .from("lessons")
           .select("*")
-          .in("module_id", mods.map((m) => m.id))
+          .in("module_id", mods.map((m: any) => m.id))
           .order("display_order", { ascending: true });
 
-        dbModules = mods.map((m) => ({
+        dbModules = mods.map((m: any) => ({
           id: m.id,
           title: m.title,
           lessons: (less || [])
-            .filter((l) => l.module_id === m.id)
-            .map((l) => ({
+            .filter((l: any) => l.module_id === m.id)
+            .map((l: any) => ({
               id: l.id,
               title: l.title,
-              kind: l.kind,
+              kind: l.kind as any,
               max_score: l.max_score,
+              video_url: l.video_url || null,
             })),
         }));
       }
@@ -113,13 +131,20 @@ export default async function CourseDetailPage({
     notFound();
   }
 
-  const id = course?.id || `fallback-id-${slug}`;
+  const id = course?.id || fallback?.id || `fallback-id-${slug}`;
   const title = course?.title || fallback?.title || "Untitled Course";
   const segment = course?.segment || fallback?.segment || "college";
   const summary = course?.summary || fallback?.summary || "";
-  const priceINR = course?.price_inr !== undefined ? Number(course.price_inr) : (fallback?.priceINR ?? 0);
+  const fee_inr = course?.fee_inr !== undefined ? Number(course.fee_inr) : (fallback?.fee_inr ?? 0);
+  const offer_price_inr = course?.offer_price_inr !== undefined ? (course.offer_price_inr !== null ? Number(course.offer_price_inr) : null) : (fallback?.offer_price_inr ?? null);
+  const offer_label = course?.offer_label || fallback?.offer_label || null;
+  const offer_expiry = course?.offer_expiry || fallback?.offer_expiry || null;
+  const is_locked = course?.is_locked !== undefined ? !!course.is_locked : (fallback?.is_locked ?? false);
   const isPaid = course?.is_paid !== undefined ? !!course.is_paid : (fallback?.isPaid ?? false);
+  const duration = course?.duration || fallback?.duration || "Self-Paced";
+  const banner_url = course?.banner_url || fallback?.banner_url || "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800";
   const introduction = course?.introduction || fallback?.introduction || "";
+  const syllabus = course?.syllabus || fallback?.syllabus || [];
 
   // Build modules list from fallback if not present in DB
   let modules = dbModules;
@@ -133,70 +158,51 @@ export default async function CourseDetailPage({
           title: item,
           kind: "material",
           max_score: null,
+          video_url: null,
         })),
       },
     ];
   }
 
   return (
-    <Section background="default" className="bg-base relative overflow-hidden">
-      <div className="absolute inset-0 bg-grid-pattern opacity-45 pointer-events-none" />
-      <div className="absolute top-20 right-0 w-96 h-96 bg-brand/5 rounded-full blur-3xl pointer-events-none" />
+    <div className="w-full bg-[#050505] text-zinc-200 min-h-screen pt-28 pb-24 relative overflow-hidden">
+      {/* Background gradients */}
+      <div className="absolute top-[10%] left-[-10%] w-[500px] h-[500px] bg-[#00F0FF]/5 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute top-[40%] right-[-10%] w-[600px] h-[600px] bg-[#0072FF]/5 rounded-full blur-[160px] pointer-events-none" />
 
       <Container className="relative z-10">
         {/* Back Link */}
         <Link
-          href="/training"
-          className="inline-flex items-center text-sm font-bold text-slate hover:text-brand mb-8 group"
+          href="/training/online-courses"
+          className="inline-flex items-center text-sm font-semibold text-zinc-400 hover:text-[#00F0FF] mb-12 group transition-colors"
         >
           <ArrowLeft className="w-4 h-4 mr-2 transition-transform duration-200 group-hover:-translate-x-1" />
-          <span>Back to Catalog</span>
+          <span>Back to Courses</span>
         </Link>
 
-        {/* Course Core details */}
-        <div className="max-w-5xl mx-auto mb-16">
-          <div className="flex items-center space-x-2.5 mb-4">
-            <span
-              className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest text-white shadow-sm ${
-                segment === "corporate" ? "bg-corporate" : "bg-education"
-              }`}
-            >
-              {segment} program
-            </span>
-          </div>
-          <BoldStatement variant="hero" className="mb-6 leading-tight text-ink">
-            {title}
-          </BoldStatement>
-          <p className="text-lg md:text-xl text-slate font-medium leading-relaxed mb-10 max-w-3xl">
-            {summary}
-          </p>
-
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 mt-8 items-start">
-            <div className="lg:col-span-12">
-              <BoldStatement variant="h3" className="mb-8">
-                Syllabus &amp; Core Outline
-              </BoldStatement>
-
-              {introduction ? (
-                <div
-                  className="prose prose-slate max-w-none text-slate leading-relaxed"
-                  dangerouslySetInnerHTML={{ __html: introduction }}
-                />
-              ) : (
-                <p className="text-slate italic">No course syllabus details uploaded yet.</p>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Dynamic client-side course panel (Syllabus items, Lock badges, Pay, Join code inputs) */}
-        <div className="max-w-5xl mx-auto border-t border-line pt-12">
-          <CourseClientWrapper
-            course={{ id, title, slug, segment, summary, priceINR, isPaid }}
-            modules={modules}
-          />
-        </div>
+        {/* Client Wrapper renders the unified 2-column grid */}
+        <CourseClientWrapper
+          course={{
+            id,
+            title,
+            slug,
+            segment,
+            summary,
+            banner_url,
+            duration,
+            fee_inr,
+            offer_price_inr,
+            offer_label,
+            offer_expiry,
+            is_locked,
+            isPaid,
+            introduction,
+            syllabus,
+          }}
+          modules={modules}
+        />
       </Container>
-    </Section>
+    </div>
   );
 }
+

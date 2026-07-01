@@ -63,13 +63,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 2. Fetch Course Details from Sanity
-    const course = await sanityClient.fetch(
-      `*[_type == "course" && slug.current == $slug][0] {
-        title
-      }`,
-      { slug: course_slug }
-    );
+    // 2. Fetch Course Details from Supabase
+    const { data: course } = await supabaseAdmin
+      .from("courses")
+      .select("title")
+      .eq("slug", course_slug)
+      .maybeSingle();
     const courseTitle = course?.title || "Professional Skill Course";
 
     // 3. Fetch Student User Details

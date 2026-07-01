@@ -1,245 +1,420 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { TrendingUp, Activity, Cpu, Workflow, Layers, CheckCircle2 } from "lucide-react";
+import React, { useEffect, useState, useRef } from "react";
+import { 
+  TrendingUp, Activity
+} from "lucide-react";
 
-/**
- * Highly detailed 3D animated holographic projection.
- * Displays a complex Power BI-style financial dashboard,
- * interactive data charts, and interconnected automation workflow nodes.
- * Utilizes hardware-accelerated CSS 3D transforms for a smooth floating animation.
- */
+interface LogEntry {
+  id: number;
+  date: string;
+  text: string;
+}
+
 export function HeroVisual() {
-  const [t, setT] = useState(0);
+  const [logs, setLogs] = useState<LogEntry[]>(() => [
+    { id: 1, date: "Mar 26", text: "Marketing ROI: Europe campaign verified at 3.8x" },
+    { id: 2, date: "Apr 26", text: "System Pulse: Data integration node synced successfully" },
+    { id: 3, date: "May 26", text: "Model Alert: USA region Q2 sales variance detected -4.2%" },
+  ]);
+  const spacing = 71.42;
 
-  useEffect(() => {
-    let raf = 0;
-    const tick = () => {
-      setT((prev) => (prev + 0.01) % (Math.PI * 2));
-      raf = requestAnimationFrame(tick);
+  // Unified scroll state for line chart
+  const [scrollState, setScrollState] = useState<{
+    offset: number;
+    vals: number[];
+    dates: string[];
+  }>(() => {
+    const initialVals = [50, 52, 49, 54, 51, 56, 59, 55, 62, 64];
+    const initialDates = [
+      "Jul 25", "Sep 25", "Nov 25", "Jan 26", "Mar 26", "May 26", "Jul 26", "Sep 26", "Nov 26", "Jan 27"
+    ];
+    return {
+      offset: 0,
+      vals: initialVals,
+      dates: initialDates
     };
-    tick();
-    return () => cancelAnimationFrame(raf);
+  });
+
+  const [barValues, setBarValues] = useState<number[]>([65, 82, 45, 78]);
+  const [radialPercent, setRadialPercent] = useState<number>(94.8);
+
+  const currentDateRef = useRef(new Date(2027, 0, 1)); 
+
+  // Step-morphing animation loop (every 2.2 seconds)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setScrollState((prev) => {
+        const lastVal = prev.vals[prev.vals.length - 1];
+        const change = (Math.random() - 0.5) * 35;
+        const nextVal = Math.max(15, Math.min(92, lastVal + change));
+        const nextVals = [...prev.vals.slice(1), nextVal];
+
+        const curDate = currentDateRef.current;
+        const nextDate = new Date(curDate);
+        nextDate.setMonth(curDate.getMonth() + 2);
+        currentDateRef.current = nextDate;
+
+        const monthName = nextDate.toLocaleString("en-US", { month: "short" });
+        const yearTwoDigit = nextDate.toLocaleString("en-US", { year: "2-digit" });
+        const nextDateLabel = `${monthName} ${yearTwoDigit}`;
+        const nextDates = [...prev.dates.slice(1), nextDateLabel];
+
+        const activeMonth = prev.dates[9];
+        const changePercent = parseFloat(((nextVal - lastVal) / (lastVal || 1) * 100).toFixed(1));
+        
+        const logTemplates = [
+          `Stream Feed: Data processing optimized (+${changePercent}%)`,
+          `Insight Engine: Target classification matching at 98.4%`,
+          `API Broadcast: Sync dispatch completed in 1.4ms`,
+          `Database Node: Transformed transactional records successfully`,
+        ];
+        const logMsg = logTemplates[Math.floor(Math.random() * logTemplates.length)];
+
+        setLogs((prevLogs) => [
+          ...prevLogs.slice(-2),
+          { id: Date.now(), date: activeMonth, text: logMsg }
+        ]);
+
+        // Animate bar values
+        setBarValues((prevBars) =>
+          prevBars.map((val) => {
+            const delta = (Math.random() - 0.5) * 20;
+            return Math.max(15, Math.min(98, val + delta));
+          })
+        );
+
+        // Animate radial optimization percentage
+        setRadialPercent((prevRad) => {
+          const delta = (Math.random() - 0.5) * 2.2;
+          return Math.max(88.5, Math.min(99.4, prevRad + delta));
+        });
+
+        return {
+          offset: 0,
+          vals: nextVals,
+          dates: nextDates
+        };
+      });
+    }, 2200);
+
+    return () => clearInterval(interval);
   }, []);
 
-  // Compute rotation offsets for a organic floating breathing effect
-  const rotX = 58 + Math.sin(t) * 3;
-  const rotY = -12 + Math.cos(t * 1.2) * 3;
-  const rotZ = 4 + Math.sin(t * 0.8) * 2;
-  const translateZ = Math.sin(t * 1.5) * 12;
+  const { vals: chartVals, dates } = scrollState;
+
+  const svgWidth = 320;
+  const svgHeight = 110;
+  const totalSvgHeight = 130; 
+
+  const points = chartVals.map((val, idx) => {
+    const x = idx * (svgWidth / (chartVals.length - 1));
+    const y = svgHeight - (val / 100) * (svgHeight - 20) - 10;
+    return { x, y };
+  });
+
+  const linePath = points.reduce((acc, p, idx) => {
+    return acc + (idx === 0 ? `M ${p.x} ${p.y}` : ` L ${p.x} ${p.y}`);
+  }, "");
+
+  const areaPath = linePath + ` L ${svgWidth} ${svgHeight} L 0 ${svgHeight} Z`;
+
+  const lastIdx = chartVals.length - 1;
+  const activeVal = chartVals[lastIdx] || 50;
+  const prevActiveVal = chartVals[lastIdx - 1] || activeVal;
+  const isUpTrend = activeVal >= prevActiveVal;
+
+  const themeColor = isUpTrend ? "#00F0FF" : "#0072FF";
+  const strokeGradId = `chartDynamicStrokeGrad-${isUpTrend ? "up" : "down"}`;
+  const fillGradId = `chartDynamicFillGrad-${isUpTrend ? "up" : "down"}`;
+  
+  const liveCoord = points[lastIdx];
+
+  // Radial Gauge Math
+  const radius = 22;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (circumference * radialPercent) / 100;
 
   return (
-    <div className="relative w-full max-w-[550px] mx-auto min-h-[520px] flex items-center justify-center py-10 select-none">
+    <div className="relative w-full max-w-none flex items-center justify-center py-6 select-none font-body">
       {/* Background ambient neon cyan/blue glowing backlights */}
-      <div className="absolute top-[10%] left-[10%] w-80 h-80 rounded-full bg-brand/10 blur-[110px] pointer-events-none animate-pulse duration-[7s]" />
-      <div className="absolute bottom-[10%] right-[10%] w-[340px] h-[340px] rounded-full bg-[#0072FF]/12 blur-[120px] pointer-events-none animate-pulse duration-[9s]" />
+      <div 
+        className="absolute top-[10%] left-[10%] w-80 h-80 rounded-full blur-[120px] pointer-events-none animate-pulse duration-[7s]" 
+        style={{ backgroundColor: `${themeColor}08` }}
+      />
+      <div 
+        className="absolute bottom-[10%] right-[10%] w-[340px] h-[340px] rounded-full blur-[130px] pointer-events-none animate-pulse duration-[9s]" 
+        style={{ backgroundColor: `${themeColor}0c` }}
+      />
 
-      {/* Holographic Projection HUD Ring Base */}
-      <div className="absolute bottom-4 w-[90%] h-12 bg-gradient-to-t from-brand/20 to-transparent rounded-full blur-[10px] transform scale-y-[0.35] opacity-80 pointer-events-none" />
-      <div className="absolute bottom-6 w-[80%] h-6 border-2 border-brand/20 rounded-full transform scale-y-[0.25] opacity-60 pointer-events-none animate-ping" />
-
-      {/* Isometric 3D Space Wrapper */}
-      <div
-        className="relative w-full aspect-square max-w-[460px] flex items-center justify-center"
-        style={{
-          perspective: "1200px",
-          transformStyle: "preserve-3d",
-        }}
-      >
-        <div
-          className="relative w-full h-full transition-transform duration-100 ease-out"
-          style={{
-            transform: `rotateX(${rotX}deg) rotateY(${rotY}deg) rotateZ(${rotZ}deg) translateY(${translateZ}px)`,
-            transformStyle: "preserve-3d",
-          }}
-        >
-          {/* ==================== LAYER 1: AUTOMATION NODES (Bottom Layer, Z-offset: -50px) ==================== */}
-          <div
-            className="absolute inset-4 rounded-[28px] border border-brand/10 bg-brand/[0.02] flex items-center justify-center"
-            style={{
-              transform: "translateZ(-50px)",
-              transformStyle: "preserve-3d",
-            }}
-          >
-            {/* Grid overlay */}
-            <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,240,255,0.04)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,240,255,0.04)_1px,transparent_1px)] bg-[size:2rem_2rem] rounded-[28px]" />
-            
-            {/* Connected Node Network SVG */}
-            <svg viewBox="0 0 400 400" className="w-full h-full opacity-65">
-              <defs>
-                <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0%" stopColor="#00F0FF" stopOpacity="0.8" />
-                  <stop offset="100%" stopColor="#0072FF" stopOpacity="0.2" />
-                </linearGradient>
-              </defs>
-              {/* Connection lines */}
-              <line x1="80" y1="120" x2="200" y2="200" stroke="url(#lineGrad)" strokeWidth="1.5" strokeDasharray="5 3" />
-              <line x1="320" y1="120" x2="200" y2="200" stroke="url(#lineGrad)" strokeWidth="1.5" />
-              <line x1="200" y1="200" x2="200" y2="320" stroke="url(#lineGrad)" strokeWidth="2" />
-              <line x1="80" y1="280" x2="200" y2="320" stroke="url(#lineGrad)" strokeWidth="1.5" />
-              <line x1="320" y1="280" x2="200" y2="320" stroke="url(#lineGrad)" strokeWidth="1.5" strokeDasharray="5 3" />
-
-              {/* Pulsing automation node loops */}
-              <g>
-                <circle cx="80" cy="120" r="14" fill="#0A0A0E" stroke="#00F0FF" strokeWidth="1.5" />
-                <circle cx="80" cy="120" r="6" fill="#00F0FF" className="animate-pulse" />
-              </g>
-              <g>
-                <circle cx="320" cy="120" r="14" fill="#0A0A0E" stroke="#0072FF" strokeWidth="1.5" />
-                <circle cx="320" cy="120" r="6" fill="#0072FF" />
-              </g>
-              <g>
-                <circle cx="200" cy="200" r="20" fill="#0A0A0E" stroke="#00F0FF" strokeWidth="2" />
-                <circle cx="200" cy="200" r="6" fill="#00F0FF" />
-              </g>
-              <g>
-                <circle cx="200" cy="320" r="16" fill="#0A0A0E" stroke="#0072FF" strokeWidth="1.5" />
-                <circle cx="200" cy="320" r="6" fill="#0072FF" className="animate-ping" />
-              </g>
-              <g>
-                <circle cx="80" cy="280" r="12" fill="#0A0A0E" stroke="#00F0FF" strokeWidth="1.2" />
-              </g>
-              <g>
-                <circle cx="320" cy="280" r="12" fill="#0A0A0E" stroke="#0072FF" strokeWidth="1.2" />
-              </g>
-            </svg>
+      {/* Main Glass Dashboard Shell */}
+      <div className="relative w-full p-5 rounded-[24px] bg-[#0A0A0E]/70 backdrop-blur-[24px] border border-white/10 shadow-[0_24px_50px_rgba(0,0,0,0.5)] flex flex-col gap-5 overflow-hidden">
+        
+        {/* Sleek Futuristic Header Status Bar (Removed KVJ Engine Core as requested) */}
+        <div className="flex items-center justify-between border-b border-white/5 pb-3">
+          <div className="flex items-center gap-2">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-brand"></span>
+            </span>
+            <span className="text-[10px] font-mono font-bold tracking-[0.2em] text-slate-200">
+              [ REAL-TIME METRICS BROADCAST ]
+            </span>
           </div>
+          <div className="text-[8px] font-mono text-slate-400 bg-white/5 border border-white/10 px-2 py-0.5 rounded uppercase tracking-wider">
+            STABLE // LATENCY 12ms
+          </div>
+        </div>
 
-          {/* ==================== LAYER 2: POWER BI FINANCIAL DASHBOARD (Middle Layer, Z-offset: 0px) ==================== */}
-          <div
-            className="absolute inset-0 rounded-[28px] border border-white/10 bg-[#12121A]/75 backdrop-blur-xl p-6 shadow-2xl flex flex-col justify-between"
-            style={{
-              transform: "translateZ(0px)",
-              transformStyle: "preserve-3d",
-            }}
-          >
-            {/* Dashboard Header */}
-            <div className="flex items-center justify-between border-b border-white/5 pb-3">
-              <div className="flex items-center gap-2">
-                <div className="p-1.5 rounded-lg bg-brand/10 text-brand">
-                  <Layers className="w-4 h-4" />
-                </div>
-                <div>
-                  <div className="text-[10px] font-mono font-bold tracking-widest text-[#00F0FF]">FINANCE_BI_HUB</div>
-                  <div className="text-[7px] text-slate-500 font-mono">SECURE INTEGRATION v4.2</div>
-                </div>
-              </div>
-              <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-brand/5 border border-brand/20">
-                <span className="h-1.5 w-1.5 rounded-full bg-brand animate-ping" />
-                <span className="text-[7px] font-mono font-bold text-white tracking-wider">LIVE</span>
+        {/* Main Columns Grid: Line Chart on the left, auxiliary widgets on the right */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-stretch">
+          
+          {/* Main Line Chart (spans 8 columns) */}
+          <div className="md:col-span-8 rounded-xl border border-white/5 bg-white/[0.01] p-4 flex flex-col justify-between group hover:border-brand/20 transition-all duration-300">
+            <div className="flex justify-between items-center mb-3">
+              <span className="text-[10px] font-mono uppercase tracking-widest text-slate-200 font-bold">
+                REVENUE FLOW & CONVERSIONS
+              </span>
+              <div className="flex items-center gap-1 text-[8px] font-mono text-brand font-bold">
+                <span className="w-1.5 h-1.5 rounded-full bg-brand animate-ping" />
+                <span className="uppercase">SALES PULSE</span>
               </div>
             </div>
 
-            {/* Dashboard Visual Grid */}
-            <div className="grid grid-cols-12 gap-3.5 my-4 flex-grow items-stretch">
-              
-              {/* Left Column: KPI Ring Dial Gauge */}
-              <div className="col-span-4 rounded-xl border border-white/5 bg-white/[0.01] p-3 flex flex-col items-center justify-center text-center">
-                <span className="text-[7px] font-mono uppercase tracking-widest text-slate-500">MIS Target</span>
-                
-                <div className="relative w-18 h-18 my-2 flex items-center justify-center">
-                  <svg viewBox="0 0 36 36" className="w-full h-full transform -rotate-90">
-                    <circle cx="18" cy="18" r="16" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="3" />
-                    <circle 
-                      cx="18" 
-                      cy="18" 
-                      r="16" 
-                      fill="none" 
-                      stroke="#00F0FF" 
-                      strokeWidth="3.5" 
-                      strokeDasharray="100" 
-                      strokeDashoffset="16" 
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                  <span className="absolute text-[9px] font-mono font-bold text-white">84%</span>
-                </div>
-                
-                <span className="text-[8px] font-bold text-[#00F0FF] font-mono leading-none">Automated</span>
-              </div>
+            {/* Glowing Line Chart Area */}
+            <div className="relative w-full h-[125px] overflow-hidden">
+              <svg viewBox={`0 0 ${svgWidth} ${totalSvgHeight}`} width="100%" height="100%" preserveAspectRatio="none" className="overflow-hidden">
+                <style dangerouslySetInnerHTML={{ __html: `
+                  .chart-path-line {
+                    stroke-dasharray: 600;
+                    stroke-dashoffset: 600;
+                    animation: draw-chart-line 2.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+                  }
+                  @keyframes draw-chart-line {
+                    to { stroke-dashoffset: 0; }
+                  }
+                `}} />
+                <defs>
+                  <linearGradient id={fillGradId} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={themeColor} stopOpacity="0.18" />
+                    <stop offset="100%" stopColor={themeColor} stopOpacity="0.0" />
+                  </linearGradient>
+                  <linearGradient id={strokeGradId} x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor={themeColor} />
+                    <stop offset="100%" stopColor={themeColor} stopOpacity="0.85" />
+                  </linearGradient>
+                </defs>
 
-              {/* Middle Column: Financial Bar Charts */}
-              <div className="col-span-8 rounded-xl border border-white/5 bg-white/[0.01] p-3 flex flex-col justify-between">
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-[7px] font-mono uppercase tracking-widest text-slate-500">Yield Analytics</span>
-                  <div className="flex gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-brand" />
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#0072FF]" />
-                  </div>
+                {/* Grid Lines */}
+                <line x1="0" y1={svgHeight * 0.25} x2={svgWidth} y2={svgHeight * 0.25} stroke="rgba(255,255,255,0.03)" strokeWidth="1" />
+                <line x1="0" y1={svgHeight * 0.5} x2={svgWidth} y2={svgHeight * 0.5} stroke="rgba(255,255,255,0.03)" strokeWidth="1" />
+                <line x1="0" y1={svgHeight * 0.75} x2={svgWidth} y2={svgHeight * 0.75} stroke="rgba(255,255,255,0.03)" strokeWidth="1" />
+
+                {/* Static Morphing Group */}
+                <g className="will-change-transform">
+                  <path
+                    d={areaPath}
+                    fill={`url(#${fillGradId})`}
+                    style={{
+                      transition: "d 0.8s cubic-bezier(0.22, 1, 0.36, 1)",
+                    }}
+                  />
+
+                  <path
+                    d={linePath}
+                    fill="none"
+                    stroke={`url(#${strokeGradId})`}
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    className="chart-path-line"
+                    style={{
+                      transition: "d 0.8s cubic-bezier(0.22, 1, 0.36, 1)",
+                    }}
+                  />
+
+                  {points.map((p, idx) => (
+                    <g key={idx}>
+                      <circle
+                        cx={p.x}
+                        cy={p.y}
+                        r="3.5"
+                        fill="#050507"
+                        stroke={idx === lastIdx ? themeColor : "rgba(255,255,255,0.15)"}
+                        strokeWidth="1.2"
+                        style={{
+                          transition: "cy 0.8s cubic-bezier(0.22, 1, 0.36, 1), stroke 0.8s ease",
+                        }}
+                      />
+                      <circle
+                        cx={p.x}
+                        cy={p.y}
+                        r="1"
+                        fill={idx === lastIdx ? themeColor : "rgba(255,255,255,0.1)"}
+                        style={{
+                          transition: "cy 0.8s cubic-bezier(0.22, 1, 0.36, 1), fill 0.8s ease",
+                        }}
+                      />
+                    </g>
+                  ))}
+
+                  {/* Dates */}
+                  {points.map((p, idx) => {
+                    const label = dates[idx];
+                    if (!label) return null;
+                    return (
+                      <text
+                        key={`date-${idx}`}
+                        x={p.x}
+                        y={svgHeight + 15}
+                        textAnchor="middle"
+                        fill={idx === lastIdx ? "#ffffff" : "#9ca3af"}
+                        className={`text-[8px] font-mono transition-all duration-300 ${idx === lastIdx ? "font-bold animate-pulse" : "font-semibold"}`}
+                        style={{
+                          transition: "x 0.8s cubic-bezier(0.22, 1, 0.36, 1), fill 0.8s ease",
+                        }}
+                      >
+                        {label}
+                      </text>
+                    );
+                  })}
+
+                  {/* Live pulsing dot */}
+                  {liveCoord && (
+                    <g
+                      style={{
+                        transform: `translate(${liveCoord.x}px, ${liveCoord.y}px)`,
+                        transition: "transform 0.8s cubic-bezier(0.22, 1, 0.36, 1)",
+                      }}
+                    >
+                      <circle
+                        cx="0"
+                        cy="0"
+                        r="9"
+                        fill={themeColor}
+                        opacity="0.32"
+                        className="animate-ping"
+                      />
+                      <circle
+                        cx="0"
+                        cy="0"
+                        r="4"
+                        fill={themeColor}
+                      />
+                    </g>
+                  )}
+                </g>
+              </svg>
+            </div>
+          </div>
+
+          {/* Right auxiliary widget panel: Radial Gauge + Regional Bar Chart (spans 4 columns) */}
+          <div className="md:col-span-4 flex flex-col sm:flex-row md:flex-col gap-4">
+            
+            {/* 1. Animated Radial Progress Gauge */}
+            <div className="flex-1 rounded-xl border border-white/5 bg-white/[0.01] p-4 flex flex-col items-center justify-center relative overflow-hidden group hover:border-brand/20 transition-all duration-300">
+              <span className="text-[9px] font-mono uppercase tracking-widest text-slate-300 mb-3 block text-center font-bold">
+                SYSTEM EFFICIENCY
+              </span>
+              <div className="relative w-20 h-20 flex items-center justify-center">
+                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 60 60">
+                  {/* Background Track */}
+                  <circle cx="30" cy="30" r={radius} fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="4" />
+                  {/* Glowing active circle */}
+                  <circle
+                    cx="30"
+                    cy="30"
+                    r={radius}
+                    fill="none"
+                    stroke={themeColor}
+                    strokeWidth="4"
+                    strokeDasharray={circumference}
+                    strokeDashoffset={strokeDashoffset}
+                    strokeLinecap="round"
+                    style={{
+                      transition: "stroke-dashoffset 0.3s ease-out, stroke 0.8s ease",
+                      filter: `drop-shadow(0 0 3px ${themeColor})`,
+                    }}
+                  />
+                  {/* Inner technical ring */}
+                  <circle cx="30" cy="30" r={16} fill="none" stroke="rgba(0, 240, 255, 0.08)" strokeWidth="1" strokeDasharray="4 2" className="animate-[spin_20s_linear_infinite]" />
+                </svg>
+                <div className="absolute flex flex-col items-center justify-center">
+                  <span className="text-sm font-mono font-bold text-white leading-none">
+                    {radialPercent.toFixed(1)}%
+                  </span>
+                  <span className="text-[6px] font-mono text-slate-400 mt-1 uppercase tracking-widest">
+                    OPTIMIZED
+                  </span>
                 </div>
-                
-                {/* Bar heights modulated slightly dynamically */}
-                <div className="h-14 flex items-end justify-between gap-1.5 pt-2">
-                  {[30, 65, 50, 90, 45, 75, 60, 95].map((h, idx) => (
-                    <div key={idx} className="flex-1 flex flex-col gap-1 items-center">
-                      <div className="w-full relative rounded bg-white/5" style={{ height: "45px" }}>
-                        <div 
-                          className="absolute bottom-0 inset-x-0 rounded bg-gradient-to-t from-[#0072FF] to-[#00F0FF] shadow-[0_0_10px_rgba(0,240,255,0.2)] transition-all duration-1000"
-                          style={{ height: `${h}%` }}
+              </div>
+            </div>
+
+            {/* 2. Live regional bar chart */}
+            <div className="flex-1 rounded-xl border border-white/5 bg-white/[0.01] p-4 flex flex-col justify-between group hover:border-brand/20 transition-all duration-300">
+              <span className="text-[9px] font-mono uppercase tracking-widest text-slate-300 mb-2 block text-center font-bold">
+                LOAD DISTRIBUTION
+              </span>
+              <div className="flex justify-between items-end h-[64px] px-2 pt-2">
+                {barValues.map((val, idx) => {
+                  const labels = ["US", "EU", "IN", "AE"];
+                  const colors = ["#00F0FF", "#0072FF", "#00F0FF", "#0072FF"];
+                  return (
+                    <div key={idx} className="flex flex-col items-center flex-1">
+                      <div className="relative w-2 h-11 bg-white/5 rounded-full overflow-hidden">
+                        <div
+                          className="absolute bottom-0 w-full rounded-full transition-all duration-300"
+                          style={{
+                            height: `${val}%`,
+                            backgroundColor: colors[idx],
+                            boxShadow: `0 0 8px ${colors[idx]}70`,
+                          }}
                         />
                       </div>
-                      <span className="text-[5px] font-bold text-slate-500 font-mono">Q{idx+1}</span>
+                      <span className="text-[7.5px] font-mono text-slate-200 font-bold mt-1.5">{labels[idx]}</span>
                     </div>
-                  ))}
-                </div>
+                  );
+                })}
               </div>
             </div>
 
-            {/* Bottom Row status banner */}
-            <div className="flex items-center justify-between border-t border-white/5 pt-3 text-[7px] font-mono text-slate-400">
-              <div className="flex items-center gap-1">
-                <Workflow className="w-3.5 h-3.5 text-brand mr-1" />
-                <span>INTEGRATION: ACTIVE</span>
-              </div>
-              <div>LATENCY: 0.12ms</div>
-            </div>
           </div>
 
-          {/* ==================== LAYER 3: FLOATING TOOLTIPS & METRICS (Top Layer, Z-offset: 50px) ==================== */}
-          {/* Floating Line Chart Tooltip (Top Right) */}
-          <div
-            className="absolute top-[8%] right-[-30px] rounded-2xl border border-brand/35 bg-[#12121A]/90 backdrop-blur-xl px-4 py-3 shadow-[0_12px_32px_rgba(0,240,255,0.18)] max-w-[170px]"
-            style={{
-              transform: "translateZ(50px)",
-              transformStyle: "preserve-3d",
-              backfaceVisibility: "hidden",
-            }}
-          >
-            <div className="flex items-center gap-2 mb-1.5">
-              <div className="p-1 rounded bg-brand/10 text-brand">
-                <TrendingUp className="w-3.5 h-3.5" />
-              </div>
-              <span className="text-[9px] font-bold text-white font-display">Revenue Growth</span>
-            </div>
-            
-            <div className="text-lg font-bold font-mono text-transparent bg-clip-text bg-gradient-to-r from-brand to-corporate leading-none mb-1">
-              +142.8%
-            </div>
-            
-            <p className="text-[6px] text-slate-500 font-mono leading-normal">
-              Continuous dashboard generation successfully loaded.
-            </p>
-          </div>
-
-          {/* Floating Performance Indicator Badge (Bottom Left) */}
-          <div
-            className="absolute bottom-[12%] left-[-40px] rounded-xl border border-[#0072FF]/40 bg-[#12121A]/90 backdrop-blur-xl px-3 py-2.5 shadow-[0_12px_28px_rgba(0,114,255,0.18)] flex items-center gap-2"
-            style={{
-              transform: "translateZ(65px)",
-              transformStyle: "preserve-3d",
-              backfaceVisibility: "hidden",
-            }}
-          >
-            <div className="w-6 h-6 rounded-full bg-[#0072FF]/10 flex items-center justify-center text-[#0072FF]">
-              <CheckCircle2 className="w-3.5 h-3.5" />
-            </div>
-            <div className="text-left font-mono">
-              <span className="text-[6px] text-slate-500 uppercase tracking-wider block">MIS AUDIT</span>
-              <span className="text-[10px] font-bold text-white leading-none mt-0.5">COMPLIANT</span>
-            </div>
-          </div>
-          
         </div>
+
+        {/* Live Terminal Console (scrolling logs) */}
+        <div className="rounded-xl border border-white/5 bg-[#050507]/90 p-4 font-mono text-[9px] relative overflow-hidden group">
+          <div className="absolute top-3.5 right-4 text-slate-400 flex items-center gap-1.5">
+            <Activity className="w-3.5 h-3.5 text-brand" />
+            <span className="text-[8px] tracking-widest font-bold">STATUS FEED</span>
+          </div>
+          <div className="space-y-2 max-h-[85px] overflow-hidden">
+            {logs.map((log) => (
+              <div key={log.id} className="flex items-start gap-2.5 transition-all duration-300 ease-out">
+                <span className="text-brand/90 font-bold">[{log.date}]</span>
+                <span className="text-slate-400 font-bold">&gt;</span>
+                <span className="text-slate-200 flex-1 break-all font-medium">{log.text}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+      </div>
+
+      {/* Floating Badges overlapping the edges */}
+      <div className="absolute top-[2%] right-[-15px] rounded-2xl border border-brand/30 bg-[#0A0A0F]/95 p-3.5 shadow-[0_15px_30px_rgba(0,0,0,0.6)] max-w-[145px] z-10 transition-transform duration-300 hover:scale-105 backdrop-blur-xl">
+        <div className="flex items-center gap-1.5 mb-1.5">
+          <TrendingUp className="w-3.5 h-3.5 text-brand" />
+          <span className="text-[8px] font-bold text-white uppercase tracking-wider">Growth rate</span>
+        </div>
+        <div
+          className="text-base font-bold font-mono leading-none mb-1 transition-colors duration-[800ms]"
+          style={{ color: themeColor }}
+        >
+          {isUpTrend ? "+142.8%" : "-15.4%"}
+        </div>
+        <p className="text-[8px] text-slate-300 leading-normal font-mono font-medium">
+          {isUpTrend ? "Automation saves 12x time" : "Downside correction period"}
+        </p>
       </div>
     </div>
   );

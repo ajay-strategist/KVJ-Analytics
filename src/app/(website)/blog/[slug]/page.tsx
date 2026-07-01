@@ -1,19 +1,27 @@
 import React from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
-import { ArrowLeft, Calendar, User, Tag } from "lucide-react";
-import { PortableText } from "@portabletext/react";
+import { ArrowLeft, Calendar, User } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { Section } from "@/components/ui/Section";
-import { Eyebrow } from "@/components/ui/Eyebrow";
 import { BoldStatement } from "@/components/ui/BoldStatement";
 import { Card } from "@/components/ui/Card";
-import { client } from "@/sanity/lib/client";
-import { postBySlugQuery } from "@/sanity/lib/queries";
-import { urlFor } from "@/sanity/lib/image";
+import { supabase } from "@/lib/supabase";
+import { pageMeta, SITE_URL } from "@/lib/seo";
 
 export const revalidate = 3600;
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  let title = "Article";
+  let description = "Insights from KVJ Analytics.";
+  let image: string | undefined;
+  try {
+    const { data } = await supabase.from("blog_posts").select("title, description, cover_url").eq("slug", slug).maybeSingle();
+    if (data) { title = data.title; description = data.description || description; image = data.cover_url || undefined; }
+  } catch {}
+  return pageMeta({ title, description, path: `/blog/${slug}`, image });
+}
 
 const FALLBACK_POSTS: Record<string, { title: string; date: string; category: string; catSlug: string; author: string; authorSlug: string; body: string[] }> = {
   "excel-reports-automation": {
@@ -66,10 +74,19 @@ export default async function BlogPostDetailPage({
 }) {
   const { slug } = await params;
 
-  // Query Sanity for post
-  const post = await client
-    .fetch(postBySlugQuery, { slug })
-    .catch(() => null);
+  // Fetch post from Supabase `blog_posts`
+  let post: any = null;
+  try {
+    const { data } = await supabase
+      .from("blog_posts")
+      .select("*")
+      .eq("slug", slug)
+      .eq("is_published", true)
+      .maybeSingle();
+    post = data || null;
+  } catch {
+    post = null;
+  }
 
   const fallback = FALLBACK_POSTS[slug];
 
@@ -78,11 +95,14 @@ export default async function BlogPostDetailPage({
   }
 
   const title = post?.title || fallback.title;
-  const dateStr = post?.publishedAt || fallback.date;
-  const authorName = post?.author?.name || fallback.author;
-  const authorSlug = post?.author?.slug || fallback.authorSlug;
-  const categoryTitle = post?.category?.title || fallback.category;
-  const categorySlug = post?.category?.slug || fallback.catSlug;
+  const dateStr = post?.published_at || fallback.date;
+  const authorName = post?.author_name || fallback.author;
+  const authorSlug = post?.author_slug || fallback.authorSlug;
+  const categoryTitle = post?.category_title || fallback.category;
+  const categorySlug = post?.category_slug || fallback.catSlug;
+  const coverUrl = post?.cover_url || null;
+  const bodyHtml = post?.body_html || null;
+  const authorBio = post?.author_bio || null;
   
   const formatDate = (d: string) => {
     return new Date(d).toLocaleDateString("en-IN", {
@@ -99,6 +119,20 @@ export default async function BlogPostDetailPage({
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-radial-glow opacity-80 pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-radial-glow-teal opacity-60 pointer-events-none" />
 
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "BlogPosting",
+          headline: title,
+          datePublished: dateStr,
+          author: { "@type": "Person", name: authorName },
+          publisher: { "@type": "Organization", name: "KVJ Analytics", logo: { "@type": "ImageObject", url: `${SITE_URL}/logo.png` } },
+          image: coverUrl ? [coverUrl] : undefined,
+          articleSection: categoryTitle,
+          mainEntityOfPage: `${SITE_URL}/blog/${slug}`,
+        }) }}
+      />
       <Container className="relative z-10">
         {/* Back Link */}
         <Link
@@ -116,12 +150,11 @@ export default async function BlogPostDetailPage({
           <article className="max-w-3xl mx-auto">
             {/* Cover Image */}
             <div className="overflow-hidden rounded-card aspect-[16/9] relative mb-8 bg-brand/5 border border-line/80">
-              {post?.coverImage ? (
-                <Image
-                  src={urlFor(post.coverImage).url()}
+              {coverUrl ? (
+                <img
+                  src={coverUrl}
                   alt={title}
-                  fill
-                  className="object-cover"
+                  className="absolute inset-0 w-full h-full object-cover"
                 />
               ) : (
                 <div className="absolute inset-0 signature-gradient opacity-90 flex items-center justify-center text-white p-8">
@@ -159,21 +192,22 @@ export default async function BlogPostDetailPage({
               {title}
             </BoldStatement>
 
-            {/* Content Body */}
-            {post?.body ? (
-              <div className="prose prose-slate prose-lg max-w-none text-slate leading-relaxed space-y-6 font-medium">
-                <PortableText value={post.body} />
-              </div>
+            {/* Content Body (HTML from admin) */}
+            {bodyHtml ? (
+              <div
+                className="prose prose-slate prose-lg max-w-none text-slate leading-relaxed space-y-6 font-medium"
+                dangerouslySetInnerHTML={{ __html: bodyHtml }}
+              />
             ) : (
               <div className="text-slate leading-relaxed space-y-6 text-base md:text-lg font-medium">
-                {fallback.body.map((p, idx) => (
+                {(fallback?.body || []).map((p, idx) => (
                   <p key={idx}>{p}</p>
                 ))}
               </div>
             )}
 
             {/* Author Bio Box */}
-            {post?.author?.bio || fallback.authorSlug === "k-v-jacob" ? (
+            {authorBio || authorName ? (
               <div className="mt-16 p-8 bg-surface/50 border border-line rounded-card flex flex-col sm:flex-row items-center sm:items-start gap-6 shadow-sm animate-fade-up">
                 <div className="w-16 h-16 rounded-full bg-brand/10 flex items-center justify-center shrink-0 font-bold text-xl text-brand font-display border border-brand/20 shadow-sm">
                   {authorName[0]}
@@ -183,7 +217,7 @@ export default async function BlogPostDetailPage({
                     About {authorName}
                   </h4>
                   <p className="text-sm text-slate leading-relaxed">
-                    {post?.author?.bio ||
+                    {authorBio ||
                       "Founder & Director of KVJ Analytics. Leads corporate reporting automation consultancies and university practical analytics certifications across Cochin, UAE, Oman, and USA."}
                   </p>
                 </div>

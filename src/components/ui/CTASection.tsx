@@ -57,22 +57,34 @@ export function CTASection({
       {/* ambient accent glows */}
       <div className="bg-radial-glow pointer-events-none absolute left-1/2 top-0 h-[34rem] w-[44rem] -translate-x-1/2 -translate-y-1/3 opacity-30" />
       <div className="bg-radial-glow-teal pointer-events-none absolute -bottom-32 right-[8%] h-[24rem] w-[24rem] opacity-30" />
-      <Container className="relative z-10 text-center flex flex-col items-center">
-        <BoldStatement variant="h2" className="mb-6 max-w-3xl text-white">
-          {title}
-        </BoldStatement>
-        <p className="text-[17px] md:text-[19px] font-light text-white/70 max-w-2xl leading-relaxed mb-10">
-          {description}
-        </p>
-        <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
-          <Button href={primaryCtaHref} variant="accent" className="w-full sm:w-auto">
-            {primaryCtaText}
-          </Button>
-          {secondaryCtaText && secondaryCtaHref && (
-            <Button href={secondaryCtaHref} variant="secondary" className="w-full sm:w-auto !text-white hover:!text-[#00F0FF]">
-              {secondaryCtaText} →
-            </Button>
-          )}
+      <Container className="relative z-10 flex flex-col items-center justify-center">
+        <div className="relative w-full max-w-5xl rounded-[2.5rem] border border-white/5 bg-[#0A0A0C]/50 backdrop-blur-2xl px-6 py-16 md:px-16 md:py-24 text-center shadow-[0_8px_40px_rgba(0,0,0,0.6)] overflow-hidden group hover:border-white/10 transition-colors duration-500">
+          
+          {/* Subtle inner animated gradient background */}
+          <div className="absolute inset-0 bg-gradient-to-br from-brand/5 via-transparent to-corporate/5 opacity-40 group-hover:opacity-70 transition-opacity duration-700" />
+          
+          <div className="relative z-10 flex flex-col items-center">
+            <BoldStatement variant="h2" className="mb-6 max-w-3xl">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand to-corporate">
+                {title}
+              </span>
+            </BoldStatement>
+            
+            <p className="text-[17px] md:text-[19px] font-light text-slate max-w-2xl leading-relaxed mb-10">
+              {description}
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-5 items-center justify-center w-full sm:w-auto">
+              <Button href={primaryCtaHref} variant="accent" className="w-full sm:w-auto min-w-[180px]">
+                {primaryCtaText}
+              </Button>
+              {secondaryCtaText && secondaryCtaHref && (
+                <Button href={secondaryCtaHref} variant="secondary" className="w-full sm:w-auto min-w-[180px]">
+                  {secondaryCtaText} →
+                </Button>
+              )}
+            </div>
+          </div>
         </div>
       </Container>
     </div>

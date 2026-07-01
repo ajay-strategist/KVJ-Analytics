@@ -1,27 +1,41 @@
 import type { Metadata } from "next";
-import { Space_Grotesk, Inter } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { SmoothScroll } from "@/components/SmoothScroll";
+import { Analytics } from "@/components/Analytics";
+import { SITE_URL, SITE_NAME, organizationSchema } from "@/lib/seo";
 
-// Premium dark theme pairing: Space Grotesk (display/headings) + Inter (body).
-const spaceGrotesk = Space_Grotesk({
+// Webandcrafts primary font pairing: Plus Jakarta Sans for both display and body.
+const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
-  variable: "--font-space",
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-});
-
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-  weight: ["300", "400", "500", "600"],
+  variable: "--font-plus-jakarta",
+  weight: ["300", "400", "500", "600", "700", "800"],
   display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "KVJ Analytics | Analytics, Automation, Training & EdTech",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "KVJ Analytics | Power BI, Excel & Report Automation Training & Consulting",
+    template: "%s | KVJ Analytics",
+  },
   description:
-    "Empowering businesses and institutions through custom reports automation, Power BI dashboards, spreadsheet consulting, and industry-oriented skill training.",
+    "KVJ Analytics delivers Power BI dashboards, Excel & report automation, and data analytics consulting — plus corporate, college & individual training. 16+ years, based in Cochin, serving India, UAE, Oman, USA & Europe.",
+  keywords: [
+    "Power BI training", "Excel training", "report automation", "data analytics consulting",
+    "corporate training", "college training", "Power BI consulting", "dashboard development",
+    "business intelligence", "Excel automation", "Cochin", "Kerala", "KVJ Analytics",
+  ],
+  alternates: { canonical: SITE_URL },
+  openGraph: {
+    type: "website", locale: "en_IN", url: SITE_URL, siteName: SITE_NAME,
+    title: "KVJ Analytics | Power BI, Excel & Report Automation Training & Consulting",
+    description:
+      "Power BI dashboards, Excel & report automation, analytics consulting, and corporate/college/individual training. Talk to KVJ Analytics.",
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "KVJ Analytics" }],
+  },
+  twitter: { card: "summary_large_image", title: "KVJ Analytics", description: "Power BI, Excel & report automation training and consulting." },
+  robots: { index: true, follow: true, googleBot: { index: true, follow: true, "max-image-preview": "large" } },
   icons: {
     icon: [
       { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
@@ -40,11 +54,16 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${spaceGrotesk.variable} ${inter.variable} h-full antialiased`}
+      className={`${plusJakartaSans.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-base text-ink font-body">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema()) }}
+        />
         <SmoothScroll />
         {children}
+        <Analytics />
       </body>
     </html>
   );

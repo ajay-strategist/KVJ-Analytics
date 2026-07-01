@@ -43,29 +43,30 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 1. Fetch course details from Sanity to lock the price
-    const course = await sanityClient.fetch(
-      `*[_type == "course" && slug.current == $slug][0] {
-        title,
-        priceINR,
-        isPaid
-      }`,
-      { slug: courseSlug }
-    );
+    // 1. Fetch course details from Supabase to lock the price
+    const { data: course, error: courseFetchError } = await supabaseAdmin
+      .from("courses")
+      .select("title, fee_inr, offer_price_inr, is_paid")
+      .eq("slug", courseSlug)
+      .maybeSingle();
 
-    if (!course) {
+    if (courseFetchError || !course) {
       return NextResponse.json(
         { error: "Course not found." },
         { status: 404 }
       );
     }
 
-    if (!course.isPaid) {
+    if (!course.is_paid) {
       return NextResponse.json(
         { error: "This course is free or code-gated, payment is not required." },
         { status: 400 }
       );
     }
+
+    const price = course.offer_price_inr !== null && course.offer_price_inr !== undefined
+      ? Number(course.offer_price_inr)
+      : Number(course.fee_inr);
 
     // 2. Generate Razorpay Order
     if (!razorpay) {
@@ -78,7 +79,7 @@ export async function POST(req: NextRequest) {
         {
           user_id: userId,
           course_slug: courseSlug,
-          amount: course.priceINR,
+          amount: price,
           currency: "INR",
           razorpay_order_id: mockOrderId,
           status: "pending",
@@ -91,7 +92,7 @@ export async function POST(req: NextRequest) {
 
       return NextResponse.json({
         id: mockOrderId,
-        amount: Math.round(course.priceINR * 100),
+        amount: Math.round(price * 100),
         currency: "INR",
         key: "rzp_test_placeholder",
         mock: true,
@@ -99,7 +100,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Standard order options
-    const amountInPaise = Math.round(course.priceINR * 100);
+    const amountInPaise = Math.round(price * 100);
     const options = {
       amount: amountInPaise,
       currency: "INR",
@@ -113,7 +114,7 @@ export async function POST(req: NextRequest) {
       {
         user_id: userId,
         course_slug: courseSlug,
-        amount: course.priceINR,
+        amount: price,
         currency: "INR",
         razorpay_order_id: order.id,
         status: "pending",

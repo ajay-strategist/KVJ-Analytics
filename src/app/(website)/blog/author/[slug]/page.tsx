@@ -7,8 +7,7 @@ import { Section } from "@/components/ui/Section";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { BoldStatement } from "@/components/ui/BoldStatement";
 import { Card } from "@/components/ui/Card";
-import { client } from "@/sanity/lib/client";
-import { authorBySlugQuery, postsByAuthorQuery } from "@/sanity/lib/queries";
+import { supabase } from "@/lib/supabase";
 
 export const revalidate = 3600;
 
@@ -53,30 +52,41 @@ export default async function AuthorFilterPage({
 }) {
   const { slug } = await params;
 
-  // Query author info
-  const authorInfo = await client
-    .fetch(authorBySlugQuery, { slug })
-    .catch(() => null);
+  // Posts by this author from Supabase
+  let postsData: any[] | null = null;
+  let dbAuthor: { name?: string; bio?: string } | null = null;
+  try {
+    const { data } = await supabase
+      .from("blog_posts")
+      .select("*")
+      .eq("author_slug", slug)
+      .eq("is_published", true)
+      .order("published_at", { ascending: false });
+    if (data) {
+      postsData = data.map((r: any) => ({
+        title: r.title,
+        slug: r.slug,
+        publishedAt: r.published_at,
+        author: { name: r.author_name || "KVJ Analytics", slug: r.author_slug },
+        category: { title: r.category_title, slug: r.category_slug },
+        description: r.description || "",
+      }));
+      if (data[0]) dbAuthor = { name: data[0].author_name, bio: data[0].author_bio };
+    }
+  } catch {
+    postsData = null;
+  }
 
   const fallbackAuthor = FALLBACK_AUTHORS[slug];
+  const fallbackFiltered = FALLBACK_POSTS.filter((p) => p.author.slug === slug);
 
-  if (!authorInfo && !fallbackAuthor) {
+  if ((!postsData || postsData.length === 0) && !fallbackAuthor && fallbackFiltered.length === 0) {
     notFound();
   }
 
-  // Query posts matching author
-  const postsData = await client
-    .fetch(postsByAuthorQuery, { slug })
-    .catch(() => null);
-
-  const name = authorInfo?.name || fallbackAuthor.name;
-  const bio = authorInfo?.bio || fallbackAuthor.bio;
-
-  // Filter fallback posts
-  const posts =
-    postsData && postsData.length > 0
-      ? postsData
-      : FALLBACK_POSTS.filter((p) => p.author.slug === slug);
+  const posts = postsData && postsData.length > 0 ? postsData : fallbackFiltered;
+  const name = dbAuthor?.name || fallbackAuthor?.name || posts[0]?.author?.name || "KVJ Analytics";
+  const bio = dbAuthor?.bio || fallbackAuthor?.bio || "Contributor at KVJ Analytics.";
 
   return (
     <Section background="default" className="bg-surface/30 relative overflow-hidden py-16 md:py-24">

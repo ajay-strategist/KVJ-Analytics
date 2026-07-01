@@ -4,8 +4,14 @@ import { Section } from "@/components/ui/Section";
 import { BoldStatement } from "@/components/ui/BoldStatement";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { Card } from "@/components/ui/Card";
+import { getPageContent } from "@/lib/content";
+import { FALLBACK_PRIVACY } from "@/lib/constants";
 
-export default function PrivacyPage() {
+export const revalidate = 3600;
+
+export default async function PrivacyPage() {
+  const stored = (await getPageContent("privacy")) as Record<string, any> | null;
+  const page = { ...FALLBACK_PRIVACY, ...(stored || {}) };
   return (
     <Section background="default" className="bg-surface/30 relative overflow-hidden py-16 md:py-24">
       {/* Background grid pattern */}
@@ -17,12 +23,18 @@ export default function PrivacyPage() {
           <div className="absolute top-0 left-0 right-0 h-1 signature-gradient" />
 
           <div className="max-w-3xl mx-auto">
-            <Eyebrow className="mb-2">Legal Information</Eyebrow>
+            <Eyebrow className="mb-2">{page.eyebrow}</Eyebrow>
             <BoldStatement variant="h1" className="mb-4 text-ink leading-tight tracking-tight">
-              Privacy Policy
+              {page.heading}
             </BoldStatement>
-            <p className="text-sm text-slate mb-8 border-b border-line pb-4 font-medium">Last Updated: June 18, 2026</p>
-            
+            <p className="text-sm text-slate mb-8 border-b border-line pb-4 font-medium">{page.lastUpdated}</p>
+
+            {page.bodyHtml ? (
+              <div
+                className="prose prose-slate max-w-none text-slate leading-relaxed text-base font-medium space-y-6"
+                dangerouslySetInnerHTML={{ __html: page.bodyHtml }}
+              />
+            ) : (
             <div className="space-y-6 text-slate leading-relaxed text-base font-medium">
               <p>
                 At KVJ Analytics, we respect your privacy and are committed to protecting the personal data we hold. This Privacy Policy details how we collect, use, and safeguard student and organization information when you use our website, enroll in certification programs, or use our platforms Grade Scope and Protrix.
@@ -48,6 +60,7 @@ export default function PrivacyPage() {
                 You have the right to request access to your profile data, review Mock Test scores, and request modifications or data removal by contacting us at info@kvjanalytics.in.
               </p>
             </div>
+            )}
           </div>
         </Card>
       </Container>

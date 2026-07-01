@@ -90,11 +90,11 @@ const ScrollDrawCheckmark = ({ delay }: { delay: number }) => {
 // Python Course: Matrix code rain + rotating Python logo
 function PythonCourseHologram() {
   return (
-    <div className="relative w-full h-36 rounded-xl overflow-hidden bg-slate-50 border border-slate-200/80 mb-5 flex items-center justify-center">
+    <div className="relative w-full h-36 rounded-xl overflow-hidden bg-[#08080A]/60 border border-white/5 mb-5 flex items-center justify-center">
       {/* Matrix rain background */}
       <div className="absolute inset-0 opacity-[0.08] pointer-events-none z-0 overflow-hidden">
         <svg className="w-full h-full" viewBox="0 0 160 100">
-          <g fontSize="6" fontFamily="monospace" fill="#2563EB" className="animate-[fade-up-data_3s_linear_infinite]">
+          <g fontSize="6" fontFamily="monospace" fill="#00F0FF" className="animate-[fade-up-data_3s_linear_infinite]">
             <text x="10" y="20">010101</text>
             <text x="10" y="40">110010</text>
             <text x="10" y="60">001101</text>
@@ -104,7 +104,7 @@ function PythonCourseHologram() {
             <text x="70" y="30">IMPORT</text>
             <text x="70" y="50">DEF</text>
           </g>
-          <g fontSize="6" fontFamily="monospace" fill="#06B6D4" className="animate-[fade-up-data_2.5s_linear_infinite_0.5s]">
+          <g fontSize="6" fontFamily="monospace" fill="#0072FF" className="animate-[fade-up-data_2.5s_linear_infinite_0.5s]">
             <text x="130" y="25">EXEC</text>
             <text x="130" y="45">VAR</text>
             <text x="130" y="65">LOOP</text>
@@ -125,7 +125,7 @@ function PythonCourseHologram() {
         </defs>
         <g filter="url(#pyGlow)" style={{ transformOrigin: "50px 50px" }}>
           {/* Upper Snake (Blue) */}
-          <path d="M50,15 C30,15 32,28 32,28 L32,38 L51,38 C56,38 60,42 60,47 L60,65 C60,65 75,63 75,48 C75,32 70,15 50,15 Z" fill="#2563EB" />
+          <path d="M50,15 C30,15 32,28 32,28 L32,38 L51,38 C56,38 60,42 60,47 L60,65 C60,65 75,63 75,48 C75,32 70,15 50,15 Z" fill="#0072FF" />
           {/* Lower Snake (Gold) */}
           <path d="M50,85 C70,85 68,72 68,72 L68,62 L49,62 C44,62 40,58 40,53 L40,35 C40,35 25,37 25,52 C25,68 30,85 50,85 Z" fill="#D4AF37" />
           {/* Eyes */}
@@ -140,11 +140,11 @@ function PythonCourseHologram() {
 // Power BI Course: Rising 3D Columns
 function PowerBICourseHologram() {
   return (
-    <div className="relative w-full h-36 rounded-xl overflow-hidden bg-slate-50 border border-slate-200/80 mb-5 flex items-center justify-center">
+    <div className="relative w-full h-36 rounded-xl overflow-hidden bg-[#08080A]/60 border border-white/5 mb-5 flex items-center justify-center">
       <svg viewBox="0 0 120 80" className="w-20 h-20 overflow-visible">
         <g transform="translate(60, 45) rotate(-20) skewX(20) scale(0.9)">
           {/* Base Plate */}
-          <polygon points="-30,-20 30,-20 30,20 -30,20" fill="none" stroke="rgba(11, 31, 58, 0.1)" strokeWidth="1" />
+          <polygon points="-30,-20 30,-20 30,20 -30,20" fill="none" stroke="rgba(0, 240, 255, 0.2)" strokeWidth="1" />
           
           {/* Rising Bars */}
           <g className="animate-[bar-grow_3s_ease-in-out_infinite_0.1s]" style={{ transformOrigin: "-17px 0px" }}>
@@ -158,8 +158,8 @@ function PowerBICourseHologram() {
           </g>
           
           {/* Trend line */}
-          <path d="M -17 -10 Q -5 -20 7 -30" fill="none" stroke="#06B6D4" strokeWidth="1.5" />
-          <circle cx="7" cy="-30" r="1.5" fill="#FFFFFF" stroke="#06B6D4" strokeWidth="0.5" />
+          <path d="M -17 -10 Q -5 -20 7 -30" fill="none" stroke="#00F0FF" strokeWidth="1.5" />
+          <circle cx="7" cy="-30" r="1.5" fill="#FFFFFF" />
         </g>
       </svg>
     </div>
@@ -169,25 +169,25 @@ function PowerBICourseHologram() {
 // Excel Course: Pulsing grid sheet
 function ExcelCourseHologram() {
   return (
-    <div className="relative w-full h-36 rounded-xl overflow-hidden bg-slate-50 border border-slate-200/80 mb-5 flex items-center justify-center">
+    <div className="relative w-full h-36 rounded-xl overflow-hidden bg-[#08080A]/60 border border-white/5 mb-5 flex items-center justify-center">
       <svg viewBox="0 0 100 80" className="w-16 h-16 overflow-visible">
         {/* Grid body */}
         <rect x="10" y="10" width="80" height="60" rx="4" fill="none" stroke="#10B981" strokeWidth="1.5" />
         {/* Grid lines */}
-        <line x1="30" y1="10" x2="30" y2="70" stroke="rgba(16, 185, 129, 0.2)" strokeWidth="1" />
-        <line x1="55" y1="10" x2="55" y2="70" stroke="rgba(16, 185, 129, 0.2)" strokeWidth="1" />
-        <line x1="80" y1="10" x2="80" y2="70" stroke="rgba(16, 185, 129, 0.2)" strokeWidth="1" />
+        <line x1="30" y1="10" x2="30" y2="70" stroke="rgba(16, 185, 129, 0.3)" strokeWidth="1" />
+        <line x1="55" y1="10" x2="55" y2="70" stroke="rgba(16, 185, 129, 0.3)" strokeWidth="1" />
+        <line x1="80" y1="10" x2="80" y2="70" stroke="rgba(16, 185, 129, 0.3)" strokeWidth="1" />
         
-        <line x1="10" y1="25" x2="90" y2="25" stroke="rgba(16, 185, 129, 0.2)" strokeWidth="1" />
-        <line x1="10" y1="40" x2="90" y2="40" stroke="rgba(16, 185, 129, 0.2)" strokeWidth="1" />
-        <line x1="10" y1="55" x2="90" y2="55" stroke="rgba(16, 185, 129, 0.2)" strokeWidth="1" />
+        <line x1="10" y1="25" x2="90" y2="25" stroke="rgba(16, 185, 129, 0.3)" strokeWidth="1" />
+        <line x1="10" y1="40" x2="90" y2="40" stroke="rgba(16, 185, 129, 0.3)" strokeWidth="1" />
+        <line x1="10" y1="55" x2="90" y2="55" stroke="rgba(16, 185, 129, 0.3)" strokeWidth="1" />
 
         {/* Pulsing active nodes */}
         <circle cx="42.5" cy="32.5" r="2.5" fill="#D4AF37" className="animate-ping" />
         <circle cx="42.5" cy="32.5" r="2" fill="#D4AF37" />
         
-        <circle cx="67.5" cy="47.5" r="2.5" fill="#06B6D4" className="animate-pulse" />
-        <circle cx="67.5" cy="47.5" r="2" fill="#06B6D4" />
+        <circle cx="67.5" cy="47.5" r="2.5" fill="#00F0FF" className="animate-pulse" />
+        <circle cx="67.5" cy="47.5" r="2" fill="#00F0FF" />
       </svg>
     </div>
   );
@@ -196,19 +196,19 @@ function ExcelCourseHologram() {
 // Generic fallback course hologram
 function DefaultCourseHologram() {
   return (
-    <div className="relative w-full h-36 rounded-xl overflow-hidden bg-slate-50 border border-slate-200/80 mb-5 flex items-center justify-center">
+    <div className="relative w-full h-36 rounded-xl overflow-hidden bg-[#08080A]/60 border border-white/5 mb-5 flex items-center justify-center">
       <svg viewBox="0 0 100 80" className="w-16 h-16 overflow-visible">
-        <circle cx="50" cy="40" r="25" fill="none" stroke="rgba(11, 31, 58, 0.06)" strokeWidth="1.2" strokeDasharray="3, 3" />
+        <circle cx="50" cy="40" r="25" fill="none" stroke="rgba(0, 240, 255, 0.15)" strokeWidth="1.2" strokeDasharray="3, 3" />
         <g className="animate-[spin_12s_linear_infinite]" style={{ transformOrigin: "50px 40px" }}>
-          <line x1="50" y1="40" x2="25" y2="25" stroke="rgba(11, 31, 58, 0.08)" strokeWidth="1" />
-          <line x1="50" y1="40" x2="75" y2="25" stroke="rgba(11, 31, 58, 0.08)" strokeWidth="1" />
-          <line x1="50" y1="40" x2="50" y2="65" stroke="rgba(11, 31, 58, 0.08)" strokeWidth="1" />
+          <line x1="50" y1="40" x2="25" y2="25" stroke="rgba(0, 114, 255, 0.3)" strokeWidth="1" />
+          <line x1="50" y1="40" x2="75" y2="25" stroke="rgba(0, 114, 255, 0.3)" strokeWidth="1" />
+          <line x1="50" y1="40" x2="50" y2="65" stroke="rgba(0, 114, 255, 0.3)" strokeWidth="1" />
           
-          <circle cx="25" cy="25" r="4.5" fill="white" stroke="#2563EB" strokeWidth="1.5" />
-          <circle cx="75" cy="25" r="4.5" fill="white" stroke="#D4AF37" strokeWidth="1.5" />
-          <circle cx="50" cy="65" r="4.5" fill="white" stroke="#06B6D4" strokeWidth="1.5" />
+          <circle cx="25" cy="25" r="4.5" fill="#050505" stroke="#0072FF" strokeWidth="1.5" />
+          <circle cx="75" cy="25" r="4.5" fill="#050505" stroke="#D4AF37" strokeWidth="1.5" />
+          <circle cx="50" cy="65" r="4.5" fill="#050505" stroke="#00F0FF" strokeWidth="1.5" />
         </g>
-        <circle cx="50" cy="40" r="5" fill="#06B6D4" className="animate-pulse" />
+        <circle cx="50" cy="40" r="5" fill="#00F0FF" className="animate-pulse" />
       </svg>
     </div>
   );
@@ -224,9 +224,37 @@ const FLOATING_CLASSES = [
   "animate-[float-tag-1_7s_ease-in-out_infinite_3s]",
 ];
 
-export function TrainingClientContent({ courses }: { courses: Course[] }) {
+interface TrainingContent {
+  eyebrow?: string;
+  heading?: string;
+  strapline?: string;
+  intro?: string;
+  exploreLabel?: string;
+  trainingAreasTitle?: string;
+  trainingAreas?: string[];
+  approachTitle?: string;
+  approach?: string[];
+  coursesEyebrow?: string;
+  coursesHeading?: string;
+}
+
+export function TrainingClientContent({ courses, content }: { courses: Course[]; content?: TrainingContent }) {
+  // Editable content with safe fallbacks (admin-managed via CMS)
+  const c = {
+    eyebrow: content?.eyebrow || "Training & Academy",
+    heading: content?.heading || "Training & Skill Development",
+    strapline: content?.strapline || "Practical Learning With Industry Relevance",
+    intro: content?.intro || "Our programs are designed to build real-world skills through hands-on learning, live datasets, and practical assignments.",
+    exploreLabel: content?.exploreLabel || "Explore Our Courses",
+    trainingAreasTitle: content?.trainingAreasTitle || "Training Areas",
+    trainingAreas: content?.trainingAreas?.length ? content.trainingAreas : TRAINING_AREAS,
+    approachTitle: content?.approachTitle || "Our Approach",
+    approach: content?.approach?.length ? content.approach : OUR_APPROACH,
+    coursesEyebrow: content?.coursesEyebrow || "Active Programs",
+    coursesHeading: content?.coursesHeading || "Explore Our Courses",
+  };
   return (
-    <div className="w-full bg-[#FAFAFC] text-[#0F172A] relative min-h-screen">
+    <div className="w-full bg-[#050505] text-slate-100 relative min-h-screen">
       {/* Page-wide training keyframes */}
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes float-tag-1 {
@@ -242,46 +270,44 @@ export function TrainingClientContent({ courses }: { courses: Course[] }) {
           50% { transform: translateY(-6px) rotate(2deg); }
         }
         .btn-magnetic-gold {
-          border-color: rgba(11, 31, 58, 0.1) !important;
-          color: #0F172A !important;
+          border-color: rgba(255, 255, 255, 0.08) !important;
           transition: all 0.3s ease !important;
         }
         .btn-magnetic-gold:hover {
           border-color: #D4AF37 !important;
           color: #D4AF37 !important;
-          box-shadow: 0 0 15px rgba(212, 175, 55, 0.2) !important;
+          box-shadow: 0 0 15px rgba(212, 175, 55, 0.25) !important;
           background: rgba(212, 175, 55, 0.05) !important;
         }
       `}} />
 
       {/* ───── HERO + INFO ───── */}
-      <section className="relative overflow-hidden pt-28 pb-20 md:pb-28 border-b border-slate-100">
-        <div className="blob animate-blob absolute -top-24 right-[-4rem] w-[30rem] h-[30rem] bg-brand/5 pointer-events-none blur-[100px]" />
-        <div className="blob animate-blob absolute bottom-[-6rem] left-[-4rem] w-[24rem] h-[24rem] bg-corporate/4 pointer-events-none blur-[90px]" style={{ animationDelay: "4s" }} />
+      <section className="relative overflow-hidden pt-28 pb-20 md:pb-28 border-b border-white/5">
+        <div className="blob animate-blob absolute -top-24 right-[-4rem] w-[30rem] h-[30rem] bg-brand/10 pointer-events-none blur-[100px]" />
+        <div className="blob animate-blob absolute bottom-[-6rem] left-[-4rem] w-[24rem] h-[24rem] bg-corporate/8 pointer-events-none blur-[90px]" style={{ animationDelay: "4s" }} />
 
         <Container className="relative z-10">
           <div className="max-w-3xl mx-auto text-center mb-16">
             <Reveal>
               <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-brand px-3.5 py-1.5 bg-brand/10 rounded-full w-fit border border-brand/20 mx-auto block mb-6">
-                Training &amp; Academy
+                {c.eyebrow}
               </span>
             </Reveal>
             <RevealText
               as="h1"
-              text="Training & Skill Development"
-              className="font-display font-bold text-4xl sm:text-5xl lg:text-6xl leading-[1.08] tracking-tight text-[#0B1F3A] mb-5"
+              text={c.heading}
+              className="font-display font-bold text-4xl sm:text-5xl lg:text-6xl leading-[1.08] tracking-tight text-white mb-5"
             />
             <Reveal delay={150}>
               <p className="text-xl md:text-2xl font-medium text-transparent bg-clip-text bg-gradient-to-r from-brand via-corporate to-brand animate-[signature-flow_6s_linear_infinite] bg-[size:200%_auto] mb-5">
-                Practical Learning With Industry Relevance
+                {c.strapline}
               </p>
-              <p className="text-lg text-slate-500 font-light leading-relaxed max-w-2xl mx-auto">
-                Our programs are designed to build real-world skills through hands-on learning, live
-                datasets, and practical assignments.
+              <p className="text-lg text-slate-400 font-light leading-relaxed max-w-2xl mx-auto">
+                {c.intro}
               </p>
               <div className="mt-8 flex justify-center">
                 <Button href="#courses" variant="accent">
-                  Explore Our Courses
+                  {c.exploreLabel}
                   <ChevronDown className="w-4 h-4 ml-1.5 inline-block" />
                 </Button>
               </div>
@@ -292,18 +318,18 @@ export function TrainingClientContent({ courses }: { courses: Course[] }) {
           <div className="grid lg:grid-cols-2 gap-8 max-w-5xl mx-auto items-start">
             
             {/* Left: Floating 3D Tag Cloud */}
-            <Reveal className="bg-white border border-[#0B1F3A]/8 rounded-[32px] p-8 sm:p-10 shadow-soft min-h-[340px]">
+            <Reveal className="bg-[#0A0A0C]/70 border border-white/5 rounded-[32px] p-8 sm:p-10 backdrop-blur-xl min-h-[340px]">
               <div className="flex items-center gap-3 mb-8">
                 <span className="grid place-items-center h-12 w-12 rounded-2xl bg-brand/10 border border-brand/20 text-brand">
                   <LayoutGrid className="w-6 h-6" />
                 </span>
-                <h2 className="text-2xl font-bold text-[#0B1F3A]">Training Areas</h2>
+                <h2 className="text-2xl font-bold text-white">{c.trainingAreasTitle}</h2>
               </div>
               <div className="flex flex-wrap gap-4 items-center justify-start relative py-4">
-                {TRAINING_AREAS.map((area, idx) => (
+                {c.trainingAreas.map((area, idx) => (
                   <span
                     key={area}
-                    className={`px-5 py-2.5 rounded-full text-xs font-mono font-bold uppercase tracking-wider bg-white text-brand border border-brand/20 cursor-default hover:border-brand hover:shadow-[0_0_15px_rgba(29,78,216,0.15)] hover:scale-105 transition-all duration-300 ${
+                    className={`px-5 py-2.5 rounded-full text-xs font-mono font-bold uppercase tracking-wider bg-[#0A0A0C] text-brand border border-brand/25 cursor-default hover:border-brand hover:shadow-[0_0_15px_rgba(0,240,255,0.4)] hover:scale-105 transition-all duration-300 ${
                       FLOATING_CLASSES[idx % FLOATING_CLASSES.length]
                     }`}
                   >
@@ -314,18 +340,18 @@ export function TrainingClientContent({ courses }: { courses: Course[] }) {
             </Reveal>
 
             {/* Right: Sequential Scroll checklist */}
-            <Reveal delay={120} className="bg-white border border-[#0B1F3A]/8 rounded-[32px] p-8 sm:p-10 shadow-soft min-h-[340px]">
+            <Reveal delay={120} className="bg-[#0A0A0C]/70 border border-white/5 rounded-[32px] p-8 sm:p-10 backdrop-blur-xl min-h-[340px]">
               <div className="flex items-center gap-3 mb-8">
                 <span className="grid place-items-center h-12 w-12 rounded-2xl bg-corporate/10 border border-corporate/20 text-corporate">
                   <Target className="w-6 h-6" />
                 </span>
-                <h2 className="text-2xl font-bold text-[#0B1F3A]">Our Approach</h2>
+                <h2 className="text-2xl font-bold text-white">{c.approachTitle}</h2>
               </div>
               <ul className="space-y-4">
-                {OUR_APPROACH.map((item, idx) => (
+                {c.approach.map((item, idx) => (
                   <li key={item} className="flex items-center gap-4">
                     <ScrollDrawCheckmark delay={idx * 150} />
-                    <span className="text-sm font-mono text-slate-600">{item}</span>
+                    <span className="text-sm font-mono text-slate-300">{item}</span>
                   </li>
                 ))}
               </ul>
@@ -336,14 +362,14 @@ export function TrainingClientContent({ courses }: { courses: Course[] }) {
       </section>
 
       {/* ───── COURSES CATALOG ───── */}
-      <section id="courses" className="py-24 relative bg-[#FAFAFC] scroll-mt-24">
+      <section id="courses" className="py-24 relative bg-[#050505] scroll-mt-24">
         <Container>
           <div className="text-center max-w-2xl mx-auto mb-16">
             <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-brand px-3 py-1 bg-brand/10 rounded-full border border-brand/20">
-              Active Programs
+              {c.coursesEyebrow}
             </span>
-            <h2 className="font-display font-bold text-3xl md:text-5xl text-[#0B1F3A] mt-5">
-              Explore Our Courses
+            <h2 className="font-display font-bold text-3xl md:text-5xl text-white mt-5">
+              {c.coursesHeading}
             </h2>
           </div>
 
@@ -366,7 +392,7 @@ function CourseCard({ course }: { course: Course }) {
   const isPython = course.slug.toLowerCase().includes("python");
 
   return (
-    <div className="bg-white border border-slate-200/80 rounded-[32px] p-6 shadow-soft hover:shadow-hover-lift hover:border-brand/35 flex flex-col h-full group transition-all duration-500 hover:-translate-y-2">
+    <div className="bg-[#0A0A0C]/75 border border-white/5 rounded-[32px] p-6 backdrop-blur-[24px] hover:border-brand/40 shadow-[0_8px_32px_rgba(0,0,0,0.4)] flex flex-col h-full group transition-all duration-500 hover:-translate-y-2">
       {/* 3D Hologram graphic header inside card */}
       {isPython ? (
         <PythonCourseHologram />
@@ -378,17 +404,17 @@ function CourseCard({ course }: { course: Course }) {
         <DefaultCourseHologram />
       )}
 
-      <h3 className="text-xl font-bold text-[#0B1F3A] mb-2 leading-snug group-hover:text-brand transition-colors duration-300">
+      <h3 className="text-xl font-bold text-white mb-2 leading-snug group-hover:text-brand transition-colors duration-300">
         {course.title}
       </h3>
-      <p className="text-xs text-slate-500 leading-relaxed font-light mb-6 flex-grow">{course.summary}</p>
+      <p className="text-xs text-slate-400 leading-relaxed font-light mb-6 flex-grow">{course.summary}</p>
 
-      <div className="border-t border-[#0B1F3A]/10 pt-4 flex items-center justify-between mt-auto">
+      <div className="border-t border-white/10 pt-4 flex items-center justify-between mt-auto">
         <div>
-          <span className="text-[9px] font-mono text-slate-600 uppercase tracking-[0.12em] block leading-none">
+          <span className="text-[9px] font-mono text-slate-500 uppercase tracking-[0.12em] block leading-none">
             {course.isPaid ? "Investment" : "Program Code"}
           </span>
-          <span className="text-base font-bold text-[#0B1F3A] font-mono mt-1.5 block">
+          <span className="text-base font-bold text-white font-mono mt-1.5 block">
             {course.isPaid ? `₹${course.priceINR}` : "Campus Access"}
           </span>
         </div>

@@ -94,12 +94,12 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
 
   if (success) {
     return (
-      <div className="bg-brand/5 border border-brand/20 rounded-[24px] p-8 text-center flex flex-col items-center w-full shadow-sm animate-fade-up">
+      <div className="bg-[#0072FF]/5 border border-[#0072FF]/30 rounded-[24px] p-8 text-center flex flex-col items-center w-full shadow-sm animate-fade-up">
         <CheckCircle2 className="w-16 h-16 text-brand mb-6" />
-        <h3 className="text-2xl font-bold font-display text-[#0B1F3A] mb-3">
+        <h3 className="text-2xl font-bold font-display text-white mb-3">
           Message Sent Successfully!
         </h3>
-        <p className="text-base text-slate-500 leading-relaxed mb-6 font-light">
+        <p className="text-base text-slate-400 leading-relaxed mb-6 font-light">
           Thank you for contacting KVJ Analytics. Our consulting team will review your interest and reach back to you within 24 hours.
         </p>
         <Button variant="secondary" onClick={() => setSuccess(false)}>
@@ -109,7 +109,7 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
     );
   }
 
-  const inputClasses = "peer w-full px-0 pt-6 pb-2 rounded-none border-b border-[#0B1F3A]/30 bg-transparent focus:border-b-brand text-[#0F172A] text-sm transition-all outline-none";
+  const inputClasses = "peer w-full px-0 pt-6 pb-2 rounded-none border-0 border-b border-white/10 bg-transparent focus:border-b-brand text-white text-sm transition-all outline-none";
 
   return (
     <form onSubmit={handleSubmit} className="w-full space-y-8 relative">
@@ -117,12 +117,12 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes blue-breath {
           0%, 100% {
-            box-shadow: 0 0 12px rgba(29, 78, 216, 0.2), 0 0 5px rgba(6, 182, 212, 0.1);
-            border-color: rgba(6, 182, 212, 0.3);
+            box-shadow: 0 0 12px rgba(0, 114, 255, 0.45), 0 0 5px rgba(0, 240, 255, 0.25);
+            border-color: rgba(0, 240, 255, 0.4);
           }
           50% {
-            box-shadow: 0 0 24px rgba(29, 78, 216, 0.4), 0 0 10px rgba(6, 182, 212, 0.2);
-            border-color: #06B6D4;
+            box-shadow: 0 0 28px rgba(0, 114, 255, 0.85), 0 0 15px rgba(0, 240, 255, 0.5);
+            border-color: #00F0FF;
           }
         }
         .btn-breathing-neon-blue {
@@ -156,7 +156,7 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
             className={`absolute left-0 top-4 text-xs font-bold uppercase tracking-wider transition-all pointer-events-none origin-left ${
               focusedField === "name" || formData.name
                 ? "transform -translate-y-2.5 scale-75 text-brand"
-                : "transform translate-y-0 scale-100 text-slate-700"
+                : "transform translate-y-0 scale-100 text-slate-500"
             }`}
           >
             Your Name *
@@ -181,7 +181,7 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
             className={`absolute left-0 top-4 text-xs font-bold uppercase tracking-wider transition-all pointer-events-none origin-left ${
               focusedField === "organization" || formData.organization
                 ? "transform -translate-y-2.5 scale-75 text-brand"
-                : "transform translate-y-0 scale-100 text-slate-700"
+                : "transform translate-y-0 scale-100 text-slate-500"
             }`}
           >
             Organization Name *
@@ -208,7 +208,7 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
             className={`absolute left-0 top-4 text-xs font-bold uppercase tracking-wider transition-all pointer-events-none origin-left ${
               focusedField === "email" || formData.email
                 ? "transform -translate-y-2.5 scale-75 text-brand"
-                : "transform translate-y-0 scale-100 text-slate-700"
+                : "transform translate-y-0 scale-100 text-slate-500"
             }`}
           >
             Email Address *
@@ -233,7 +233,7 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
             className={`absolute left-0 top-4 text-xs font-bold uppercase tracking-wider transition-all pointer-events-none origin-left ${
               focusedField === "phone" || formData.phone
                 ? "transform -translate-y-2.5 scale-75 text-brand"
-                : "transform translate-y-0 scale-100 text-slate-700"
+                : "transform translate-y-0 scale-100 text-slate-500"
             }`}
           >
             Phone Number *
@@ -251,30 +251,30 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
           onChange={handleChange}
           onFocus={() => setFocusedField("serviceInterest")}
           onBlur={() => setFocusedField("")}
-          className="peer w-full px-0 pt-6 pb-2 rounded-none border-b border-[#0B1F3A]/30 bg-transparent focus:border-b-brand text-[#0F172A] text-sm transition-all outline-none appearance-none cursor-pointer"
+          className="peer w-full px-0 pt-6 pb-2 rounded-none border-0 border-b border-white/10 bg-transparent focus:border-b-brand text-white text-sm transition-all outline-none appearance-none cursor-pointer"
         >
-          <option value="" className="bg-white text-slate-600">-- Select Interest Category --</option>
+          <option value="" className="bg-[#050505] text-slate-500">-- Select Interest Category --</option>
           {inquiryAreas.map((area, idx) => (
-            <option key={idx} value={area} className="bg-white text-[#0F172A]">
+            <option key={idx} value={area} className="bg-[#050505] text-white">
               {area}
             </option>
           ))}
           {formData.serviceInterest && !inquiryAreas.includes(formData.serviceInterest) && (
-            <option value={formData.serviceInterest} className="bg-white text-[#0F172A]">{formData.serviceInterest}</option>
+            <option value={formData.serviceInterest} className="bg-[#050505] text-white">{formData.serviceInterest}</option>
           )}
         </select>
         <label
           htmlFor="serviceInterest"
-          className={`absolute left-0 top-4 text-xs font-bold uppercase tracking-wider transition-all pointer-events-none origin-left transform -translate-y-2.5 scale-75 ${
+          className={`absolute left-0 top-1.5 text-xs font-bold uppercase tracking-wider transition-all pointer-events-none origin-left transform -translate-y-2.5 scale-75 ${
             focusedField === "serviceInterest"
               ? "text-brand"
-              : "text-slate-700"
+              : "text-slate-500"
           }`}
         >
           Service Interested In *
         </label>
-        <div className="absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none border-l border-[#0B1F3A]/30 pl-3">
-          <svg className="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none border-l border-white/10 pl-3">
+          <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
           </svg>
         </div>
@@ -291,14 +291,14 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
           onChange={handleChange}
           onFocus={() => setFocusedField("message")}
           onBlur={() => setFocusedField("")}
-          className="peer w-full px-0 pt-6 pb-2 rounded-none border-b border-[#0B1F3A]/30 bg-transparent focus:border-b-brand text-[#0F172A] text-sm transition-all outline-none resize-none"
+          className="peer w-full px-0 pt-6 pb-2 rounded-none border-0 border-b border-white/10 bg-transparent focus:border-b-brand text-white text-sm transition-all outline-none resize-none"
         />
         <label
           htmlFor="message"
           className={`absolute left-0 top-4 text-xs font-bold uppercase tracking-wider transition-all pointer-events-none origin-left ${
             focusedField === "message" || formData.message
               ? "transform -translate-y-2.5 scale-75 text-brand"
-              : "transform translate-y-0 scale-100 text-slate-700"
+              : "transform translate-y-0 scale-100 text-slate-500"
           }`}
         >
           How can we help you? *

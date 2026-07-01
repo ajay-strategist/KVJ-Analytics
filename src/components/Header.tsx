@@ -31,7 +31,7 @@ export function Header({ siteSettings = FALLBACK_SITE_SETTINGS }: HeaderProps) {
 
   // Sync Supabase session to a cookie for server route verification
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
       if (session) {
         document.cookie = `sb-access-token=${session.access_token}; path=/; max-age=${session.expires_in}; SameSite=Lax; Secure`;
       } else {

@@ -7,32 +7,11 @@ import { MetricCounter } from "@/components/ui/MetricCounter";
 import { LogoStrip } from "@/components/ui/LogoStrip";
 import { CTASection } from "@/components/ui/CTASection";
 import { ClientLogoCarousel } from "@/components/ui/ClientLogoCarousel";
-import { client } from "@/sanity/lib/client";
-import { impactPageQuery, clientsQuery } from "@/sanity/lib/queries";
+import { getPageContent, mergePageContent } from "@/lib/content";
+import { FALLBACK_IMPACT } from "@/lib/constants";
 import { GraduationCap, Briefcase, ShoppingBag, Users, Truck, Settings, TrendingUp, HelpCircle } from "lucide-react";
 
 export const revalidate = 3600;
-
-const FALLBACK_IMPACT = {
-  heading: "Our Impact",
-  intro:
-    "For over 16 years, KVJ Analytics has delivered analytics, automation, and training solutions to corporates and educational institutions.",
-  highlights: [
-    "50,000+ Young Professionals Trained",
-    "5,000+ Senior Professionals Trained",
-    "Clients Across India & International Markets",
-    "Services Delivered in UAE, Oman, USA & Europe",
-  ],
-  industriesServed: [
-    "Education",
-    "Finance",
-    "Retail",
-    "HR",
-    "Logistics",
-    "Operations",
-    "Consulting",
-  ],
-};
 
 const getIndustryIcon = (industry: string) => {
   switch (industry.toLowerCase()) {
@@ -56,18 +35,8 @@ const getIndustryIcon = (industry: string) => {
 };
 
 export default async function ImpactPage() {
-  const data = await client.fetch(impactPageQuery).catch((err) => {
-    console.warn("Sanity fetch error in ImpactPage:", err);
-    return null;
-  });
-
-  const clientsData = await client.fetch(clientsQuery).catch((err) => {
-    console.warn("Sanity fetch error in ImpactPage clients:", err);
-    return null;
-  });
-
-  const page = data || FALLBACK_IMPACT;
-  const clients = clientsData || [];
+  const page = mergePageContent(await getPageContent("impact"), FALLBACK_IMPACT);
+  const clients: any[] = [];
 
   return (
     <>
@@ -79,7 +48,7 @@ export default async function ImpactPage() {
 
         <Container className="relative z-10">
           <div className="max-w-3xl mx-auto text-center mb-16">
-            <Eyebrow className="mb-4">Clients & Milestones</Eyebrow>
+            <Eyebrow className="mb-4">{page.eyebrow || FALLBACK_IMPACT.eyebrow}</Eyebrow>
             <BoldStatement variant="h1" className="mb-6 leading-tight tracking-tight text-ink">
               {page.heading}
             </BoldStatement>
@@ -123,7 +92,7 @@ export default async function ImpactPage() {
       {/* Global logo strip */}
       <LogoStrip
         title="Regions of Impact"
-        items={["United States", "European Union", "United Arab Emirates", "Sultanate of Oman", "Republic of India"]}
+        items={["United States", "European Union", "United Arab Emirates", "Sultanate of Oman", "Republic of India", "Kerala"]}
       />
 
       {/* Dynamic Client Logo Carousel */}

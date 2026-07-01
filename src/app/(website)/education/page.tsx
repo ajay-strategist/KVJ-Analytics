@@ -10,7 +10,16 @@ import { getPageContent, mergePageContent } from "@/lib/content";
 import { FALLBACK_EDUCATION } from "@/lib/constants";
 import EducationHeroGraphic from "@/components/EducationHeroGraphic";
 
+import { pageMeta } from "@/lib/seo";
+
 export const revalidate = 3600;
+export const metadata = pageMeta({
+  title: "Educational Solutions — Training, Certification & Academic Analytics",
+  description:
+    "Industry-ready training and certification, curriculum development, and academic analytics platforms for colleges and universities. Bridge the college-to-corporate skill gap with KVJ Analytics.",
+  path: "/education",
+  keywords: ["college training", "certification programs", "curriculum development", "academic analytics", "campus training", "Power BI training for students"],
+});
 
 export default async function EducationalSolutionsPage() {
   const pageData = await getPageContent("education");

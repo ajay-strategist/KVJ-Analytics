@@ -32,13 +32,10 @@ export function RevealText({ text, className = "", stagger = 55, delay = 0, as =
     const io = new IntersectionObserver(
       (entries) => {
         entries.forEach((e) => {
-          if (e.isIntersecting) {
-            setShown(true);
-            io.disconnect();
-          }
+          setShown(e.isIntersecting);
         });
       },
-      { threshold: 0.2 }
+      { threshold: 0.1 }
     );
     io.observe(el);
     return () => io.disconnect();

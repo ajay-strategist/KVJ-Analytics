@@ -75,6 +75,18 @@ type LessonValues = {
  * HTML field does NOT re-render the (very large) course builder on every
  * keystroke. Commits to the parent only when "Save Lesson" is clicked.
  */
+// All supported question types (Google-Forms-style picker in the test builder)
+const QUESTION_TYPES: { value: string; label: string; hint: string }[] = [
+  { value: "single", label: "Single Choice", hint: "One correct (radio)" },
+  { value: "multiple", label: "Multiple Choice", hint: "Many correct (checkboxes)" },
+  { value: "truefalse", label: "True / False", hint: "Boolean" },
+  { value: "fillblank", label: "Fill in the Blank", hint: "Text / dropdown" },
+  { value: "dragdrop", label: "Drag & Drop", hint: "Matching pairs" },
+  { value: "sequence", label: "Sequence", hint: "Reorder steps" },
+  { value: "matrix", label: "Matrix / Grid", hint: "Rows × columns" },
+  { value: "code", label: "Code", hint: "Sandbox execution" },
+];
+
 const LessonEditor = React.memo(function LessonEditor({
   initial,
   onSave,
@@ -1045,6 +1057,35 @@ export default function AdminCourseDetailsPage() {
                             </div>
                           </div>
 
+                          {/* Module structure checklist — guides editors to complete each module */}
+                          {(() => {
+                            const hasTheory = mod.lessons.some((l) => l.kind === "theory");
+                            const hasActivity = mod.lessons.some((l) => l.kind === "activity");
+                            const hasTest = mockTests.some((t: any) => t.module_id === mod.id);
+                            const chip = (ok: boolean, label: string) => (
+                              <span
+                                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
+                                  ok
+                                    ? "bg-success/10 text-success border-success/30"
+                                    : "bg-amber-50 text-amber-600 border-amber-300"
+                                }`}
+                              >
+                                <span>{ok ? "✓" : "•"}</span>
+                                {label}
+                              </span>
+                            );
+                            return (
+                              <div className="px-5 py-2.5 bg-surface/30 border-b border-line flex flex-wrap items-center gap-2">
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-slate mr-1">
+                                  Module should have:
+                                </span>
+                                {chip(hasTheory, "HTML Content")}
+                                {chip(hasActivity, "HTML Activity")}
+                                {chip(hasTest, "Module Test")}
+                              </div>
+                            );
+                          })()}
+
                           {/* Lessons List inside Module */}
                           <div className="p-4 space-y-2 bg-white">
                             {mod.lessons.length === 0 ? (
@@ -1368,25 +1409,28 @@ export default function AdminCourseDetailsPage() {
                                   {editingQuestionId === "new" ? "New Question Details" : "Edit Question Details"}
                                 </h3>
 
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                  <div className="md:col-span-2">
-                                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate mb-1">Question Type</label>
-                                    <select
-                                      value={questionForm.type}
-                                      onChange={(e) => handleTypeChange(e.target.value)}
-                                      className="w-full px-3 py-2 rounded border border-line bg-white text-sm"
-                                    >
-                                      <option value="single">Single Choice (Radio)</option>
-                                      <option value="multiple">Multiple Choice (Checkboxes)</option>
-                                      <option value="truefalse">True / False</option>
-                                      <option value="dragdrop">Drag &amp; Drop Matching</option>
-                                      <option value="sequence">Sequence Reordering</option>
-                                      <option value="fillblank">Fill in the Blanks</option>
-                                      <option value="matrix">Matrix / Grid</option>
-                                      <option value="code">Sandbox Code Execution</option>
-                                    </select>
-                                  </div>
+                                <div className="space-y-4">
                                   <div>
+                                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate mb-2">Question Type</label>
+                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                      {QUESTION_TYPES.map((t) => (
+                                        <button
+                                          type="button"
+                                          key={t.value}
+                                          onClick={() => handleTypeChange(t.value)}
+                                          className={`px-3 py-2.5 rounded-lg border text-left transition-all ${
+                                            questionForm.type === t.value
+                                              ? "border-brand bg-brand/10 text-brand shadow-sm"
+                                              : "border-line bg-white text-slate hover:border-brand/40 hover:text-ink"
+                                          }`}
+                                        >
+                                          <span className="block text-xs font-bold">{t.label}</span>
+                                          <span className="block text-[9px] font-medium opacity-70 mt-0.5">{t.hint}</span>
+                                        </button>
+                                      ))}
+                                    </div>
+                                  </div>
+                                  <div className="max-w-[180px]">
                                     <label className="block text-[10px] font-bold uppercase tracking-wider text-slate mb-1">Marks Assigned</label>
                                     <input
                                       type="number"

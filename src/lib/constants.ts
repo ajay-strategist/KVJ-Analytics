@@ -1,7 +1,9 @@
+const CURRENT_EXP_YEARS = new Date().getFullYear() - 2010;
+
 export const FALLBACK_SITE_SETTINGS = {
   companyName: "KVJ Analytics",
   tagline: "Analytics • Automation • Training • Educational Technology",
-  regionsServed: ["India", "UAE", "Oman", "USA", "Europe"],
+  regionsServed: ["Kerala", "India", "UAE", "Oman", "USA", "Europe"],
   contactInfo: {
     email: "info@kvjanalytics.in",
     phones: ["9961813730", "0484-4059310", "7902661012"],
@@ -16,10 +18,11 @@ export const FALLBACK_SITE_SETTINGS = {
     { label: "Educational Solutions", href: "/education" },
     { label: "Products", href: "/products" },
     { label: "Training", href: "/training" },
+    { label: "Blog", href: "/blog" },
     { label: "Contact", href: "/contact" },
   ],
   footerDescription:
-    "KVJ Analytics is a leading analytics, automation, and training organization with 16+ years of experience in delivering business-focused technology solutions and industry-oriented learning systems.",
+    `KVJ Analytics is a leading analytics, automation, and training organization with ${CURRENT_EXP_YEARS}+ years of experience in delivering business-focused technology solutions and industry-oriented learning systems.`,
   footerTagline:
     "Empowering Businesses and Institutions Through Analytics, Automation & Practical Learning.",
   footerColumns: [
@@ -51,6 +54,7 @@ export const FALLBACK_SITE_SETTINGS = {
     { label: "Educational Solutions", href: "/education" },
     { label: "Products", href: "/products" },
     { label: "Training", href: "/training" },
+    { label: "Blog", href: "/blog" },
     { label: "Contact", href: "/contact" },
   ],
   socialLinks: [
@@ -67,16 +71,16 @@ export const FALLBACK_HOME_PAGE = {
     intro:
       "KVJ Analytics helps corporates and educational institutions automate operations, visualize data, improve decision-making, and build industry-ready talent.",
     supportingLine:
-      "16+ years of expertise delivering analytics, automation, dashboards, training, and educational technology solutions across India, UAE, Oman, USA, and Europe.",
+      `${CURRENT_EXP_YEARS}+ years of expertise delivering analytics, automation, dashboards, training, and educational technology solutions across India, UAE, Oman, USA, and Europe.`,
     primaryCta: {
       label: "Get Started",
       href: "/contact",
     },
   },
   keyHighlights: [
-    "16+ Years of Experience",
-    "50,000+ Young Professionals Trained",
-    "5,000+ Senior Professionals Trained",
+    `${CURRENT_EXP_YEARS}+ Years of Experience`,
+    "6+ Regions",
+    "500+ Clients",
     "Global Training & Consulting Exposure",
     "Trusted by Corporates & Institutions",
   ],
@@ -100,10 +104,133 @@ export const FALLBACK_HOME_PAGE = {
   },
 };
 
+export const FALLBACK_TRAINING = {
+  eyebrow: "Training & Academy",
+  heading: "Training & Skill Development",
+  strapline: "Practical Learning With Industry Relevance",
+  intro:
+    "Our programs are designed to build real-world skills through hands-on learning, live datasets, and practical assignments.",
+  exploreLabel: "Explore Our Courses",
+  trainingAreasTitle: "Training Areas",
+  trainingAreas: [
+    "Advanced Excel",
+    "Power BI",
+    "Data Analytics",
+    "Dashboard Development",
+    "Financial Analytics",
+    "Automation Tools",
+    "Business Intelligence",
+  ],
+  approachTitle: "Our Approach",
+  approach: [
+    "Hands-On Learning",
+    "Real Business Scenarios",
+    "Industry-Oriented Curriculum",
+    "Assignment-Based Practice",
+    "Placement-Focused Skill Development",
+  ],
+  coursesEyebrow: "Active Programs",
+  coursesHeading: "Explore Our Courses",
+};
+
+export const FALLBACK_TRAINING_HUB = {
+  eyebrow: "Training Hub",
+  headingLead: "Training",
+  headingAccent: "Programs",
+  intro:
+    "Select a learning pathway tailored for personal excellence, academic growth, or corporate optimization.",
+  cta: {
+    title: "Need a Custom Curriculum?",
+    description:
+      "We collaborate with corporate partners and universities to establish specialized training cohorts and automated evaluation systems.",
+    primaryCtaText: "Schedule a Consultation",
+    primaryCtaHref: "/contact",
+    secondaryCtaText: "Explore Solutions",
+    secondaryCtaHref: "/corporate",
+  },
+};
+
+export const FALLBACK_ONLINE_COURSES = {
+  headingLead: "Online",
+  headingAccent: "Courses",
+  intro: "Self-paced video curricula. Code spreadsheets, build telemetry dashboards, and consolidate financial pipelines.",
+};
+
+export const FALLBACK_INTERNSHIPS_PAGE = {
+  headingLead: "Internship",
+  headingAccent: "Opportunities",
+  intro: "Gain placement-focused corporate analytical capabilities by working on real client projects.",
+};
+
+export const FALLBACK_CAT_CORPORATE = {
+  name: "Corporate",
+  description: "Custom automated dashboards, financial telemetry modules, and MIS reporting pipelines for enterprise teams.",
+};
+
+export const FALLBACK_CAT_COLLEGES = {
+  name: "Colleges",
+  description: "Academic partnerships, college batch cohorts, and automated skill evaluation tests for campuses.",
+};
+
+export const FALLBACK_CAT_ONE_TO_ONE = {
+  name: "One-to-One",
+  description: "Personalized 1-on-1 analytical mentoring sessions tailored for custom professional career growth.",
+};
+
+export const FALLBACK_CAREERS = {
+  eyebrow: "Careers Board",
+  headingLead: "Join Our",
+  headingAccent: "Team",
+  intro: "Build enterprise dashboards, configure automation engines, and consult with leading corporate teams.",
+};
+
+export const FALLBACK_BLOG = {
+  eyebrow: "Insights & Articles",
+  headingLead: "KVJ Analytics Blog",
+  headingAccent: "",
+  intro: "Discover advanced Excel techniques, dashboard design rules, process automation case studies, and edtech updates.",
+};
+
+export const FALLBACK_IMPACT = {
+  eyebrow: "Clients & Milestones",
+  heading: "Our Impact",
+  intro:
+    "For over 16 years, KVJ Analytics has delivered analytics, automation, and training solutions to corporates and educational institutions.",
+  highlights: [
+    "50,000+ Young Professionals Trained",
+    "5,000+ Senior Professionals Trained",
+    "Clients Across India & International Markets",
+    "Services Delivered in UAE, Oman, USA & Europe",
+  ],
+  industriesServed: [
+    "Education",
+    "Finance",
+    "Retail",
+    "HR",
+    "Logistics",
+    "Operations",
+    "Consulting",
+  ],
+};
+
+export const FALLBACK_PRIVACY = {
+  eyebrow: "Legal Information",
+  heading: "Privacy Policy",
+  lastUpdated: "Last Updated: June 18, 2026",
+  bodyHtml: "",
+};
+
+export const FALLBACK_TERMS = {
+  eyebrow: "Legal Information",
+  heading: "Terms & Conditions",
+  lastUpdated: "Last Updated: June 18, 2026",
+  bodyHtml: "",
+};
+
 export const FALLBACK_ABOUT = {
   title: "About KVJ Analytics",
   intro:
-    "KVJ Analytics is an analytics, automation, and training company with 16+ years of experience supporting corporates and educational institutions.",
+    `KVJ Analytics is an analytics, automation, and training company with ${CURRENT_EXP_YEARS}+ years of experience supporting corporates and educational institutions.`,
   specializations: [
     "Report Automation",
     "Dashboard Development",

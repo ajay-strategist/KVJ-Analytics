@@ -23,7 +23,8 @@ import {
   FALLBACK_CORPORATE,
   FALLBACK_EDUCATION,
   FALLBACK_PRODUCTS_PAGE,
-  FALLBACK_CONTACT
+  FALLBACK_CONTACT,
+  FALLBACK_TRAINING_HUB
 } from "@/lib/constants";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -107,9 +108,9 @@ interface ContactData {
   inquiryAreas: string[];
 }
 
-type PageSlug = "home" | "about" | "corporate" | "education" | "products" | "contact" | "site-settings";
+type PageSlug = string;
 
-interface PageMeta { slug: PageSlug; label: string; icon: React.ReactNode }
+interface PageMeta { slug: PageSlug; label: string; icon: React.ReactNode; href?: string }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -120,6 +121,17 @@ const PAGES: PageMeta[] = [
   { slug: "education",     label: "Educational Solutions", icon: <FileText className="w-4 h-4" /> },
   { slug: "products",      label: "Products",              icon: <FileText className="w-4 h-4" /> },
   { slug: "contact",       label: "Contact",               icon: <FileText className="w-4 h-4" /> },
+  { slug: "training",      label: "Training Hub",          icon: <FileText className="w-4 h-4" />, href: "/training" },
+  { slug: "online-courses", label: "Online Courses",       icon: <FileText className="w-4 h-4" />, href: "/training/online-courses" },
+  { slug: "internships",   label: "Internships",           icon: <FileText className="w-4 h-4" />, href: "/training/internships" },
+  { slug: "training-corporate", label: "Training · Corporate", icon: <FileText className="w-4 h-4" />, href: "/training/corporate" },
+  { slug: "training-colleges",  label: "Training · Colleges",  icon: <FileText className="w-4 h-4" />, href: "/training/colleges" },
+  { slug: "training-one-to-one", label: "Training · One-to-One", icon: <FileText className="w-4 h-4" />, href: "/training/one-to-one" },
+  { slug: "careers",       label: "Careers",               icon: <FileText className="w-4 h-4" />, href: "/careers" },
+  { slug: "blog",          label: "Blog (header)",         icon: <FileText className="w-4 h-4" />, href: "/blog" },
+  { slug: "impact",        label: "Impact",                icon: <FileText className="w-4 h-4" />, href: "/impact" },
+  { slug: "privacy",       label: "Privacy Policy",        icon: <FileText className="w-4 h-4" />, href: "/privacy" },
+  { slug: "terms",         label: "Terms & Conditions",    icon: <FileText className="w-4 h-4" />, href: "/terms" },
   { slug: "site-settings", label: "Global Settings",       icon: <Settings className="w-4 h-4" /> },
 ];
 
@@ -717,6 +729,119 @@ function SiteSettingsEditor({
   );
 }
 
+// ─── Training Hub editor ──────────────────────────────────────────────────────
+
+function TrainingHubEditor({
+  data, onChange,
+}: { data: any; onChange: (d: any) => void }) {
+  const set = (k: string, v: unknown) => onChange({ ...data, [k]: v });
+  const setCta = (k: string, v: string) => onChange({ ...data, cta: { ...(data.cta ?? {}), [k]: v } });
+  const cta = data.cta ?? {};
+  return (
+    <div className="space-y-6">
+      <div className="bg-white border border-line rounded-card p-6 shadow-soft space-y-4">
+        <h3 className="text-xs font-bold uppercase tracking-widest text-slate border-b border-line pb-2">Header</h3>
+        <Field label="Eyebrow (small label above the title)" value={data.eyebrow || ""} onChange={v => set("eyebrow", v)} placeholder={FALLBACK_TRAINING_HUB.eyebrow} />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Field label="Heading — first part" value={data.headingLead || ""} onChange={v => set("headingLead", v)} placeholder={FALLBACK_TRAINING_HUB.headingLead} />
+          <Field label="Heading — highlighted part" value={data.headingAccent || ""} onChange={v => set("headingAccent", v)} placeholder={FALLBACK_TRAINING_HUB.headingAccent} />
+        </div>
+        <Field label="Intro paragraph" value={data.intro || ""} onChange={v => set("intro", v)} rows={3} placeholder={FALLBACK_TRAINING_HUB.intro} />
+      </div>
+
+      <div className="bg-white border border-line rounded-card p-6 shadow-soft space-y-4">
+        <h3 className="text-xs font-bold uppercase tracking-widest text-slate border-b border-line pb-2">Closing Call-to-Action</h3>
+        <Field label="CTA title" value={cta.title || ""} onChange={v => setCta("title", v)} placeholder={FALLBACK_TRAINING_HUB.cta.title} />
+        <Field label="CTA description" value={cta.description || ""} onChange={v => setCta("description", v)} rows={2} placeholder={FALLBACK_TRAINING_HUB.cta.description} />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Field label="Primary button text" value={cta.primaryCtaText || ""} onChange={v => setCta("primaryCtaText", v)} placeholder={FALLBACK_TRAINING_HUB.cta.primaryCtaText} />
+          <Field label="Primary button link" value={cta.primaryCtaHref || ""} onChange={v => setCta("primaryCtaHref", v)} placeholder={FALLBACK_TRAINING_HUB.cta.primaryCtaHref} />
+          <Field label="Secondary button text" value={cta.secondaryCtaText || ""} onChange={v => setCta("secondaryCtaText", v)} placeholder={FALLBACK_TRAINING_HUB.cta.secondaryCtaText} />
+          <Field label="Secondary button link" value={cta.secondaryCtaHref || ""} onChange={v => setCta("secondaryCtaHref", v)} placeholder={FALLBACK_TRAINING_HUB.cta.secondaryCtaHref} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Impact page editor ───────────────────────────────────────────────────────
+
+function ImpactEditor({ data, onChange }: { data: any; onChange: (d: any) => void }) {
+  const set = (k: string, v: any) => onChange({ ...data, [k]: v });
+  return (
+    <div className="space-y-6">
+      <div className="bg-white border border-line rounded-card p-6 shadow-soft space-y-4">
+        <h3 className="text-xs font-bold uppercase tracking-widest text-slate border-b border-line pb-2">Header</h3>
+        <Field label="Eyebrow" value={data.eyebrow || ""} onChange={v => set("eyebrow", v)} placeholder="Clients & Milestones" />
+        <Field label="Heading" value={data.heading || ""} onChange={v => set("heading", v)} placeholder="Our Impact" />
+        <Field label="Intro" value={data.intro || ""} onChange={v => set("intro", v)} rows={3} placeholder="Short intro paragraph" />
+      </div>
+      <div className="bg-white border border-line rounded-card p-6 shadow-soft space-y-4">
+        <h3 className="text-xs font-bold uppercase tracking-widest text-slate border-b border-line pb-2">Highlights</h3>
+        <StringList label="Key highlights" items={data.highlights || []} onChange={v => set("highlights", v)} placeholder="Add highlight…" />
+      </div>
+      <div className="bg-white border border-line rounded-card p-6 shadow-soft space-y-4">
+        <h3 className="text-xs font-bold uppercase tracking-widest text-slate border-b border-line pb-2">Industries Served</h3>
+        <StringList label="Industries" items={data.industriesServed || []} onChange={v => set("industriesServed", v)} placeholder="Add industry…" />
+      </div>
+    </div>
+  );
+}
+
+// ─── Legal page editor (privacy / terms) ──────────────────────────────────────
+
+function LegalEditor({ data, onChange }: { data: any; onChange: (d: any) => void }) {
+  const set = (k: string, v: string) => onChange({ ...data, [k]: v });
+  return (
+    <div className="bg-white border border-line rounded-card p-6 shadow-soft space-y-4">
+      <h3 className="text-xs font-bold uppercase tracking-widest text-slate border-b border-line pb-2">Legal Document</h3>
+      <Field label="Eyebrow" value={data.eyebrow || ""} onChange={v => set("eyebrow", v)} placeholder="Legal Information" />
+      <Field label="Heading" value={data.heading || ""} onChange={v => set("heading", v)} placeholder="Privacy Policy" />
+      <Field label="Last updated line" value={data.lastUpdated || ""} onChange={v => set("lastUpdated", v)} placeholder="Last Updated: June 18, 2026" />
+      <Field label="Full document body (HTML) — leave empty to keep the built-in default text" value={data.bodyHtml || ""} onChange={v => set("bodyHtml", v)} rows={16} placeholder="<h4>1. Section</h4><p>Paragraph…</p>" />
+      <p className="text-xs text-slate">Paste the complete policy as HTML. Use &lt;h4&gt; for section titles and &lt;p&gt; for paragraphs. If empty, the current built-in text is shown.</p>
+    </div>
+  );
+}
+
+// ─── Simple header editor (heading + intro pages) ─────────────────────────────
+
+function SimpleHeaderEditor({
+  data, onChange, showEyebrow = false,
+}: { data: any; onChange: (d: any) => void; showEyebrow?: boolean }) {
+  const set = (k: string, v: string) => onChange({ ...data, [k]: v });
+  return (
+    <div className="bg-white border border-line rounded-card p-6 shadow-soft space-y-4">
+      <h3 className="text-xs font-bold uppercase tracking-widest text-slate border-b border-line pb-2">Page Header</h3>
+      {showEyebrow && (
+        <Field label="Eyebrow (small label above the title)" value={data.eyebrow || ""} onChange={v => set("eyebrow", v)} placeholder="e.g. Careers Board" />
+      )}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <Field label="Heading — first part" value={data.headingLead || ""} onChange={v => set("headingLead", v)} placeholder="e.g. Online" />
+        <Field label="Heading — highlighted part" value={data.headingAccent || ""} onChange={v => set("headingAccent", v)} placeholder="e.g. Courses" />
+      </div>
+      <Field label="Intro paragraph" value={data.intro || ""} onChange={v => set("intro", v)} rows={3} placeholder="Short description shown under the heading" />
+      <p className="text-xs text-slate">Leave a field empty to keep the current default text.</p>
+    </div>
+  );
+}
+
+// ─── Category landing editor (corporate / colleges / one-to-one) ──────────────
+
+function CategoryLandingEditor({
+  data, onChange,
+}: { data: any; onChange: (d: any) => void }) {
+  const set = (k: string, v: string) => onChange({ ...data, [k]: v });
+  return (
+    <div className="bg-white border border-line rounded-card p-6 shadow-soft space-y-4">
+      <h3 className="text-xs font-bold uppercase tracking-widest text-slate border-b border-line pb-2">Category Landing</h3>
+      <Field label="Category name (heading)" value={data.name || ""} onChange={v => set("name", v)} placeholder="e.g. Corporate" />
+      <Field label="Description" value={data.description || ""} onChange={v => set("description", v)} rows={3} placeholder="Short description shown under the heading" />
+      <p className="text-xs text-slate">Leave a field empty to keep the current default text.</p>
+    </div>
+  );
+}
+
 // ─── Generic editor for other pages ──────────────────────────────────────────
 
 function GenericEditor({
@@ -761,6 +886,7 @@ export default function AdminContentPage() {
   const [educationData,setEducationData]= useState<EducationData>(FALLBACK_EDUCATION);
   const [productsData, setProductsData] = useState<ProductsPageData>(FALLBACK_PRODUCTS_PAGE);
   const [contactData,  setContactData]  = useState<ContactData>(FALLBACK_CONTACT);
+  const [trainingData, setTrainingData] = useState<any>(FALLBACK_TRAINING_HUB);
   const [siteSettingsData, setSiteSettingsData] = useState<any>(FALLBACK_SITE_SETTINGS);
 
   const [genericData,  setGenericData]  = useState<Record<string, unknown>>({});
@@ -831,6 +957,14 @@ export default function AdminContentPage() {
             intro: stored.intro || FALLBACK_CONTACT.intro,
             inquiryAreas: stored.inquiryAreas?.length ? stored.inquiryAreas : FALLBACK_CONTACT.inquiryAreas,
           });
+        } else if (selectedSlug === "training") {
+          setTrainingData({
+            eyebrow: stored.eyebrow || FALLBACK_TRAINING_HUB.eyebrow,
+            headingLead: stored.headingLead || FALLBACK_TRAINING_HUB.headingLead,
+            headingAccent: stored.headingAccent || FALLBACK_TRAINING_HUB.headingAccent,
+            intro: stored.intro || FALLBACK_TRAINING_HUB.intro,
+            cta: { ...FALLBACK_TRAINING_HUB.cta, ...(stored.cta ?? {}) },
+          });
         } else if (selectedSlug === "site-settings") {
           setSiteSettingsData({
             companyName: stored.companyName || FALLBACK_SITE_SETTINGS.companyName,
@@ -868,6 +1002,7 @@ export default function AdminContentPage() {
     else if (selectedSlug === "education") payload = educationData;
     else if (selectedSlug === "products") payload = productsData;
     else if (selectedSlug === "contact") payload = contactData;
+    else if (selectedSlug === "training") payload = trainingData;
     else if (selectedSlug === "site-settings") payload = siteSettingsData;
     else payload = genericData;
 
@@ -973,7 +1108,7 @@ export default function AdminContentPage() {
           <div className="pt-4 border-t border-line mt-4">
             <p className="text-[10px] font-bold uppercase tracking-widest text-slate px-3 mb-2">Live site</p>
             {PAGES.map(p => (
-              <a key={p.slug} href={p.slug === "home" ? "/" : `/${p.slug}`} target="_blank" rel="noreferrer"
+              <a key={p.slug} href={p.href ?? (p.slug === "home" ? "/" : `/${p.slug}`)} target="_blank" rel="noreferrer"
                 className="flex items-center gap-2 px-3 py-1.5 text-xs text-slate hover:text-brand transition-colors">
                 ↗ View {p.label}
               </a>
@@ -1084,6 +1219,22 @@ export default function AdminContentPage() {
               </div>
               <ContactEditor data={contactData} onChange={setContactData} />
             </>
+          ) : selectedSlug === "training" ? (
+            <>
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-xl font-bold font-display text-ink">Training Hub Page</h2>
+                  <p className="text-xs text-slate mt-0.5">
+                    Edit the Training hub heading, intro, and closing call-to-action. Category cards are managed under Courses → Categories.
+                  </p>
+                </div>
+                <a href="/training" target="_blank" rel="noreferrer"
+                  className="text-xs font-semibold text-brand hover:underline flex items-center gap-1">
+                  ↗ Preview live page
+                </a>
+              </div>
+              <TrainingHubEditor data={trainingData} onChange={setTrainingData} />
+            </>
           ) : selectedSlug === "site-settings" ? (
             <>
               <div className="flex items-center justify-between mb-6">
@@ -1095,6 +1246,76 @@ export default function AdminContentPage() {
                 </div>
               </div>
               <SiteSettingsEditor data={siteSettingsData} onChange={setSiteSettingsData} />
+            </>
+          ) : (selectedSlug === "online-courses" || selectedSlug === "internships") ? (
+            <>
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-xl font-bold font-display text-ink">
+                    {PAGES.find(p => p.slug === selectedSlug)?.label} Page
+                  </h2>
+                  <p className="text-xs text-slate mt-0.5">
+                    Edit the page heading and intro. Courses/internships are managed in their own admin sections.
+                  </p>
+                </div>
+                <a href={PAGES.find(p => p.slug === selectedSlug)?.href} target="_blank" rel="noreferrer"
+                  className="text-xs font-semibold text-brand hover:underline flex items-center gap-1">↗ Preview live page</a>
+              </div>
+              <SimpleHeaderEditor data={genericData} onChange={setGenericData} />
+            </>
+          ) : selectedSlug === "impact" ? (
+            <>
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-xl font-bold font-display text-ink">Impact Page</h2>
+                  <p className="text-xs text-slate mt-0.5">Edit the impact heading, intro, highlights and industries served.</p>
+                </div>
+                <a href="/impact" target="_blank" rel="noreferrer" className="text-xs font-semibold text-brand hover:underline flex items-center gap-1">↗ Preview live page</a>
+              </div>
+              <ImpactEditor data={genericData} onChange={setGenericData} />
+            </>
+          ) : (selectedSlug === "privacy" || selectedSlug === "terms") ? (
+            <>
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-xl font-bold font-display text-ink">{PAGES.find(p => p.slug === selectedSlug)?.label}</h2>
+                  <p className="text-xs text-slate mt-0.5">Edit the header, and optionally paste full HTML to replace the whole document body.</p>
+                </div>
+                <a href={PAGES.find(p => p.slug === selectedSlug)?.href} target="_blank" rel="noreferrer" className="text-xs font-semibold text-brand hover:underline flex items-center gap-1">↗ Preview live page</a>
+              </div>
+              <LegalEditor data={genericData} onChange={setGenericData} />
+            </>
+          ) : (selectedSlug === "careers" || selectedSlug === "blog") ? (
+            <>
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-xl font-bold font-display text-ink">
+                    {PAGES.find(p => p.slug === selectedSlug)?.label} Page
+                  </h2>
+                  <p className="text-xs text-slate mt-0.5">
+                    Edit the page eyebrow, heading and intro. {selectedSlug === "careers" ? "Job openings are managed under Jobs." : "Blog posts are managed under Blog."}
+                  </p>
+                </div>
+                <a href={PAGES.find(p => p.slug === selectedSlug)?.href} target="_blank" rel="noreferrer"
+                  className="text-xs font-semibold text-brand hover:underline flex items-center gap-1">↗ Preview live page</a>
+              </div>
+              <SimpleHeaderEditor data={genericData} onChange={setGenericData} showEyebrow />
+            </>
+          ) : (selectedSlug === "training-corporate" || selectedSlug === "training-colleges" || selectedSlug === "training-one-to-one") ? (
+            <>
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-xl font-bold font-display text-ink">
+                    {PAGES.find(p => p.slug === selectedSlug)?.label} Page
+                  </h2>
+                  <p className="text-xs text-slate mt-0.5">
+                    Edit this category landing page's name and description. Courses shown are managed under Courses.
+                  </p>
+                </div>
+                <a href={PAGES.find(p => p.slug === selectedSlug)?.href} target="_blank" rel="noreferrer"
+                  className="text-xs font-semibold text-brand hover:underline flex items-center gap-1">↗ Preview live page</a>
+              </div>
+              <CategoryLandingEditor data={genericData} onChange={setGenericData} />
             </>
           ) : (
             <>

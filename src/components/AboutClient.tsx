@@ -4,6 +4,9 @@ import React, { useEffect, useRef, useState } from "react";
 import { Container } from "@/components/ui/Container";
 import { CountUp } from "@/components/ui/CountUp";
 import { Reveal } from "@/components/ui/Reveal";
+import { Cpu, GraduationCap, LineChart, Activity } from "lucide-react";
+import { AboutHeroVisual } from "@/components/ui/AboutHeroVisual";
+import { FALLBACK_ABOUT } from "@/lib/constants";
 
 interface AboutClientProps {
   pageData: {
@@ -56,18 +59,17 @@ const ScrollRevealParagraph = ({ children }: { children: React.ReactNode }) => {
   return (
     <div
       ref={ref}
-      className="transition-all duration-700 ease-out py-6 border-l-2 pl-6 cursor-default"
+      className="transition-all duration-700 ease-out py-6 border-l-4 pl-6 cursor-default"
       style={{
-        borderColor: isActive ? "#06B6D4" : "rgba(11, 31, 58, 0.08)",
-        opacity: isActive ? 1 : 0.25,
-        transform: isActive ? "translateX(10px) scale(1.02)" : "translateX(0) scale(1)",
+        borderColor: isActive ? "#00F0FF" : "rgba(255, 255, 255, 0.05)",
+        opacity: isActive ? 1 : 0.35,
+        transform: isActive ? "translateX(10px) scale(1.01)" : "translateX(0) scale(1)",
       }}
     >
       <div 
-        className="font-display font-medium text-xl sm:text-2xl md:text-3xl transition-all duration-500"
+        className="font-display font-medium text-lg sm:text-xl md:text-2xl transition-all duration-500 text-zinc-100"
         style={{
-          color: isActive ? "#0B1F3A" : "#64748B",
-          textShadow: isActive ? "0 0 10px rgba(6, 182, 212, 0.15)" : "none"
+          textShadow: isActive ? "0 0 15px rgba(0, 240, 255, 0.2)" : "none"
         }}
       >
         {children}
@@ -76,223 +78,6 @@ const ScrollRevealParagraph = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-// Milestone description text reveal as user scrolls down
-const ScrollRevealMilestoneText = ({ children }: { children: React.ReactNode }) => {
-  const ref = useRef<HTMLDivElement>(null);
-  const [isActive, setIsActive] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      if (!ref.current) return;
-      const rect = ref.current.getBoundingClientRect();
-      const viewportHeight = window.innerHeight;
-      
-      const elementMiddle = rect.top + rect.height / 2;
-      if (elementMiddle > viewportHeight * 0.25 && elementMiddle < viewportHeight * 0.75) {
-        setIsActive(true);
-      } else {
-        setIsActive(false);
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    handleScroll();
-    const timer = setTimeout(handleScroll, 100);
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-      clearTimeout(timer);
-    };
-  }, []);
-
-  return (
-    <div
-      ref={ref}
-      className="transition-all duration-500 ease-out"
-      style={{
-        opacity: isActive ? 1 : 0.35,
-        color: isActive ? "#0F172A" : "#64748B",
-        textShadow: isActive ? "0 0 10px rgba(6, 182, 212, 0.15)" : "none",
-        transform: isActive ? "scale(1.01)" : "scale(1)",
-        transformOrigin: "left center"
-      }}
-    >
-      {children}
-    </div>
-  );
-};
-
-// 3D Holographic Brain Component
-function HolographicBrain() {
-  return (
-    <div className="relative w-full aspect-square max-w-[420px] mx-auto flex items-center justify-center animate-[float-slow_6s_ease-in-out_infinite]">
-      {/* Brain projection beam backlights */}
-      <div className="absolute inset-0 bg-gradient-to-tr from-brand/5 to-corporate/5 rounded-full blur-[80px] pointer-events-none" />
-      <div className="absolute bottom-[-10px] w-[80%] h-8 bg-brand/20 rounded-full blur-[8px] transform scale-y-[0.3] pointer-events-none" />
-
-      {/* SVG Brain Circuits */}
-      <svg viewBox="0 0 400 400" className="w-full h-full relative z-10 overflow-visible">
-        <defs>
-          <filter id="brainGlow" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="4" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
-
-        {/* Outer hud circle */}
-        <circle cx="200" cy="200" r="170" fill="none" stroke="rgba(11, 31, 58, 0.06)" strokeWidth="1" strokeDasharray="5, 8" />
-        <circle cx="200" cy="200" r="160" fill="none" stroke="rgba(11, 31, 58, 0.04)" strokeWidth="1.5" strokeDasharray="30, 20" className="animate-[spin_30s_linear_infinite]" />
-
-        {/* Brain Hemispheres - Left & Right circuit lines */}
-        <g filter="url(#brainGlow)" strokeWidth="2.2" strokeLinecap="round" fill="none">
-          {/* Left Hemisphere (Neon Cyan) */}
-          <g stroke="#00F0FF">
-            {/* Frontal Lobe */}
-            <path d="M 200 90 C 130 90, 100 130, 100 180 C 100 200, 110 220, 120 230" />
-            <path d="M 120 120 Q 150 140, 180 130" strokeDasharray="5, 3" />
-            <path d="M 100 180 Q 140 180, 170 170" />
-            {/* Occipital / Temporal */}
-            <path d="M 120 230 C 120 270, 160 300, 200 300" />
-            <path d="M 150 250 Q 170 220, 195 210" />
-            <path d="M 120 200 Q 150 210, 170 250" strokeWidth="1.5" />
-          </g>
-
-          {/* Right Hemisphere (Electric Blue) */}
-          <g stroke="#0072FF">
-            {/* Frontal Lobe */}
-            <path d="M 200 90 C 270 90, 300 130, 300 180 C 300 200, 290 220, 280 230" />
-            <path d="M 280 120 Q 250 140, 220 130" strokeDasharray="5, 3" />
-            <path d="M 300 180 Q 260 180, 230 170" />
-            {/* Occipital / Temporal */}
-            <path d="M 280 230 C 280 270, 240 300, 200 300" />
-            <path d="M 250 250 Q 230 220, 205 210" />
-            <path d="M 280 200 Q 250 210, 230 250" strokeWidth="1.5" />
-          </g>
-        </g>
-
-        {/* Brain Synapse Nodes (Pulsing circles) */}
-        <g>
-          {/* Central spine */}
-          <line x1="200" y1="90" x2="200" y2="300" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5" />
-          
-          {/* Synapses Left (Neon Cyan & Gold Accents) */}
-          <circle cx="100" cy="180" r="5" fill="#00F0FF" className="animate-pulse" />
-          <circle cx="130" cy="110" r="4.5" fill="#00F0FF" />
-          <circle cx="170" cy="170" r="4" fill="#D4AF37" /> {/* Gold Accent */}
-          <circle cx="150" cy="250" r="5" fill="#00F0FF" className="animate-ping duration-2000" />
-          <circle cx="150" cy="250" r="4" fill="#00F0FF" />
-
-          {/* Synapses Right (Electric Blue & Gold Accents) */}
-          <circle cx="300" cy="180" r="5" fill="#0072FF" className="animate-pulse" />
-          <circle cx="270" cy="110" r="4.5" fill="#0072FF" />
-          <circle cx="230" cy="170" r="4" fill="#D4AF37" /> {/* Gold Accent */}
-          <circle cx="250" cy="250" r="5" fill="#0072FF" className="animate-ping duration-1500" />
-          <circle cx="250" cy="250" r="4" fill="#0072FF" />
-        </g>
-
-        {/* Interconnected data streams flowing in/out */}
-        <path d="M 200 200 L 50 150 M 200 130 L 350 100 M 200 250 L 50 280 M 200 280 L 350 260" stroke="rgba(0,240,255,0.1)" strokeWidth="1" strokeDasharray="4, 4" />
-        <circle cx="50" cy="150" r="3" fill="#D4AF37" className="animate-ping" /> {/* Gold */}
-        <circle cx="350" cy="100" r="3" fill="#0072FF" className="animate-ping" />
-        <circle cx="50" cy="280" r="3" fill="#00F0FF" />
-        <circle cx="350" cy="260" r="3" fill="#D4AF37" /> {/* Gold */}
-      </svg>
-    </div>
-  );
-}
-
-// Context-sensitive animations for timeline
-// 1. Founding: Startup garage made of circuit lines
-function GarageCircuitAnimation() {
-  return (
-    <svg viewBox="0 0 100 100" className="w-16 h-16 text-brand mx-auto">
-      {/* Circuit board house outline */}
-      <polygon points="50,15 85,45 85,85 15,85 15,45" fill="none" stroke="#00F0FF" strokeWidth="2.5" strokeLinecap="round" />
-      <line x1="15" y1="45" x2="85" y2="45" stroke="#0072FF" strokeWidth="2" />
-      {/* Garage door grid lines */}
-      <rect x="30" y="55" width="40" height="30" fill="none" stroke="rgba(0, 240, 255, 0.3)" strokeWidth="1.5" />
-      <line x1="30" y1="65" x2="70" y2="65" stroke="rgba(0, 240, 255, 0.3)" strokeWidth="1.5" />
-      <line x1="30" y1="75" x2="70" y2="75" stroke="rgba(0, 240, 255, 0.3)" strokeWidth="1.5" />
-      
-      {/* Glowing node connections */}
-      <circle cx="50" cy="15" r="4" fill="#D4AF37" className="animate-pulse" /> {/* Gold pin */}
-      <circle cx="15" cy="85" r="3.5" fill="#00F0FF" />
-      <circle cx="85" cy="85" r="3.5" fill="#0072FF" />
-    </svg>
-  );
-}
-
-// 2. AI Integration: Swirling Neural Network
-function NeuralNetworkAnimation() {
-  return (
-    <div className="relative w-16 h-16 mx-auto flex items-center justify-center">
-      <svg viewBox="0 0 100 100" className="w-full h-full">
-        {/* Swirling orbits */}
-        <circle cx="50" cy="50" r="28" fill="none" stroke="rgba(0, 114, 255, 0.25)" strokeWidth="1.5" strokeDasharray="10, 5" className="animate-[spin_8s_linear_infinite]" />
-        <circle cx="50" cy="50" r="38" fill="none" stroke="rgba(0, 240, 255, 0.2)" strokeWidth="1.5" strokeDasharray="15, 8" className="animate-[spin_12s_linear_infinite_reverse]" />
-        
-        {/* Network connections */}
-        <line x1="25" y1="25" x2="50" y2="50" stroke="rgba(0, 240, 255, 0.3)" strokeWidth="1.5" />
-        <line x1="75" y1="25" x2="50" y2="50" stroke="rgba(0, 240, 255, 0.3)" strokeWidth="1.5" />
-        <line x1="50" y1="78" x2="50" y2="50" stroke="rgba(0, 114, 255, 0.3)" strokeWidth="1.5" />
-        
-        {/* Core node */}
-        <circle cx="50" cy="50" r="7" fill="white" stroke="#D4AF37" strokeWidth="2.2" /> {/* Gold target node */}
-        <circle cx="50" cy="50" r="3" fill="#D4AF37" className="animate-ping" />
-
-        {/* Orbit nodes */}
-        <circle cx="25" cy="25" r="4.5" fill="#0072FF" />
-        <circle cx="75" cy="25" r="4.5" fill="#00F0FF" />
-        <circle cx="50" cy="78" r="4.5" fill="#0072FF" />
-      </svg>
-    </div>
-  );
-}
-
-// 3. Client Expansion: Global Nodes
-function GlobalNodesAnimation() {
-  return (
-    <svg viewBox="0 0 100 100" className="w-16 h-16 text-[#0072FF] mx-auto">
-      {/* Globe grid */}
-      <circle cx="50" cy="50" r="35" fill="none" stroke="rgba(0, 114, 255, 0.25)" strokeWidth="2" />
-      <ellipse cx="50" cy="50" rx="35" ry="12" fill="none" stroke="rgba(0, 114, 255, 0.2)" strokeWidth="1.5" />
-      <ellipse cx="50" cy="50" rx="12" ry="35" fill="none" stroke="rgba(0, 114, 255, 0.2)" strokeWidth="1.5" />
-      
-      {/* Blinking connection lines */}
-      <line x1="25" y1="35" x2="75" y2="65" stroke="rgba(0, 240, 255, 0.4)" strokeWidth="1.5" strokeDasharray="4, 2" />
-      <line x1="25" y1="65" x2="75" y2="35" stroke="rgba(0, 240, 255, 0.4)" strokeWidth="1.5" strokeDasharray="4, 2" />
-
-      {/* Nodes */}
-      <circle cx="25" cy="35" r="4" fill="#00F0FF" className="animate-pulse" />
-      <circle cx="75" cy="65" r="4" fill="#00F0FF" />
-      <circle cx="50" cy="15" r="3.5" fill="#D4AF37" /> {/* Gold */}
-      <circle cx="50" cy="85" r="3.5" fill="#0072FF" />
-    </svg>
-  );
-}
-
-// 4. Training Launch: Graduation Cap node
-function GraduationCapAnimation() {
-  return (
-    <svg viewBox="0 0 100 100" className="w-16 h-16 text-brand mx-auto animate-[float-slow_4s_ease-in-out_infinite]">
-      {/* Cap diamond */}
-      <polygon points="50,22 82,35 50,48 18,35" fill="none" stroke="#00F0FF" strokeWidth="2.2" />
-      {/* Cap skull */}
-      <path d="M 32,41 L 32,60 Q 50,70 68,60 L 68,41" fill="none" stroke="#0072FF" strokeWidth="2" />
-      {/* Tassel */}
-      <path d="M 82,35 L 82,52 Q 78,56 76,56" fill="none" stroke="#D4AF37" strokeWidth="1.5" /> {/* Gold Tassel */}
-      <circle cx="76" cy="56" r="2" fill="#D4AF37" />
-      
-      {/* Data curves underneath */}
-      <path d="M 20,78 Q 50,65 80,78" fill="none" stroke="rgba(0, 240, 255, 0.25)" strokeWidth="2" strokeDasharray="4, 4" />
-      <circle cx="50" cy="71" r="3" fill="#D4AF37" /> {/* Gold */}
-    </svg>
-  );
-}
-
-// Core Pillars custom animated graphics
 // Vision: Stylized glowing compass with swirling data points around the Gold north needle
 function VisionCompass() {
   return (
@@ -318,425 +103,201 @@ function VisionCompass() {
         <g className="animate-[float-slow_4s_ease-in-out_infinite]" style={{ transformOrigin: "50px 50px" }}>
           <polygon points="50,15 55,50 45,50" fill="#D4AF37" filter="drop-shadow(0 0 4px rgba(212, 175, 55, 0.6))" /> {/* Gold North */}
           <polygon points="50,85 55,50 45,50" fill="#0072FF" /> {/* Blue South */}
-          <circle cx="50" cy="50" r="4.5" fill="white" stroke="#0B1F3A" strokeWidth="1" />
+          <circle cx="50" cy="50" r="4.5" fill="#050505" stroke="#FFFFFF" strokeWidth="1" />
         </g>
       </svg>
     </div>
   );
 }
 
-// Mission: Animated target with a gold data arrow hitting the bullseye
-function MissionTarget() {
-  return (
-    <div className="relative w-12 h-12 mx-auto flex items-center justify-center">
-      <svg viewBox="0 0 100 100" className="w-full h-full overflow-visible">
-        <circle cx="50" cy="50" r="36" fill="none" stroke="rgba(0, 114, 255, 0.2)" strokeWidth="1.5" />
-        <circle cx="50" cy="50" r="24" fill="none" stroke="rgba(0, 240, 255, 0.25)" strokeWidth="1.5" />
-        <circle cx="50" cy="50" r="12" fill="none" stroke="rgba(0, 240, 255, 0.35)" strokeWidth="2" />
-        <circle cx="50" cy="50" r="3.5" fill="#00F0FF" className="animate-ping" />
-        <circle cx="50" cy="50" r="2.5" fill="#00F0FF" />
-        
-        {/* Crosshair lines */}
-        <line x1="50" y1="5" x2="50" y2="95" stroke="rgba(255, 255, 255, 0.08)" strokeWidth="1.2" />
-        <line x1="5" y1="50" x2="95" y2="50" stroke="rgba(255, 255, 255, 0.08)" strokeWidth="1.2" />
-
-        {/* Flying Data Arrow */}
-        <g className="animate-[arrow-strike_3s_ease-out_infinite]" style={{ transformOrigin: "50px 50px" }}>
-          <line x1="-15" y1="-15" x2="46" y2="46" stroke="#D4AF37" strokeWidth="2" strokeDasharray="3, 3" />
-          <polygon points="50,50 48,40 40,48" fill="#D4AF37" filter="drop-shadow(0 0 5px rgba(212, 175, 55, 0.8))" /> {/* Gold head */}
-          <polygon points="-12,-12 -8,-4 -16,-8" fill="#0072FF" />
-          <polygon points="-12,-12 -4,-8 -8,-16" fill="#0072FF" />
-        </g>
-      </svg>
-    </div>
-  );
+function getSpecializationLabel(spec: any): string {
+  if (!spec) return "";
+  if (typeof spec === "string") return spec;
+  if (typeof spec === "object") {
+    return spec.label || spec.name || spec.value || "";
+  }
+  return String(spec);
 }
-
-// Values: Chain of interlocking tech-nodes that light up sequentially
-function ValuesTechChain() {
-  return (
-    <div className="relative w-12 h-12 mx-auto flex items-center justify-center">
-      <svg viewBox="0 0 100 100" className="w-full h-full overflow-visible">
-        {/* Connection tracks */}
-        <path d="M 25 75 L 50 25 L 75 75 Z" fill="none" stroke="rgba(11, 31, 58, 0.08)" strokeWidth="2" />
-        
-        {/* Sequential dash lightups */}
-        <path d="M 25 75 L 50 25" fill="none" stroke="#06B6D4" strokeWidth="2" className="animate-[dash_3s_linear_infinite]" strokeDasharray="60" strokeDashoffset="60" />
-        <path d="M 50 25 L 75 75" fill="none" stroke="#D4AF37" strokeWidth="2" className="animate-[dash_3s_linear_infinite_1s]" strokeDasharray="60" strokeDashoffset="60" />
-        <path d="M 75 75 L 25 75" fill="none" stroke="#2563EB" strokeWidth="2" className="animate-[dash_3s_linear_infinite_2s]" strokeDasharray="60" strokeDashoffset="60" />
-
-        {/* Node 1: Integrity */}
-        <g>
-          <circle cx="25" cy="75" r="7" fill="white" stroke="#06B6D4" strokeWidth="2" />
-          <circle cx="25" cy="75" r="3" fill="#06B6D4" className="animate-[pulse_1.5s_infinite]" />
-        </g>
-        
-        {/* Node 2: Excellence (Gold) */}
-        <g>
-          <circle cx="50" cy="25" r="7" fill="white" stroke="#D4AF37" strokeWidth="2" />
-          <circle cx="50" cy="25" r="3" fill="#D4AF37" className="animate-[pulse_1.5s_infinite_0.5s]" />
-        </g>
-        
-        {/* Node 3: Value Clarity */}
-        <g>
-          <circle cx="75" cy="75" r="7" fill="white" stroke="#2563EB" strokeWidth="2" />
-          <circle cx="75" cy="75" r="3" fill="#2563EB" className="animate-[pulse_1.5s_infinite_1s]" />
-        </g>
-      </svg>
-    </div>
-  );
-}
-
 
 export function AboutClientContent({ pageData }: AboutClientProps) {
-  // Parse experience highlights
+  const expYears = new Date().getFullYear() - 2010;
+  const expStat = { num: expYears, suffix: "+", label: "Years of Experience" };
+
+  // Parse experience highlights (the new impact points)
   const parsedStats = (pageData.impact || []).map((imp) => {
     const m = imp.match(/^([\d,]+)(\+)?\s*(.*)$/);
-    const num = m ? parseInt(m[1].replace(/,/g, ""), 10) : 16;
-    const suffix = m && m[2] ? "+" : "";
-    const label = m ? m[3] : imp;
-    return { num, suffix, label };
+    if (m) {
+      const num = parseInt(m[1].replace(/,/g, ""), 10);
+      const suffix = m[2] ? "+" : "";
+      const label = m[3];
+      return { num, suffix, label, isStat: true };
+    }
+    return { num: null, suffix: "", label: imp, isStat: false };
   });
 
-  // Filter out the experience stat specifically for the Hero section
-  const expStat = parsedStats.find(s => s.label.toLowerCase().includes("experience")) || { num: 16, suffix: "+", label: "Years Experience" };
+  // Resolve specializations with strict fallback to ensure all 7 items are displayed correctly
+  const rawSpecializations = pageData.specializations || [];
+  const specializations = rawSpecializations.length > 0 && rawSpecializations.some(s => {
+    const lbl = getSpecializationLabel(s);
+    return lbl && lbl.trim() !== "";
+  })
+    ? rawSpecializations
+    : FALLBACK_ABOUT.specializations;
 
   return (
-    <div className="w-full bg-[#FAFAFC] text-[#0F172A] relative min-h-screen">
-      {/* Self-contained keyframe styles */}
-      <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes arrow-strike {
-          0% {
-            transform: translate(-32px, -32px) scale(0.6);
-            opacity: 0;
-          }
-          10% {
-            transform: translate(-32px, -32px) scale(0.6);
-            opacity: 0;
-          }
-          30% {
-            transform: translate(0px, 0px) scale(1);
-            opacity: 1;
-          }
-          65% {
-            transform: translate(0px, 0px) scale(1);
-            opacity: 1;
-            filter: drop-shadow(0 0 6px rgba(0, 240, 255, 0.7));
-          }
-          85%, 100% {
-            transform: translate(0px, 0px) scale(1);
-            opacity: 0;
-          }
-        }
-        @keyframes dash {
-          to {
-            stroke-dashoffset: 0;
-          }
-        }
-        @keyframes spin-slow {
-          to { transform: rotate(360deg); }
-        }
-      `}} />
-
-      {/* 1. HERO SECTION — Asymmetric Split Screen */}
-      <section className="relative min-h-screen flex items-center pt-28 pb-16 overflow-hidden border-b border-slate-100">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(11,31,58,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(11,31,58,0.01)_1px,transparent_1px)] bg-[size:4rem_4rem] pointer-events-none" />
+    <div className="w-full bg-[#050505] text-zinc-200 relative min-h-screen">
+      {/* 1. HERO SECTION — Asymmetric 60/40 Split Screen */}
+      <section className="relative min-h-[90vh] flex items-center pt-28 pb-16 overflow-hidden border-b border-white/5">
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:4rem_4rem] pointer-events-none" />
         
         {/* Glowing backdrop spotlights */}
-        <div className="absolute top-[20%] left-[-10%] w-[500px] h-[500px] bg-brand/3 rounded-full blur-[140px] pointer-events-none animate-pulse duration-[8s]" />
-        <div className="absolute bottom-[10%] right-[-10%] w-[600px] h-[600px] bg-corporate/3 rounded-full blur-[160px] pointer-events-none animate-pulse duration-[10s]" />
+        <div className="absolute top-[20%] left-[-10%] w-[500px] h-[500px] bg-brand/8 rounded-full blur-[140px] pointer-events-none animate-pulse duration-[8s]" />
+        <div className="absolute bottom-[10%] right-[-10%] w-[600px] h-[600px] bg-corporate/8 rounded-full blur-[160px] pointer-events-none animate-pulse duration-[10s]" />
 
         <Container className="relative z-10 w-full">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
             
-            {/* Left Column: Glowing Typography & Stats Pill */}
-            <div className="lg:col-span-6 flex flex-col justify-center space-y-8 text-left">
-              <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-brand px-3.5 py-1.5 bg-brand/10 rounded-full w-fit border border-brand/20">
-                Strategic Intelligence
+            {/* Left Column (60% width): Plain label, heading, intro block, single pill */}
+            <div className="lg:col-span-7 flex flex-col justify-center space-y-8 text-left">
+              <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-[#00F0FF] px-3.5 py-1.5 bg-brand/10 rounded-full w-fit border border-brand/20">
+                About
               </span>
               
-              <h1 className="font-display font-bold text-4xl sm:text-5xl lg:text-6xl leading-[1.08] tracking-tight text-[#0B1F3A]">
+              <h1 className="font-display font-bold text-4xl sm:text-5xl lg:text-6xl leading-[1.08] tracking-tight text-white">
                 About <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand via-corporate to-brand animate-[signature-flow_6s_linear_infinite] bg-[size:200%_auto]">KVJ Analytics</span>
               </h1>
 
-              {/* Scrolling text reveal paragraphs */}
-              <div className="space-y-2 max-w-xl">
+              {/* Accent-bar intro block */}
+              <div className="max-w-xl">
                 <ScrollRevealParagraph>
                   {pageData.intro}
                 </ScrollRevealParagraph>
-                <ScrollRevealParagraph>
-                  We synthesize human auditing expertise with modular machine pipelines to ensure data translates seamlessly into high-yield decisions.
-                </ScrollRevealParagraph>
               </div>
 
-              {/* 16+ Years Experience Pill */}
-              <Reveal delay={300}>
-                <div className="rounded-full border border-brand/30 bg-white backdrop-blur-xl px-7 py-3.5 shadow-[0_8px_30px_rgba(11,31,58,0.03)] hover:border-brand transition-all duration-300 flex items-center gap-4 w-fit group">
-                  <div className="text-3xl md:text-4xl font-extrabold font-display leading-none text-[#0B1F3A]">
+              {/* Single experience pill */}
+              <Reveal delay={200}>
+                <div className="rounded-full border border-brand/35 bg-[#0A0A0C]/75 backdrop-blur-xl px-7 py-3.5 shadow-[0_8px_32px_rgba(0,240,255,0.14)] hover:border-brand transition-all duration-300 flex items-center gap-4 w-fit group">
+                  <div className="text-3xl md:text-4xl font-extrabold font-display leading-none text-transparent bg-clip-text bg-gradient-to-r from-brand to-corporate">
                     <CountUp value={expStat.num} suffix={expStat.suffix} />
                   </div>
-                  <div className="text-xs font-bold uppercase tracking-wider text-slate-500 group-hover:text-[#0B1F3A] transition-colors">
+                  <div className="text-xs font-bold uppercase tracking-wider text-zinc-300 group-hover:text-white transition-colors">
                     {expStat.label}
                   </div>
                 </div>
               </Reveal>
             </div>
 
-            {/* Right Column: Holographic Brain Circuit Projection */}
-            <div className="lg:col-span-6 flex items-center justify-center">
-              <HolographicBrain />
+            {/* Right Column (40% width): Vertically centered animated globe constellation */}
+            <div className="lg:col-span-5 flex items-center justify-center relative">
+              <AboutHeroVisual />
             </div>
 
           </div>
         </Container>
       </section>
 
-      {/* 2. THE JOURNEY (Timeline Section) */}
-      <section className="py-24 md:py-36 relative bg-[#FAFAFC] border-b border-slate-100 overflow-hidden">
+      {/* 2. WE SPECIALIZE IN SECTION — Full-width Band */}
+      <section className="py-20 relative bg-[#08080A] border-b border-white/5 overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(0,240,255,0.03),transparent)] pointer-events-none" />
+        <Container>
+          <div className="text-center max-w-2xl mx-auto mb-16">
+            <h2 className="font-display font-bold text-3xl md:text-5xl text-white tracking-tight">
+              We Specialize In
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
+            {specializations.map((spec, idx) => {
+              const label = getSpecializationLabel(spec) || FALLBACK_ABOUT.specializations[idx] || "";
+              return (
+                <Reveal key={idx} delay={idx * 50} variant="up">
+                  <div className="bg-[#0A0A0C]/65 border border-white/5 hover:border-brand/40 px-6 py-5 rounded-2xl flex items-center gap-4 hover:-translate-y-1 hover:shadow-[0_4px_20px_rgba(0,240,255,0.04)] transition-all duration-300 group relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-tr from-brand/5 to-transparent pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#00F0FF] shadow-[0_0_8px_#00F0FF] animate-pulse" />
+                    <span className="text-zinc-100 text-[16px] md:text-[17px] font-medium tracking-wide leading-snug">{label}</span>
+                  </div>
+                </Reveal>
+              );
+            })}
+          </div>
+        </Container>
+      </section>
+
+      {/* 3. OUR IMPACT SECTION — Band */}
+      <section className="py-20 relative bg-[#050505] overflow-hidden border-b border-white/5">
+        <Container className="relative z-10">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <h2 className="font-display font-bold text-3xl md:text-5xl text-white tracking-tight mb-6">
+              Our Impact
+            </h2>
+            <p className="text-zinc-300 font-light text-lg md:text-xl leading-relaxed max-w-2xl mx-auto">
+              {pageData.reachLine}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto items-stretch">
+            {parsedStats.map((stat, idx) => (
+              <Reveal key={idx} delay={idx * 80} variant="scale" className="h-full">
+                <div className="bg-[#0A0A0C]/55 border border-white/5 rounded-3xl p-6 backdrop-blur-xl flex flex-col justify-between h-full hover:border-brand/40 transition-all duration-300 relative group overflow-hidden shadow-soft">
+                  <div className="absolute inset-0 bg-gradient-to-tr from-brand/5 to-transparent pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  
+                  {stat.isStat ? (
+                    <div className="flex flex-col h-full justify-between">
+                      <div className="text-3xl md:text-4xl font-extrabold font-display leading-none text-transparent bg-clip-text bg-gradient-to-r from-brand to-corporate mb-6">
+                        <CountUp value={stat.num!} suffix={stat.suffix} />
+                      </div>
+                      <p className="text-sm font-semibold text-zinc-200 leading-normal mt-auto">
+                        {stat.label}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col justify-between h-full">
+                      <div className="w-10 h-10 rounded-xl bg-brand/10 border border-brand/20 flex items-center justify-center text-brand mb-6">
+                        {idx === 2 ? (
+                          <GraduationCap className="w-5 h-5 text-brand" />
+                        ) : (
+                          <Activity className="w-5 h-5 text-brand" />
+                        )}
+                      </div>
+                      <p className="text-sm font-semibold text-zinc-200 leading-normal mt-auto">
+                        {stat.label}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </Container>
+      </section>
+
+      {/* 4. OUR VISION SECTION — Centered Statement Band */}
+      <section className="py-24 relative bg-[#08080A] border-b border-white/5 overflow-hidden">
         {/* Glow */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[350px] bg-[#1D4ED8]/3 rounded-full blur-[130px] pointer-events-none" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[250px] bg-brand/5 rounded-full blur-[100px] pointer-events-none" />
 
         <Container className="relative z-10">
-          <div className="text-center max-w-3xl mx-auto mb-20">
-            <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-brand">Our Legacy</span>
-            <h2 className="font-display font-bold text-3xl md:text-5xl text-[#0B1F3A] mt-3 mb-6">
-              The Journey of Innovation
-            </h2>
-            <p className="text-slate-500 font-light text-base md:text-lg">
-              Tracing our evolution from a core automation consultancy into a multi-disciplinary analytics powerhouse.
-            </p>
-          </div>
-
-          {/* Timeline Layout */}
-          <div className="relative max-w-5xl mx-auto">
-            {/* Timeline Center track (shifts left on mobile) */}
-            <div className="absolute left-4 lg:left-1/2 top-0 bottom-0 w-[2px] bg-gradient-to-b from-brand via-corporate to-brand -translate-x-1/2 opacity-15" />
-
-            {/* Milestone 1: 2010 - Founding */}
-            <div className="relative grid grid-cols-1 lg:grid-cols-12 gap-8 mb-20">
-              <div className="lg:col-span-5 lg:text-right flex flex-col justify-center order-2 lg:order-1 pl-10 lg:pl-0">
-                <Reveal>
-                  <span className="text-xs font-mono font-bold text-brand block mb-1">STAGE 01 // 2010</span>
-                  <h3 className="text-2xl font-bold text-[#0B1F3A] mb-3">Startup Founding</h3>
-                  <ScrollRevealMilestoneText>
-                    <p className="text-sm leading-relaxed font-light">
-                      KVJ Analytics was established in Kerala, focused initially on custom report compilation, Excel auditing, and automating manual enterprise workflows.
-                    </p>
-                  </ScrollRevealMilestoneText>
-                </Reveal>
-              </div>
-              <div className="lg:col-span-2 flex items-center justify-start lg:justify-center order-1 lg:order-2 z-10 pl-2 lg:pl-0">
-                <div className="w-10 h-10 rounded-full bg-white border-2 border-brand flex items-center justify-center shadow-[0_0_15px_rgba(29,78,216,0.15)] animate-pulse">
-                  <span className="w-3.5 h-3.5 rounded-full bg-brand" />
-                </div>
-              </div>
-              <div className="lg:col-span-5 flex items-center order-3 pl-10 lg:pl-8">
-                <Reveal className="p-6 bg-white border border-[#0B1F3A]/8 rounded-2xl w-full shadow-sm">
-                  <GarageCircuitAnimation />
-                </Reveal>
-              </div>
-            </div>
-
-            {/* Milestone 2: 2015 - Expansion */}
-            <div className="relative grid grid-cols-1 lg:grid-cols-12 gap-8 mb-20">
-              <div className="lg:col-span-5 flex items-center order-3 lg:order-1 pl-10 lg:pl-0 pr-0 lg:pr-8">
-                <Reveal className="p-6 bg-white border border-[#0B1F3A]/8 rounded-2xl w-full shadow-sm">
-                  <GlobalNodesAnimation />
-                </Reveal>
-              </div>
-              <div className="lg:col-span-2 flex items-center justify-start lg:justify-center order-1 lg:order-2 z-10 pl-2 lg:pl-0">
-                <div className="w-10 h-10 rounded-full bg-white border-2 border-corporate flex items-center justify-center shadow-[0_0_15px_rgba(11,31,58,0.1)]">
-                  <span className="w-3.5 h-3.5 rounded-full bg-corporate" />
-                </div>
-              </div>
-              <div className="lg:col-span-5 flex flex-col justify-center order-2 pl-10 lg:pl-0">
-                <Reveal>
-                  <span className="text-xs font-mono font-bold text-corporate block mb-1">STAGE 02 // 2015</span>
-                  <h3 className="text-2xl font-bold text-[#0B1F3A] mb-3">Enterprise Operations</h3>
-                  <ScrollRevealMilestoneText>
-                    <p className="text-sm leading-relaxed font-light">
-                      Expanded operations across South India, delivering custom dashboard infrastructures, database pipelines, and spreadsheet risk-auditing models.
-                    </p>
-                  </ScrollRevealMilestoneText>
-                </Reveal>
-              </div>
-            </div>
-
-            {/* Milestone 3: 2020 - AI Integration */}
-            <div className="relative grid grid-cols-1 lg:grid-cols-12 gap-8 mb-20">
-              <div className="lg:col-span-5 lg:text-right flex flex-col justify-center order-2 lg:order-1 pl-10 lg:pl-0">
-                <Reveal>
-                  <span className="text-xs font-mono font-bold text-brand block mb-1">STAGE 03 // 2020</span>
-                  <h3 className="text-2xl font-bold text-[#0B1F3A] mb-3">Cognitive Analytics &amp; AI</h3>
-                  <ScrollRevealMilestoneText>
-                    <p className="text-sm leading-relaxed font-light">
-                      Integrated machine learning and cognitive algorithms, establishing automated pipeline workflows that convert raw datastreams into predictive business insights.
-                    </p>
-                  </ScrollRevealMilestoneText>
-                </Reveal>
-              </div>
-              <div className="lg:col-span-2 flex items-center justify-start lg:justify-center order-1 lg:order-2 z-10 pl-2 lg:pl-0">
-                <div className="w-10 h-10 rounded-full bg-white border-2 border-brand flex items-center justify-center shadow-[0_0_15px_rgba(29,78,216,0.15)] animate-pulse">
-                  <span className="w-3.5 h-3.5 rounded-full bg-brand" />
-                </div>
-              </div>
-              <div className="lg:col-span-5 flex items-center order-3 pl-10 lg:pl-8">
-                <Reveal className="p-6 bg-white border border-[#0B1F3A]/8 rounded-2xl w-full shadow-sm">
-                  <NeuralNetworkAnimation />
-                </Reveal>
-              </div>
-            </div>
-
-            {/* Milestone 4: 2024 - Training Launch */}
-            <div className="relative grid grid-cols-1 lg:grid-cols-12 gap-8">
-              <div className="lg:col-span-5 flex items-center order-3 lg:order-1 pl-10 lg:pl-0 pr-0 lg:pr-8">
-                <Reveal className="p-6 bg-white border border-[#0B1F3A]/8 rounded-2xl w-full shadow-sm">
-                  <GraduationCapAnimation />
-                </Reveal>
-              </div>
-              <div className="lg:col-span-2 flex items-center justify-start lg:justify-center order-1 lg:order-2 z-10 pl-2 lg:pl-0">
-                <div className="w-10 h-10 rounded-full bg-white border-2 border-corporate flex items-center justify-center shadow-[0_0_15px_rgba(11,31,58,0.1)]">
-                  <span className="w-3.5 h-3.5 rounded-full bg-corporate" />
-                </div>
-              </div>
-              <div className="lg:col-span-5 flex flex-col justify-center order-2 pl-10 lg:pl-0">
-                <Reveal>
-                  <span className="text-xs font-mono font-bold text-corporate block mb-1">STAGE 04 // 2024</span>
-                  <h3 className="text-2xl font-bold text-[#0B1F3A] mb-3">Academic &amp; Training Divisions</h3>
-                  <ScrollRevealMilestoneText>
-                    <p className="text-sm leading-relaxed font-light">
-                      Launched structured training frameworks and partnerships with top universities, delivering certified outcomes in Power BI, Excel analytics, and Python automation.
-                    </p>
-                  </ScrollRevealMilestoneText>
-                </Reveal>
-              </div>
-            </div>
-
-          </div>
-        </Container>
-      </section>
-
-      {/* 3. CORE PILLARS (Vision, Mission, Values) */}
-      <section className="py-24 md:py-36 relative bg-[#FAFAFC] border-b border-slate-100 overflow-hidden">
-        <Container className="relative z-10">
-          <div className="text-center max-w-3xl mx-auto mb-20">
-            <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-brand">Our Foundations</span>
-            <h2 className="font-display font-bold text-3xl md:text-5xl text-[#0B1F3A] mt-3 mb-6">
-              Our Core Pillars
-            </h2>
-            <p className="text-slate-500 font-light text-base md:text-lg">
-              Three fundamental vectors driving our engineering standards and training excellence.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {/* Vision Pillar */}
-            <Reveal delay={0}>
-              <div className="bg-white border border-[#0B1F3A]/8 rounded-[32px] p-8 md:p-9 shadow-soft flex flex-col justify-between h-[360px] group hover:border-[#0072FF]/40 transition-all duration-300 relative overflow-hidden">
-                {/* Shifting Particle Background */}
-                <div className="absolute inset-0 z-0 pointer-events-none opacity-20 group-hover:opacity-40 transition-opacity duration-500">
-                  <svg className="w-full h-full" viewBox="0 0 200 360">
-                    <g className="transition-all duration-700 ease-out">
-                      {/* Particles shift towards top left on hover */}
-                      <circle cx="30" cy="50" r="1.5" fill="#00F0FF" className="transition-transform duration-700 group-hover:translate-x-[20px] group-hover:translate-y-[20px]" />
-                      <circle cx="150" cy="80" r="1" fill="#0072FF" className="transition-transform duration-700 group-hover:translate-x-[-90px] group-hover:translate-y-[-10px]" />
-                      <circle cx="110" cy="180" r="1.5" fill="#D4AF37" className="transition-transform duration-700 group-hover:translate-x-[-50px] group-hover:translate-y-[-110px]" />
-                      <circle cx="50" cy="240" r="1.2" fill="#00F0FF" className="transition-transform duration-700 group-hover:translate-x-[10px] group-hover:translate-y-[-170px]" />
-                      <circle cx="170" cy="280" r="1.5" fill="#0072FF" className="transition-transform duration-700 group-hover:translate-x-[-110px] group-hover:translate-y-[-210px]" />
-                      <circle cx="90" cy="300" r="1" fill="#D4AF37" className="transition-transform duration-700 group-hover:translate-x-[-30px] group-hover:translate-y-[-230px]" />
-                    </g>
-                  </svg>
+          <Reveal variant="scale">
+            <div className="max-w-4xl mx-auto bg-[#0A0A0C]/75 border border-[#00F0FF]/20 rounded-[32px] p-8 md:p-12 backdrop-blur-xl hover:border-[#00F0FF]/40 transition-all duration-300 relative overflow-hidden group shadow-[0_12px_40px_rgba(0,240,255,0.05)] text-center">
+              <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,240,255,0.01)_1px,transparent_1px)] bg-[size:3rem_3rem] pointer-events-none" />
+              
+              <div className="flex flex-col items-center justify-center relative z-10 space-y-6">
+                <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-brand">
+                  <VisionCompass />
                 </div>
                 
-                <div className="flex items-start justify-between relative z-10">
-                  <div className="w-14 h-14 rounded-2xl bg-[#0072FF]/5 border border-[#0072FF]/10 flex items-center justify-center text-brand">
-                    <VisionCompass />
-                  </div>
-                  <span className="text-xs font-mono text-slate-400 font-bold">PILLAR 01</span>
-                </div>
-                <div className="relative z-10">
-                  <h3 className="text-2xl font-bold text-[#0B1F3A] mb-3 group-hover:text-brand transition-all duration-300">
-                    Vision
-                  </h3>
-                  <p className="text-sm text-slate-500 leading-relaxed font-light transition-all duration-300 group-hover:text-[#0B1F3A]">
-                    To establish a cognitive standard where complexity is automated and strategic strategies are backed by clean, verified data.
-                  </p>
-                </div>
+                <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-[#00F0FF]">
+                  Our Vision
+                </span>
+                
+                <p className="text-xl md:text-2xl font-light text-zinc-100 leading-relaxed max-w-2xl mx-auto">
+                  {pageData.vision?.body || "To build smarter organizations and industry-ready professionals through analytics, automation, and practical learning."}
+                </p>
               </div>
-            </Reveal>
-
-            {/* Mission Pillar */}
-            <Reveal delay={100}>
-              <div className="bg-white border border-[#0B1F3A]/8 rounded-[32px] p-8 md:p-9 shadow-soft flex flex-col justify-between h-[360px] group hover:border-[#0072FF]/40 transition-all duration-300 relative overflow-hidden">
-                {/* Shifting Particle Background */}
-                <div className="absolute inset-0 z-0 pointer-events-none opacity-20 group-hover:opacity-40 transition-opacity duration-500">
-                  <svg className="w-full h-full" viewBox="0 0 200 360">
-                    <g className="transition-all duration-700 ease-out">
-                      <circle cx="40" cy="60" r="1.5" fill="#00F0FF" className="transition-transform duration-700 group-hover:translate-x-[10px] group-hover:translate-y-[10px]" />
-                      <circle cx="160" cy="90" r="1" fill="#0072FF" className="transition-transform duration-700 group-hover:translate-x-[-100px] group-hover:translate-y-[-20px]" />
-                      <circle cx="120" cy="190" r="1.5" fill="#D4AF37" className="transition-transform duration-700 group-hover:translate-x-[-60px] group-hover:translate-y-[-120px]" />
-                      <circle cx="60" cy="250" r="1.2" fill="#00F0FF" className="transition-transform duration-700 group-hover:translate-x-[0px] group-hover:translate-y-[-180px]" />
-                      <circle cx="180" cy="290" r="1.5" fill="#0072FF" className="transition-transform duration-700 group-hover:translate-x-[-120px] group-hover:translate-y-[-220px]" />
-                      <circle cx="100" cy="310" r="1" fill="#D4AF37" className="transition-transform duration-700 group-hover:translate-x-[-40px] group-hover:translate-y-[-240px]" />
-                    </g>
-                  </svg>
-                </div>
-
-                <div className="flex items-start justify-between relative z-10">
-                  <div className="w-14 h-14 rounded-2xl bg-[#0072FF]/5 border border-[#0072FF]/10 flex items-center justify-center text-brand">
-                    <MissionTarget />
-                  </div>
-                  <span className="text-xs font-mono text-slate-400 font-bold">PILLAR 02</span>
-                </div>
-                <div className="relative z-10">
-                  <h3 className="text-2xl font-bold text-[#0B1F3A] mb-3 group-hover:text-brand transition-all duration-300">
-                    Mission
-                  </h3>
-                  <p className="text-sm text-slate-500 leading-relaxed font-light transition-all duration-300 group-hover:text-[#0B1F3A]">
-                    Deploying custom analytics and automation to eliminate manual errors and raise job-relevant corporate outcomes.
-                  </p>
-                </div>
-              </div>
-            </Reveal>
-
-            {/* Values Pillar */}
-            <Reveal delay={200}>
-              <div className="bg-white border border-[#0B1F3A]/8 rounded-[32px] p-8 md:p-9 shadow-soft flex flex-col justify-between h-[360px] group hover:border-[#0072FF]/40 transition-all duration-300 relative overflow-hidden">
-                {/* Shifting Particle Background */}
-                <div className="absolute inset-0 z-0 pointer-events-none opacity-20 group-hover:opacity-40 transition-opacity duration-500">
-                  <svg className="w-full h-full" viewBox="0 0 200 360">
-                    <g className="transition-all duration-700 ease-out">
-                      <circle cx="35" cy="55" r="1.5" fill="#00F0FF" className="transition-transform duration-700 group-hover:translate-x-[15px] group-hover:translate-y-[15px]" />
-                      <circle cx="155" cy="85" r="1" fill="#0072FF" className="transition-transform duration-700 group-hover:translate-x-[-95px] group-hover:translate-y-[-15px]" />
-                      <circle cx="115" cy="185" r="1.5" fill="#D4AF37" className="transition-transform duration-700 group-hover:translate-x-[-55px] group-hover:translate-y-[-115px]" />
-                      <circle cx="55" cy="245" r="1.2" fill="#00F0FF" className="transition-transform duration-700 group-hover:translate-x-[5px] group-hover:translate-y-[-175px]" />
-                      <circle cx="175" cy="285" r="1.5" fill="#0072FF" className="transition-transform duration-700 group-hover:translate-x-[-115px] group-hover:translate-y-[-215px]" />
-                      <circle cx="95" cy="305" r="1" fill="#D4AF37" className="transition-transform duration-700 group-hover:translate-x-[-35px] group-hover:translate-y-[-235px]" />
-                    </g>
-                  </svg>
-                </div>
-
-                <div className="flex items-start justify-between relative z-10">
-                  <div className="w-14 h-14 rounded-2xl bg-[#0072FF]/5 border border-[#0072FF]/10 flex items-center justify-center text-brand">
-                    <ValuesTechChain />
-                  </div>
-                  <span className="text-xs font-mono text-slate-400 font-bold">PILLAR 03</span>
-                </div>
-                <div className="relative z-10">
-                  <h3 className="text-2xl font-bold text-[#0B1F3A] mb-3 group-hover:text-brand transition-all duration-300">
-                    Values
-                  </h3>
-                  <p className="text-sm text-slate-500 leading-relaxed font-light transition-all duration-300 group-hover:text-[#0B1F3A]">
-                    Sustained auditing integrity, engineering modular structures, and delivering clear value that converts complexity to clarity.
-                  </p>
-                </div>
-              </div>
-            </Reveal>
-          </div>
+            </div>
+          </Reveal>
         </Container>
       </section>
-
-
     </div>
   );
 }

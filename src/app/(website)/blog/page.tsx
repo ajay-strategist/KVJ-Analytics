@@ -1,6 +1,5 @@
 import React from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { Calendar, User, Tag, ArrowRight } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { Section } from "@/components/ui/Section";
@@ -8,11 +7,19 @@ import { Eyebrow } from "@/components/ui/Eyebrow";
 import { BoldStatement } from "@/components/ui/BoldStatement";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { client } from "@/sanity/lib/client";
-import { postsQuery } from "@/sanity/lib/queries";
-import { urlFor } from "@/sanity/lib/image";
+import { supabase } from "@/lib/supabase";
+import { getPageContent, mergePageContent } from "@/lib/content";
+import { FALLBACK_BLOG } from "@/lib/constants";
+import { pageMeta } from "@/lib/seo";
 
 export const revalidate = 3600;
+export const metadata = pageMeta({
+  title: "Blog — Excel, Power BI, Automation & Analytics Insights",
+  description:
+    "Practical guides on Excel automation, Power BI dashboards, report automation, and data analytics for businesses and institutions — from the KVJ Analytics team.",
+  path: "/blog",
+  keywords: ["Excel tips", "Power BI blog", "report automation guide", "data analytics articles", "business intelligence blog"],
+});
 
 const FALLBACK_POSTS = [
   {
@@ -51,11 +58,32 @@ const FALLBACK_POSTS = [
 ];
 
 export default async function BlogPage() {
-  const data = await client.fetch(postsQuery).catch((err) => {
-    console.warn("Sanity fetch error in BlogPage:", err);
-    return null;
-  });
+  // Posts from Supabase `blog_posts` (admin-managed); fall back to demo posts.
+  let data: any[] | null = null;
+  try {
+    const { data: rows, error } = await supabase
+      .from("blog_posts")
+      .select("*")
+      .eq("is_published", true)
+      .order("published_at", { ascending: false });
+    if (!error && rows) {
+      data = rows.map((r: any) => ({
+        title: r.title,
+        slug: r.slug,
+        publishedAt: r.published_at,
+        featured: !!r.featured,
+        author: { name: r.author_name || "KVJ Analytics", slug: r.author_slug || "kvj-analytics" },
+        category: { title: r.category_title || "Insights", slug: r.category_slug || "insights" },
+        coverImage: null,
+        coverUrl: r.cover_url || null,
+        description: r.description || "",
+      }));
+    }
+  } catch (err) {
+    console.warn("Supabase blog fetch error, falling back:", err);
+  }
 
+  const header = mergePageContent(await getPageContent("blog"), FALLBACK_BLOG);
   const posts = data && data.length > 0 ? data : FALLBACK_POSTS;
 
   // Split into featured and standard
@@ -80,12 +108,12 @@ export default async function BlogPage() {
       <Container className="relative z-10">
         {/* Header */}
         <div className="max-w-3xl mx-auto text-center mb-16">
-          <Eyebrow className="mb-4">Insights & Articles</Eyebrow>
+          <Eyebrow className="mb-4">{header.eyebrow}</Eyebrow>
           <BoldStatement variant="h1" className="mb-4 text-ink leading-tight tracking-tight">
-            KVJ Analytics Blog
+            {header.headingLead}{header.headingAccent ? ` ${header.headingAccent}` : ""}
           </BoldStatement>
           <p className="text-lg text-slate leading-relaxed">
-            Discover advanced Excel techniques, dashboard design rules, process automation case studies, and edtech updates.
+            {header.intro}
           </p>
         </div>
 
@@ -96,12 +124,11 @@ export default async function BlogPage() {
               <div className="absolute top-0 left-0 right-0 h-1.5 signature-gradient" />
               {/* Image box */}
               <div className="lg:col-span-6 overflow-hidden rounded-xl aspect-[16/10] relative bg-brand/5">
-                {featuredPost.coverImage ? (
-                  <Image
-                    src={urlFor(featuredPost.coverImage).url()}
+                {featuredPost.coverUrl ? (
+                  <img
+                    src={featuredPost.coverUrl}
                     alt={featuredPost.title}
-                    fill
-                    className="object-cover transition-transform duration-300 hover:scale-102"
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 hover:scale-102"
                   />
                 ) : (
                   <div className="absolute inset-0 signature-gradient opacity-90 flex items-center justify-center text-white p-8">
@@ -179,12 +206,11 @@ export default async function BlogPage() {
                   <div>
                     {/* Cover image placeholder */}
                     <div className="overflow-hidden rounded-lg aspect-[16/10] relative mb-5 bg-brand/5">
-                      {post.coverImage ? (
-                        <Image
-                          src={urlFor(post.coverImage).url()}
+                      {post.coverUrl ? (
+                        <img
+                          src={post.coverUrl}
                           alt={post.title}
-                          fill
-                          className="object-cover transition-transform duration-300 hover:scale-102"
+                          className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 hover:scale-102"
                         />
                       ) : (
                         <div className="absolute inset-0 signature-gradient opacity-80 flex items-center justify-center text-white p-6">

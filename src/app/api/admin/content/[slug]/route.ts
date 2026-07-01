@@ -15,7 +15,8 @@ import {
   FALLBACK_CORPORATE,
   FALLBACK_EDUCATION,
   FALLBACK_PRODUCTS_PAGE,
-  FALLBACK_CONTACT
+  FALLBACK_CONTACT,
+  FALLBACK_TRAINING_HUB
 } from "@/lib/constants";
 import { adminToken } from "@/lib/adminAuth";
 
@@ -49,6 +50,7 @@ const FALLBACKS: Record<string, Record<string, unknown>> = {
   education: FALLBACK_EDUCATION as unknown as Record<string, unknown>,
   products: FALLBACK_PRODUCTS_PAGE as unknown as Record<string, unknown>,
   contact: FALLBACK_CONTACT as unknown as Record<string, unknown>,
+  training: FALLBACK_TRAINING_HUB as unknown as Record<string, unknown>,
 };
 
 // ---------------------------------------------------------------------------
@@ -134,6 +136,28 @@ export async function PUT(
       revalidatePath("/products/[slug]", "page");
     } else if (slug === "contact") {
       revalidatePath("/contact");
+    } else if (slug === "training") {
+      revalidatePath("/training");
+    } else if (slug === "online-courses") {
+      revalidatePath("/training/online-courses");
+    } else if (slug === "internships") {
+      revalidatePath("/training/internships");
+    } else if (slug === "training-corporate") {
+      revalidatePath("/training/corporate");
+    } else if (slug === "training-colleges") {
+      revalidatePath("/training/colleges");
+    } else if (slug === "training-one-to-one") {
+      revalidatePath("/training/one-to-one");
+    } else if (slug === "careers") {
+      revalidatePath("/careers");
+    } else if (slug === "blog") {
+      revalidatePath("/blog");
+    } else if (slug === "impact") {
+      revalidatePath("/impact");
+    } else if (slug === "privacy") {
+      revalidatePath("/privacy");
+    } else if (slug === "terms") {
+      revalidatePath("/terms");
     } else if (slug === "site-settings") {
       revalidatePath("/", "layout");
     }

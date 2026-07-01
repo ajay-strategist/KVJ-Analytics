@@ -6,8 +6,16 @@ import { Reveal } from "@/components/ui/Reveal";
 import { ContactForm } from "@/components/ContactForm";
 import { getPageContent, mergePageContent } from "@/lib/content";
 import { FALLBACK_CONTACT, FALLBACK_SITE_SETTINGS } from "@/lib/constants";
+import { pageMeta } from "@/lib/seo";
 
 export const revalidate = 3600;
+export const metadata = pageMeta({
+  title: "Contact KVJ Analytics — Get a Free Consultation",
+  description:
+    "Talk to KVJ Analytics about Power BI, Excel & report automation, analytics consulting, or corporate/college/individual training. Call, WhatsApp, or send an enquiry — we reply within 24 hours.",
+  path: "/contact",
+  keywords: ["contact KVJ Analytics", "analytics consultation", "Power BI consultant", "training enquiry", "Cochin analytics company"],
+});
 
 export default async function ContactPage() {
   const contactData = await getPageContent("contact");
