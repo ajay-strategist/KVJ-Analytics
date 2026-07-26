@@ -42,7 +42,7 @@ export default async function HomePage() {
 
       <CapabilityStrip items={capabilities} />
 
-      <LogoWall heading={trustedBy.heading} logos={trustedBy.logos} />
+      {/* <LogoWall heading={trustedBy.heading} logos={trustedBy.logos} /> */}
 
       <SolutionExplorer
         eyebrow="Our Solutions"
