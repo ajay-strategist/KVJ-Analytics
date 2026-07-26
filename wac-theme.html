@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WAC — Digital Transformation Services & Solutions Company (Theme Recreation)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Hanken Grotesk used as a close substitute for WAC's self-hosted custom grotesque (weights 200–500) -->
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   WAC (webandcrafts.com) — Design Tokens
+   Extracted pixel-exact from the live site (computed styles)
+   ============================================================ */
+:root{
+  /* Color palette */
+  --primary:#141414;        /* near-black: text, buttons, dark sections */
+  --dark:#000000;           /* pure black: footer, overlays */
+  --secondary:#f4f4f4;      /* light grey section background */
+  --grey:#e8e8e8;           /* hairlines / muted */
+  --grey-text:rgba(20,20,20,.65);
+  --light:#ffffff;
+  --body-bg:#ffffff;
+  --body-color:#000000;
+
+  /* Radius / borders */
+  --radius:3px;             /* default component radius */
+  --btn-radius:0px;         /* buttons are sharp rectangles */
+  --border:1px solid var(--primary);
+
+  /* Typography */
+  --font:'Hanken Grotesk',Arial,Helvetica,sans-serif;
+  --fs-base:18px;           /* desktop root size */
+  --lh-base:1.5;
+
+  /* Layout */
+  --container:1500px;
+  --gutter:40px;
+  --section-py:90px;
+  --header-h:75px;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html{font-size:var(--fs-base);-webkit-font-smoothing:antialiased}
+body{
+  font-family:var(--font);
+  font-weight:400;
+  font-size:1rem;
+  line-height:var(--lh-base);
+  color:var(--body-color);
+  background:var(--body-bg);
+}
+img{max-width:100%;display:block}
+a{color:inherit;text-decoration:none}
+.container{max-width:var(--container);margin:0 auto;padding:0 var(--gutter)}
+
+/* ---------- Buttons ---------- */
+.btn{
+  display:inline-flex;align-items:center;gap:.6em;
+  font-size:1rem;font-weight:400;line-height:1;
+  padding:.94rem 1.83rem;
+  border:1px solid var(--primary);
+  border-radius:var(--btn-radius);
+  background:transparent;color:var(--primary);
+  cursor:pointer;transition:background .3s ease,color .3s ease,border-color .3s ease;
+}
+.btn:hover{background:var(--primary);color:#fff;border-color:var(--primary)}
+.btn--light{border-color:#fff;color:#fff}
+.btn--light:hover{background:#fff;color:var(--primary)}
+.btn .arw{width:18px;height:14px}
+.btn-text{display:inline-flex;align-items:center;gap:.5em;font-size:1rem}
+.btn-text .arw{width:18px}
+
+/* ---------- Header ---------- */
+.header{
+  position:fixed;top:0;left:0;width:100%;height:var(--header-h);z-index:100;
+  display:flex;align-items:center;
+  background:transparent;color:#fff;
+  transition:background .3s ease,color .3s ease;
+}
+.header.scrolled{background:#fff;color:var(--primary);box-shadow:0 1px 0 rgba(0,0,0,.06)}
+.header .container{display:flex;align-items:center;justify-content:space-between;width:100%}
+.logo{font-weight:500;font-size:1.4rem;letter-spacing:.04em}
+.logo span{font-weight:200}
+.nav{display:flex;align-items:center;gap:2.2rem}
+.nav a{font-size:.83rem;font-weight:400;opacity:.95;transition:opacity .2s}
+.nav a:hover{opacity:.6}
+.nav-cta{border:1px solid currentColor;padding:.55rem 1.4rem;font-size:.83rem;border-radius:0}
+.header.scrolled .nav-cta{border-color:var(--primary)}
+
+/* ---------- Hero ---------- */
+.hero{position:relative;min-height:100vh;display:flex;align-items:flex-end;color:#fff;overflow:hidden}
+.hero-bg{position:absolute;inset:0;z-index:0}
+.hero-bg img{width:100%;height:100%;object-fit:cover}
+.hero-bg::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.35) 0%,rgba(0,0,0,.05) 35%,rgba(0,0,0,.55) 100%)}
+.hero-inner{position:relative;z-index:1;width:100%;padding-bottom:120px}
+.hero h1{
+  font-size:clamp(2.2rem,5.2vw,3.4rem);
+  font-weight:300;line-height:1.32;max-width:14ch;margin-bottom:2rem;
+}
+.hero-thumbs{display:flex;gap:18px;margin-top:60px}
+.hero-thumb{width:150px;border:1px solid rgba(255,255,255,.4);padding:6px;background:rgba(0,0,0,.2)}
+.hero-thumb img{aspect-ratio:16/10;object-fit:cover}
+.hero-thumb span{display:block;font-size:.72rem;margin-top:8px;opacity:.85}
+
+/* ---------- Section primitives ---------- */
+.section{padding:var(--section-py) 0}
+.section--grey{background:var(--secondary)}
+.section--dark{background:var(--primary);color:#fff}
+.section--black{background:#000;color:#fff}
+.section-head{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:3rem;gap:2rem;flex-wrap:wrap}
+h2.heading,.heading{font-size:clamp(2rem,4.2vw,2.96rem);font-weight:300;line-height:1.2;color:inherit;letter-spacing:-.01em}
+.eyebrow{font-size:.85rem;letter-spacing:.18em;text-transform:uppercase;opacity:.6;margin-bottom:1rem}
+.lead{font-size:1.15rem;font-weight:300;line-height:1.6;max-width:46ch;opacity:.85}
+
+/* ---------- Case studies grid ---------- */
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:36px 30px}
+.card{display:flex;flex-direction:column}
+.card-img{overflow:hidden;border-radius:var(--radius);aspect-ratio:1/1;background:var(--grey)}
+.card-img img{width:100%;height:100%;object-fit:cover;transition:transform .6s ease}
+.card:hover .card-img img{transform:scale(1.05)}
+.card-cat{font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;color:var(--grey-text);margin:1.2rem 0 .5rem}
+.card-title{font-size:1.11rem;font-weight:500;line-height:1.33;color:var(--primary)}
+
+/* ---------- Stats ---------- */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:30px;border-top:1px solid rgba(255,255,255,.25);padding-top:50px;margin-top:60px}
+.stat-num{font-size:2.6rem;font-weight:300;line-height:1}
+.stat-label{font-size:.95rem;margin-top:.8rem;opacity:.75;line-height:1.4}
+
+/* ---------- Story ---------- */
+.story{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center}
+.story p{font-size:1.3rem;font-weight:300;line-height:1.6;margin-bottom:2rem}
+
+/* ---------- What we do list ---------- */
+.wwd-list{border-top:1px solid var(--grey)}
+.wwd-item{display:flex;align-items:center;justify-content:space-between;padding:2.2rem 0;border-bottom:1px solid var(--grey);transition:padding-left .3s ease}
+.wwd-item:hover{padding-left:1.5rem}
+.wwd-item h3{font-size:clamp(1.5rem,3vw,2.2rem);font-weight:300}
+.wwd-item .arw{width:26px;opacity:0;transition:opacity .3s,transform .3s}
+.wwd-item:hover .arw{opacity:1;transform:translateX(8px)}
+
+/* ---------- Clients ---------- */
+.client-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.12)}
+.client-cell{background:#141414;display:flex;align-items:center;justify-content:center;padding:42px 24px;min-height:120px}
+.client-cell img{max-height:42px;max-width:130px;width:auto;opacity:.9;filter:brightness(0) invert(1)}
+
+/* ---------- Insights ---------- */
+.insights{display:grid;grid-template-columns:repeat(3,1fr);gap:30px}
+.insight-img{border-radius:var(--radius);overflow:hidden;aspect-ratio:16/10;background:var(--grey)}
+.insight-img img{width:100%;height:100%;object-fit:cover;transition:transform .6s}
+.insight:hover .insight-img img{transform:scale(1.05)}
+.insight-meta{font-size:.82rem;letter-spacing:.08em;text-transform:uppercase;color:var(--grey-text);margin:1.1rem 0 .6rem}
+.insight-title{font-size:1.22rem;font-weight:400;line-height:1.35;color:var(--primary)}
+
+/* ---------- CTA band ---------- */
+.cta{text-align:center;padding:110px 0}
+.cta h2{font-size:clamp(2.2rem,5vw,3.4rem);font-weight:300;margin-bottom:1.2rem}
+.cta p{opacity:.7;margin-bottom:2.4rem;font-size:1.05rem}
+
+/* ---------- Careers ---------- */
+.careers{position:relative;background:#000;color:#fff;padding:120px 0;text-align:center;overflow:hidden}
+.careers h2{font-size:clamp(2rem,4.5vw,3rem);font-weight:300;margin-bottom:1.4rem}
+.careers p{max-width:54ch;margin:0 auto 2.4rem;opacity:.8;font-weight:300;font-size:1.1rem}
+
+/* ---------- Footer ---------- */
+.footer{background:#000;color:#fff;padding:140px 0 60px}
+.footer-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1.4fr;gap:50px;padding-bottom:80px;border-bottom:1px solid rgba(255,255,255,.15)}
+.footer h4{font-size:.85rem;letter-spacing:.14em;text-transform:uppercase;opacity:.55;margin-bottom:1.6rem;font-weight:400}
+.footer ul{list-style:none}
+.footer li{margin-bottom:.95rem}
+.footer a{font-size:.98rem;opacity:.85;transition:opacity .2s}
+.footer a:hover{opacity:1}
+.footer .contact-line{font-size:.98rem;opacity:.85;margin-bottom:.8rem}
+.footer .contact-line b{display:block;font-size:.78rem;opacity:.5;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.2rem;font-weight:400}
+.footer-bottom{display:flex;align-items:center;justify-content:space-between;padding-top:36px;flex-wrap:wrap;gap:18px}
+.footer-bottom .copy{font-size:.85rem;opacity:.6}
+.footer-social{display:flex;gap:18px}
+.footer-social a{width:34px;height:34px;border:1px solid rgba(255,255,255,.25);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;opacity:.7;transition:.2s}
+.footer-social a:hover{opacity:1;border-color:#fff}
+
+/* ---------- Responsive ---------- */
+@media(max-width:1024px){
+  :root{--fs-base:17px}
+  .cards,.insights{grid-template-columns:repeat(2,1fr)}
+  .client-grid{grid-template-columns:repeat(3,1fr)}
+  .story{grid-template-columns:1fr;gap:30px}
+  .footer-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:640px){
+  :root{--fs-base:16px;--gutter:22px;--section-py:60px}
+  .nav{display:none}
+  .cards,.insights,.stats{grid-template-columns:1fr 1fr}
+  .stats{gap:30px 20px}
+  .client-grid{grid-template-columns:repeat(2,1fr)}
+  .footer-grid{grid-template-columns:1fr}
+  .hero-thumbs{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ========== HEADER ========== -->
+<header class="header" id="header">
+  <div class="container">
+    <a class="logo" href="#">Webandcrafts</a>
+    <nav class="nav">
+      <a href="#">Services</a>
+      <a href="#">Solutions</a>
+      <a href="#">Industries</a>
+      <a href="#">Works</a>
+      <a href="#">About</a>
+      <a href="#">Careers</a>
+      <a href="#" class="nav-cta">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<!-- ========== HERO ========== -->
+<section class="hero">
+  <div class="hero-bg">
+    <img src="https://admin.wac.co/uploads/desktop_poster_1_b703d41742.jpg" alt="WAC hero">
+  </div>
+  <div class="hero-inner">
+    <div class="container">
+      <h1>Experiences Powered by Intelligence.</h1>
+      <a class="btn btn--light" href="#">Watch the Future
+        <svg class="arw" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </a>
+      <div class="hero-thumbs">
+        <div class="hero-thumb"><img src="https://admin.wac.co/uploads/desktop_poster_1_b703d41742.jpg" alt=""><span>Intelligence, Elevated</span></div>
+        <div class="hero-thumb"><img src="https://admin.wac.co/uploads/ai_thumb_b3f4404496.jpg" alt=""><span>AI + Insight</span></div>
+        <div class="hero-thumb"><img src="https://admin.wac.co/uploads/beyond_thumb_3ee780fb29.jpg" alt=""><span>WAC Beyond</span></div>
+        <div class="hero-thumb"><img src="https://admin.wac.co/uploads/Banner_thumb_1_min_136b7e8d24.png" alt=""><span>Story Reel</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== CASE STUDIES ========== -->
+<section class="section">
+  <div class="container">
+    <div class="section-head">
+      <h2 class="heading">Case Studies</h2>
+      <a class="btn" href="#">View all works</a>
+    </div>
+    <div class="cards">
+      <a class="card" href="#">
+        <div class="card-img"><img src="https://admin.wac.co/uploads/careebu_coffee_19e3d1a32c.png" alt="Caribou Coffee"></div>
+        <div class="card-cat">Food</div>
+        <div class="card-title">Caribou: Helping a reputed coffee chain go digital with a powerful app in their Kuwait chapter</div>
+      </a>
+      <a class="card" href="#">
+        <div class="card-img"><img src="https://admin.wac.co/uploads/LULU_Thumb_2_c17c456ffc.jpg" alt="Lulu Hypermarket"></div>
+        <div class="card-cat">Retail</div>
+        <div class="card-title">LuLu Hypermarket: Building a one-click path for a search-intensive, high volume big brand store</div>
+      </a>
+      <a class="card" href="#">
+        <div class="card-img"><img src="https://admin.wac.co/uploads/middlesex_fb62084b71.png" alt="Middlesex University"></div>
+        <div class="card-cat">Education</div>
+        <div class="card-title">Middlesex University: Revamping the digital face of a world-class university for better visual impact</div>
+      </a>
+      <a class="card" href="#">
+        <div class="card-img"><img src="https://admin.wac.co/uploads/yallatoys_0ca8d87e79.png" alt="Yallatoys"></div>
+        <div class="card-cat">Retail</div>
+        <div class="card-title">Yallatoys: Elevating Qatar's No.1 toy brand with our digital prowess in web, app, and digital marketing</div>
+      </a>
+      <a class="card" href="#">
+        <div class="card-img"><img src="https://admin.wac.co/uploads/dtale_banner_213f5b1981.png" alt="Dtale"></div>
+        <div class="card-cat">Retail · Manufacturing</div>
+        <div class="card-title">Dtale: Reshaping the entire digital landscape for India's foremost design-led, interior fit-out brand</div>
+      </a>
+      <a class="card" href="#">
+        <div class="card-img"><img src="https://admin.wac.co/uploads/ikea_54473e2d09.png" alt="IKEA Foods"></div>
+        <div class="card-cat">Retail · Food</div>
+        <div class="card-title">IKEA Foods: Delectably designed branded E-commerce store to launch a new sales channel</div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ========== STATS + STORY (dark) ========== -->
+<section class="section section--dark">
+  <div class="container">
+    <div class="story">
+      <div>
+        <div class="eyebrow">Our Story</div>
+        <p>In a world brimming with possibilities, we sprouted, seizing our destiny to create an extraordinary narrative — a tale that encapsulates laughter, tears, challenges, and triumphs.</p>
+        <a class="btn btn--light" href="#">About us</a>
+      </div>
+      <div class="stats" style="border-color:rgba(255,255,255,.25)">
+        <div><div class="stat-num">700+</div><div class="stat-label">High-Impact Projects</div></div>
+        <div><div class="stat-num">600+</div><div class="stat-label">International Clients</div></div>
+        <div><div class="stat-num">450+</div><div class="stat-label">Dedicated Experts</div></div>
+        <div><div class="stat-num">100+</div><div class="stat-label">Brand Connections</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== WHAT WE DO ========== -->
+<section class="section">
+  <div class="container">
+    <div class="section-head">
+      <h2 class="heading">What We Do</h2>
+      <a class="btn" href="#">Explore What We Do</a>
+    </div>
+    <div class="wwd-list">
+      <a class="wwd-item" href="#"><h3>Strategy + Customer Experience</h3><svg class="arw" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      <a class="wwd-item" href="#"><h3>Data + Intelligence</h3><svg class="arw" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      <a class="wwd-item" href="#"><h3>Digital Marketing + Transformation</h3><svg class="arw" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      <a class="wwd-item" href="#"><h3>E-commerce + Accelerators</h3><svg class="arw" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      <a class="wwd-item" href="#"><h3>Innovation + Product Engineering</h3><svg class="arw" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      <a class="wwd-item" href="#"><h3>Platforms + Technology</h3><svg class="arw" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+    </div>
+  </div>
+</section>
+
+<!-- ========== GEN AI BANNER ========== -->
+<section class="section section--grey">
+  <div class="container" style="text-align:center;max-width:900px">
+    <div class="eyebrow" style="text-align:center">Gen AI</div>
+    <h2 class="heading" style="margin-bottom:1.4rem">Unlock The Power of Gen AI</h2>
+    <p class="lead" style="margin:0 auto 2.2rem">Today's businesses need more than just digital tools — they need clear strategic direction, backed by deep customer insight.</p>
+    <a class="btn" href="#">Start with Gen AI</a>
+  </div>
+</section>
+
+<!-- ========== CLIENTS (dark) ========== -->
+<section class="section section--dark">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <h2 class="heading">Clients</h2>
+        <p class="lead" style="margin-top:.8rem">Our clients are everything to us; so are we to them.</p>
+      </div>
+      <a class="btn btn--light" href="#">View all clients</a>
+    </div>
+    <div class="client-grid">
+      <div class="client-cell"><img src="https://admin.wac.co/uploads/Group_167345_56bfd0d947.svg" alt="client"></div>
+      <div class="client-cell"><img src="https://admin.wac.co/uploads/client_2_5a488bf25f.svg" alt="client"></div>
+      <div class="client-cell"><img src="https://admin.wac.co/uploads/Group_167335_e325126701.svg" alt="Garmin"></div>
+      <div class="client-cell"><img src="https://admin.wac.co/uploads/Federal_Bank_White_65a617fb4a.svg" alt="Federal Bank"></div>
+      <div class="client-cell"><img src="https://admin.wac.co/uploads/Group_167340_c04c2e510b.svg" alt="Marriott"></div>
+      <div class="client-cell"><img src="https://admin.wac.co/uploads/Group_167338_62bdf18cfe.svg" alt="Joyalukkas"></div>
+      <div class="client-cell"><img src="https://admin.wac.co/uploads/Group_167337_4cc65a272d.svg" alt="Alyasra"></div>
+      <div class="client-cell"><img src="https://admin.wac.co/uploads/nestle_white_image_6c16d05d78.svg" alt="Nestle"></div>
+      <div class="client-cell"><img src="https://admin.wac.co/uploads/Group_167352_e82f229aac.svg" alt="Al Qatami"></div>
+      <div class="client-cell"><img src="https://admin.wac.co/uploads/Group_167334_d856c252b4.svg" alt="Landmark Group"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== INSIGHTS ========== -->
+<section class="section">
+  <div class="container">
+    <div class="section-head">
+      <h2 class="heading">Insights</h2>
+      <a class="btn" href="#">Explore all insights</a>
+    </div>
+    <div class="insights">
+      <a class="insight" href="#">
+        <div class="insight-img"><img src="https://admin.wac.co/uploads/Best_Programming_Languages_cecf1c5d4e.jpg" alt=""></div>
+        <div class="insight-meta">Blog · 9 min read</div>
+        <div class="insight-title">Best Programming Languages in 2026 for Future-Ready Development</div>
+      </a>
+      <a class="insight" href="#">
+        <div class="insight-img"><img src="https://admin.wac.co/uploads/AI_in_Ecommerce_2026_5c31e31ce1.jpg" alt=""></div>
+        <div class="insight-meta">Blog · 8 min read</div>
+        <div class="insight-title">AI for Ecommerce: Driving the Next Digital Revolution</div>
+      </a>
+      <a class="insight" href="#">
+        <div class="insight-img"><img src="https://admin.wac.co/uploads/DSC_09058_2ceec90ced.jpg" alt=""></div>
+        <div class="insight-meta">News · 3 min read</div>
+        <div class="insight-title">WAC Gifts Its First Employee a Mercedes-Benz</div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ========== CAREERS ========== -->
+<section class="careers">
+  <div class="container">
+    <div class="eyebrow" style="text-align:center;opacity:.7">Careers</div>
+    <h2>You Will Like It Here!</h2>
+    <p>At WAC, we are all about creating a habitat that lets you grow stronger roots and larger branches. Together let's make a fruitful journey!</p>
+    <a class="btn btn--light" href="#">Explore opportunities</a>
+  </div>
+</section>
+
+<!-- ========== CTA ========== -->
+<section class="cta section--grey">
+  <div class="container">
+    <h2>Get started now!</h2>
+    <p>It takes less than a minute of your time.</p>
+    <a class="btn" href="#">Request a quote</a>
+  </div>
+</section>
+
+<!-- ========== FOOTER ========== -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <a class="logo" href="#" style="font-size:1.6rem">Webandcrafts</a>
+        <h4 style="margin-top:2rem">Company</h4>
+        <ul>
+          <li><a href="#">About</a></li>
+          <li><a href="#">Services</a></li>
+          <li><a href="#">Industries</a></li>
+          <li><a href="#">Works</a></li>
+          <li><a href="#">Careers</a></li>
+          <li><a href="#">Contact</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Services</h4>
+        <ul>
+          <li><a href="#">Branding</a></li>
+          <li><a href="#">Experience Design</a></li>
+          <li><a href="#">Technology</a></li>
+          <li><a href="#">Digital Marketing</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Other</h4>
+        <ul>
+          <li><a href="#">Partnership</a></li>
+          <li><a href="#">Awards and Recognitions</a></li>
+          <li><a href="#">Insights</a></li>
+          <li><a href="#">Blogs</a></li>
+          <li><a href="#">Resource Augmentation</a></li>
+          <li><a href="#">Testimonials</a></li>
+          <li><a href="#">Our Clients</a></li>
+          <li><a href="#">Sitemap</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Connect</h4>
+        <div class="contact-line"><b>General Enquiry</b>+91 480 2733 111</div>
+        <div class="contact-line"><b>Sales Enquiry</b>+91 480 2733 555</div>
+        <div class="contact-line"><b>Email</b>info@webandcrafts.com</div>
+        <div class="contact-line"><b>HR Enquiry</b>+91 480 2733 999</div>
+        <div class="contact-line"><b>Whatsapp (Sales)</b>+91 8606 483 399</div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="copy">WAC © 2026 All rights reserved &nbsp;·&nbsp; Privacy Policy &nbsp;|&nbsp; Terms &amp; Conditions</div>
+      <div class="footer-social">
+        <a href="#" title="LinkedIn">in</a>
+        <a href="#" title="YouTube">yt</a>
+        <a href="#" title="Instagram">ig</a>
+        <a href="#" title="Facebook">fb</a>
+        <a href="#" title="Dribbble">dr</a>
+        <a href="#" title="Behance">be</a>
+        <a href="#" title="X">x</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+// Header turns solid white after scrolling past the hero
+const header=document.getElementById('header');
+const onScroll=()=>{header.classList.toggle('scrolled',window.scrollY>window.innerHeight-100)};
+window.addEventListener('scroll',onScroll);onScroll();
+</script>
+</body>
+</html>

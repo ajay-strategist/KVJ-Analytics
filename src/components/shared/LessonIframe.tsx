@@ -1,0 +1,544 @@
+"use client";
+
+import React, { useRef, useState, useEffect, useCallback } from "react";
+
+interface LessonIframeProps {
+  html: string;
+  darkMode?: boolean;
+  hideSidebar?: boolean;
+  onLightDetected?: (isLight: boolean) => void;
+  onContentWindow?: (win: Window | null) => void;
+}
+
+export const DARK_MODE_CSS = `
+html { filter: invert(1) hue-rotate(180deg); background: #ffffff !important; }
+img, video, iframe, svg, canvas,
+[style*="background-image"] { filter: invert(1) hue-rotate(180deg); }
+`;
+
+export const HIDE_SIDEBAR_CSS = `
+aside,
+nav,
+[class*="sidebar" i],
+[id*="sidebar" i],
+[class*="side-bar" i],
+[class*="sidenav" i],
+[id*="sidenav" i],
+[class*="left-panel" i],
+[id*="left-panel" i],
+header:first-of-type,
+[class*="header" i]:first-of-type,
+[class*="top-bar" i]:first-of-type,
+[class*="navbar" i]:first-of-type,
+[class*="exit" i] { display: none !important; }
+
+main,
+[role="main"],
+[class*="content" i]:not([class*="table-of-contents" i]),
+[class*="main" i],
+[id*="content" i],
+[id*="main" i] {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin-left: 0 !important;
+  padding-left: 1.5rem !important;
+}
+`;
+
+export function LessonIframe({
+  html,
+  darkMode = false,
+  hideSidebar = false,
+  onLightDetected,
+  onContentWindow,
+}: LessonIframeProps) {
+  const frameRef = useRef<HTMLIFrameElement>(null);
+  const lightDetectedRef = useRef(false);
+
+  // Build a self-contained HTML document wrapping the content.
+  // Tailwind CDN is linked so that all our pre-designed premium blocks render beautifully.
+  const srcDoc = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<base target="_blank" />
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+<style>
+  *{box-sizing:border-box}
+  :root {
+    --color-base: #050608;
+    --color-base-2: #0A0D13;
+    --color-surface: #0A0D13;
+    --color-card: #0E1117;
+    --color-line: rgba(67, 245, 255, 0.12);
+    --color-brand: #00F0FF;
+    --color-brand-secondary: #16E6D8;
+    --color-ink: #FFFFFF;
+    --color-slate: #CBD5E1;
+  }
+  html,body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:16px;
+    line-height:1.8;
+    color: var(--color-slate);
+    background-color:transparent;
+    margin:0;
+    padding:0;
+  }
+  body{overflow:hidden}
+  
+  /* Modern Editorial Typography */
+  h1, h2, h3, h4, h5, h6 {
+    color: var(--color-ink);
+    font-weight: 700;
+    line-height: 1.3;
+    margin-top: 2.5rem;
+    margin-bottom: 1.25rem;
+    letter-spacing: -0.02em;
+    font-family: system-ui, -apple-system, sans-serif;
+  }
+  h1 { font-size: 2.25rem; font-weight: 800; }
+  h2 { font-size: 1.75rem; border-b: 1px solid var(--color-line); padding-bottom: 0.5rem; }
+  h3 { font-size: 1.35rem; }
+  h4 { font-size: 1.15rem; }
+  
+  p {
+    font-size: 1.05rem;
+    margin-bottom: 1.75rem;
+    color: #cbd5e1;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+  }
+  
+  /* Bold links */
+  a {
+    color: var(--color-brand);
+    text-decoration: none;
+    font-weight: 500;
+    border-bottom: 1px solid rgba(0, 240, 255, 0.2);
+    transition: all 0.2s ease;
+  }
+  a:hover {
+    color: var(--color-brand-secondary);
+    border-bottom-color: var(--color-brand-secondary);
+  }
+  
+  /* Lists */
+  ul, ol {
+    margin-bottom: 1.75rem;
+    padding-left: 1.5rem;
+  }
+  ul { list-style-type: disc; }
+  ol { list-style-type: decimal; }
+  li {
+    margin-bottom: 0.5rem;
+    color: #cbd5e1;
+    font-size: 1.05rem;
+  }
+  li::marker {
+    color: var(--color-brand);
+  }
+  
+  /* Blockquotes */
+  blockquote {
+    border-left: 4px solid var(--color-brand);
+    background: rgba(0, 240, 255, 0.02);
+    padding: 1.25rem 1.75rem;
+    margin: 2.5rem 0;
+    border-radius: 0 1rem 1rem 0;
+    font-style: italic;
+    color: #f1f5f9;
+  }
+  blockquote p {
+    margin-bottom: 0;
+    font-size: 1.15rem;
+    color: #f8fafc;
+  }
+  
+  /* Premium Callout Blocks */
+  .callout, .callout-info, .callout-success, .callout-warning, .callout-danger, .callout-tip, .callout-important, .callout-example {
+    padding: 1.25rem 1.5rem;
+    margin: 2rem 0;
+    border-radius: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.02);
+    backdrop-filter: blur(8px);
+    position: relative;
+    padding-left: 3rem;
+  }
+  .callout::before {
+    position: absolute;
+    left: 1.25rem;
+    top: 1.35rem;
+    font-size: 1.1rem;
+    line-height: 1;
+  }
+  .callout-info, .callout-note {
+    border-left: 4px solid #3b82f6;
+    background: rgba(59, 130, 246, 0.03);
+  }
+  .callout-info::before, .callout-note::before { content: "ℹ️"; }
+  
+  .callout-success {
+    border-left: 4px solid #10b981;
+    background: rgba(16, 185, 129, 0.03);
+  }
+  .callout-success::before { content: "✅"; }
+  
+  .callout-warning {
+    border-left: 4px solid #f59e0b;
+    background: rgba(245, 158, 11, 0.03);
+  }
+  .callout-warning::before { content: "⚠️"; }
+  
+  .callout-tip {
+    border-left: 4px solid #8b5cf6;
+    background: rgba(139, 92, 246, 0.03);
+  }
+  .callout-tip::before { content: "💡"; }
+  
+  .callout-important {
+    border-left: 4px solid #ef4444;
+    background: rgba(239, 68, 68, 0.03);
+  }
+  .callout-important::before { content: "🔥"; }
+  
+  .callout-example {
+    border-left: 4px solid #14b8a6;
+    background: rgba(20, 184, 166, 0.03);
+  }
+  .callout-example::before { content: "📝"; }
+  
+  /* Tables styling */
+  table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 2rem 0;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 0.75rem;
+    overflow: hidden;
+  }
+  th {
+    background-color: rgba(255, 255, 255, 0.02);
+    color: var(--color-ink);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    padding: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+  td {
+    padding: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    color: #cbd5e1;
+    font-size: 0.9rem;
+  }
+  tr:last-child td {
+    border-bottom: none;
+  }
+  tr:hover td {
+    background-color: rgba(255, 255, 255, 0.01);
+  }
+  
+  /* Images styling */
+  img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: zoom-in;
+    margin: 2rem auto;
+  }
+  img:hover {
+    transform: scale(1.005);
+    box-shadow: 0 15px 40px -15px rgba(0, 240, 255, 0.15);
+  }
+  
+  /* Code Blocks */
+  pre {
+    background-color: #080b11 !important;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 1rem;
+    padding: 1.25rem;
+    margin: 2rem 0;
+    overflow-x: auto;
+  }
+  code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.9em;
+    color: #e2e8f0;
+  }
+  pre code {
+    background: transparent;
+    padding: 0;
+    color: #cbd5e1;
+    display: block;
+    line-height: 1.6;
+  }
+  :not(pre) > code {
+    background-color: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 0.375rem;
+    padding: 0.2rem 0.4rem;
+    color: #22d3ee;
+  }
+  
+  /* Theme utilities mapping */
+  .bg-card { background-color: var(--color-card) !important; }
+  .border-white\\/5 { border-color: rgba(255, 255, 255, 0.05) !important; }
+  .border-white\\/10 { border-color: rgba(255, 255, 255, 0.1) !important; }
+  .border-brand\\/20 { border-color: rgba(0, 240, 255, 0.2) !important; }
+  .text-brand { color: var(--color-brand) !important; }
+  .text-white { color: var(--color-ink) !important; }
+  .text-slate-350 { color: var(--color-slate) !important; }
+  .signature-gradient {
+    background: linear-gradient(120deg, #00F0FF 0%, #3A7BFF 35%, #16E6D8 60%, #00F0FF 100%) !important;
+  }
+  
+  /* Scrollbar styles */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.15);
+    border-radius: 4px;
+  }
+</style>
+</head>
+<body class="p-1">
+${html}
+<script>
+  // Copy Code Button & Language Label
+  document.querySelectorAll('pre').forEach(pre => {
+    pre.className = (pre.className || '') + ' relative group';
+    
+    // Add language label
+    const codeEl = pre.querySelector('code');
+    let lang = 'code';
+    if (codeEl && codeEl.className) {
+      const match = codeEl.className.match(/language-(\\w+)/);
+      if (match) lang = match[1];
+    }
+    const label = document.createElement('span');
+    label.className = 'absolute top-2 left-3 text-[10px] text-slate-500 font-mono uppercase select-none';
+    label.textContent = lang;
+    pre.appendChild(label);
+    
+    const btn = document.createElement('button');
+    btn.className = 'absolute top-2 right-2 px-2 py-1 bg-white/5 hover:bg-white/10 text-white rounded text-[10px] opacity-0 group-hover:opacity-100 transition-opacity focus:outline-none border border-white/10';
+    btn.textContent = 'Copy';
+    btn.onclick = () => {
+      let codeText = '';
+      pre.childNodes.forEach(node => {
+        if (node !== btn && node !== label) codeText += node.textContent;
+      });
+      navigator.clipboard.writeText(codeText.trim());
+      btn.textContent = 'Copied!';
+      setTimeout(() => btn.textContent = 'Copy', 2000);
+    };
+    pre.appendChild(btn);
+  });
+
+  // Image Zoom Lightbox
+  document.querySelectorAll('img').forEach(img => {
+    img.onclick = () => {
+      const overlay = document.createElement('div');
+      overlay.style.position = 'fixed';
+      overlay.style.inset = '0';
+      overlay.style.backgroundColor = 'rgba(5, 6, 8, 0.95)';
+      overlay.style.zIndex = '99999';
+      overlay.style.display = 'flex';
+      overlay.style.alignItems = 'center';
+      overlay.style.justifyContent = 'center';
+      overlay.style.cursor = 'zoom-out';
+      overlay.style.transition = 'all 0.25s ease';
+      
+      const clone = img.cloneNode();
+      clone.style.maxWidth = '90%';
+      clone.style.maxHeight = '90%';
+      clone.style.objectFit = 'contain';
+      clone.style.border = 'none';
+      clone.style.boxShadow = '0 25px 50px -12px rgba(0,0,0,0.8)';
+      clone.style.transform = 'none';
+      
+      overlay.appendChild(clone);
+      overlay.onclick = () => overlay.remove();
+      document.body.appendChild(overlay);
+    };
+  });
+
+  // Heading anchor links
+  document.querySelectorAll('h2, h3').forEach(h => {
+    h.className = (h.className || '') + ' relative group cursor-pointer';
+    if (!h.id) {
+      h.id = h.textContent.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    }
+    const anchor = document.createElement('span');
+    anchor.className = 'absolute -left-5 text-brand opacity-0 group-hover:opacity-100 transition-opacity select-none';
+    anchor.textContent = '#';
+    anchor.style.paddingRight = '5px';
+    anchor.onclick = (e) => {
+      e.stopPropagation();
+      window.parent.postMessage({ type: 'COPY_LINK', id: h.id }, '*');
+    };
+    h.insertBefore(anchor, h.firstChild);
+  });
+
+  // Scroll spy Intersection Observer inside iframe
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        window.parent.postMessage({ type: 'ACTIVE_HEADING', id: entry.target.id }, '*');
+      }
+    });
+  }, { rootMargin: '0px 0px -75% 0px' });
+  document.querySelectorAll('h2, h3').forEach(h => observer.observe(h));
+
+  // Listen for scroll commands
+  window.addEventListener('message', (e) => {
+    if (e.data.type === 'SCROLL_TO_HEADING') {
+      const el = document.getElementById(e.data.id);
+      if (el) {
+        const rect = el.getBoundingClientRect();
+        const absoluteTop = rect.top + window.pageYOffset;
+        window.parent.postMessage({ type: 'SCROLL_PARENT', top: absoluteTop }, '*');
+      }
+    }
+  });
+</script>
+</body>
+</html>`;
+
+  const injectStyle = useCallback((doc: Document, id: string, css: string) => {
+    const existing = doc.querySelector(`style[data-kvj-id="${id}"]`);
+    if (existing) {
+      existing.textContent = css;
+    } else {
+      const tag = doc.createElement("style");
+      tag.setAttribute("data-kvj-id", id);
+      tag.textContent = css;
+      doc.head.appendChild(tag);
+    }
+  }, []);
+
+  const removeStyle = useCallback((doc: Document, id: string) => {
+    doc.querySelector(`style[data-kvj-id="${id}"]`)?.remove();
+  }, []);
+
+  const autoResize = useCallback(() => {
+    const frame = frameRef.current;
+    if (!frame) return;
+    try {
+      const body = frame.contentDocument?.body;
+      if (body) {
+        frame.style.height = "0px";
+        frame.style.height = `${body.scrollHeight + 16}px`;
+      }
+    } catch (e) {
+      // Cross-origin safety
+    }
+  }, []);
+
+  const detectLightBackground = useCallback((doc: Document) => {
+    if (lightDetectedRef.current) return;
+    try {
+      const bg = window.getComputedStyle(doc.body).backgroundColor;
+      const match = bg.match(/\d+/g);
+      if (match && match.length >= 3) {
+        const [r, g, b] = match.map(Number);
+        const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+        lightDetectedRef.current = true;
+        onLightDetected?.(lum > 0.5);
+      }
+    } catch {
+      // ignore
+    }
+  }, [onLightDetected]);
+
+  const applyOverlays = useCallback(() => {
+    const frame = frameRef.current;
+    const doc = frame?.contentDocument;
+    if (!doc || !doc.head) return;
+
+    if (darkMode) {
+      injectStyle(doc, "kvj-dark", DARK_MODE_CSS);
+      doc.body.classList.add("dark");
+    } else {
+      removeStyle(doc, "kvj-dark");
+      doc.body.classList.remove("dark");
+    }
+
+    if (hideSidebar) {
+      injectStyle(doc, "kvj-hide-sidebar", HIDE_SIDEBAR_CSS);
+    } else {
+      removeStyle(doc, "kvj-hide-sidebar");
+    }
+
+    autoResize();
+  }, [darkMode, hideSidebar, injectStyle, removeStyle, autoResize]);
+
+  // Initial load handler
+  const handleLoad = () => {
+    const frame = frameRef.current;
+    if (!frame) return;
+    try {
+      const doc = frame.contentDocument;
+      if (doc) {
+        detectLightBackground(doc);
+        applyOverlays();
+        onContentWindow?.(frame.contentWindow);
+
+        // Attach mutation observer to dynamically resize on content updates
+        const observer = new MutationObserver(autoResize);
+        observer.observe(doc.body, { subtree: true, childList: true, attributes: true });
+        
+        // Poll resize for images loading or external files
+        let count = 0;
+        const interval = setInterval(() => {
+          autoResize();
+          if (++count > 5) clearInterval(interval);
+        }, 300);
+
+        return () => {
+          observer.disconnect();
+          clearInterval(interval);
+        };
+      }
+    } catch {
+      // ignore
+    }
+  };
+
+  useEffect(() => {
+    lightDetectedRef.current = false;
+    // Re-trigger load setup if html changes (since srcDoc forces iframe reload)
+    const timer = setTimeout(handleLoad, 50);
+    return () => clearTimeout(timer);
+  }, [html]);
+
+  useEffect(() => {
+    applyOverlays();
+  }, [darkMode, hideSidebar, applyOverlays]);
+
+  return (
+    <iframe
+      ref={frameRef}
+      srcDoc={srcDoc}
+      onLoad={handleLoad}
+      className="w-full border-none bg-transparent transition-all duration-200"
+      style={{ minHeight: "150px" }}
+      sandbox="allow-scripts allow-same-origin allow-popups"
+      scrolling="no"
+    />
+  );
+}

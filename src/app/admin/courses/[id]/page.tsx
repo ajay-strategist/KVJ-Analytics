@@ -1,0 +1,1808 @@
+"use client";
+
+import React, { useEffect, useState, useRef } from "react";
+import { useRouter, usePathname, useParams } from "next/navigation";
+import { supabase } from "@/lib/supabase";
+import { QuestionBuilder } from "@/components/admin/QuestionBuilder";
+import Link from "next/link";
+import {
+  ArrowLeft,
+  Plus,
+  Pencil,
+  Trash2,
+  Check,
+  X,
+  Loader2,
+  AlertCircle,
+  Upload,
+  ArrowUp,
+  ArrowDown,
+  Layers,
+  FileCode,
+  Sparkles,
+  BookOpen,
+  Clock,
+  HelpCircle,
+  Code2,
+  ListOrdered,
+  GripVertical,
+  Eye,
+} from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import dynamic from "next/dynamic";
+const CodeMirror = dynamic(() => import("@uiw/react-codemirror"), { ssr: false });
+import { python } from "@codemirror/lang-python";
+import { javascript } from "@codemirror/lang-javascript";
+import { sql } from "@codemirror/lang-sql";
+
+interface Lesson {
+  id: string;
+  module_id: string;
+  title: string;
+  kind: "theory" | "activity" | "assessment";
+  content_html: string;
+  max_score: number | null;
+  display_order: number;
+}
+
+interface Module {
+  id: string;
+  course_id: string;
+  title: string;
+  display_order: number;
+  lessons: Lesson[];
+}
+
+interface Course {
+  id: string;
+  slug: string;
+  title: string;
+  segment: "corporate" | "college";
+  summary: string;
+  introduction: string;
+  thumbnail_url: string;
+  price_inr: number;
+  is_paid: boolean;
+  display_order: number;
+}
+
+type LessonValues = {
+  id?: string;
+  module_id?: string;
+  title: string;
+  kind: "theory" | "activity" | "assessment";
+  content_html: string;
+  max_score: number | null;
+  assessment_settings?: {
+    duration_mins: number;
+    pass_mark: number;
+    attempts_allowed: number;
+    negative_marking: number;
+    randomize: boolean;
+    publish_results: boolean;
+  };
+};
+
+/**
+ * Self-contained lesson editor. Holds its OWN local state so typing in the
+ * HTML field does NOT re-render the (very large) course builder on every
+ * keystroke. Commits to the parent only when "Save Lesson" is clicked.
+ */
+// All supported question types (Google-Forms-style picker in the test builder)
+const QUESTION_TYPES: { value: string; label: string; hint: string }[] = [
+  { value: "single", label: "Single Choice", hint: "One correct (radio)" },
+  { value: "multiple", label: "Multiple Choice", hint: "Many correct (checkboxes)" },
+  { value: "truefalse", label: "True / False", hint: "Boolean" },
+  { value: "fillblank", label: "Fill in the Blank", hint: "Text / dropdown" },
+  { value: "dragdrop", label: "Drag & Drop", hint: "Matching pairs" },
+  { value: "sequence", label: "Sequence", hint: "Reorder steps" },
+  { value: "matrix", label: "Matrix / Grid", hint: "Rows × columns" },
+  { value: "code", label: "Code", hint: "Sandbox execution" },
+];
+
+const LessonEditor = React.memo(function LessonEditor({
+  initial,
+  onSave,
+  onCancel,
+  fetchMockTests,
+}: {
+  initial: LessonValues;
+  onSave: (values: LessonValues) => void;
+  onCancel: () => void;
+  fetchMockTests?: (courseId: string) => void;
+}) {
+  const routeParams = useParams<{ id: string }>();
+  const courseId = routeParams?.id as string;
+
+  const [title, setTitle] = React.useState(initial.title || "");
+  const [kind, setKind] = React.useState<"theory" | "activity" | "assessment">(initial.kind || "theory");
+  const [contentHtml, setContentHtml] = React.useState(initial.content_html || "");
+  const [maxScore, setMaxScore] = React.useState<number>(initial.max_score ?? 100);
+  const [importing, setImporting] = React.useState(false);
+  const [importStatus, setImportStatus] = React.useState<string | null>(null);
+  // Collapsible guidelines panel for activity lessons
+  const [guidelinesOpen, setGuidelinesOpen] = React.useState(true);
+  // Feedback state for the "Copy AI prompt" button
+  const [copiedPrompt, setCopiedPrompt] = React.useState(false);
+  const fileId = React.useId();
+
+  // Assessment Settings
+  const [durationMins, setDurationMins] = React.useState<number>(30);
+  const [passMark, setPassMark] = React.useState<number>(0);
+  const [attemptsAllowed, setAttemptsAllowed] = React.useState<number>(0);
+  const [negativeMarking, setNegativeMarking] = React.useState<number>(0);
+  const [randomize, setRandomize] = React.useState<boolean>(false);
+  const [publishResults, setPublishResults] = React.useState<boolean>(true);
+
+  const [linkedTest, setLinkedTest] = React.useState<any>(null);
+  const [loadingTest, setLoadingTest] = React.useState(false);
+  const [uploadedImages, setUploadedImages] = React.useState<string[]>([]);
+
+  React.useEffect(() => {
+    if (initial.id && initial.kind === "assessment") {
+      const loadTestDetails = async () => {
+        setLoadingTest(true);
+        try {
+          const { data, error } = await supabase
+            .from("mock_tests")
+            .select("*")
+            .eq("lesson_id", initial.id)
+            .maybeSingle();
+
+          if (error) throw error;
+          if (data) {
+            setLinkedTest(data);
+            setDurationMins(data.duration_mins ?? 30);
+            setPassMark(data.pass_mark ?? 0);
+            setAttemptsAllowed(data.attempts_allowed ?? 0);
+            setNegativeMarking(data.negative_marking ?? 0);
+            setRandomize(data.randomize ?? false);
+            setPublishResults(data.publish_results ?? true);
+          }
+        } catch (err) {
+          console.error("Error loading linked test:", err);
+        } finally {
+          setLoadingTest(false);
+        }
+      };
+      loadTestDetails();
+    }
+  }, [initial.id, initial.kind]);
+
+  /**
+   * Enhanced HTML import:
+   * 1. Reads the .html file from the FileList.
+   * 2. Scans all <img src> attributes for relative paths.
+   * 3. For each relative src, looks for a matching file in the FileList
+   *    (same filename, any subfolder stripped), then uploads it via
+   *    POST /api/admin/upload and rewrites the src to the public URL.
+   * 4. Sets the rewritten HTML as contentHtml.
+   *
+   * If an image file isn’t in the selection, the src is left unchanged.
+   * Those images will render as native broken-image icons inside the
+   * sandboxed lesson iframe — no layout breakage.
+   */
+  const importHtml = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    // Find the HTML file among selected files
+    const htmlFile = Array.from(files).find((f) =>
+      f.name.toLowerCase().endsWith(".html") || f.name.toLowerCase().endsWith(".htm")
+    );
+    if (!htmlFile) {
+      alert("No .html or .htm file found in selection.");
+      return;
+    }
+
+    setImporting(true);
+    setImportStatus(null);
+    let uploaded = 0;
+    let missing = 0;
+
+    try {
+      const text = await htmlFile.text();
+
+      // Parse with DOMParser (browser-only; this is a client component)
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(text, "text/html");
+      const images = Array.from(doc.querySelectorAll("img[src]"));
+
+      // Build a lookup map of filename -> File for non-HTML files
+      const fileMap = new Map<string, File>();
+      Array.from(files).forEach((f) => {
+        if (f !== htmlFile) {
+          // Strip any subfolder prefix so "images/robot.jpg" matches file "robot.jpg"
+          const basename = f.name.split(/[\\/]/).pop()!;
+          fileMap.set(basename, f);
+          fileMap.set(f.name, f); // also store with original name
+        }
+      });
+
+      for (const img of images) {
+        const src = img.getAttribute("src") || "";
+        // Skip absolute URLs and data URIs
+        if (/^https?:\/\//i.test(src) || /^data:/i.test(src)) continue;
+
+        // Extract basename from relative path (e.g. "assets/robot.jpg" -> "robot.jpg")
+        const srcBasename = src.split(/[\\/]/).pop()!;
+        const matchedFile = fileMap.get(src) || fileMap.get(srcBasename);
+
+        if (!matchedFile) {
+          missing++;
+          continue;
+        }
+
+        // Upload to Supabase Storage via the existing admin upload endpoint
+        try {
+          const fd = new FormData();
+          fd.append("file", matchedFile);
+          const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || "Upload failed");
+          img.setAttribute("src", data.url);
+          uploaded++;
+          setUploadedImages((prev) => [...prev, data.url]);
+        } catch (uploadErr: any) {
+          console.warn("Image upload failed for", srcBasename, uploadErr);
+          missing++;
+        }
+      }
+
+      // Serialise the modified document back to an HTML string.
+      // Use the body innerHTML so we don’t double-wrap with <html><body>.
+      const rewritten = doc.body.innerHTML;
+      setContentHtml(rewritten);
+
+      if (images.length === 0) {
+        setImportStatus(`✓ Imported successfully (no images found).`);
+      } else {
+        setImportStatus(
+          `✓ Imported — ${uploaded} image${uploaded !== 1 ? "s" : ""} uploaded` +
+          (missing > 0 ? `, ${missing} not found (include them in the selection to auto-upload).` : ".")
+        );
+      }
+    } catch (err: any) {
+      alert("Import failed: " + (err.message || String(err)));
+    } finally {
+      setImporting(false);
+      e.target.value = "";
+    }
+  };
+
+  return (
+    <div className="space-y-4 pt-1">
+      <div className="flex items-center justify-between border-b border-line/60 pb-2">
+        <h4 className="text-xs font-bold text-ink uppercase tracking-wider">Lesson Details</h4>
+        <button type="button" onClick={onCancel} className="cursor-pointer">
+          <X className="w-4 h-4 text-slate hover:text-ink" />
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-[10px] font-bold uppercase tracking-wider text-slate mb-1">Lesson Title *</label>
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className="w-full px-3 py-2 rounded-lg border border-line bg-white text-sm"
+          />
+        </div>
+        <div>
+          <label className="block text-[10px] font-bold uppercase tracking-wider text-slate mb-1">Material Type</label>
+          <select
+            value={kind}
+            onChange={(e) => {
+              const newKind = e.target.value as "theory" | "activity" | "assessment";
+              setKind(newKind);
+              if (newKind === "assessment") {
+                setMaxScore(100);
+              }
+            }}
+            className="w-full px-3 py-2 rounded-lg border border-line bg-white text-sm"
+          >
+            <option value="theory">Theory (HTML)</option>
+            <option value="activity">Interactive Activity (HTML)</option>
+            <option value="assessment">Assessment (MCQ)</option>
+          </select>
+        </div>
+
+        {kind === "activity" && (
+          <div>
+            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate mb-1">Max Score *</label>
+            <input
+              type="number"
+              value={maxScore}
+              onChange={(e) => setMaxScore(Number(e.target.value))}
+              className="w-full px-3 py-2 rounded-lg border border-line bg-white text-sm"
+            />
+          </div>
+        )}
+
+        {kind === "activity" && (
+          <div className="md:col-span-2">
+            {/* ── Collapsible guidelines panel ── */}
+            <div className="border border-amber-200 rounded-xl overflow-hidden">
+
+              {/* Header / toggle row */}
+              <button
+                type="button"
+                onClick={() => setGuidelinesOpen((o) => !o)}
+                className="w-full flex items-center justify-between gap-2 px-4 py-2.5 bg-amber-50 hover:bg-amber-100 transition-colors text-left"
+              >
+                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700">
+                  📡 How to record the student&apos;s mark (kvjSubmit contract)
+                </span>
+                <svg
+                  className={`w-3.5 h-3.5 text-amber-600 shrink-0 transition-transform ${guidelinesOpen ? "rotate-180" : ""}`}
+                  fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m19 9-7 7-7-7" />
+                </svg>
+              </button>
+
+              {/* Collapsible body */}
+              {guidelinesOpen && (
+                <div className="bg-amber-50 border-t border-amber-200 p-4 space-y-3">
+                  <p className="text-xs text-amber-800 leading-relaxed">
+                    Include this script in your HTML and call{" "}
+                    <code className="bg-amber-100 px-1 py-0.5 rounded font-mono text-[11px]">kvjSubmit(earned, total)</code>{" "}
+                    exactly once when the student clicks <strong>Submit / Finish</strong>.
+                  </p>
+
+                  <pre className="bg-white border border-amber-200 rounded-lg p-3 text-[11px] font-mono text-slate overflow-x-auto whitespace-pre leading-relaxed">{`<script>
+  function kvjSubmit(score, maxScore) {
+    window.parent.postMessage(
+      { type: "KVJ_ACTIVITY_RESULT", score: Number(score), maxScore: Number(maxScore) },
+      "*"
+    );
+  }
+</script>`}</pre>
+
+                  <ul className="text-[11px] text-amber-800 space-y-1 pl-4 list-disc">
+                    <li>Call <code className="bg-amber-100 px-1 rounded font-mono">kvjSubmit(earned, total)</code> <strong>once</strong>, when the student clicks Submit/Finish.</li>
+                    <li><code className="bg-amber-100 px-1 rounded font-mono">earned</code> = points scored; <code className="bg-amber-100 px-1 rounded font-mono">total</code> = max points (must match the Max Score field above).</li>
+                    <li>One self-contained HTML file — inline all CSS &amp; JS. No external files. Images as full <code className="bg-amber-100 px-1 rounded font-mono">https://</code> URLs or <code className="bg-amber-100 px-1 rounded font-mono">data:</code> URIs.</li>
+                    <li>Do <strong>not</strong> add your own header, sidebar, login, or Exit button — the player provides those.</li>
+                    <li>Use a transparent background: <code className="bg-amber-100 px-1 rounded font-mono">{`body { background: transparent; }`}</code></li>
+                  </ul>
+
+                  {/* Copy AI prompt button */}
+                  <div className="pt-1 border-t border-amber-200">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const prompt = `Create a self-contained interactive HTML activity for a KVJ Analytics course lesson. Requirements:
+
+• Inline ALL CSS and JavaScript — no external files, no CDN links.
+• Set body { background: transparent; } so it blends with the dark course player.
+• Do NOT include a header, sidebar, navigation bar, login form, or Exit button. The KVJ platform provides those.
+• When the student clicks Submit / Finish, call kvjSubmit(earned, total) exactly once:
+
+<script>
+  function kvjSubmit(score, maxScore) {
+    window.parent.postMessage(
+      { type: "KVJ_ACTIVITY_RESULT", score: Number(score), maxScore: Number(maxScore) },
+      "*"
+    );
+  }
+</script>
+
+  – earned = integer points the student scored.
+  – total  = maximum possible points (must equal the lesson's Max Score: ${maxScore}).
+
+• Images must be full https:// URLs or data: URIs — no relative paths.
+• The activity should test: [DESCRIBE THE TOPIC / LEARNING OBJECTIVE HERE].
+• Total max score: ${maxScore} points.
+• [Add any other specific requirements, question types, difficulty level, etc.]`;
+                        navigator.clipboard.writeText(prompt).then(() => {
+                          setCopiedPrompt(true);
+                          setTimeout(() => setCopiedPrompt(false), 2500);
+                        }).catch(() => alert("Copy failed — please copy the prompt manually."));
+                      }}
+                      className={`px-3 py-1.5 rounded-lg text-[11px] font-bold flex items-center gap-1.5 transition-all ${
+                        copiedPrompt
+                          ? "bg-emerald-100 border border-emerald-300 text-emerald-700"
+                          : "bg-white border border-amber-300 hover:border-amber-400 text-amber-700 hover:text-amber-900"
+                      }`}
+                    >
+                      {copiedPrompt ? (
+                        <>
+                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="m5 13 4 4L19 7" />
+                          </svg>
+                          Copied!
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <rect x="9" y="9" width="13" height="13" rx="2" />
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                          </svg>
+                          Copy AI prompt
+                        </>
+                      )}
+                    </button>
+                    <p className="text-[10px] text-amber-600 mt-1.5">
+                      Paste into ChatGPT / Gemini, fill in the topic, and import the generated HTML above.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {kind !== "assessment" && (
+          <div className="md:col-span-2">
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">Lesson Content (HTML Source)</label>
+              <div className="flex items-center gap-1.5">
+                {/* Multi-file input: select the .html file + any referenced image files together.
+                    The importHtml handler will upload images and rewrite src attrs automatically. */}
+                <input
+                  type="file"
+                  id={fileId}
+                  accept=".html,.htm,image/*"
+                  multiple
+                  className="hidden"
+                  onChange={importHtml}
+                />
+                <label htmlFor={fileId} className="cursor-pointer px-2 py-1 bg-white border border-line hover:border-brand/40 text-brand text-[10px] font-bold rounded flex items-center gap-1 shadow-sm shrink-0">
+                  {importing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
+                  <span>Import HTML + images</span>
+                </label>
+              </div>
+            </div>
+            <textarea
+              rows={12}
+              placeholder="<div>Paste lesson HTML markup here...</div>"
+              value={contentHtml}
+              onChange={(e) => setContentHtml(e.target.value)}
+              className="w-full px-3 py-2 border border-line bg-white rounded-lg text-xs font-mono resize-y"
+            />
+          </div>
+        )}
+
+        {/* Uploaded images thumbnail strip */}
+        {kind !== "assessment" && uploadedImages.length > 0 && (
+          <div className="md:col-span-2 border border-line bg-surface/25 p-3 rounded-lg space-y-2">
+            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">Session Uploaded Images</label>
+            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-thin scrollbar-thumb-zinc-200">
+              {uploadedImages.map((url, idx) => (
+                <div key={idx} className="relative w-16 h-16 rounded border border-line overflow-hidden shrink-0 group">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={url} alt="Uploaded" className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(url);
+                        alert("Copied URL to clipboard!");
+                      }}
+                      className="text-[9px] text-white font-bold px-1.5 py-1 bg-brand rounded hover:scale-105"
+                    >
+                      Copy URL
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Import status message */}
+        {kind !== "assessment" && importStatus && (
+          <div className="md:col-span-2 text-[11px] text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
+            {importStatus}
+          </div>
+        )}
+
+        {/* Assessment Settings + QuestionBuilder */}
+        {kind === "assessment" && (
+          <div className="md:col-span-2 border-t border-line/60 pt-4 mt-2 space-y-4">
+            <h5 className="text-[11px] font-bold text-slate uppercase tracking-wider">Assessment Settings</h5>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate mb-1">Time Limit (Mins) *</label>
+                <input
+                  type="number"
+                  min={1}
+                  value={durationMins}
+                  onChange={(e) => setDurationMins(Number(e.target.value))}
+                  className="w-full px-3 py-1.5 rounded border border-line bg-white text-xs"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate mb-1">Pass Mark (Marks) *</label>
+                <input
+                  type="number"
+                  min={0}
+                  step="any"
+                  value={passMark}
+                  onChange={(e) => setPassMark(Number(e.target.value))}
+                  className="w-full px-3 py-1.5 rounded border border-line bg-white text-xs"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate mb-1">Attempts Allowed (0 = unlimited)</label>
+                <input
+                  type="number"
+                  min={0}
+                  value={attemptsAllowed}
+                  onChange={(e) => setAttemptsAllowed(Number(e.target.value))}
+                  className="w-full px-3 py-1.5 rounded border border-line bg-white text-xs"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate mb-1">Negative Marking (e.g. 0.25)</label>
+                <input
+                  type="number"
+                  min={0}
+                  step="any"
+                  value={negativeMarking}
+                  onChange={(e) => setNegativeMarking(Number(e.target.value))}
+                  className="w-full px-3 py-1.5 rounded border border-line bg-white text-xs"
+                />
+              </div>
+              <div className="flex items-center gap-2 pt-5">
+                <input
+                  type="checkbox"
+                  id="randomize-toggle"
+                  checked={randomize}
+                  onChange={(e) => setRandomize(e.target.checked)}
+                  className="w-4 h-4 rounded text-brand border-line"
+                />
+                <label htmlFor="randomize-toggle" className="text-[10px] font-bold uppercase tracking-wider text-slate cursor-pointer">
+                  Randomize Questions
+                </label>
+              </div>
+              <div className="flex items-center gap-2 pt-5">
+                <input
+                  type="checkbox"
+                  id="publish-results-toggle"
+                  checked={publishResults}
+                  onChange={(e) => setPublishResults(e.target.checked)}
+                  className="w-4 h-4 rounded text-brand border-line"
+                />
+                <label htmlFor="publish-results-toggle" className="text-[10px] font-bold uppercase tracking-wider text-slate cursor-pointer">
+                  Publish Results Instantly
+                </label>
+              </div>
+            </div>
+
+            {initial.id ? (
+              linkedTest ? (
+                <div className="border-t border-line/60 pt-4 mt-4">
+                  <QuestionBuilder testId={linkedTest.id} />
+                </div>
+              ) : (
+                <div className="text-center py-6 border border-dashed border-line rounded-lg">
+                  {loadingTest ? (
+                    <Loader2 className="w-5 h-5 animate-spin mx-auto text-brand" />
+                  ) : (
+                    <>
+                      <p className="text-xs text-slate font-semibold mb-2">No linked assessment test found in database.</p>
+                      <Button
+                        type="button"
+                        onClick={async () => {
+                          setLoadingTest(true);
+                          try {
+                            const newTestBody = {
+                              course_id: courseId,
+                              module_id: initial.module_id || null,
+                              lesson_id: initial.id,
+                              title: title,
+                              duration_mins: durationMins,
+                              pass_mark: passMark,
+                              attempts_allowed: attemptsAllowed,
+                              negative_marking: negativeMarking,
+                              randomize: randomize,
+                              publish_results: publishResults,
+                            };
+                            const res = await fetch("/api/admin/tests", {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify(newTestBody),
+                            });
+                            const data = await res.json();
+                            if (!res.ok) throw new Error(data.error);
+                            setLinkedTest(data.mock_test);
+                            if (courseId && fetchMockTests) fetchMockTests(courseId);
+                          } catch (err: any) {
+                            alert("Failed to initialize test: " + err.message);
+                          } finally {
+                            setLoadingTest(false);
+                          }
+                        }}
+                        className="py-1 px-3 bg-brand text-white text-xs font-bold"
+                      >
+                        Create Assessment Test Row
+                      </Button>
+                    </>
+                  )}
+                </div>
+              )
+            ) : (
+              <div className="text-center py-6 border border-dashed border-line rounded-lg text-xs text-slate font-medium">
+                💡 Save the lesson details first to begin configuring questions.
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      <div className="flex gap-2 justify-end">
+        <Button
+          onClick={() => {
+            if (!title.trim()) { alert("Lesson title is required."); return; }
+            onSave({
+              id: initial.id,
+              module_id: initial.module_id,
+              title: title.trim(),
+              kind,
+              content_html: kind === "assessment" ? "" : contentHtml,
+              max_score: kind === "activity" ? maxScore : null,
+              assessment_settings: kind === "assessment" ? {
+                duration_mins: durationMins,
+                pass_mark: passMark,
+                attempts_allowed: attemptsAllowed,
+                negative_marking: negativeMarking,
+                randomize: randomize,
+                publish_results: publishResults,
+              } : undefined
+            });
+          }}
+          className="px-4 py-2 bg-brand text-white text-xs font-bold flex items-center gap-1"
+        >
+          <Check className="w-3.5 h-3.5" />
+          Save Lesson
+        </Button>
+        <Button onClick={onCancel} variant="secondary" className="px-3 py-2 text-xs">Cancel</Button>
+      </div>
+    </div>
+  );
+});
+
+export default function AdminCourseDetailsPage() {
+  const routeParams = useParams<{ id: string }>();
+  const courseId = routeParams?.id as string;
+  const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // States
+  const [course, setCourse] = useState<Course | null>(null);
+  const [curriculum, setCurriculum] = useState<Module[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [savingCourse, setSavingCourse] = useState(false);
+  const [uploadingThumb, setUploadingThumb] = useState(false);
+
+  // Form states for modules
+  const [addingModule, setAddingModule] = useState(false);
+  const [newModuleTitle, setNewModuleTitle] = useState("");
+
+  // Form states for lessons (mapping of moduleId -> LessonForm)
+  const [editingLessonId, setEditingLessonId] = useState<string | null>(null);
+  const [lessonForm, setLessonForm] = useState<Partial<Lesson>>({});
+  const [uploadingHtml, setUploadingHtml] = useState(false);
+
+  // Phase 3 - Mock Tests States
+  const [activeTab, setActiveTab] = useState<"curriculum" | "mock-tests">("curriculum");
+  const [mockTests, setMockTests] = useState<any[]>([]);
+  const [loadingTests, setLoadingTests] = useState(false);
+  const [selectedTestId, setSelectedTestId] = useState<string | null>(null);
+  const [editingTestId, setEditingTestId] = useState<string | null>(null);
+  const [testForm, setTestForm] = useState<{ title: string; duration_mins: number; pass_mark: number; module_id: string | null }>({ title: "", duration_mins: 30, pass_mark: 0, module_id: null });
+
+  const fetchMockTests = async (courseId: string) => {
+    setLoadingTests(true);
+    try {
+      const res = await fetch(`/api/admin/tests?course_id=${courseId}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setMockTests(data.mock_tests || []);
+    } catch (err: any) {
+      console.error("Failed to load mock tests:", err);
+    } finally {
+      setLoadingTests(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCourseDetails();
+  }, [courseId]);
+
+  const fetchCourseDetails = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch(`/api/admin/courses/${courseId}`);
+      if (res.status === 401) {
+        router.push("/admin");
+        return;
+      }
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to load course details");
+      setCourse(data.course);
+      setCurriculum(data.curriculum || []);
+      if (data.course) {
+        fetchMockTests(data.course.id);
+      }
+    } catch (err: any) {
+      setError(err.message || "Failed to fetch details.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+
+  const handleSaveTest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!course) return;
+    const isNew = editingTestId === "new";
+    const method = isNew ? "POST" : "PATCH";
+    const body = isNew
+      ? { ...testForm, module_id: testForm.module_id || null, course_id: course.id, display_order: mockTests.length + 1 }
+      : { ...testForm, module_id: testForm.module_id || null, id: editingTestId };
+
+    try {
+      const res = await fetch("/api/admin/tests", {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setEditingTestId(null);
+      fetchMockTests(course.id);
+    } catch (err: any) {
+      alert(err.message || "Failed to save mock test");
+    }
+  };
+
+  const handleDeleteTest = async (testId: string) => {
+    if (!confirm("Are you sure you want to delete this mock test? This will permanently delete all questions and student attempts.")) return;
+    try {
+      const res = await fetch("/api/admin/tests", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: testId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      if (selectedTestId === testId) {
+        setSelectedTestId(null);
+      }
+      if (course) fetchMockTests(course.id);
+    } catch (err: any) {
+      alert(err.message || "Failed to delete test");
+    }
+  };
+
+  const handleMoveTest = async (index: number, direction: -1 | 1) => {
+    const targetIdx = index + direction;
+    if (targetIdx < 0 || targetIdx >= mockTests.length) return;
+    const listCopy = [...mockTests];
+    const temp = listCopy[index].display_order;
+    listCopy[index].display_order = listCopy[targetIdx].display_order;
+    listCopy[targetIdx].display_order = temp;
+
+    setMockTests(listCopy);
+    try {
+      await Promise.all([
+        fetch("/api/admin/tests", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: listCopy[index].id, display_order: listCopy[index].display_order }),
+        }),
+        fetch("/api/admin/tests", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: listCopy[targetIdx].id, display_order: listCopy[targetIdx].display_order }),
+        }),
+      ]);
+      if (course) fetchMockTests(course.id);
+    } catch (err) {
+      console.error("Failed to move test:", err);
+    }
+  };
+
+
+
+  // Course updates
+  const handleUpdateCourse = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!course) return;
+    setSavingCourse(true);
+    try {
+      const res = await fetch(`/api/admin/courses/${course.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(course),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      alert("Course settings saved successfully!");
+    } catch (err: any) {
+      alert(err.message || "Failed to update course.");
+    } finally {
+      setSavingCourse(false);
+    }
+  };
+
+  const handleThumbUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !course) return;
+    setUploadingThumb(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/admin/upload", {
+        method: "POST",
+        body: fd,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setCourse({ ...course, thumbnail_url: data.url });
+    } catch (err: any) {
+      alert(err.message || "Image upload failed.");
+    } finally {
+      setUploadingThumb(false);
+    }
+  };
+
+  // Module actions
+  const handleAddModule = async () => {
+    if (!newModuleTitle.trim() || !course) return;
+    const order = curriculum.length > 0 ? Math.max(...curriculum.map((m) => m.display_order)) + 1 : 1;
+
+    try {
+      const res = await fetch("/api/admin/modules", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          course_id: course.id,
+          title: newModuleTitle,
+          display_order: order,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setNewModuleTitle("");
+      setAddingModule(false);
+      fetchCourseDetails(); // Reload curriculum
+    } catch (err: any) {
+      alert(err.message || "Failed to create module.");
+    }
+  };
+
+  const handleDeleteModule = async (moduleId: string) => {
+    if (!confirm("Are you sure you want to delete this module and all lessons inside it?")) return;
+    try {
+      const res = await fetch("/api/admin/modules", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: moduleId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      fetchCourseDetails();
+    } catch (err: any) {
+      alert(err.message || "Module delete failed.");
+    }
+  };
+
+  const handleRenameModule = async (moduleId: string, newTitle: string) => {
+    if (!newTitle.trim()) return;
+    try {
+      const res = await fetch("/api/admin/modules", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: moduleId, title: newTitle }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setCurriculum((prev) =>
+        prev.map((mod) => (mod.id === moduleId ? { ...mod, title: newTitle } : mod))
+      );
+    } catch (err: any) {
+      alert(err.message || "Rename failed.");
+    }
+  };
+
+  const handleMoveModule = async (index: number, direction: -1 | 1) => {
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= curriculum.length) return;
+
+    const newCurriculum = [...curriculum];
+    const temp = newCurriculum[index].display_order;
+    newCurriculum[index].display_order = newCurriculum[targetIndex].display_order;
+    newCurriculum[targetIndex].display_order = temp;
+
+    // Swap locally
+    setCurriculum(newCurriculum);
+
+    try {
+      await Promise.all([
+        fetch("/api/admin/modules", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: newCurriculum[index].id, display_order: newCurriculum[index].display_order }),
+        }),
+        fetch("/api/admin/modules", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: newCurriculum[targetIndex].id, display_order: newCurriculum[targetIndex].display_order }),
+        }),
+      ]);
+      fetchCourseDetails(); // Reload ordering
+    } catch (err) {
+      console.error("Move module failed:", err);
+    }
+  };
+
+  // Lesson actions
+  const openAddLesson = (moduleId: string) => {
+    const mod = curriculum.find((m) => m.id === moduleId);
+    const order = mod && mod.lessons.length > 0 ? Math.max(...mod.lessons.map((l) => l.display_order)) + 1 : 1;
+    setEditingLessonId(`new-${moduleId}`);
+    setLessonForm({
+      module_id: moduleId,
+      title: "",
+      kind: "theory",
+      content_html: "",
+      max_score: 100,
+      display_order: order,
+    });
+  };
+
+  const openEditLesson = (lesson: Lesson) => {
+    setEditingLessonId(lesson.id);
+    setLessonForm(lesson);
+  };
+
+  const handleSaveLesson = async (values: LessonValues) => {
+    if (!values.title?.trim()) {
+      alert("Lesson title is required.");
+      return;
+    }
+    const isNew = editingLessonId?.startsWith("new-");
+    let body: any;
+    let moduleId = "";
+    if (isNew) {
+      moduleId = editingLessonId!.replace("new-", "");
+      const mod = curriculum.find((m) => m.id === moduleId);
+      const order = mod && mod.lessons.length > 0 ? Math.max(...mod.lessons.map((l) => l.display_order)) + 1 : 1;
+      body = { module_id: moduleId, display_order: order, ...values };
+    } else {
+      body = { id: editingLessonId, ...values };
+      const currentLesson = curriculum.flatMap(m => m.lessons).find(l => l.id === editingLessonId);
+      if (currentLesson) {
+        moduleId = currentLesson.module_id;
+      }
+    }
+
+    const { assessment_settings, ...lessonPayload } = body;
+
+    try {
+      const res = await fetch("/api/admin/lessons", {
+        method: isNew ? "POST" : "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(lessonPayload),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Save failed");
+
+      const savedLesson = data.lesson;
+
+      if (values.kind === "assessment" && savedLesson) {
+        // Upsert mock test
+        const { data: existingTest } = await supabase
+          .from("mock_tests")
+          .select("id")
+          .eq("lesson_id", savedLesson.id)
+          .maybeSingle();
+
+        const testBody = {
+          id: existingTest?.id,
+          course_id: course!.id,
+          module_id: moduleId || null,
+          lesson_id: savedLesson.id,
+          title: savedLesson.title,
+          duration_mins: assessment_settings?.duration_mins ?? 30,
+          pass_mark: assessment_settings?.pass_mark ?? 0,
+          attempts_allowed: assessment_settings?.attempts_allowed ?? 0,
+          negative_marking: assessment_settings?.negative_marking ?? 0,
+          randomize: assessment_settings?.randomize ?? false,
+          publish_results: assessment_settings?.publish_results ?? true,
+        };
+
+        const testRes = await fetch("/api/admin/tests", {
+          method: existingTest ? "PATCH" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(testBody),
+        });
+
+        if (!testRes.ok) {
+          const testData = await testRes.json();
+          throw new Error(testData.error || "Failed to save mock test details.");
+        }
+      }
+
+      setEditingLessonId(null);
+      setLessonForm({});
+      fetchCourseDetails();
+      if (course) fetchMockTests(course.id);
+    } catch (err: any) {
+      alert(err.message || "Failed to save lesson.");
+    }
+  };
+
+  const handleDeleteLesson = async (lessonId: string) => {
+    if (!confirm("Delete this lesson?")) return;
+    try {
+      const res = await fetch("/api/admin/lessons", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: lessonId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      fetchCourseDetails();
+    } catch (err: any) {
+      alert(err.message || "Failed to delete lesson.");
+    }
+  };
+
+  const handleMoveLesson = async (modIndex: number, lessonIndex: number, direction: -1 | 1) => {
+    const mod = curriculum[modIndex];
+    const targetIndex = lessonIndex + direction;
+    if (targetIndex < 0 || targetIndex >= mod.lessons.length) return;
+
+    const lessonsCopy = [...mod.lessons];
+    const temp = lessonsCopy[lessonIndex].display_order;
+    lessonsCopy[lessonIndex].display_order = lessonsCopy[targetIndex].display_order;
+    lessonsCopy[targetIndex].display_order = temp;
+
+    try {
+      await Promise.all([
+        fetch("/api/admin/lessons", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: lessonsCopy[lessonIndex].id, display_order: lessonsCopy[lessonIndex].display_order }),
+        }),
+        fetch("/api/admin/lessons", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: lessonsCopy[targetIndex].id, display_order: lessonsCopy[targetIndex].display_order }),
+        }),
+      ]);
+      fetchCourseDetails();
+    } catch (err) {
+      console.error("Failed to move lesson:", err);
+    }
+  };
+
+  const handleHtmlFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingHtml(true);
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result as string;
+      setLessonForm((prev) => ({ ...prev, content_html: text }));
+      setUploadingHtml(false);
+    };
+    reader.onerror = () => {
+      alert("Failed to read HTML file.");
+      setUploadingHtml(false);
+    };
+    reader.readAsText(file);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-surface flex items-center justify-center">
+        <Loader2 className="w-10 h-10 animate-spin text-brand" />
+      </div>
+    );
+  }
+
+  if (!course) {
+    return (
+      <div className="min-h-screen bg-surface p-8 flex items-center justify-center">
+        <div className="text-center bg-white border border-line p-8 rounded-card max-w-sm">
+          <AlertCircle className="w-12 h-12 text-error mx-auto mb-3" />
+          <h3 className="font-bold text-ink">Course Not Found</h3>
+          <p className="text-xs text-slate mt-2">The selected program details could not be resolved.</p>
+          <Link href="/admin/courses" className="mt-6 inline-block">
+            <Button variant="secondary" className="px-4 py-2 text-xs">Return to Courses</Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-surface p-6 font-body">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Breadcrumb Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-card border border-line shadow-soft">
+          <div className="flex items-center space-x-3">
+            <Link
+              href="/admin/courses"
+              className="p-2 border border-line rounded-lg text-slate hover:text-brand hover:border-brand/30 transition-all shrink-0"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </Link>
+            <div>
+              <span className="text-[10px] font-bold text-slate uppercase tracking-wider block">
+                program builder
+              </span>
+              <h1 className="text-xl font-bold font-display text-ink leading-tight mt-0.5">
+                {course.title}
+              </h1>
+            </div>
+          </div>
+          {course.slug && (
+            <div className="flex items-center gap-2 shrink-0">
+              <a href={`/training/${course.slug}`} target="_blank" rel="noreferrer" title="Preview the course landing page students see">
+                <Button
+                  variant="ghost"
+                  className="py-2 px-4 text-sm border border-line text-slate hover:text-brand flex items-center gap-1.5"
+                >
+                  <Eye className="w-4 h-4" />
+                  Preview page
+                </Button>
+              </a>
+              <a href={`/training/${course.slug}/learn?preview=1`} target="_blank" rel="noreferrer" title="Open the course materials exactly as an enrolled student sees them — no payment needed">
+                <Button
+                  className="py-2 px-4 text-sm bg-brand text-white flex items-center gap-1.5"
+                >
+                  <BookOpen className="w-4 h-4" />
+                  Take course (preview)
+                </Button>
+              </a>
+            </div>
+          )}
+        </div>
+
+        {/* Two Columns: Course Info & Curriculum Outline */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          {/* Left Column: Course Details */}
+          <div className="lg:col-span-4 space-y-6">
+            <div className="bg-white border border-line rounded-card p-6 shadow-soft space-y-6">
+              <h2 className="text-base font-bold font-display text-ink border-b border-line pb-2.5">
+                Course Settings
+              </h2>
+
+              <form onSubmit={handleUpdateCourse} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate mb-1">
+                    Course Title *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={course.title}
+                    onChange={(e) => setCourse({ ...course, title: e.target.value })}
+                    className="w-full px-3 py-2 rounded-input border border-line bg-surface/50 text-sm focus:bg-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate mb-1">
+                    URL Slug
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={course.slug}
+                    onChange={(e) => setCourse({ ...course, slug: e.target.value })}
+                    className="w-full px-3 py-2 rounded-input border border-line bg-surface/50 text-sm focus:bg-white"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate mb-1">
+                      Segment
+                    </label>
+                    <select
+                      value={course.segment}
+                      onChange={(e: any) => setCourse({ ...course, segment: e.target.value })}
+                      className="w-full px-3 py-2 rounded-input border border-line bg-surface/50 text-sm"
+                    >
+                      <option value="college">College</option>
+                      <option value="corporate">Corporate</option>
+                    </select>
+                  </div>
+                  <div className="flex items-center pt-5 pl-1">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={course.is_paid}
+                        onChange={(e) => setCourse({ ...course, is_paid: e.target.checked })}
+                        className="w-4 h-4 rounded text-brand border-line"
+                      />
+                      <span className="text-xs font-bold uppercase tracking-wider text-slate">Paid</span>
+                    </label>
+                  </div>
+                </div>
+
+                {course.is_paid && (
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate mb-1">
+                      Price (INR)
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      value={course.price_inr}
+                      onChange={(e) => setCourse({ ...course, price_inr: Number(e.target.value) })}
+                      className="w-full px-3 py-2 rounded-input border border-line bg-surface/50 text-sm focus:bg-white"
+                    />
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate mb-1">
+                    Thumbnail Image URL
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={course.thumbnail_url}
+                      onChange={(e) => setCourse({ ...course, thumbnail_url: e.target.value })}
+                      className="flex-1 px-3 py-2 rounded-input border border-line bg-surface/50 text-sm"
+                    />
+                    <input
+                      type="file"
+                      id="thumb-file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleThumbUpload}
+                    />
+                    <label
+                      htmlFor="thumb-file"
+                      className="px-3 py-2 border border-line rounded-btn hover:bg-surface text-slate text-xs font-bold cursor-pointer shrink-0 inline-flex items-center justify-center gap-1.5"
+                    >
+                      {uploadingThumb ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <Upload className="w-3.5 h-3.5" />
+                      )}
+                      <span>Upload</span>
+                    </label>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate mb-1">
+                    Introduction (Markdown / Rich HTML)
+                  </label>
+                  <textarea
+                    rows={8}
+                    value={course.introduction}
+                    onChange={(e) => setCourse({ ...course, introduction: e.target.value })}
+                    placeholder="Provide HTML content explaining what students learn in this program..."
+                    className="w-full px-3 py-2.5 rounded-input border border-line bg-surface/50 focus:bg-white text-xs font-mono resize-y"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate mb-1">
+                    Summary Text
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={course.summary}
+                    onChange={(e) => setCourse({ ...course, summary: e.target.value })}
+                    className="w-full px-3 py-2 rounded-input border border-line bg-surface/50 text-sm focus:bg-white resize-none"
+                  />
+                </div>
+
+                <Button
+                  type="submit"
+                  disabled={savingCourse}
+                  className="w-full py-3 justify-center text-sm font-bold bg-brand text-white"
+                >
+                  {savingCourse ? (
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  ) : (
+                    <Check className="w-4 h-4 mr-2" />
+                  )}
+                  Save Program Settings
+                </Button>
+              </form>
+            </div>
+          </div>
+
+          {/* Right Column: Curriculum & Mock Tests Tabs */}
+          <div className="lg:col-span-8 space-y-6">
+            <div className="bg-white border border-line rounded-card p-6 shadow-soft space-y-6">
+              {/* Tab Selector */}
+              <div className="flex border-b border-line -mx-6 -mt-6 px-6 bg-surface/20 rounded-t-card overflow-x-auto">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveTab("curriculum");
+                    setSelectedTestId(null);
+                  }}
+                  className={`py-3.5 px-5 text-xs font-bold uppercase tracking-wider border-b-2 transition-all cursor-pointer whitespace-nowrap ${
+                    activeTab === "curriculum"
+                      ? "border-brand text-brand bg-white"
+                      : "border-transparent text-slate hover:text-ink"
+                  }`}
+                >
+                  Curriculum Outline
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveTab("mock-tests");
+                    setSelectedTestId(null);
+                  }}
+                  className={`py-3.5 px-5 text-xs font-bold uppercase tracking-wider border-b-2 transition-all cursor-pointer whitespace-nowrap ${
+                    activeTab === "mock-tests"
+                      ? "border-brand text-brand bg-white"
+                      : "border-transparent text-slate hover:text-ink"
+                  }`}
+                >
+                  Mock Tests ({mockTests.length})
+                </button>
+              </div>
+
+              {activeTab === "curriculum" ? (
+                <div className="space-y-6 pt-2">
+                  <div className="flex items-center justify-between border-b border-line pb-3">
+                    <h2 className="text-base font-bold font-display text-ink">Course Curriculum Outline</h2>
+                    {!addingModule && (
+                      <Button
+                        onClick={() => setAddingModule(true)}
+                        className="px-3.5 py-1.5 bg-education text-white text-xs font-bold flex items-center gap-1"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        Add Module
+                      </Button>
+                    )}
+                  </div>
+
+                  {/* Add Module inline form */}
+                  {addingModule && (
+                    <div className="bg-surface/50 border border-line p-4 rounded-xl flex items-center gap-3 animate-fade-up">
+                      <input
+                        type="text"
+                        placeholder="Enter module title..."
+                        value={newModuleTitle}
+                        onChange={(e) => setNewModuleTitle(e.target.value)}
+                        className="flex-1 px-3 py-2 rounded-lg border border-line bg-white text-sm"
+                      />
+                      <Button
+                        onClick={handleAddModule}
+                        disabled={!newModuleTitle.trim()}
+                        className="px-4 py-2 bg-education text-white text-xs font-bold shrink-0"
+                      >
+                        Create
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          setAddingModule(false);
+                          setNewModuleTitle("");
+                        }}
+                        variant="secondary"
+                        className="px-3 py-2 text-xs"
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* Modules List */}
+                  {curriculum.length === 0 ? (
+                    <div className="text-center py-12 border-dashed border-2 border-line rounded-xl">
+                      <Layers className="w-12 h-12 text-slate/30 mx-auto mb-3" />
+                      <p className="text-sm font-semibold text-slate">No modules defined yet.</p>
+                      <p className="text-xs text-slate mt-1">Start by creating a module, then populate it with lessons.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-6">
+                      {curriculum.map((mod, modIdx) => (
+                        <div key={mod.id} className="border border-line rounded-xl shadow-sm overflow-hidden">
+                          {/* Module Title Row */}
+                          <div className="bg-surface/55 px-5 py-4 border-b border-line flex items-center justify-between gap-3">
+                            <div className="flex items-center space-x-3 flex-1 min-w-0">
+                              <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-brand/10 text-brand text-xs font-bold shrink-0">
+                                M{modIdx + 1}
+                              </span>
+                              <input
+                                type="text"
+                                value={mod.title}
+                                onChange={(e) => handleRenameModule(mod.id, e.target.value)}
+                                className="bg-transparent border-b border-transparent hover:border-slate/30 focus:border-brand focus:outline-none font-bold text-ink text-sm flex-1 min-w-0 py-0.5"
+                              />
+                            </div>
+
+                            {/* Module Actions */}
+                            <div className="flex items-center gap-1 shrink-0">
+                              <button
+                                type="button"
+                                onClick={() => handleMoveModule(modIdx, -1)}
+                                disabled={modIdx === 0}
+                                className="p-1 border border-line bg-white rounded hover:bg-surface disabled:opacity-30 cursor-pointer"
+                                title="Move Module Up"
+                              >
+                                <ArrowUp className="w-3.5 h-3.5 text-slate" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleMoveModule(modIdx, 1)}
+                                disabled={modIdx === curriculum.length - 1}
+                                className="p-1 border border-line bg-white rounded hover:bg-surface disabled:opacity-30 cursor-pointer"
+                                title="Move Module Down"
+                              >
+                                <ArrowDown className="w-3.5 h-3.5 text-slate" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => openAddLesson(mod.id)}
+                                className="p-1.5 bg-education/10 border border-education/20 hover:bg-education/20 text-education rounded-md text-xs font-bold flex items-center gap-0.5 ml-1 cursor-pointer"
+                                title="Add Lesson inside Module"
+                              >
+                                <Plus className="w-3.5 h-3.5" />
+                                <span className="hidden sm:inline">Add Lesson</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteModule(mod.id)}
+                                className="p-1.5 border border-error/25 hover:bg-error/5 text-error rounded-md ml-1 cursor-pointer"
+                                title="Delete Module"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Module structure checklist — guides editors to complete each module */}
+                          {(() => {
+                            const hasTheory = mod.lessons.some((l) => l.kind === "theory");
+                            const hasActivity = mod.lessons.some((l) => l.kind === "activity");
+                            const hasTest = mockTests.some((t: any) => t.module_id === mod.id);
+                            const chip = (ok: boolean, label: string) => (
+                              <span
+                                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
+                                  ok
+                                    ? "bg-success/10 text-success border-success/30"
+                                    : "bg-amber-50 text-amber-600 border-amber-300"
+                                }`}
+                              >
+                                <span>{ok ? "✓" : "•"}</span>
+                                {label}
+                              </span>
+                            );
+                            return (
+                              <div className="px-5 py-2.5 bg-surface/30 border-b border-line flex flex-wrap items-center gap-2">
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-slate mr-1">
+                                  Module should have:
+                                </span>
+                                {chip(hasTheory, "HTML Content")}
+                                {chip(hasActivity, "HTML Activity")}
+                                {chip(hasTest, "Module Test")}
+                              </div>
+                            );
+                          })()}
+
+                          {/* Lessons List inside Module */}
+                          <div className="p-4 space-y-2 bg-white">
+                            {mod.lessons.length === 0 ? (
+                              <div className="text-center py-5 text-xs text-slate italic">
+                                No lessons added to this module yet.
+                              </div>
+                            ) : (
+                              mod.lessons.map((les, lesIdx) => {
+                                const isEditing = editingLessonId === les.id;
+                                const isActivity = les.kind === "activity";
+                                const badgeColor = isActivity
+                                  ? "bg-corporate/10 text-corporate border-corporate/30"
+                                  : "bg-education/10 text-education border-education/30";
+
+                                return (
+                                  <div
+                                    key={les.id}
+                                    className={`border rounded-lg p-3 transition-all ${
+                                      isEditing
+                                        ? "border-brand/40 bg-brand/5 shadow-soft"
+                                        : "border-line bg-surface/10 hover:border-line-hover"
+                                    }`}
+                                  >
+                                    {!isEditing ? (
+                                      /* Display Mode */
+                                      <div className="flex items-center justify-between gap-3 text-xs">
+                                        <div className="flex items-center space-x-2.5 min-w-0 flex-1">
+                                          <span className="font-semibold text-slate">L{lesIdx + 1}</span>
+                                          <span
+                                            className={`px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider shrink-0 border ${badgeColor}`}
+                                          >
+                                            {les.kind}
+                                          </span>
+                                          <span className="font-semibold text-ink truncate text-sm">
+                                            {les.title}
+                                          </span>
+                                          {isActivity && les.max_score && (
+                                            <span className="text-[10px] text-slate font-semibold shrink-0">
+                                              (Max Score: {les.max_score})
+                                            </span>
+                                          )}
+                                        </div>
+                                        <div className="flex items-center gap-1.5 shrink-0">
+                                          <button
+                                            type="button"
+                                            onClick={() => handleMoveLesson(modIdx, lesIdx, -1)}
+                                            disabled={lesIdx === 0}
+                                            className="p-0.5 border border-line bg-white rounded hover:bg-surface disabled:opacity-30 cursor-pointer"
+                                          >
+                                            <ArrowUp className="w-3 h-3 text-slate" />
+                                          </button>
+                                          <button
+                                            type="button"
+                                            onClick={() => handleMoveLesson(modIdx, lesIdx, 1)}
+                                            disabled={lesIdx === mod.lessons.length - 1}
+                                            className="p-0.5 border border-line bg-white rounded hover:bg-surface disabled:opacity-30 cursor-pointer"
+                                          >
+                                            <ArrowDown className="w-3 h-3 text-slate" />
+                                          </button>
+                                          <button
+                                            type="button"
+                                            onClick={() => openEditLesson(les)}
+                                            className="p-1 text-slate hover:text-brand cursor-pointer"
+                                          >
+                                            <Pencil className="w-3.5 h-3.5" />
+                                          </button>
+                                          <button
+                                            type="button"
+                                            onClick={() => handleDeleteLesson(les.id)}
+                                            className="p-1 text-slate hover:text-error cursor-pointer"
+                                          >
+                                            <Trash2 className="w-3.5 h-3.5" />
+                                          </button>
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <LessonEditor
+                                        initial={{ id: les.id, module_id: les.module_id, title: les.title, kind: les.kind, content_html: les.content_html, max_score: les.max_score }}
+                                        onSave={handleSaveLesson}
+                                        onCancel={() => { setEditingLessonId(null); setLessonForm({}); }}
+                                        fetchMockTests={fetchMockTests}
+                                      />
+                                    )}
+                                  </div>
+                                );
+                              })
+                            )}
+                            {editingLessonId === `new-${mod.id}` && (
+                              <div className="border border-brand/40 bg-brand/5 rounded-lg p-3 mt-2">
+                                <LessonEditor
+                                  initial={{ module_id: mod.id, title: "", kind: "theory", content_html: "", max_score: 100 }}
+                                  onSave={handleSaveLesson}
+                                  onCancel={() => { setEditingLessonId(null); setLessonForm({}); }}
+                                  fetchMockTests={fetchMockTests}
+                                />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                /* Phase 3 Mock Tests Builder Tab */
+                <div className="space-y-6 pt-2">
+                  {!selectedTestId ? (
+                    /* Mock Tests Listing view */
+                    <div className="space-y-6">
+                      <div className="flex items-center justify-between border-b border-line pb-3">
+                        <h2 className="text-base font-bold font-display text-ink">Programs Mock Tests</h2>
+                        {!editingTestId && (
+                          <Button
+                            onClick={() => {
+                              setEditingTestId("new");
+                              setTestForm({ title: "", duration_mins: 30, pass_mark: 0, module_id: null });
+                            }}
+                            className="px-3.5 py-1.5 bg-brand text-white text-xs font-bold flex items-center gap-1"
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                            Add Test
+                          </Button>
+                        )}
+                      </div>
+
+                      {/* Add/Edit Mock Test Form */}
+                      {editingTestId && (
+                        <form onSubmit={handleSaveTest} className="bg-surface/50 border border-line p-4 rounded-xl space-y-4 animate-fade-up">
+                          <h3 className="text-xs font-bold text-ink uppercase tracking-wider">
+                            {editingTestId === "new" ? "Create Mock Test" : "Edit Mock Test Settings"}
+                          </h3>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="md:col-span-2">
+                              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate mb-1">Test Title *</label>
+                              <input
+                                type="text"
+                                required
+                                value={testForm.title}
+                                onChange={(e) => setTestForm({ ...testForm, title: e.target.value })}
+                                className="w-full px-3 py-2 rounded border border-line bg-white text-sm"
+                                placeholder="e.g. SQL Basics Practice Exam"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate mb-1">Duration (Minutes)</label>
+                              <input
+                                type="number"
+                                required
+                                min={1}
+                                value={testForm.duration_mins}
+                                onChange={(e) => setTestForm({ ...testForm, duration_mins: Number(e.target.value) })}
+                                className="w-full px-3 py-2 rounded border border-line bg-white text-sm"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate mb-1">Minimum Passing Mark</label>
+                              <input
+                                type="number"
+                                required
+                                min={0}
+                                step="any"
+                                value={testForm.pass_mark}
+                                onChange={(e) => setTestForm({ ...testForm, pass_mark: Number(e.target.value) })}
+                                className="w-full px-3 py-2 rounded border border-line bg-white text-sm"
+                              />
+                            </div>
+                          </div>
+                          <div className="mb-4">
+                            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate mb-1">Attach To</label>
+                            <select
+                              value={testForm.module_id || ""}
+                              onChange={(e) => setTestForm({ ...testForm, module_id: e.target.value || null })}
+                              className="w-full px-3 py-2 rounded border border-line bg-white text-sm"
+                            >
+                              <option value="">Course-level Mock Test (final exam)</option>
+                              {curriculum.map((m) => (
+                                <option key={m.id} value={m.id}>Module Assessment — {m.title}</option>
+                              ))}
+                            </select>
+                            <p className="text-[10px] text-slate mt-1">Leave as &quot;Course-level&quot; for a final Mock Test, or pick a module to make this that module&apos;s assessment.</p>
+                          </div>
+                          <div className="flex gap-2 justify-end">
+                            <Button type="submit" className="px-4 py-2 bg-brand text-white text-xs font-bold">
+                              {editingTestId === "new" ? "Create Test" : "Save Test Settings"}
+                            </Button>
+                            <Button
+                              type="button"
+                              onClick={() => setEditingTestId(null)}
+                              variant="secondary"
+                              className="px-3 py-2 text-xs"
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        </form>
+                      )}
+
+                      {loadingTests ? (
+                        <div className="py-12 flex justify-center">
+                          <Loader2 className="w-8 h-8 animate-spin text-brand" />
+                        </div>
+                      ) : mockTests.length === 0 ? (
+                        <div className="text-center py-12 border-dashed border-2 border-line rounded-xl">
+                          <Clock className="w-12 h-12 text-slate/30 mx-auto mb-3" />
+                          <p className="text-sm font-semibold text-slate">No mock tests designed yet.</p>
+                          <p className="text-xs text-slate mt-1">Start by adding a timed test, then build out its questions.</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          {mockTests.map((test, index) => (
+                            <div key={test.id} className="border border-line rounded-xl p-4 bg-white hover:border-line-hover transition-all flex flex-col md:flex-row md:items-center justify-between gap-4">
+                              <div className="space-y-1">
+                                <h3 className="font-bold text-ink text-sm flex items-center gap-2">
+                                  <span className="w-5 h-5 rounded bg-brand/10 text-brand text-[10px] font-bold flex items-center justify-center">
+                                    T{index + 1}
+                                  </span>
+                                  {test.title}
+                                </h3>
+                                <div className="flex items-center gap-3 text-xs text-slate">
+                                  <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {test.duration_mins} mins</span>
+                                  <span>•</span>
+                                  <span>Pass score: {test.pass_mark}</span>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => handleMoveTest(index, -1)}
+                                  disabled={index === 0}
+                                  className="p-1.5 border border-line bg-white rounded hover:bg-surface disabled:opacity-30 cursor-pointer"
+                                >
+                                  <ArrowUp className="w-3.5 h-3.5 text-slate" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleMoveTest(index, 1)}
+                                  disabled={index === mockTests.length - 1}
+                                  className="p-1.5 border border-line bg-white rounded hover:bg-surface disabled:opacity-30 cursor-pointer"
+                                >
+                                  <ArrowDown className="w-3.5 h-3.5 text-slate" />
+                                </button>
+                                <Button
+                                  onClick={() => setSelectedTestId(test.id)}
+                                  className="py-1 px-3 bg-brand/10 hover:bg-brand/20 text-brand border border-brand/20 text-xs font-bold"
+                                >
+                                  Manage Questions
+                                </Button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setEditingTestId(test.id);
+                                    setTestForm({ title: test.title, duration_mins: test.duration_mins, pass_mark: test.pass_mark, module_id: test.module_id ?? null });
+                                  }}
+                                  className="p-1.5 border border-line rounded hover:bg-surface cursor-pointer text-slate hover:text-ink"
+                                  title="Edit Test Settings"
+                                >
+                                  <Pencil className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteTest(test.id)}
+                                  className="p-1.5 border border-error/30 hover:bg-error/5 text-error rounded cursor-pointer"
+                                  title="Delete Test"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    /* Questions list/builder for selected test */
+                    <div className="space-y-6">
+                      {(() => {
+                        const selectedTest = mockTests.find(t => t.id === selectedTestId);
+                        return (
+                          <>
+                            <div className="flex items-center justify-between border-b border-line pb-3">
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  onClick={() => setSelectedTestId(null)}
+                                  variant="secondary"
+                                  className="py-1 px-2 text-xs"
+                                >
+                                  ← Back
+                                </Button>
+                                <div>
+                                  <h2 className="text-sm font-bold text-ink leading-tight">{selectedTest?.title}</h2>
+                                  <p className="text-[10px] text-slate mt-0.5">{selectedTest?.duration_mins} mins • Passing: {selectedTest?.pass_mark} marks</p>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="pt-4">
+                              <QuestionBuilder testId={selectedTestId} />
+                            </div>
+                          </>
+                        );
+                      })()}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
