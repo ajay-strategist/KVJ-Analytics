@@ -14,3 +14,20 @@ alter table public.mock_tests add column if not exists publish_results boolean d
 
 -- 3. Add index on lesson_id for faster lookups
 create index if not exists idx_mock_tests_lesson_id on public.mock_tests(lesson_id);
+
+-- 4. Ensure test_attempts table exists with extended columns
+create table if not exists public.test_attempts (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references public.profiles(id) on delete cascade not null,
+  test_slug text not null,
+  answers jsonb not null,
+  score numeric(5, 2) not null,
+  passed boolean not null,
+  started_at timestamp with time zone not null,
+  submitted_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+alter table public.test_attempts add column if not exists test_id uuid references public.mock_tests(id) on delete cascade;
+alter table public.test_attempts add column if not exists max_score numeric(5, 2);
+alter table public.test_attempts add column if not exists per_question jsonb;
+

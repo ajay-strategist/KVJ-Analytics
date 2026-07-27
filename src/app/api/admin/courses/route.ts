@@ -44,9 +44,10 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { data, error } = await db.from("courses").insert([body]).select().single();
+    const { data, error } = await db.from("courses").insert([body]).select();
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    return NextResponse.json({ course: data });
+    const course = Array.isArray(data) ? data[0] : data;
+    return NextResponse.json({ course });
   } catch (err: any) {
     return NextResponse.json({ error: err.message || "Invalid request body" }, { status: 400 });
   }

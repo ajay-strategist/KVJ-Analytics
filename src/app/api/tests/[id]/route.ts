@@ -55,13 +55,41 @@ function stripAnswers(type: string, config: any) {
 }
 
 function getCorrectAnswerLabel(type: string, config: any) {
-  if (type === "single") return `Option index: ${config.correctIndex}`;
-  if (type === "multiple") return `Option indices: ${config.correctIndexes?.join(", ")}`;
+  if (!config) return "";
+  if (type === "single") {
+    const optText = config.options?.[config.correctIndex];
+    return optText ? `Option ${config.correctIndex + 1}: ${optText}` : `Option index: ${config.correctIndex}`;
+  }
+  if (type === "multiple") {
+    const labels = (config.correctIndexes || []).map((idx: number) => {
+      const txt = config.options?.[idx];
+      return txt ? `Option ${idx + 1}: ${txt}` : `Option ${idx + 1}`;
+    });
+    return labels.join(", ");
+  }
   if (type === "truefalse") return config.correct ? "True" : "False";
-  if (type === "dragdrop") return `Correct matches: ${JSON.stringify(config.correctPairs)}`;
-  if (type === "sequence") return `Correct order index sequence: ${config.correctOrder?.join(", ")}`;
-  if (type === "fillblank") return `Blanks: ${config.blanks?.map((b: any, i: number) => `[Blank ${i + 1}: ${b.accepted?.join(" or ")}]`).join(", ")}`;
-  if (type === "matrix") return `Rows → correct columns: ${(config.correct || []).map((cols: number[], i: number) => `[${config.rows?.[i] ?? "Row " + (i + 1)}: ${(cols || []).map((ci) => config.columns?.[ci] ?? ci).join(", ")}]`).join("; ")}`;
+  if (type === "dragdrop") {
+    const pairs = (config.correctPairs || []).map((p: any) => {
+      const l = config.left?.[p[0]] ?? p[0];
+      const r = config.right?.[p[1]] ?? p[1];
+      return `${l} → ${r}`;
+    });
+    return pairs.join("; ");
+  }
+  if (type === "sequence") {
+    const order = (config.correctOrder || []).map((idx: number) => config.items?.[idx] ?? `Item ${idx + 1}`);
+    return order.join(" → ");
+  }
+  if (type === "fillblank") {
+    return (config.blanks || []).map((b: any, i: number) => `[Blank ${i + 1}: ${(b.accepted || []).join(" or ")}]`).join(", ");
+  }
+  if (type === "matrix") {
+    return (config.correct || []).map((cols: number[], i: number) => {
+      const rowName = config.rows?.[i] ?? `Row ${i + 1}`;
+      const colNames = (cols || []).map((ci: number) => config.columns?.[ci] ?? `Column ${ci + 1}`);
+      return `[${rowName}: ${colNames.join(", ")}]`;
+    }).join("; ");
+  }
   if (type === "code") return "Passes all test cases.";
   return "";
 }
@@ -268,7 +296,9 @@ export async function POST(
     let user: any = null;
     const token = req.cookies.get("sb-access-token")?.value;
     const adminSession = req.cookies.get("admin_session")?.value;
-    const isAdminPreview = adminSession === adminToken();
+    const urlObj = new URL(req.url);
+    const isExplicitPreview = urlObj.searchParams.get("preview") === "true";
+    const isAdminPreview = (adminSession === adminToken()) || isExplicitPreview;
 
     if (!isAdminPreview) {
       if (!token) {
@@ -306,6 +336,10 @@ export async function POST(
           );
         }
       }
+    } else if (token && !user) {
+      // If user token is available even during admin preview, extract user for reference
+      const { data: { user: authUser } } = await db.auth.getUser(token);
+      if (authUser) user = authUser;
     }
 
     // 4. Fetch the real questions with answer configurations
@@ -331,7 +365,7 @@ export async function POST(
       totalPossibleMarks += qMarks;
 
       const studentAns = answers[qId];
-      const config = q.config;
+      const config = q.config || {};
       let isCorrect = false;
       let pending = false;
       let feedback = "";
@@ -341,59 +375,73 @@ export async function POST(
         isCorrect = false;
         feedback = "Not answered.";
       } else if (q.type === "single") {
-        isCorrect = Number(studentAns) === Number(config.correctIndex);
+        isCorrect = typeof studentAns !== "boolean" && studentAns !== "" && Number(studentAns) === Number(config.correctIndex);
       } else if (q.type === "multiple") {
-        isCorrect = Array.isArray(studentAns) &&
-          studentAns.length === config.correctIndexes.length &&
-          studentAns.every((x: any) => config.correctIndexes.includes(Number(x)));
+        if (!Array.isArray(studentAns) || !Array.isArray(config.correctIndexes)) {
+          isCorrect = false;
+        } else {
+          const studentSet = Array.from(new Set<number>(studentAns.map((x: any) => Number(x)))).sort((a: number, b: number) => a - b);
+          const correctSet = Array.from(new Set<number>(config.correctIndexes.map((x: any) => Number(x)))).sort((a: number, b: number) => a - b);
+          isCorrect = studentSet.length === correctSet.length && studentSet.every((val, idx) => val === correctSet[idx]);
+        }
       } else if (q.type === "truefalse") {
-        isCorrect = String(studentAns) === String(config.correct);
+        isCorrect = String(studentAns).toLowerCase() === String(config.correct).toLowerCase();
       } else if (q.type === "dragdrop") {
-        // Support both string-based [leftVal, rightVal] and index-based [leftIdx, rightIdx] pairs
-        isCorrect = Array.isArray(studentAns) &&
-          studentAns.length === config.correctPairs.length &&
-          studentAns.every((pair: any) => {
+        const correctPairs = config.correctPairs || [];
+        const leftList = config.left || [];
+        const rightList = config.right || [];
+        if (!Array.isArray(studentAns) || studentAns.length !== correctPairs.length) {
+          isCorrect = false;
+        } else {
+          isCorrect = studentAns.every((pair: any) => {
             if (!Array.isArray(pair) || pair.length !== 2) return false;
             const [l, r] = pair;
             if (typeof l === "string" && typeof r === "string") {
-              return config.correctPairs.some((p: any) => {
-                const correctLStr = config.left[p[0]];
-                const correctRStr = config.right[p[1]];
-                return String(l).trim() === String(correctLStr).trim() && String(r).trim() === String(correctRStr).trim();
+              return correctPairs.some((p: any) => {
+                const correctLStr = leftList[p[0]];
+                const correctRStr = rightList[p[1]];
+                return String(l).trim() === String(correctLStr || "").trim() && String(r).trim() === String(correctRStr || "").trim();
               });
             }
-            return config.correctPairs.some((p: any) => Number(p[0]) === Number(l) && Number(p[1]) === Number(r));
+            return correctPairs.some((p: any) => Number(p[0]) === Number(l) && Number(p[1]) === Number(r));
           });
+        }
       } else if (q.type === "sequence") {
-        // Support both string-based reordered items and index-based lists
-        isCorrect = Array.isArray(studentAns) &&
-          studentAns.length === config.correctOrder.length &&
-          studentAns.every((x: any, i: number) => {
+        const correctOrder = config.correctOrder || [];
+        const items = config.items || [];
+        if (!Array.isArray(studentAns) || studentAns.length !== correctOrder.length) {
+          isCorrect = false;
+        } else {
+          isCorrect = studentAns.every((x: any, i: number) => {
             if (typeof x === "string") {
-              const correctStr = config.items[config.correctOrder[i]];
-              return String(x).trim() === String(correctStr).trim();
+              const correctStr = items[correctOrder[i]];
+              return String(x).trim() === String(correctStr || "").trim();
             }
-            return Number(x) === Number(config.correctOrder[i]);
+            return Number(x) === Number(correctOrder[i]);
           });
+        }
       } else if (q.type === "fillblank") {
-        isCorrect = Array.isArray(studentAns) &&
-          studentAns.length === config.blanks.length &&
-          studentAns.every((ans: any, idx: number) => {
-            const accepted = config.blanks[idx].accepted || [];
+        const blanks = config.blanks || [];
+        if (!Array.isArray(studentAns) || studentAns.length !== blanks.length) {
+          isCorrect = false;
+        } else {
+          isCorrect = studentAns.every((ans: any, idx: number) => {
+            const accepted = blanks[idx]?.accepted || [];
             const cleanAns = (ans || "").toString().trim().toLowerCase();
-            return accepted.map((a: string) => a.trim().toLowerCase()).includes(cleanAns);
+            return accepted.map((a: string) => (a || "").toString().trim().toLowerCase()).includes(cleanAns);
           });
+        }
       } else if (q.type === "matrix") {
-        // studentAns: number[][] — selected column indexes per row.
-        // config.correct: number[][] — correct column indexes per row.
         const correctRows = config.correct || [];
-        isCorrect = Array.isArray(studentAns) &&
-          studentAns.length === correctRows.length &&
-          correctRows.every((correctCols: number[], rowIdx: number) => {
-            const picked = Array.isArray(studentAns[rowIdx]) ? studentAns[rowIdx].map((x: any) => Number(x)) : [];
-            const want = (correctCols || []).map((x: any) => Number(x));
-            return picked.length === want.length && want.every((c: number) => picked.includes(c));
+        if (!Array.isArray(studentAns) || studentAns.length !== correctRows.length) {
+          isCorrect = false;
+        } else {
+          isCorrect = correctRows.every((correctCols: number[], rowIdx: number) => {
+            const pickedSet = Array.from(new Set<number>((Array.isArray(studentAns[rowIdx]) ? studentAns[rowIdx] : []).map((x: any) => Number(x)))).sort((a: number, b: number) => a - b);
+            const wantSet = Array.from(new Set<number>((correctCols || []).map((x: any) => Number(x)))).sort((a: number, b: number) => a - b);
+            return pickedSet.length === wantSet.length && wantSet.every((c: number, i: number) => c === pickedSet[i]);
           });
+        }
       } else if (q.type === "code") {
         if (!process.env.JUDGE0_URL) {
           pending = true;
@@ -451,38 +499,56 @@ export async function POST(
     }
 
     const passed = earnedMarks >= Number(test.pass_mark || 0);
-
-    const urlObj = new URL(req.url);
-    const isPreview = urlObj.searchParams.get("preview") === "true";
+    const isPreview = isAdminPreview || isExplicitPreview;
 
     let attemptId = "preview-id";
 
-    if (!isPreview) {
+    if (!isPreview && user?.id) {
       // 6. Store attempt in Supabase test_attempts table
-      const { data: attemptRecord, error: dbError } = await db
+      const fullRecord = {
+        user_id: user.id,
+        test_slug: id,
+        test_id: id,
+        answers: answers,
+        score: earnedMarks,
+        max_score: totalPossibleMarks,
+        passed: passed,
+        per_question: perQuestionFeedback,
+        started_at: startedAt,
+        submitted_at: new Date().toISOString()
+      };
+
+      const resInsert = await db
         .from("test_attempts")
-        .insert([
-          {
-            user_id: user.id,
-            test_slug: id, // maintain backward compatibility by saving uuid in test_slug
-            test_id: id,   // pointing to FK test_id
-            answers: answers,
-            score: earnedMarks,
-            max_score: totalPossibleMarks,
-            passed: passed,
-            per_question: perQuestionFeedback,
-            started_at: startedAt,
-            submitted_at: new Date().toISOString()
-          }
-        ])
+        .insert([fullRecord])
         .select()
         .single();
 
-      if (dbError) {
-        console.error("Error saving test attempt:", dbError);
-        return NextResponse.json({ error: "Failed to save test attempt results to database." }, { status: 500 });
+      if (resInsert.error) {
+        console.warn("Full test_attempts insert failed, attempting standard schema insert:", resInsert.error.message);
+        const standardRecord = {
+          user_id: user.id,
+          test_slug: id,
+          answers: answers,
+          score: earnedMarks,
+          passed: passed,
+          started_at: startedAt,
+          submitted_at: new Date().toISOString()
+        };
+        const fallbackInsert = await db
+          .from("test_attempts")
+          .insert([standardRecord])
+          .select()
+          .single();
+
+        if (fallbackInsert.error) {
+          console.error("Error saving test attempt:", fallbackInsert.error);
+          return NextResponse.json({ error: "Failed to save test attempt results to database." }, { status: 500 });
+        }
+        attemptId = fallbackInsert.data.id;
+      } else {
+        attemptId = resInsert.data.id;
       }
-      attemptId = attemptRecord.id;
     }
 
     // 7. Return graded result details
@@ -493,7 +559,8 @@ export async function POST(
       passed,
       passMark: test.pass_mark,
       gradedQuestions: perQuestionFeedback,
-      attemptId: attemptId
+      attemptId: attemptId,
+      isPreview: isPreview,
     });
   } catch (error: any) {
     console.error("POST mock test score error:", error);

@@ -50,10 +50,6 @@ export default function AdminApplicationsPage() {
   const [error, setError] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchApplications();
-  }, []);
-
   const fetchApplications = async () => {
     setLoading(true);
     setError("");
@@ -82,6 +78,10 @@ export default function AdminApplicationsPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchApplications();
+  }, []);
 
   const handleDelete = async (id: string, type: "internships" | "careers") => {
     if (!confirm("Are you sure you want to delete this applicant file? This action is irreversible.")) {

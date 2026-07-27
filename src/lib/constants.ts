@@ -74,7 +74,7 @@ export const FALLBACK_HOME_PAGE = {
     supporting:
       "Helping organizations make smarter decisions through Business Intelligence, Artificial Intelligence, Automation and Digital Transformation.",
     description:
-      "KVJ Analytics partners with businesses, enterprises, government organizations and educational institutions to build intelligent analytics platforms, automate business processes, modernize operations and enable data-driven decision making. We combine technology, strategy and innovation to create measurable business outcomes.",
+      "KVJ Analytics partners with businesses, enterprises and educational institutions to build intelligent analytics platforms, automate business processes, modernize operations and enable data-driven decision making. We combine technology, strategy and innovation to create measurable business outcomes.",
     primaryCta: { label: "Schedule a Consultation", href: "/contact" },
     secondaryCta: { label: "Explore Corporate Solutions", href: "/corporate" },
   },

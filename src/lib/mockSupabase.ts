@@ -686,7 +686,9 @@ class MockSupabaseQueryBuilder {
   }
 
   select(fields?: string) {
-    this.operation = "select";
+    if (!this.operation) {
+      this.operation = "select";
+    }
     return this;
   }
 
@@ -805,12 +807,7 @@ class MockSupabaseQueryBuilder {
           return copy;
         };
 
-        if (this.isSingle) {
-          if (filtered.length === 0) {
-            throw new Error("No rows found matching query.");
-          }
-          data = enrichRow(filtered[0]);
-        } else if (this.isMaybeSingle) {
+        if (this.isSingle || this.isMaybeSingle) {
           data = filtered.length > 0 ? enrichRow(filtered[0]) : null;
         } else {
           data = filtered.map(enrichRow);
@@ -825,7 +822,7 @@ class MockSupabaseQueryBuilder {
         list.push(...newRows);
         mockDb[this.tableName] = list;
 
-        data = this.isSingle ? newRows[0] : newRows;
+        data = (this.isSingle || this.isMaybeSingle) ? (newRows.length > 0 ? newRows[0] : null) : newRows;
       } else if (this.operation === "update") {
         const updatedRows: any[] = [];
         mockDb[this.tableName] = list.map((item) => {
@@ -844,11 +841,8 @@ class MockSupabaseQueryBuilder {
           return item;
         });
 
-        if (this.isSingle) {
-          if (updatedRows.length === 0) {
-            throw new Error("No rows matched for update.");
-          }
-          data = updatedRows[0];
+        if (this.isSingle || this.isMaybeSingle) {
+          data = updatedRows.length > 0 ? updatedRows[0] : null;
         } else {
           data = updatedRows;
         }

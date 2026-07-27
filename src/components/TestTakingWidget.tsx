@@ -448,9 +448,17 @@ export function TestTakingWidget({
       ? Math.round((gradedResult.score / gradedResult.totalPossibleMarks) * 100)
       : 0;
 
+    const isPreviewMode = adminPreview || gradedResult.isPreview;
+
     return (
       <div className={`py-6 font-body ${colors.container}`}>
         <div className="max-w-4xl mx-auto space-y-8 px-4">
+          {isPreviewMode && (
+            <div className="bg-amber-500/10 border border-amber-500/30 text-amber-400 rounded-xl p-4 text-xs font-bold text-center flex items-center justify-center gap-2">
+              <AlertTriangle className="w-4 h-4 shrink-0 text-amber-500" />
+              <span>Preview Mode — Result was graded for preview only and not saved to database.</span>
+            </div>
+          )}
           <Card className={`p-8 shadow-soft border-t-8 ${colors.surface} ${
             gradedResult.passed ? "border-emerald-500" : "border-red-500"
           }`}>

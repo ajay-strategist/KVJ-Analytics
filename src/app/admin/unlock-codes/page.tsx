@@ -118,10 +118,6 @@ export default function AdminUnlockCodesPage() {
   const [newExpiryDate, setNewExpiryDate] = useState("");
   const [extending, setExtending] = useState(false);
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
   const fetchData = async () => {
     setLoading(true);
     setError("");
@@ -158,6 +154,10 @@ export default function AdminUnlockCodesPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   // Preset configuration autofill helper
   const handlePresetChange = (type: "ONE_TO_ONE" | "COLLEGE" | "CORPORATE" | "") => {

@@ -380,7 +380,6 @@ export default function AdminCoursesPage() {
                     </label>
                     <textarea
                       rows={3}
-                      required
                       value={form.summary}
                       placeholder="Short description shown on course card..."
                       onChange={(e) => setForm((prev) => ({ ...prev, summary: e.target.value }))}

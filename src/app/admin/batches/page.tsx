@@ -80,28 +80,6 @@ export default function AdminBatchesPage() {
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState("");
 
-  // Fetch batches and courses
-  useEffect(() => {
-    fetchBatches();
-    fetchCourses();
-  }, []);
-
-  // Set up local countdown timer for code rotations
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setSecondsLeft((prev) => {
-        if (prev <= 1) {
-          // Trigger a silent reload of TOTP codes when timer hits 0
-          reloadCodesOnly();
-          return 30;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, []);
-
   const fetchBatches = async () => {
     setLoading(true);
     setError("");
@@ -158,6 +136,28 @@ export default function AdminBatchesPage() {
       console.error("Failed to load courses for dropdown:", err);
     }
   };
+
+  // Fetch batches and courses
+  useEffect(() => {
+    fetchBatches();
+    fetchCourses();
+  }, []);
+
+  // Set up local countdown timer for code rotations
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setSecondsLeft((prev) => {
+        if (prev <= 1) {
+          // Trigger a silent reload of TOTP codes when timer hits 0
+          reloadCodesOnly();
+          return 30;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
 
   const handleLogout = async () => {
     try {

@@ -26,7 +26,7 @@ Faculty, Students, Internships, Learning Ecosystem** on Home.
 - **Hero badge:** Business Intelligence • Data Analytics • Artificial Intelligence • Digital Transformation
 - **Headline:** Transform Data Into Business Growth.
 - **Supporting:** Helping organizations make smarter decisions through Business Intelligence, Artificial Intelligence, Automation and Digital Transformation.
-- **Description:** KVJ Analytics partners with businesses, enterprises, government organizations and educational institutions to build intelligent analytics platforms, automate business processes, modernize operations and enable data-driven decision making. We combine technology, strategy and innovation to create measurable business outcomes.
+- **Description:** KVJ Analytics partners with businesses, enterprises and educational institutions to build intelligent analytics platforms, automate business processes, modernize operations and enable data-driven decision making. We combine technology, strategy and innovation to create measurable business outcomes.
 - **CTAs:** Schedule a Consultation · Explore Corporate Solutions
 - **Trusted By:** "Trusted by Forward-Thinking Organizations" — logos only, CMS-managed. Initial: MIM Kuttikkanam, Christ College Autonomous, SIMS.
 - **Our Solutions:** "Enterprise Solutions That Drive Business Growth" — desc: "We help organizations transform data into strategic assets through intelligent analytics, automation and enterprise technology solutions."

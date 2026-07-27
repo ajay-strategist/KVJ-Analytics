@@ -100,11 +100,11 @@ export async function PUT(
       .from("courses")
       .update(body)
       .eq("id", id)
-      .select()
-      .single();
+      .select();
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    return NextResponse.json({ course: data });
+    const course = Array.isArray(data) ? data[0] : data;
+    return NextResponse.json({ course });
   } catch (err: any) {
     return NextResponse.json({ error: err.message || "Invalid request body" }, { status: 400 });
   }
@@ -119,7 +119,10 @@ export async function DELETE(
   if (!db) return notConfigured();
 
   const { id } = await params;
-  const { error } = await db.from("courses").delete().eq("id", id);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  const { error } = await db.from("courses").delete().or(`id.eq.${id},slug.eq.${id}`);
+  if (error) {
+    const { error: err2 } = await db.from("courses").delete().eq("id", id);
+    if (err2) return NextResponse.json({ error: err2.message }, { status: 500 });
+  }
   return NextResponse.json({ success: true });
 }
