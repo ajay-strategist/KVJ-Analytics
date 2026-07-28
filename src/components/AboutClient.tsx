@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Container } from "@/components/ui/Container";
 import { CountUp } from "@/components/ui/CountUp";
 import { Reveal } from "@/components/ui/Reveal";
+import { ScaleIn } from "@/components/v3/ScrollFx";
 import { Cpu, GraduationCap, LineChart, Activity } from "lucide-react";
 import { AboutHeroVisual } from "@/components/ui/AboutHeroVisual";
 import { FALLBACK_ABOUT } from "@/lib/constants";
@@ -163,9 +164,9 @@ export function AboutClientContent({ pageData }: AboutClientProps) {
                 About
               </span>
               
-              <h1 className="font-display font-bold text-4xl sm:text-5xl lg:text-6xl leading-[1.08] tracking-tight text-white">
+              <ScaleIn as="h1" y={28} className="font-display font-bold text-4xl sm:text-5xl lg:text-6xl leading-[1.08] tracking-tight text-white">
                 About <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand via-corporate to-brand animate-[signature-flow_6s_linear_infinite] bg-[size:200%_auto]">KVJ Analytics</span>
-              </h1>
+              </ScaleIn>
 
               {/* Accent-bar intro block */}
               <div className="max-w-xl">

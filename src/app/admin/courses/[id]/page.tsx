@@ -27,8 +27,10 @@ import {
   ListOrdered,
   GripVertical,
   Eye,
+  Image as ImageIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { LessonIframe } from "@/components/shared/LessonIframe";
 import dynamic from "next/dynamic";
 const CodeMirror = dynamic(() => import("@uiw/react-codemirror"), { ssr: false });
 import { python } from "@codemirror/lang-python";
@@ -119,12 +121,27 @@ const LessonEditor = React.memo(function LessonEditor({
   const [contentHtml, setContentHtml] = React.useState(initial.content_html || "");
   const [maxScore, setMaxScore] = React.useState<number>(initial.max_score ?? 100);
   const [importing, setImporting] = React.useState(false);
+  const [uploadingImage, setUploadingImage] = React.useState(false);
   const [importStatus, setImportStatus] = React.useState<string | null>(null);
+  const [editorTab, setEditorTab] = React.useState<"code" | "preview">("code");
   // Collapsible guidelines panel for activity lessons
   const [guidelinesOpen, setGuidelinesOpen] = React.useState(true);
   // Feedback state for the "Copy AI prompt" button
   const [copiedPrompt, setCopiedPrompt] = React.useState(false);
   const fileId = React.useId();
+  const standaloneImageId = React.useId();
+
+  // Every image embedded in THIS lesson's HTML (persisted), so admins can always see what's
+  // uploaded to the lesson — not just files added in the current editing session.
+  const lessonImages = React.useMemo(() => {
+    const urls: string[] = [];
+    const re = /<img[^>]+src=["']([^"']+)["']/gi;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(contentHtml || "")) !== null) {
+      if (!urls.includes(m[1])) urls.push(m[1]);
+    }
+    return urls;
+  }, [contentHtml]);
 
   // Assessment Settings
   const [durationMins, setDurationMins] = React.useState<number>(30);
@@ -170,23 +187,58 @@ const LessonEditor = React.memo(function LessonEditor({
   }, [initial.id, initial.kind]);
 
   /**
+   * Standalone Image Upload: Uploads selected images to Supabase storage
+   * and appends <img> tags directly into the lesson HTML source.
+   */
+  const handleStandaloneImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    setUploadingImage(true);
+    try {
+      const newUrls: string[] = [];
+      let imageTags = "";
+      for (const file of Array.from(files)) {
+        const fd = new FormData();
+        fd.append("file", file);
+        const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Upload failed");
+        newUrls.push(data.url);
+        imageTags += `\n<img src="${data.url}" alt="${file.name.replace(/\.[^/.]+$/, "")}" class="my-4 rounded-xl max-w-full border border-white/10 shadow-lg" />\n`;
+      }
+      setUploadedImages((prev) => [...prev, ...newUrls]);
+      setContentHtml((prev) => prev + imageTags);
+      setImportStatus(`✓ ${newUrls.length} image(s) uploaded and inserted into HTML!`);
+    } catch (err: any) {
+      alert("Image upload failed: " + (err.message || String(err)));
+    } finally {
+      setUploadingImage(false);
+      e.target.value = "";
+    }
+  };
+
+  /**
+   * Helper to insert an image tag for any uploaded URL at the end of the HTML editor.
+   */
+  const insertImageTag = (url: string) => {
+    const tag = `\n<img src="${url}" alt="Lesson image" class="my-4 rounded-xl max-w-full border border-white/10 shadow-lg" />\n`;
+    setContentHtml((prev) => prev + tag);
+    setImportStatus("✓ Image tag inserted into HTML!");
+  };
+
+  /**
    * Enhanced HTML import:
    * 1. Reads the .html file from the FileList.
    * 2. Scans all <img src> attributes for relative paths.
    * 3. For each relative src, looks for a matching file in the FileList
-   *    (same filename, any subfolder stripped), then uploads it via
-   *    POST /api/admin/upload and rewrites the src to the public URL.
+   *    (same filename, any subfolder stripped, decoded URIs, case-insensitive),
+   *    then uploads it via POST /api/admin/upload and rewrites the src to the public URL.
    * 4. Sets the rewritten HTML as contentHtml.
-   *
-   * If an image file isn’t in the selection, the src is left unchanged.
-   * Those images will render as native broken-image icons inside the
-   * sandboxed lesson iframe — no layout breakage.
    */
   const importHtml = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    // Find the HTML file among selected files
     const htmlFile = Array.from(files).find((f) =>
       f.name.toLowerCase().endsWith(".html") || f.name.toLowerCase().endsWith(".htm")
     );
@@ -203,37 +255,48 @@ const LessonEditor = React.memo(function LessonEditor({
     try {
       const text = await htmlFile.text();
 
-      // Parse with DOMParser (browser-only; this is a client component)
       const parser = new DOMParser();
       const doc = parser.parseFromString(text, "text/html");
       const images = Array.from(doc.querySelectorAll("img[src]"));
 
-      // Build a lookup map of filename -> File for non-HTML files
       const fileMap = new Map<string, File>();
+      const fileEntries: [string, File][] = [];
       Array.from(files).forEach((f) => {
         if (f !== htmlFile) {
-          // Strip any subfolder prefix so "images/robot.jpg" matches file "robot.jpg"
           const basename = f.name.split(/[\\/]/).pop()!;
           fileMap.set(basename, f);
-          fileMap.set(f.name, f); // also store with original name
+          fileMap.set(f.name, f);
+          fileEntries.push([f.name.toLowerCase(), f]);
+          fileEntries.push([basename.toLowerCase(), f]);
         }
       });
 
       for (const img of images) {
         const src = img.getAttribute("src") || "";
-        // Skip absolute URLs and data URIs
         if (/^https?:\/\//i.test(src) || /^data:/i.test(src)) continue;
 
-        // Extract basename from relative path (e.g. "assets/robot.jpg" -> "robot.jpg")
         const srcBasename = src.split(/[\\/]/).pop()!;
-        const matchedFile = fileMap.get(src) || fileMap.get(srcBasename);
+        const decodedSrc = decodeURIComponent(src);
+        const decodedBasename = decodeURIComponent(srcBasename);
+
+        let matchedFile =
+          fileMap.get(src) ||
+          fileMap.get(srcBasename) ||
+          fileMap.get(decodedSrc) ||
+          fileMap.get(decodedBasename);
+
+        if (!matchedFile) {
+          const entry = fileEntries.find(
+            ([name]) => name === decodedBasename.toLowerCase() || name === srcBasename.toLowerCase()
+          );
+          if (entry) matchedFile = entry[1];
+        }
 
         if (!matchedFile) {
           missing++;
           continue;
         }
 
-        // Upload to Supabase Storage via the existing admin upload endpoint
         try {
           const fd = new FormData();
           fd.append("file", matchedFile);
@@ -249,8 +312,6 @@ const LessonEditor = React.memo(function LessonEditor({
         }
       }
 
-      // Serialise the modified document back to an HTML string.
-      // Use the body innerHTML so we don’t double-wrap with <html><body>.
       const rewritten = doc.body.innerHTML;
       setContentHtml(rewritten);
 
@@ -258,7 +319,7 @@ const LessonEditor = React.memo(function LessonEditor({
         setImportStatus(`✓ Imported successfully (no images found).`);
       } else {
         setImportStatus(
-          `✓ Imported — ${uploaded} image${uploaded !== 1 ? "s" : ""} uploaded` +
+          `✓ Imported — ${uploaded} image${uploaded !== 1 ? "s" : ""} uploaded & re-linked` +
           (missing > 0 ? `, ${missing} not found (include them in the selection to auto-upload).` : ".")
         );
       }
@@ -435,12 +496,53 @@ const LessonEditor = React.memo(function LessonEditor({
         )}
 
         {kind !== "assessment" && (
-          <div className="md:col-span-2">
-            <div className="flex items-center justify-between mb-1">
-              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">Lesson Content (HTML Source)</label>
-              <div className="flex items-center gap-1.5">
-                {/* Multi-file input: select the .html file + any referenced image files together.
-                    The importHtml handler will upload images and rewrite src attrs automatically. */}
+          <div className="md:col-span-2 space-y-2">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-line pb-2">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate">Lesson Content</span>
+                <div className="flex items-center bg-surface p-0.5 rounded-lg border border-line">
+                  <button
+                    type="button"
+                    onClick={() => setEditorTab("code")}
+                    className={`px-2.5 py-1 text-[10px] font-bold rounded-md transition-all ${
+                      editorTab === "code" ? "bg-white text-ink shadow-sm" : "text-slate hover:text-ink"
+                    }`}
+                  >
+                    HTML Source
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditorTab("preview")}
+                    className={`px-2.5 py-1 text-[10px] font-bold rounded-md flex items-center gap-1 transition-all ${
+                      editorTab === "preview" ? "bg-brand text-black shadow-sm" : "text-slate hover:text-ink"
+                    }`}
+                  >
+                    <Eye className="w-3 h-3" />
+                    Live Preview
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {/* Standalone Image Upload */}
+                <input
+                  type="file"
+                  id={standaloneImageId}
+                  accept="image/*"
+                  multiple
+                  className="hidden"
+                  onChange={handleStandaloneImageUpload}
+                />
+                <label
+                  htmlFor={standaloneImageId}
+                  className="cursor-pointer px-2.5 py-1 bg-white border border-line hover:border-brand/40 text-slate hover:text-brand text-[10px] font-bold rounded-md flex items-center gap-1 shadow-sm shrink-0"
+                  title="Upload image files and insert <img> tags into HTML source"
+                >
+                  {uploadingImage ? <Loader2 className="w-3 h-3 animate-spin text-brand" /> : <ImageIcon className="w-3 h-3 text-brand" />}
+                  <span>+ Upload Image</span>
+                </label>
+
+                {/* Multi-file HTML + Images import */}
                 <input
                   type="file"
                   id={fileId}
@@ -449,19 +551,76 @@ const LessonEditor = React.memo(function LessonEditor({
                   className="hidden"
                   onChange={importHtml}
                 />
-                <label htmlFor={fileId} className="cursor-pointer px-2 py-1 bg-white border border-line hover:border-brand/40 text-brand text-[10px] font-bold rounded flex items-center gap-1 shadow-sm shrink-0">
+                <label
+                  htmlFor={fileId}
+                  className="cursor-pointer px-2.5 py-1 bg-white border border-line hover:border-brand/40 text-brand text-[10px] font-bold rounded-md flex items-center gap-1 shadow-sm shrink-0"
+                  title="Import an .html file with its referenced relative image files together"
+                >
                   {importing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
                   <span>Import HTML + images</span>
                 </label>
               </div>
             </div>
-            <textarea
-              rows={12}
-              placeholder="<div>Paste lesson HTML markup here...</div>"
-              value={contentHtml}
-              onChange={(e) => setContentHtml(e.target.value)}
-              className="w-full px-3 py-2 border border-line bg-white rounded-lg text-xs font-mono resize-y"
-            />
+
+            {editorTab === "code" ? (
+              <textarea
+                rows={12}
+                placeholder="<div>Paste or write lesson HTML markup here...</div>"
+                value={contentHtml}
+                onChange={(e) => setContentHtml(e.target.value)}
+                className="w-full px-3 py-2 border border-line bg-white rounded-lg text-xs font-mono resize-y"
+              />
+            ) : (
+              <div className="w-full min-h-[340px] max-h-[500px] overflow-y-auto border border-line rounded-xl bg-[#050505] p-4">
+                {contentHtml ? (
+                  <LessonIframe html={contentHtml} darkMode={true} />
+                ) : (
+                  <div className="py-16 text-center space-y-2">
+                    <ImageIcon className="w-10 h-10 text-slate/30 mx-auto" />
+                    <p className="text-xs text-slate/60">No HTML content added yet. Add HTML or upload images to preview.</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Images embedded in this lesson (parsed from the saved HTML — persists across sessions) */}
+        {kind !== "assessment" && lessonImages.length > 0 && (
+          <div className="md:col-span-2 border border-line bg-white p-3 rounded-lg space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">
+                Images in this lesson ({lessonImages.length})
+              </label>
+              <span className="text-[10px] text-slate/60">Click thumbnail to insert into HTML or copy URL</span>
+            </div>
+            <div className="flex gap-2.5 flex-wrap">
+              {lessonImages.map((url, idx) => (
+                <div key={idx} className="relative w-24 h-24 rounded-lg border border-line overflow-hidden shrink-0 bg-surface/25 group">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={url} alt="" className="w-full h-full object-cover" loading="lazy" />
+                  <div className="absolute inset-0 bg-black/75 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-1 p-1 transition-opacity">
+                    <button
+                      type="button"
+                      onClick={() => insertImageTag(url)}
+                      className="w-full py-0.5 text-[9px] font-bold bg-brand text-black rounded hover:bg-brand-secondary transition-colors"
+                    >
+                      + Insert Tag
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(url);
+                        alert("Copied image URL to clipboard!");
+                      }}
+                      className="w-full py-0.5 text-[9px] font-bold bg-white/20 text-white rounded hover:bg-white/30 transition-colors"
+                    >
+                      Copy URL
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
@@ -469,19 +628,26 @@ const LessonEditor = React.memo(function LessonEditor({
         {kind !== "assessment" && uploadedImages.length > 0 && (
           <div className="md:col-span-2 border border-line bg-surface/25 p-3 rounded-lg space-y-2">
             <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">Session Uploaded Images</label>
-            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-thin scrollbar-thumb-zinc-200">
+            <div className="flex gap-2.5 overflow-x-auto pb-1">
               {uploadedImages.map((url, idx) => (
-                <div key={idx} className="relative w-16 h-16 rounded border border-line overflow-hidden shrink-0 group">
+                <div key={idx} className="relative w-20 h-20 rounded-lg border border-line overflow-hidden shrink-0 group">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={url} alt="Uploaded" className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                  <div className="absolute inset-0 bg-black/75 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-1 p-1 transition-opacity">
+                    <button
+                      type="button"
+                      onClick={() => insertImageTag(url)}
+                      className="w-full py-0.5 text-[9px] font-bold bg-brand text-black rounded hover:bg-brand-secondary transition-colors"
+                    >
+                      + Insert Tag
+                    </button>
                     <button
                       type="button"
                       onClick={() => {
                         navigator.clipboard.writeText(url);
                         alert("Copied URL to clipboard!");
                       }}
-                      className="text-[9px] text-white font-bold px-1.5 py-1 bg-brand rounded hover:scale-105"
+                      className="w-full py-0.5 text-[9px] font-bold bg-white/20 text-white rounded hover:bg-white/30 transition-colors"
                     >
                       Copy URL
                     </button>
@@ -494,8 +660,9 @@ const LessonEditor = React.memo(function LessonEditor({
 
         {/* Import status message */}
         {kind !== "assessment" && importStatus && (
-          <div className="md:col-span-2 text-[11px] text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
-            {importStatus}
+          <div className="md:col-span-2 text-[11px] font-medium text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2 flex items-center justify-between">
+            <span>{importStatus}</span>
+            <button type="button" onClick={() => setImportStatus(null)} className="text-emerald-600 hover:text-emerald-900 text-xs font-bold">×</button>
           </div>
         )}
 

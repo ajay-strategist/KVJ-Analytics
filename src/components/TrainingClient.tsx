@@ -5,7 +5,7 @@ import { ChevronDown, LayoutGrid, Target, ArrowRight } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { Reveal } from "@/components/ui/Reveal";
-import { RevealText } from "@/components/ui/RevealText";
+import { SplitHeading } from "@/components/v3/ScrollFx";
 
 const TRAINING_AREAS = [
   "Advanced Excel",
@@ -293,11 +293,12 @@ export function TrainingClientContent({ courses, content }: { courses: Course[];
                 {c.eyebrow}
               </span>
             </Reveal>
-            <RevealText
+            <SplitHeading
               as="h1"
-              text={c.heading}
               className="font-display font-bold text-4xl sm:text-5xl lg:text-6xl leading-[1.08] tracking-tight text-white mb-5"
-            />
+            >
+              {c.heading}
+            </SplitHeading>
             <Reveal delay={150}>
               <p className="text-xl md:text-2xl font-medium text-transparent bg-clip-text bg-gradient-to-r from-brand via-corporate to-brand animate-[signature-flow_6s_linear_infinite] bg-[size:200%_auto] mb-5">
                 {c.strapline}

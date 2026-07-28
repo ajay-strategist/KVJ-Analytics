@@ -113,7 +113,7 @@ export function DataTable<T>(props: DataTableProps<T>) {
   const colSpan = visibleCols.length + (selectable ? 1 : 0) + (rowActions ? 1 : 0) + (expandable ? 1 : 0);
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white">
+    <div className="rounded-2xl border border-slate-200 bg-white shadow-sm shadow-slate-200/40">
       {/* toolbar */}
       <div className="flex flex-wrap items-center gap-2 border-b border-slate-100 p-3">
         {searchable && (
@@ -159,8 +159,8 @@ export function DataTable<T>(props: DataTableProps<T>) {
       {/* table */}
       <div className="overflow-x-auto">
         <table className="w-full min-w-[640px] border-collapse text-left">
-          <thead className="sticky top-0 z-10 bg-slate-50">
-            <tr className="border-b border-slate-200 text-[11px] font-bold uppercase tracking-wide text-slate-400">
+          <thead className="sticky top-0 z-10 bg-gradient-to-b from-slate-50 to-slate-100/60">
+            <tr className="border-b border-slate-200 text-[11px] font-bold uppercase tracking-wide text-slate-500">
               {selectable && <th className="w-10 px-4 py-3"><input type="checkbox" checked={allChecked} onChange={toggleAll} aria-label="Select all" className="h-4 w-4 rounded border-slate-300 text-brand" /></th>}
               {expandable && <th className="w-8 px-2" />}
               {visibleCols.map((c) => (
@@ -198,7 +198,7 @@ export function DataTable<T>(props: DataTableProps<T>) {
                 const id = getRowId(row); const open = expanded.has(id);
                 return (
                   <React.Fragment key={id}>
-                    <tr className="hover:bg-slate-50/60">
+                    <tr className="transition-colors hover:bg-cyan-50/40">
                       {selectable && <td className="px-4 py-3"><input type="checkbox" checked={selected.has(id)} onChange={() => toggleOne(id)} aria-label="Select row" className="h-4 w-4 rounded border-slate-300 text-brand" /></td>}
                       {expandable && <td className="px-2"><button type="button" onClick={() => setExpanded((e) => { const n = new Set(e); n.has(id) ? n.delete(id) : n.add(id); return n; })} aria-label="Expand row" className="text-slate-400 hover:text-slate-700"><ChevronDown className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`} /></button></td>}
                       {visibleCols.map((c) => (

@@ -323,21 +323,22 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .group:hover .icon-anim { transform: translateY(-3px) scale(1.08); }
 
 .reveal {
-  opacity: 0; transform: translateY(32px); filter: blur(6px);
-  transition: opacity 0.95s cubic-bezier(0.16, 1, 0.3, 1), transform 0.95s cubic-bezier(0.16, 1, 0.3, 1), filter 0.95s cubic-bezier(0.16, 1, 0.3, 1);
-  will-change: opacity, transform, filter;
+  opacity: 0; transform: translateY(30px) scale(0.985);
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.75s cubic-bezier(0.16, 1, 0.3, 1), filter 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
 }
-.reveal.is-visible { opacity: 1; transform: translateY(0); filter: blur(0); }
+.reveal.is-visible { opacity: 1; transform: translateY(0) scale(1); }
 
 /* Reveal variants */
 .reveal.rv-left  { transform: translateX(-48px) translateY(0); }
 .reveal.rv-right { transform: translateX(48px) translateY(0); }
-.reveal.rv-scale { transform: scale(0.92) translateY(12px); }
+/* KTM-style zoom-in: content scales up into place as it enters view */
+.reveal.rv-scale { transform: scale(0.9) translateY(22px); filter: blur(6px); }
 .reveal.rv-blur  { transform: translateY(20px); filter: blur(16px); }
 .reveal.rv-left.is-visible,
-.reveal.rv-right.is-visible,
-.reveal.rv-scale.is-visible { transform: none; }
-.reveal.rv-blur.is-visible  { transform: none; filter: blur(0); }
+.reveal.rv-right.is-visible { transform: none; }
+.reveal.rv-scale.is-visible { transform: none; filter: blur(0px) !important; }
+.reveal.rv-blur.is-visible  { transform: none; filter: blur(0px) !important; }
 
 /* Animated flowing gradient text (premium headings / accents) */
 .text-gradient-flow {
@@ -607,6 +608,191 @@ details[open] summary ~ * {
 }
 
 /* ══════════════════════════════════════════════════════
+   3D IMMERSIVE WEBSITE — PREMIUM ANIMATION UTILITIES
+   Inspired by Trionn.com & Arqui9.com design language
+══════════════════════════════════════════════════════ */
+
+/* 3D perspective container — apply to parent of tiltable/3D children */
+.perspective-container {
+  perspective: 1200px;
+  transform-style: preserve-3d;
+}
+
+/* 3D tilt card — children transform in 3D space */
+.tilt-card {
+  transform-style: preserve-3d;
+  transition: transform 0.5s cubic-bezier(0.03, 0.98, 0.52, 0.99);
+  will-change: transform;
+}
+.tilt-card .tilt-card-inner {
+  transform: translateZ(40px);
+  transition: transform 0.5s cubic-bezier(0.03, 0.98, 0.52, 0.99);
+}
+
+/* Animated gradient mesh background */
+@keyframes mesh-drift {
+  0%   { background-position: 0% 50%, 100% 50%, 50% 0%; }
+  25%  { background-position: 100% 0%, 0% 100%, 100% 50%; }
+  50%  { background-position: 50% 100%, 50% 0%, 0% 100%; }
+  75%  { background-position: 0% 0%, 100% 100%, 50% 50%; }
+  100% { background-position: 0% 50%, 100% 50%, 50% 0%; }
+}
+.gradient-mesh-animated {
+  background:
+    radial-gradient(ellipse 80% 50% at 20% 40%, rgba(67,245,255,0.12) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 60% at 80% 20%, rgba(58,123,255,0.14) 0%, transparent 70%),
+    radial-gradient(ellipse 70% 50% at 50% 80%, rgba(22,230,216,0.08) 0%, transparent 70%),
+    linear-gradient(180deg, #050608 0%, #0A0D13 100%);
+  background-size: 200% 200%, 200% 200%, 200% 200%, 100% 100%;
+  animation: mesh-drift 20s ease infinite;
+}
+
+/* Morphing liquid metal border */
+@keyframes morph-border {
+  0%   { border-radius: 24px 60px 24px 60px; }
+  25%  { border-radius: 60px 24px 60px 24px; }
+  50%  { border-radius: 40px 60px 40px 24px; }
+  75%  { border-radius: 24px 40px 60px 40px; }
+  100% { border-radius: 24px 60px 24px 60px; }
+}
+.morphing-border {
+  animation: morph-border 12s ease-in-out infinite;
+}
+
+/* Character-level animation targets (set by useSplitText) */
+.split-word { display: inline-block; overflow: hidden; vertical-align: top; }
+.split-char {
+  display: inline-block;
+  will-change: transform, opacity;
+  transform-style: preserve-3d;
+}
+
+/* 3D section entrance with depth */
+@keyframes section-3d-enter {
+  from {
+    opacity: 0;
+    transform: perspective(1200px) translateZ(-120px) translateY(40px) rotateX(6deg);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: perspective(1200px) translateZ(0) translateY(0) rotateX(0);
+    filter: blur(0);
+  }
+}
+
+/* Dramatic text glow for hero headings */
+.text-glow-hero {
+  text-shadow: 0 0 40px rgba(67,245,255,0.3), 0 0 80px rgba(67,245,255,0.15), 0 0 120px rgba(58,123,255,0.1);
+}
+
+/* 3D orb — layered radial gradients creating a sphere illusion */
+@keyframes orb-rotate { to { transform: rotate(360deg); } }
+@keyframes orb-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.9; }
+  50%      { transform: scale(1.08); opacity: 1; }
+}
+.orb-3d {
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255,255,255,0.25) 0%, transparent 50%),
+    radial-gradient(circle at 60% 70%, rgba(67,245,255,0.35) 0%, transparent 55%),
+    radial-gradient(circle at 50% 50%, rgba(58,123,255,0.5) 0%, rgba(22,230,216,0.15) 60%, transparent 80%);
+  box-shadow:
+    0 0 60px rgba(67,245,255,0.4),
+    0 0 120px rgba(58,123,255,0.2),
+    inset 0 0 60px rgba(0,0,0,0.3);
+  animation: orb-pulse 4s ease-in-out infinite;
+}
+.orb-ring {
+  border: 1px solid rgba(67,245,255,0.2);
+  border-radius: 50%;
+  animation: orb-rotate 12s linear infinite;
+}
+.orb-ring-reverse {
+  border: 1px solid rgba(58,123,255,0.15);
+  border-radius: 50%;
+  animation: orb-rotate 18s linear infinite reverse;
+}
+
+/* Orbiting particle dots around the 3D orb */
+@keyframes orbit {
+  from { transform: rotate(0deg) translateX(var(--orbit-radius, 80px)) rotate(0deg); }
+  to   { transform: rotate(360deg) translateX(var(--orbit-radius, 80px)) rotate(-360deg); }
+}
+.orbit-dot {
+  position: absolute;
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: #43F5FF;
+  box-shadow: 0 0 8px rgba(67,245,255,0.8);
+  animation: orbit var(--orbit-duration, 6s) linear infinite;
+}
+
+/* Cinematic intro belt strips */
+@keyframes belt-slide-right { from { transform: translateX(-110%); } to { transform: translateX(0); } }
+@keyframes belt-slide-left  { from { transform: translateX(110%); }  to { transform: translateX(0); } }
+@keyframes belt-exit-up     { to { transform: translateY(-110%); } }
+@keyframes belt-exit-down   { to { transform: translateY(110%); } }
+@keyframes logo-stroke-draw {
+  from { stroke-dashoffset: 1; }
+  to   { stroke-dashoffset: 0; }
+}
+@keyframes logo-glow-in {
+  0%   { opacity: 0; filter: blur(20px) drop-shadow(0 0 0 transparent); }
+  60%  { opacity: 1; filter: blur(0) drop-shadow(0 0 30px rgba(67,245,255,0.8)); }
+  100% { opacity: 1; filter: blur(0) drop-shadow(0 0 15px rgba(67,245,255,0.4)); }
+}
+
+/* Header glass transition — applied via GSAP */
+.header-glass {
+  background: rgba(5,6,8,0.75) !important;
+  backdrop-filter: blur(20px) saturate(1.6) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(1.6) !important;
+  border-bottom: 1px solid rgba(67,245,255,0.08) !important;
+}
+
+/* Text stagger hover on nav links (Trionn-style) */
+.nav-text-stagger {
+  position: relative;
+  display: inline-flex;
+  overflow: hidden;
+}
+.nav-text-stagger .char {
+  display: inline-block;
+  transition: transform 0.35s cubic-bezier(0.22,1,0.36,1);
+}
+.nav-text-stagger:hover .char {
+  transform: translateY(-110%);
+}
+
+/* Smooth GSAP quickTo cursor overrides */
+.cursor-text-mode {
+  width: 2px !important;
+  height: 28px !important;
+  border-radius: 1px !important;
+  background: #43F5FF !important;
+}
+.cursor-view-mode {
+  width: 80px !important;
+  height: 80px !important;
+  border: none !important;
+  background: rgba(67,245,255,0.12) !important;
+  backdrop-filter: blur(4px) !important;
+}
+
+/* Reduced-motion fallbacks for all new 3D effects */
+@media (prefers-reduced-motion: reduce) {
+  .gradient-mesh-animated { animation: none !important; }
+  .morphing-border { animation: none !important; border-radius: 24px !important; }
+  .orb-3d, .orb-ring, .orb-ring-reverse { animation: none !important; }
+  .orbit-dot { animation: none !important; }
+  .tilt-card { transform: none !important; }
+  .text-glow-hero { text-shadow: none !important; }
+}
+
+
+/* ══════════════════════════════════════════════════════
    ADMIN LIGHT THEME SCOPE
    The public site's design tokens are dark (obsidian + neon cyan).
    The admin platform (AdminShell) is a light enterprise UI, so we
@@ -649,6 +835,13 @@ details[open] summary ~ * {
   --shadow-soft:       0 1px 2px rgba(15, 23, 42, 0.06), 0 6px 16px rgba(15, 23, 42, 0.06);
   --shadow-hover-lift: 0 10px 30px rgba(15, 23, 42, 0.12), 0 3px 8px rgba(15, 23, 42, 0.06);
 
+  /* Light + colorful backdrop: soft cyan / violet / blue washes on a cool light base so
+     white cards pop and the panel feels vibrant rather than flat gray. */
   background-color: var(--color-base);
+  background-image:
+    radial-gradient(1100px 620px at 100% -8%, rgba(8, 145, 178, 0.12), transparent 60%),
+    radial-gradient(1000px 560px at -6% 108%, rgba(124, 58, 237, 0.10), transparent 60%),
+    radial-gradient(900px 520px at 55% 118%, rgba(58, 123, 255, 0.08), transparent 60%);
+  background-attachment: fixed;
   color: var(--color-ink);
 }

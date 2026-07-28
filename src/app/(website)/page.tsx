@@ -14,6 +14,7 @@ import { BusinessAnalyticsPipeline } from "@/components/v3/home/BusinessAnalytic
 import { FinalCTAExperience } from "@/components/v3/home/FinalCTAExperience";
 import { getPageContent, mergePageContent } from "@/lib/content";
 import { FALLBACK_HOME_PAGE } from "@/lib/constants";
+import { supabase } from "@/lib/supabase";
 
 export const revalidate = 3600;
 
@@ -31,6 +32,29 @@ export default async function HomePage() {
   // Capability names come from the approved hero badge (no new copy).
   const capabilities = (hero.badge || "").split("•").map((s) => s.trim()).filter(Boolean);
 
+  // "Trusted by" wall: prefer real client LOGOS from the admin-managed `clients` table
+  // (logo_url), falling back to the client name where no logo is uploaded, then to the
+  // CMS logo list if there are no clients at all. LogoWall renders <img> for URLs.
+  // A logo_url is only usable if it's a DIRECT image (uploaded file / storage URL), not a
+  // share link (e.g. OneDrive 1drv.ms) which renders as a broken image. Otherwise show the name.
+  const isDirectImage = (u?: string | null) =>
+    !!u && typeof u === "string" && u.trim().length > 0 &&
+    (/^https?:\/\//i.test(u) || u.startsWith("/"));
+  let trustedLogos: string[] = trustedBy.logos;
+  try {
+    const { data: clientRows } = await supabase
+      .from("clients")
+      .select("name, logo_url, sort_order")
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true });
+    const fromClients = (clientRows ?? [])
+      .map((c: { name: string; logo_url: string | null }) => (isDirectImage(c.logo_url) ? c.logo_url! : c.name))
+      .filter(Boolean) as string[];
+    if (fromClients.length) trustedLogos = fromClients;
+  } catch {
+    /* fall back to CMS logos on any error */
+  }
+
   return (
     <>
       <HeroCommandCenter
@@ -42,7 +66,7 @@ export default async function HomePage() {
 
       <CapabilityStrip items={capabilities} />
 
-      <LogoWall heading={trustedBy.heading} logos={trustedBy.logos} />
+      <LogoWall heading={trustedBy.heading} logos={trustedLogos} />
 
       <SolutionExplorer
         eyebrow="Our Solutions"

@@ -70,7 +70,7 @@ export const FALLBACK_SITE_SETTINGS = {
 export const FALLBACK_HOME_PAGE = {
   hero: {
     badge: "Business Intelligence • Data Analytics • Artificial Intelligence • Digital Transformation",
-    headline: "Transform Data Into Business Growth.",
+    headline: "Transform Data Into Business Growth",
     supporting:
       "Helping organizations make smarter decisions through Business Intelligence, Artificial Intelligence, Automation and Digital Transformation.",
     description:

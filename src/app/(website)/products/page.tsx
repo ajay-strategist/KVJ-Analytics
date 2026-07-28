@@ -2,8 +2,8 @@ import React from "react";
 import { Container } from "@/components/ui/Container";
 import { Section } from "@/components/ui/Section";
 import { Reveal } from "@/components/ui/Reveal";
-import { RevealText } from "@/components/ui/RevealText";
 import { ProductCard } from "@/components/ui/ProductCard";
+import { SplitHeading, ScaleIn, Parallax } from "@/components/v3/ScrollFx";
 import { getPageContent, mergePageContent } from "@/lib/content";
 import { FALLBACK_PRODUCTS_PAGE } from "@/lib/constants";
 
@@ -55,10 +55,10 @@ export default async function ProductsPage() {
         }
       `}} />
 
-      {/* 3D Perspective Grid Background layer */}
-      <div className="absolute inset-0 z-0 pointer-events-none opacity-40 perspective-container">
+      {/* 3D Perspective Grid Background layer (scroll parallax for depth) */}
+      <Parallax speed={0.28} className="absolute inset-0 z-0 pointer-events-none opacity-40 perspective-container">
         <div className="absolute inset-x-0 -top-40 bottom-0 h-[200%] grid-plane" />
-      </div>
+      </Parallax>
 
       {/* Data streams overlay */}
       <div className="absolute inset-0 z-0 pointer-events-none opacity-20">
@@ -80,11 +80,12 @@ export default async function ProductsPage() {
               Proprietary Software Solutions
             </span>
           </Reveal>
-          <RevealText
+          <SplitHeading
             as="h1"
-            text={page.heading}
             className="font-display font-bold text-4xl sm:text-5xl lg:text-6xl leading-[1.08] tracking-tight text-white mb-6 max-w-[18ch] mx-auto"
-          />
+          >
+            {page.heading}
+          </SplitHeading>
           <Reveal delay={150}>
             <p className="text-xl md:text-2xl font-medium text-transparent bg-clip-text bg-gradient-to-r from-brand via-corporate to-brand animate-[signature-flow_6s_linear_infinite] bg-[size:200%_auto] max-w-2xl mx-auto mb-4">
               {page.intro}
@@ -100,7 +101,7 @@ export default async function ProductsPage() {
             {products.map((product: any, idx: number) => {
               const isGradeScope = product.slug === "grade-scope";
               return (
-                <Reveal key={idx} delay={idx * 110}>
+                <ScaleIn key={idx} delay={idx * 0.12}>
                   <ProductCard
                     name={product.name}
                     tagline={product.tagline}
@@ -109,7 +110,7 @@ export default async function ProductsPage() {
                     keyFeatures={product.keyFeatures}
                     isGradeScope={isGradeScope}
                   />
-                </Reveal>
+                </ScaleIn>
               );
             })}
           </div>

@@ -1,7 +1,7 @@
 import React from "react";
 import { Mail, Phone, MapPin, MessageSquare } from "lucide-react";
 import { Container } from "@/components/ui/Container";
-import { BoldStatement } from "@/components/ui/BoldStatement";
+import { SplitHeading } from "@/components/v3/ScrollFx";
 import { Reveal } from "@/components/ui/Reveal";
 import { ContactForm } from "@/components/ContactForm";
 import { getPageContent, mergePageContent } from "@/lib/content";
@@ -36,9 +36,12 @@ export default async function ContactPage() {
       <Container className="relative z-10">
         {/* Centered header */}
         <Reveal className="max-w-3xl mx-auto text-center mb-12 md:mb-14">
-          <BoldStatement variant="h1" className="mb-4 text-white">
+          <SplitHeading
+            as="h1"
+            className="text-[34px] lg:text-[54px] font-medium tracking-[-0.025em] leading-[1.1] font-display text-white mb-4"
+          >
             {page.heading}
-          </BoldStatement>
+          </SplitHeading>
           <p className="text-xl md:text-2xl font-medium text-transparent bg-clip-text bg-gradient-to-r from-[#43F5FF] via-[#3A7BFF] to-[#43F5FF] animate-[signature-flow_6s_linear_infinite] bg-[size:200%_auto] mb-5">
             {page.strapline}
           </p>

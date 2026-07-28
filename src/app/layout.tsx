@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
-import { SmoothScroll } from "@/components/SmoothScroll";
 import { Analytics } from "@/components/Analytics";
 import { SITE_URL, SITE_NAME, organizationSchema } from "@/lib/seo";
 
@@ -62,7 +61,6 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema()) }}
         />
-        <SmoothScroll />
         {children}
         <Analytics />
       </body>

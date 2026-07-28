@@ -51,7 +51,7 @@ export function FormActions({
       {onPublish && <button type="button" onClick={onPublish} disabled={saving} className="rounded-lg border border-brand/40 bg-brand/10 px-4 py-2 text-sm font-semibold text-brand hover:bg-brand/15 disabled:opacity-60">Publish</button>}
       {onSave && (
         <button type="submit" onClick={onSave} disabled={saving}
-          className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60">
+          className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 px-4 py-2 text-sm font-semibold text-white hover:from-cyan-500 hover:to-blue-500 disabled:opacity-60">
           {saving && <Loader2 className="h-4 w-4 animate-spin" />}{saveLabel}
         </button>
       )}

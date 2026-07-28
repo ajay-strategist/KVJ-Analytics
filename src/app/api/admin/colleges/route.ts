@@ -20,11 +20,13 @@ export async function GET(req: NextRequest) {
   const db = getAdmin();
   if (!db) return NextResponse.json({ error: "Supabase not configured." }, { status: 500 });
 
+  // The `colleges` table is optional / may not be provisioned. Degrade to an empty list
+  // instead of a 500 so the Vouchers page (which loads colleges for a dropdown) never crashes.
   const { data, error } = await db
     .from("colleges")
     .select("*")
     .order("name", { ascending: true });
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ colleges: data });
+  if (error) return NextResponse.json({ colleges: [] });
+  return NextResponse.json({ colleges: data ?? [] });
 }

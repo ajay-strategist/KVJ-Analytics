@@ -4,7 +4,7 @@ import { Container } from "@/components/ui/Container";
 import { Section } from "@/components/ui/Section";
 import { Button } from "@/components/ui/Button";
 import { Reveal } from "@/components/ui/Reveal";
-import { RevealText } from "@/components/ui/RevealText";
+import { SplitHeading, Parallax } from "@/components/v3/ScrollFx";
 import { SolutionsExplorer } from "@/components/v3/corporate/SolutionsExplorer";
 import { getPageContent, mergePageContent } from "@/lib/content";
 import { FALLBACK_CORPORATE } from "@/lib/constants";
@@ -61,11 +61,11 @@ export default async function CorporateSolutionsPage() {
         />
 
         {/* WebGL-style 3D animated dashboard graphic behind the text */}
-        <div className="absolute inset-0 z-0 flex items-center justify-center opacity-25 pointer-events-none overflow-hidden">
+        <Parallax speed={0.18} className="absolute inset-0 z-0 flex items-center justify-center opacity-25 pointer-events-none overflow-hidden">
           <div className="relative w-full max-w-[600px]">
             <CorporateHeroGraphic />
           </div>
-        </div>
+        </Parallax>
 
         <Container className="relative z-10 py-24 md:py-32 text-center">
           <Reveal>
@@ -73,11 +73,12 @@ export default async function CorporateSolutionsPage() {
               For Businesses &amp; Corporates
             </p>
           </Reveal>
-          <RevealText
+          <SplitHeading
             as="h1"
-            text={page.heading}
             className="font-display font-medium text-[40px] sm:text-[54px] lg:text-[64px] leading-[1.06] tracking-[-0.025em] mb-6 max-w-[18ch] mx-auto text-white"
-          />
+          >
+            {page.heading}
+          </SplitHeading>
           <Reveal delay={150}>
             <p className="text-xl md:text-2xl text-[#3A7BFF] font-medium mb-6">{page.strapline}</p>
             <p className="text-lg text-slate font-light leading-relaxed max-w-2xl mx-auto">{page.intro}</p>

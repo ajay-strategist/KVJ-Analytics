@@ -72,7 +72,7 @@ export default function AdminBlogListPage() {
           <h2 className="text-xl font-bold text-slate-900">Blog</h2>
           <p className="text-sm text-slate-500">Manage articles, categories and publishing.</p>
         </div>
-        <Link href="/admin/blog/new" className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800">
+        <Link href="/admin/blog/new" className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 px-4 py-2 text-sm font-semibold text-white hover:from-cyan-500 hover:to-blue-500">
           <Plus className="h-4 w-4" />New post
         </Link>
       </div>

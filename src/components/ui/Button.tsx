@@ -80,14 +80,14 @@ export function Button({
     if (variant === "primary" || variant === "accent") {
       return (
         <span className="flex items-center gap-1.5 relative z-10">
-          <span>{children}</span>
+          <span className="flex items-center gap-2">{children}</span>
           <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover/btn:translate-x-1" />
           {/* Subtle ripple layer */}
           <span className="absolute -inset-x-8 -inset-y-4 bg-white/10 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300 pointer-events-none rounded-full blur-[10px] mix-blend-screen" />
         </span>
       );
     }
-    return <span className="relative z-10">{children}</span>;
+    return <span className="flex items-center gap-2 relative z-10">{children}</span>;
   };
 
   if (href) {

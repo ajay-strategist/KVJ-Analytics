@@ -180,12 +180,12 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
               {!collapsed && (
                 <div className="flex items-center gap-2">
-                  <img src="/logo.png" alt="KVJ Analytics" className="h-6 w-auto object-contain" />
+                  <img src="/logo-dark.png" alt="KVJ Analytics" className="h-6 w-auto object-contain" />
                   <span className="text-[10px] font-extrabold uppercase tracking-wider text-cyan-700 bg-cyan-50 px-1.5 py-0.5 rounded">Console</span>
                 </div>
               )}
               {collapsed && (
-                <img src="/logo.png" alt="KVJ" className="h-6 w-6 object-contain mx-auto" />
+                <img src="/logo-dark.png" alt="KVJ" className="h-6 w-6 object-contain mx-auto" />
               )}
               <button 
                 onClick={toggleCollapse} 
@@ -252,7 +252,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                 <ExternalLink className="h-3.5 w-3.5" />View site
               </Link>
               <button onClick={logout}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-800 transition-colors shadow-sm">
+                className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:from-cyan-500 hover:to-blue-500 transition-all shadow-sm shadow-cyan-600/20">
                 <LogOut className="h-3.5 w-3.5" />Logout
               </button>
             </div>
@@ -361,10 +361,10 @@ function SidebarContent({ pathname, onNavigate, pinned, togglePin, collapsed }: 
   const pinnedItems = activeNavItems.filter((i) => pinned.includes(i.href));
 
   return (
-    <div className="flex h-full flex-col bg-white overflow-hidden">
+    <div className="flex h-full flex-col bg-gradient-to-b from-white via-white to-slate-50/70 overflow-hidden">
       {/* 1. Logo Block in mobile / drawer (where shell lacks the default block) */}
       <div className="lg:hidden flex items-center gap-2 border-b border-slate-100 px-5 py-4 shrink-0">
-        <img src="/logo.png" alt="KVJ Analytics" className="h-7 w-auto object-contain" />
+        <img src="/logo-dark.png" alt="KVJ Analytics" className="h-7 w-auto object-contain" />
         <span className="text-[10px] font-bold uppercase tracking-wider text-cyan-700 bg-cyan-50 px-1.5 py-0.5 rounded">Console</span>
       </div>
 
@@ -382,8 +382,10 @@ function SidebarContent({ pathname, onNavigate, pinned, togglePin, collapsed }: 
                 return (
                   <Link key={"pin-" + item.href} href={item.href} onClick={onNavigate}
                     aria-current={active ? "page" : undefined}
-                    className={`flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-[12.5px] font-medium transition-all group ${
-                      active ? "bg-cyan-50 text-cyan-850 font-bold border border-cyan-100" : "text-slate-650 hover:bg-slate-50"
+                    className={`flex items-center gap-2.5 rounded-lg border-l-[3px] border-transparent px-2.5 py-1.5 text-[12.5px] font-medium transition-all group ${
+                      active
+                        ? "bg-gradient-to-r from-cyan-100/80 to-blue-50 !border-cyan-500 text-cyan-900 font-bold shadow-[0_1px_2px_rgba(8,145,178,0.08)]"
+                        : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                     }`}
                   >
                     <item.icon className={`h-4 w-4 shrink-0 ${active ? "text-cyan-700" : "text-slate-400 group-hover:text-slate-700"}`} />
@@ -434,8 +436,10 @@ function SidebarContent({ pathname, onNavigate, pinned, togglePin, collapsed }: 
                   return (
                     <Link key={item.href} href={item.href} onClick={onNavigate}
                       aria-current={active ? "page" : undefined}
-                      className={`flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-[12.5px] font-medium transition-all group ${
-                        active ? "bg-cyan-50 text-cyan-850 font-bold border border-cyan-100" : "text-slate-650 hover:bg-slate-50"
+                      className={`flex items-center gap-2.5 rounded-lg border-l-[3px] border-transparent px-2.5 py-1.5 text-[12.5px] font-medium transition-all group ${
+                        active
+                          ? "bg-gradient-to-r from-cyan-100/80 to-blue-50 !border-cyan-500 text-cyan-900 font-bold shadow-[0_1px_2px_rgba(8,145,178,0.08)]"
+                          : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                       }`}
                     >
                       <item.icon className={`h-4 w-4 shrink-0 transition-transform group-hover:scale-105 ${active ? "text-cyan-700 font-bold" : "text-slate-400 group-hover:text-slate-700"}`} />

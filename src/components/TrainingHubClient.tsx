@@ -306,7 +306,6 @@ export function TrainingHubClient({ categories, hub }: TrainingHubClientProps) {
                     >
                       <User className="w-4 h-4 text-white" />
                       <span>Access Student Dashboard</span>
-                      <ArrowRight className="w-4 h-4 text-white group-hover/btn:translate-x-1 transition-transform" />
                     </Button>
                     <span className="text-xs text-zinc-400 font-mono">
                       Logged in as: <span className="text-white font-bold">{user.email}</span>
@@ -321,7 +320,6 @@ export function TrainingHubClient({ categories, hub }: TrainingHubClientProps) {
                     >
                       <LogIn className="w-4 h-4 text-white group-hover/login-btn:rotate-12 transition-transform duration-300" />
                       <span>Student Portal Login</span>
-                      <ArrowRight className="w-4 h-4 text-white group-hover/login-btn:translate-x-1.5 transition-transform duration-300" />
                     </Button>
                     <p className="text-xs text-zinc-400 font-light leading-relaxed max-w-xs">
                       Already enrolled? Log in to launch your course player, assessments, and grades.

@@ -3,15 +3,26 @@
 import React, { useEffect, useRef, useState } from "react";
 
 /**
- * Cinematic intro: a 0 → 100 counter on a dark panel that wipes upward to
- * reveal the site. Runs once per browser session, respects reduced-motion,
- * and locks scroll only while active. Brand/number only — no fabricated copy.
+ * Cinematic intro loader with GSAP-powered belt strips, logo reveal, and counter.
+ * Inspired by Trionn.com's dramatic page-load experience.
+ * Runs once per browser session, respects reduced-motion.
  */
+/** Broadcast that the intro is finished so the hero can time its reveal to it.
+ *  Sets a global flag (for consumers that mount/read late) and fires an event
+ *  (for consumers already listening). Safe to call more than once. */
+function signalIntroDone() {
+  try {
+    (window as unknown as { __kvjIntroDone?: boolean }).__kvjIntroDone = true;
+    window.dispatchEvent(new Event("kvj:intro-done"));
+  } catch { /* ignore */ }
+}
+
 export function IntroLoader() {
-  const [count, setCount] = useState(0);
-  const [wiping, setWiping] = useState(false);
   const [done, setDone] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const counterRef = useRef<HTMLDivElement>(null);
   const barRef = useRef<HTMLDivElement>(null);
+  const logoRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -22,33 +33,88 @@ export function IntroLoader() {
 
     if (reduce || seen) {
       setDone(true);
+      signalIntroDone();
       return;
     }
 
     try { sessionStorage.setItem("kvj-intro", "1"); } catch { /* ignore */ }
     document.body.style.overflow = "hidden";
 
-    const duration = 1500;
-    const start = performance.now();
-    let raf = 0;
-    const tick = (t: number) => {
-      const p = Math.min((t - start) / duration, 1);
-      const eased = 1 - Math.pow(1 - p, 3); // ease-out cubic
-      setCount(Math.round(eased * 100));
-      if (p < 1) {
-        raf = requestAnimationFrame(tick);
-      } else {
-        setWiping(true);
-        window.setTimeout(() => {
-          setDone(true);
-          document.body.style.overflow = "";
-        }, 900);
-      }
+    let ctx: ReturnType<typeof import("gsap").default.context> | null = null;
+
+    const run = async () => {
+      const gsapMod = await import("gsap");
+      const gsap = gsapMod.default || gsapMod;
+
+      const container = containerRef.current;
+      const counter = counterRef.current;
+      const bar = barRef.current;
+      const logo = logoRef.current;
+      if (!container || !counter || !bar || !logo) return;
+
+      ctx = gsap.context(() => {
+        const tl = gsap.timeline({
+          onComplete: () => {
+            setDone(true);
+            document.body.style.overflow = "";
+            signalIntroDone();
+          },
+        });
+
+        // Phase 1: Belt strips slide in from alternating directions
+        const belts = container.querySelectorAll<HTMLElement>(".intro-belt");
+        tl.set(belts, { xPercent: (i) => (i % 2 === 0 ? -110 : 110) });
+        tl.to(belts, {
+          xPercent: 0,
+          duration: 0.5,
+          stagger: 0.04,
+          ease: "power3.inOut",
+        });
+
+        // Phase 2: Logo glow in
+        tl.fromTo(
+          logo,
+          { opacity: 0, filter: "blur(20px)", scale: 0.85 },
+          { opacity: 1, filter: "blur(0px)", scale: 1, duration: 0.7, ease: "power2.out" },
+          "-=0.15"
+        );
+
+        // Phase 3: Counter 0→100 with progress bar
+        const counterObj = { val: 0 };
+        tl.to(counterObj, {
+          val: 100,
+          duration: 1.3,
+          ease: "power2.inOut",
+          onUpdate: () => {
+            const v = Math.round(counterObj.val);
+            counter.textContent = String(v).padStart(2, "0");
+            if (bar) bar.style.width = `${v}%`;
+          },
+        }, "-=0.3");
+
+        // Phase 4: Everything fades then strips exit up/down
+        tl.to(
+          [logo, counter.parentElement, bar.parentElement?.parentElement],
+          { opacity: 0, y: -30, filter: "blur(10px)", duration: 0.4, ease: "power2.in" },
+          "+=0.15"
+        );
+
+        tl.to(belts, {
+          yPercent: (i) => (i % 2 === 0 ? -110 : 110),
+          duration: 0.55,
+          stagger: 0.03,
+          ease: "power4.inOut",
+        }, "-=0.15");
+
+        // Final container fade out
+        tl.to(container, { opacity: 0, duration: 0.25, ease: "power1.out" });
+      });
     };
-    raf = requestAnimationFrame(tick);
+
+    run();
 
     return () => {
-      cancelAnimationFrame(raf);
+      ctx?.revert();
       document.body.style.overflow = "";
     };
   }, []);
@@ -57,46 +123,68 @@ export function IntroLoader() {
 
   return (
     <div
+      ref={containerRef}
       aria-hidden
-      className={`fixed inset-0 z-[100000] flex flex-col items-center justify-center bg-[#050608] ${wiping ? "intro-wipe" : ""}`}
+      className="fixed inset-0 z-[100000] flex flex-col items-center justify-center"
+      style={{ background: "#050608" }}
     >
-      {/* ambient accent glows */}
-      <div className="pointer-events-none absolute -top-24 right-[12%] h-80 w-80 rounded-full bg-brand/10 blur-[90px]" />
-      <div className="pointer-events-none absolute bottom-[-6rem] left-[8%] h-72 w-72 rounded-full bg-corporate/10 blur-[90px]" />
-
-      {/* brand wordmark */}
-      <img
-        src="/logo.png"
-        alt="KVJ Analytics"
-        className="relative h-9 md:h-11 w-auto object-contain brightness-0 invert mb-10 opacity-90 logo-blur-reveal"
-      />
-
-      {/* counter */}
-      <div 
-        className="relative font-display font-medium leading-none text-white text-[64px] md:text-[96px] tabular-nums tracking-tight"
-        style={{ textShadow: "0 0 25px rgba(67, 245, 255, 0.25)" }}
-      >
-        {String(count).padStart(2, "0")}
-        <span className="text-[#43F5FF]">%</span>
-      </div>
-
-      {/* progress bar */}
-      <div className="relative mt-8 h-[2px] w-56 md:w-72 overflow-hidden rounded-full bg-white/10">
+      {/* Belt strips — 10 horizontal bars */}
+      {Array.from({ length: 10 }).map((_, i) => (
         <div
-          ref={barRef}
-          className="h-full rounded-full"
+          key={i}
+          className="intro-belt absolute left-0 w-full bg-[#0A0D13]"
           style={{
-            width: `${count}%`,
-            background: "linear-gradient(90deg, #43F5FF, #3A7BFF)",
-            transition: "width 0.1s linear",
-            boxShadow: "0 0 16px rgba(67, 245, 255, 0.45)",
+            top: `${i * 10}%`,
+            height: "10.1%",
+            borderTop: "1px solid rgba(67,245,255,0.06)",
           }}
         />
-      </div>
+      ))}
 
-      <p className="relative mt-6 text-[11px] uppercase tracking-[0.3em] text-white/40">
-        Transforming Data Into Decisions
-      </p>
+      {/* Center content — overlaid on top of belts */}
+      <div className="relative z-10 flex flex-col items-center">
+        {/* Ambient glows */}
+        <div className="pointer-events-none absolute -top-32 right-[-6rem] h-80 w-80 rounded-full bg-brand/10 blur-[100px]" />
+        <div className="pointer-events-none absolute bottom-[-6rem] left-[-4rem] h-72 w-72 rounded-full bg-corporate/10 blur-[100px]" />
+
+        {/* Logo */}
+        <div ref={logoRef} className="mb-10" style={{ opacity: 0 }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/logo.png"
+            alt="KVJ Analytics"
+            className="h-9 md:h-12 w-auto object-contain brightness-0 invert opacity-90"
+          />
+        </div>
+
+        {/* Counter */}
+        <div className="relative">
+          <div
+            ref={counterRef}
+            className="font-display font-medium leading-none text-white text-[72px] md:text-[110px] tabular-nums tracking-tight text-glow-hero"
+          >
+            00
+          </div>
+          <span className="absolute -right-8 md:-right-10 top-2 text-[28px] md:text-[36px] text-brand font-light">%</span>
+        </div>
+
+        {/* Progress bar */}
+        <div className="relative mt-8 h-[2px] w-56 md:w-72 overflow-hidden rounded-full bg-white/10">
+          <div
+            ref={barRef}
+            className="h-full rounded-full"
+            style={{
+              width: "0%",
+              background: "linear-gradient(90deg, #43F5FF, #3A7BFF)",
+              boxShadow: "0 0 20px rgba(67, 245, 255, 0.5)",
+            }}
+          />
+        </div>
+
+        <p className="relative mt-6 text-[11px] uppercase tracking-[0.3em] text-white/40">
+          Transforming Data Into Decisions
+        </p>
+      </div>
     </div>
   );
 }

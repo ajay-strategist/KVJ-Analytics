@@ -134,8 +134,8 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
   const lessonFrameWindowRef = useRef<Window | null>(null);
 
   // Viewer controls — persisted in localStorage per course slug.
-  // null = not yet determined (auto-detect will set it on first load).
-  const [darkMode, setDarkModeRaw] = useState<boolean>(false);
+  // Default to Dark Mode.
+  const [darkMode, setDarkModeRaw] = useState<boolean>(true);
   const [hideSidebar, setHideSidebarRaw] = useState<boolean>(false);
   // Track whether we've initialised from localStorage yet
   const [viewerReady, setViewerReady] = useState(false);
@@ -158,13 +158,12 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
   const setHideSidebar = (v: boolean) => { setHideSidebarRaw(v); lsSet(lsHideKey, v); };
 
   /**
-   * Called by LessonIframe once per load with the detected background luminance.
-   * Only auto-sets darkMode when the user has never stored a preference for this
-   * course (i.e. the localStorage key is absent).
+   * Called by LessonIframe once per load.
+   * Default to dark mode unless user explicitly selected light mode in localStorage.
    */
-  const handleLightDetected = useCallback((isLight: boolean) => {
+  const handleLightDetected = useCallback((_isLight: boolean) => {
     if (lsGet(lsDarkKey) === null) {
-      setDarkMode(isLight);
+      setDarkMode(true);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lsDarkKey]);
@@ -557,13 +556,13 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
                 <ViewerToggle
                   active={darkMode}
                   onClick={() => setDarkMode(!darkMode)}
-                  title={darkMode ? "Disable force-dark mode" : "Force dark mode (invert light documents)"}
+                  title={darkMode ? "Dark mode active (click for Light mode)" : "Light mode active (click for Dark mode)"}
                 >
                   {darkMode
-                    ? <Sun className="w-3.5 h-3.5" />
-                    : <Moon className="w-3.5 h-3.5" />}
+                    ? <Moon className="w-3.5 h-3.5 text-[#00F0FF]" />
+                    : <Sun className="w-3.5 h-3.5" />}
                   <span className="hidden sm:inline text-[10px] font-semibold leading-none">
-                    {darkMode ? "Light" : "Dark"}
+                    {darkMode ? "Dark" : "Light"}
                   </span>
                 </ViewerToggle>
 

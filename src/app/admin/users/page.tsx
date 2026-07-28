@@ -84,7 +84,7 @@ export default function AdminUsersPage() {
           <h2 className="text-xl font-bold text-slate-900">Users & Roles</h2>
           <p className="text-sm text-slate-500">Internal staff directory and role assignment.</p>
         </div>
-        <button onClick={openAdd} className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800">
+        <button onClick={openAdd} className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 px-4 py-2 text-sm font-semibold text-white hover:from-cyan-500 hover:to-blue-500">
           <Plus className="h-4 w-4" />Add staff
         </button>
       </div>
@@ -139,7 +139,7 @@ export default function AdminUsersPage() {
             <div className="mt-6 flex justify-end gap-2">
               <button onClick={() => setModalOpen(false)} className="rounded-lg px-4 py-2 text-sm font-semibold text-slate-500 hover:text-slate-800">Cancel</button>
               <button onClick={() => form.handleSubmit()} disabled={form.isSubmitting}
-                className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60">
+                className="rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 px-4 py-2 text-sm font-semibold text-white hover:from-cyan-500 hover:to-blue-500 disabled:opacity-60">
                 {form.isSubmitting ? "Saving…" : editing ? "Save changes" : "Add staff"}
               </button>
             </div>

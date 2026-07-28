@@ -93,7 +93,7 @@ export function BusinessAnalyticsPipeline({
   const current = Math.min(STAGES.length - 1, Math.max(0, active === 0 ? 0 : active - 1));
 
   return (
-    <section className="relative bg-base">
+    <section className="relative bg-base perspective-container">
       {/* Desktop: sticky routed-flow journey */}
       <div ref={outer} className="relative hidden md:block h-[340vh]">
         <div className="sticky top-0 flex h-screen items-center overflow-hidden grid-fade">
@@ -101,7 +101,7 @@ export function BusinessAnalyticsPipeline({
           <div className="relative z-10 mx-auto w-full max-w-[1080px] px-6">
             <div className="mb-10 max-w-2xl">
               <span className="mb-3 inline-block text-[11px] font-bold uppercase tracking-[0.22em] text-brand">{eyebrow}</span>
-              <h2 className="font-display font-bold text-3xl lg:text-5xl text-ink leading-tight tracking-tight">{heading}</h2>
+              <h2 className="font-display font-bold text-3xl lg:text-5xl text-ink leading-tight tracking-tight text-glow-hero">{heading}</h2>
             </div>
 
             <div className="flex items-start gap-8 lg:gap-14">

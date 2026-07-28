@@ -11,9 +11,121 @@ interface LessonIframeProps {
 }
 
 export const DARK_MODE_CSS = `
-html { filter: invert(1) hue-rotate(180deg); background: #ffffff !important; }
-img, video, iframe, svg, canvas,
-[style*="background-image"] { filter: invert(1) hue-rotate(180deg); }
+html, body {
+  background-color: transparent !important;
+  color: #cbd5e1 !important;
+}
+h1, h2, h3, h4, h5, h6,
+[class*="heading"], [class*="title"] {
+  color: #ffffff !important;
+}
+p, li, td, th, dt, dd, figcaption, label {
+  color: #cbd5e1 !important;
+}
+strong, b {
+  color: #f8fafc !important;
+}
+a {
+  color: #38bdf8 !important;
+}
+a:hover {
+  color: #00f0ff !important;
+}
+blockquote {
+  background: rgba(0, 240, 255, 0.03) !important;
+  border-left-color: #00f0ff !important;
+  color: #f1f5f9 !important;
+}
+blockquote p {
+  color: #f8fafc !important;
+}
+
+/* Override any elements with hardcoded dark inline text colors */
+[style*="color: #0"], [style*="color:#0"],
+[style*="color: #1"], [style*="color:#1"],
+[style*="color: #2"], [style*="color:#2"],
+[style*="color: #3"], [style*="color:#3"],
+[style*="color: #4"], [style*="color:#4"],
+[style*="color: #5"], [style*="color:#5"],
+[style*="color: black"], [style*="color:black"],
+[style*="color: rgb(0,"], [style*="color: rgb(1"], [style*="color: rgb(2"], [style*="color: rgb(3"], [style*="color: rgb(4"], [style*="color: rgb(5"], [style*="color: rgb(6"] {
+  color: #cbd5e1 !important;
+}
+
+/* Strip hardcoded light background colors from imported HTML containers */
+[style*="background-color: white"], [style*="background-color:#fff"], [style*="background-color: #fff"], [style*="background-color:#ffffff"], [style*="background-color: #ffffff"],
+[style*="background-color: rgb(255"], [style*="background-color: rgb(24"], [style*="background-color: rgb(25"],
+[style*="background: white"], [style*="background: #fff"], [style*="background: #ffffff"] {
+  background-color: transparent !important;
+}
+
+/* Tables in dark mode */
+table {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+th {
+  background-color: rgba(255, 255, 255, 0.03) !important;
+  color: #ffffff !important;
+  border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+}
+td {
+  border-bottom-color: rgba(255, 255, 255, 0.04) !important;
+  color: #cbd5e1 !important;
+}
+`;
+
+export const LIGHT_MODE_CSS = `
+html, body {
+  background-color: #ffffff !important;
+  color: #334155 !important;
+}
+h1, h2, h3, h4, h5, h6 {
+  color: #0f172a !important;
+}
+p, li, td, th, dt, dd, label {
+  color: #334155 !important;
+}
+strong, b {
+  color: #0f172a !important;
+}
+a {
+  color: #0284c7 !important;
+}
+a:hover {
+  color: #0369a1 !important;
+}
+blockquote {
+  background: #f8fafc !important;
+  border-left-color: #0284c7 !important;
+  color: #334155 !important;
+}
+blockquote p {
+  color: #0f172a !important;
+}
+pre {
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+}
+pre code {
+  color: #e2e8f0 !important;
+}
+:not(pre) > code {
+  background-color: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
+  color: #0284c7 !important;
+}
+table {
+  border-color: #e2e8f0 !important;
+}
+th {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+  border-bottom-color: #e2e8f0 !important;
+}
+td {
+  border-bottom-color: #f1f5f9 !important;
+  color: #334155 !important;
+}
 `;
 
 export const HIDE_SIDEBAR_CSS = `
@@ -452,14 +564,32 @@ ${html}
   const detectLightBackground = useCallback((doc: Document) => {
     if (lightDetectedRef.current) return;
     try {
-      const bg = window.getComputedStyle(doc.body).backgroundColor;
-      const match = bg.match(/\d+/g);
-      if (match && match.length >= 3) {
-        const [r, g, b] = match.map(Number);
-        const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-        lightDetectedRef.current = true;
-        onLightDetected?.(lum > 0.5);
+      // Use the iframe's OWN window for computed styles (not the parent).
+      const win = doc.defaultView || window;
+      const parse = (bg: string) => {
+        const m = bg.match(/[\d.]+/g);
+        if (!m || m.length < 3) return null;
+        const [r, g, b, a = 1] = m.map(Number);
+        return { lum: (0.299 * r + 0.587 * g + 0.114 * b) / 255, a };
+      };
+      // The wrapper forces body{background:transparent}, so reading only <body> always looks
+      // dark. Instead sample the largest painted surfaces (inner wrappers, sections, cells) and
+      // pick the dominant background by AREA. If light surfaces win, the lesson is light-themed
+      // and should auto-convert to dark for readability.
+      const els: Element[] = [doc.body, ...Array.from(doc.querySelectorAll("div,section,main,article,header,td,th"))].slice(0, 100);
+      let lightArea = 0;
+      let darkArea = 0;
+      for (const el of els) {
+        const c = parse(win.getComputedStyle(el).backgroundColor);
+        if (!c || c.a < 0.5) continue; // ignore transparent surfaces
+        const r = (el as HTMLElement).getBoundingClientRect();
+        const area = Math.max(0, r.width) * Math.max(0, r.height);
+        if (area <= 0) continue;
+        if (c.lum > 0.6) lightArea += area;
+        else darkArea += area;
       }
+      lightDetectedRef.current = true;
+      onLightDetected?.(lightArea > darkArea && lightArea > 0);
     } catch {
       // ignore
     }
@@ -471,10 +601,14 @@ ${html}
     if (!doc || !doc.head) return;
 
     if (darkMode) {
+      removeStyle(doc, "kvj-light");
       injectStyle(doc, "kvj-dark", DARK_MODE_CSS);
       doc.body.classList.add("dark");
+      doc.body.classList.remove("light");
     } else {
       removeStyle(doc, "kvj-dark");
+      injectStyle(doc, "kvj-light", LIGHT_MODE_CSS);
+      doc.body.classList.add("light");
       doc.body.classList.remove("dark");
     }
 

@@ -32,10 +32,13 @@ export function RevealText({ text, className = "", stagger = 55, delay = 0, as =
     const io = new IntersectionObserver(
       (entries) => {
         entries.forEach((e) => {
-          setShown(e.isIntersecting);
+          if (e.isIntersecting) {
+            setShown(true);          // play once, then stop observing (no re-hide on scroll-back)
+            io.unobserve(e.target);
+          }
         });
       },
-      { threshold: 0.1 }
+      { threshold: 0.1, rootMargin: "0px 0px -8% 0px" }
     );
     io.observe(el);
     return () => io.disconnect();

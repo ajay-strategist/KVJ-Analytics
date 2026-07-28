@@ -1058,7 +1058,7 @@ export default function AdminContentPage() {
           </span>
         )}
         <Button onClick={handleSave} disabled={saving || loading}
-          className="flex items-center gap-2 rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-bold text-white hover:bg-slate-800">
+          className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 px-5 py-2.5 text-sm font-bold text-white hover:from-cyan-500 hover:to-blue-500">
           {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
           {saving ? "Saving…" : "Save Page"}
         </Button>

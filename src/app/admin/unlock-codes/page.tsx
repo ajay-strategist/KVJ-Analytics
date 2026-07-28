@@ -441,7 +441,7 @@ export default function AdminUnlockCodesPage() {
             setEditingId(null);
             setShowForm(true);
           }}
-          className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold flex items-center gap-2 rounded-xl transition-all shadow-sm shrink-0 border-0"
+          className="px-4 py-2.5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white text-xs font-bold flex items-center gap-2 rounded-xl transition-all shadow-sm shrink-0 border-0"
         >
           <Plus className="w-4 h-4" /> Generate Access Codes
         </Button>
@@ -1098,7 +1098,7 @@ export default function AdminUnlockCodesPage() {
               <Button
                 type="submit"
                 disabled={saving}
-                className="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold flex items-center justify-center rounded-xl transition-all shadow-md shrink-0 border-0"
+                className="w-full py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold flex items-center justify-center rounded-xl transition-all shadow-md shrink-0 border-0"
               >
                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : (editingId ? "Save Changes" : "Generate Batch Codes")}
               </Button>
@@ -1216,7 +1216,7 @@ export default function AdminUnlockCodesPage() {
                 <Button
                   type="submit"
                   disabled={extending}
-                  className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl border-0 shadow-md shrink-0 flex items-center gap-1.5"
+                  className="px-4 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white text-xs font-bold rounded-xl border-0 shadow-md shrink-0 flex items-center gap-1.5"
                 >
                   {extending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Extend Code"}
                 </Button>

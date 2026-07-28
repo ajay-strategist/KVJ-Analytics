@@ -30,9 +30,11 @@ export async function GET(req: NextRequest) {
       .lt("expires_at", new Date().toISOString());
   } catch { /* noop */ }
 
+  // Only `courses` is a real FK on unlock_codes. `colleges`/`clients` are NOT related here —
+  // joining them makes PostgREST throw "could not find a relationship …" and crashes the page.
   const { data, error } = await db
     .from("unlock_codes")
-    .select("*, courses(title), colleges(name), clients(name)")
+    .select("*, courses(title)")
     .order("created_at", { ascending: false });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
