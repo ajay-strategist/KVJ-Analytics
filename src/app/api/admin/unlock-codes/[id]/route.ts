@@ -26,9 +26,10 @@ export async function PUT(
   const { id } = await params;
   try {
     const body = await req.json();
+    const { bulk, bulk_count, prefix, ...updateData } = body;
     const { data, error } = await db
       .from("unlock_codes")
-      .update(body)
+      .update(updateData)
       .eq("id", id)
       .select()
       .single();
