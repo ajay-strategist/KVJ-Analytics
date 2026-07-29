@@ -205,7 +205,7 @@ export function CategoryPageClient({ categorySlug, categoryName, categoryDesc, c
                 <Unlock className="w-5 h-5 text-[#43F5FF]" /> Redeem Batch Access Code
               </h3>
               <p className="text-xs text-zinc-450 mt-2 font-light leading-relaxed">
-                If you have been provided a 6-digit unlock code by your college coordinator or corporate account admin, enter it below to gain instant access to your syllabus.
+                If you have been provided a valid unlock code by your college coordinator or corporate account admin, enter it below to gain instant access to your syllabus.
               </p>
 
               {unlockError && (

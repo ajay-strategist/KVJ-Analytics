@@ -173,7 +173,7 @@ export default function CollegeJoinPage() {
               Join Academic Class
             </BoldStatement>
             <p className="text-sm text-slate leading-relaxed max-w-md mx-auto">
-              Enter your student details and the 6-digit access code provided by your college coordinator to enroll in {courseTitle}.
+              Enter your student details and the access code provided by your college coordinator to enroll in {courseTitle}.
             </p>
           </div>
 

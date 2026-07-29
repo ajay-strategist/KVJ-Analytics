@@ -21,12 +21,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (code.length !== 6) {
-      return NextResponse.json(
-        { error: "Access code must be exactly 6 digits." },
-        { status: 400 }
-      );
-    }
+
 
     const supabaseAdmin = getAdminClient();
     if (!supabaseAdmin) {
