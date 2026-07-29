@@ -53,10 +53,19 @@ function SignInForm() {
       }
 
       // Normal student login via Supabase.
-      const { error: authError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      // Check if input is email or phone number
+      const isEmail = email.includes("@");
+      
+      let signInParams;
+      if (isEmail) {
+        signInParams = { email, password };
+      } else {
+        // Format as phone number (assuming +91 if no + is provided)
+        const formattedPhone = email.startsWith("+") ? email : `+91${email.replace(/\D/g, "")}`;
+        signInParams = { phone: formattedPhone, password };
+      }
+
+      const { error: authError } = await supabase.auth.signInWithPassword(signInParams);
 
       if (authError) throw authError;
 
@@ -87,16 +96,16 @@ function SignInForm() {
       <form onSubmit={handleSignIn} className="space-y-5">
         <div>
           <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-2 font-mono">
-            Email Address
+            Email or Phone Number
           </label>
           <div className="relative">
             <Mail className="absolute left-4 top-3.5 w-4.5 h-4.5 text-zinc-500" />
             <input
-              type="email"
+              type="text"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="name@company.com"
+              placeholder="name@company.com or 9876543210"
               className="w-full pl-12 pr-4 py-3 rounded-xl border border-white/5 text-sm bg-[#0E0E12] text-white placeholder-zinc-500 focus:outline-none focus:border-[#00F0FF]/40"
             />
           </div>

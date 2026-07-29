@@ -10,7 +10,8 @@ CREATE OR REPLACE VIEW public.powerbi_students AS
 SELECT 
   p.id AS student_id,
   p.name AS student_name,
-  u.email AS mail_id
+  u.email AS mail_id,
+  p.phone AS phone
 FROM public.profiles p
 JOIN auth.users u ON p.id = u.id
 WHERE p.role = 'student';
