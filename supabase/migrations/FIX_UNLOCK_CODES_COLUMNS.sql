@@ -6,6 +6,7 @@
 -- ============================================================================
 
 -- Batch / targeting
+ALTER TABLE public.unlock_codes DROP CONSTRAINT IF EXISTS unlock_codes_code_check;
 ALTER TABLE public.unlock_codes ADD COLUMN IF NOT EXISTS training_type       text;
 ALTER TABLE public.unlock_codes ADD COLUMN IF NOT EXISTS batch_label         text;
 ALTER TABLE public.unlock_codes ADD COLUMN IF NOT EXISTS course_id           uuid;
