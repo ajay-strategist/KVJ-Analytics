@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Eye } from "lucide-react";
+import { Eye, KeyRound, X } from "lucide-react";
 import { DataTable, StatusBadge, AvatarCell, RowActions, formatDate, type Column } from "@/components/admin/DataTable";
 import { useAdminFetch } from "@/components/admin/hooks/useAdminFetch";
 
@@ -20,6 +20,12 @@ export default function AdminStudentsPage() {
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<{ key: string; dir: "asc" | "desc" } | null>(null);
 
+  const [resetStudent, setResetStudent] = useState<Student | null>(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetError, setResetError] = useState("");
+  const [resetSuccess, setResetSuccess] = useState(false);
+
   const url = useMemo(() => {
     const p = new URLSearchParams({ page: String(page), pageSize: String(PAGE_SIZE) });
     if (query) p.set("q", query);
@@ -28,6 +34,34 @@ export default function AdminStudentsPage() {
   }, [page, query, sort]);
 
   const { data, loading, error, reload } = useAdminFetch<StudentList>(url, { onUnauthorized: () => router.push("/admin") });
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resetStudent) return;
+    setResetLoading(true);
+    setResetError("");
+    setResetSuccess(false);
+
+    try {
+      const res = await fetch(`/api/admin/students/${resetStudent.id}/reset-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ newPassword }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to reset password");
+      setResetSuccess(true);
+      setTimeout(() => {
+        setResetStudent(null);
+        setNewPassword("");
+        setResetSuccess(false);
+      }, 2000);
+    } catch (err: any) {
+      setResetError(err.message);
+    } finally {
+      setResetLoading(false);
+    }
+  };
 
   const columns: Column<Student>[] = [
     {
@@ -68,9 +102,74 @@ export default function AdminStudentsPage() {
         rowActions={(r) => (
           <RowActions actions={[
             { label: "View enrollments", icon: Eye, onClick: () => router.push(`/admin/enrollments`) },
+            { label: "Reset password", icon: KeyRound, onClick: () => { setResetStudent(r); setNewPassword(""); setResetError(""); setResetSuccess(false); } },
           ]} />
         )}
       />
+
+      {resetStudent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200">
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+              <h3 className="font-semibold text-slate-800">Reset Password</h3>
+              <button onClick={() => setResetStudent(null)} className="text-slate-400 hover:text-slate-600">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={handleResetPassword} className="p-6">
+              <p className="text-sm text-slate-600 mb-4">
+                Enter a new password for <strong>{resetStudent.full_name || resetStudent.name}</strong>.
+              </p>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                    New Password
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    minLength={6}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    placeholder="Enter at least 6 characters"
+                  />
+                </div>
+
+                {resetError && (
+                  <div className="text-sm text-rose-600 bg-rose-50 p-3 rounded-lg border border-rose-100">
+                    {resetError}
+                  </div>
+                )}
+                
+                {resetSuccess && (
+                  <div className="text-sm text-emerald-600 bg-emerald-50 p-3 rounded-lg border border-emerald-100">
+                    Password successfully updated!
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-6 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setResetStudent(null)}
+                  className="px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={resetLoading || !newPassword || resetSuccess}
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors flex items-center gap-2"
+                >
+                  {resetLoading ? "Updating..." : "Reset Password"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
