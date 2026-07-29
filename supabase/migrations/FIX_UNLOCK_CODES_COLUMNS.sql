@@ -55,3 +55,13 @@ END $$;
 
 -- Reload PostgREST's schema cache so the new columns are visible immediately.
 NOTIFY pgrst, 'reload schema';
+
+-- ============================================================================
+-- FIX: "Failed to record code usage"
+-- The new enrollment flow references `enrollment_id` in code_redemptions.
+-- ============================================================================
+ALTER TABLE public.code_redemptions ADD COLUMN IF NOT EXISTS enrollment_id uuid REFERENCES public.enrollments(id) ON DELETE CASCADE;
+ALTER TABLE public.code_redemptions ADD COLUMN IF NOT EXISTS status text DEFAULT 'REDEEMED';
+
+-- Notify again just in case
+NOTIFY pgrst, 'reload schema';
