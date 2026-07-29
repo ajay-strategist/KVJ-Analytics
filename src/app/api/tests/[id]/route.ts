@@ -178,7 +178,8 @@ export async function GET(
     // 2. Validate session from cookie
     const token = req.cookies.get("sb-access-token")?.value;
     const adminSession = req.cookies.get("admin_session")?.value;
-    const isAdminPreview = adminSession === adminToken();
+    const isExplicitPreview = req.nextUrl.searchParams.get("preview") === "1" || req.nextUrl.searchParams.get("preview") === "true";
+    const isAdminPreview = (adminSession === adminToken()) && isExplicitPreview;
 
     if (!isAdminPreview) {
       if (!token) {
@@ -297,8 +298,8 @@ export async function POST(
     const token = req.cookies.get("sb-access-token")?.value;
     const adminSession = req.cookies.get("admin_session")?.value;
     const urlObj = new URL(req.url);
-    const isExplicitPreview = urlObj.searchParams.get("preview") === "true";
-    const isAdminPreview = (adminSession === adminToken()) || isExplicitPreview;
+    const isExplicitPreview = urlObj.searchParams.get("preview") === "true" || urlObj.searchParams.get("preview") === "1";
+    const isAdminPreview = (adminSession === adminToken()) && isExplicitPreview;
 
     if (!isAdminPreview) {
       if (!token) {

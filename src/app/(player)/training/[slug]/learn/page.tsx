@@ -9,16 +9,20 @@ export const revalidate = 0; // Dynamic route
 
 export default async function CoursePlayerPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ preview?: string }>;
 }) {
   const { slug } = await params;
+  const resolvedSearchParams = await searchParams;
+  const isPreviewParam = resolvedSearchParams?.preview === "1" || resolvedSearchParams?.preview === "true";
 
-  // Any signed-in admin (verified server-side via the admin cookie) gets full access to the
-  // materials — no student login, enrolment or payment. A student without this cookie still
-  // hits the normal enrolment gate in ContentPlayerClient.
+  // Any signed-in admin (verified server-side via the admin cookie) who EXPLICITLY requests a preview
+  // gets full access to the materials — no student login, enrolment or payment. A student without this cookie
+  // or the preview flag still hits the normal enrolment gate in ContentPlayerClient.
   const cookieStore = await cookies();
-  const adminPreview = cookieStore.get("admin_session")?.value === adminToken();
+  const adminPreview = (cookieStore.get("admin_session")?.value === adminToken()) && isPreviewParam;
 
   // 1. Fetch Course
   const { data: course, error: courseError } = await supabase
