@@ -86,8 +86,9 @@ export async function POST(req: NextRequest) {
       
       return NextResponse.json({ codes: data });
     } else {
-      // Single code generation
-      const { data, error } = await db.from("unlock_codes").insert([body]).select().single();
+      // Single code generation — strip bulk-only params so they aren't sent as columns
+      const { bulk, bulk_count, prefix, ...row } = body;
+      const { data, error } = await db.from("unlock_codes").insert([row]).select().single();
       if (error) return NextResponse.json({ error: error.message }, { status: 500 });
       
       // Log audit trail
