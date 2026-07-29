@@ -44,7 +44,10 @@ export function SplitHeading({
       gsap.registerPlugin(ScrollTrigger);
 
       ctx = gsap.context(() => {
-        const text = el.textContent || "";
+        // Cache the ORIGINAL text so a re-run (StrictMode/HMR) never re-splits the
+        // already-split DOM (whose textContent has no spaces → jammed heading).
+        let text = el.dataset.fxText;
+        if (text == null) { text = el.textContent || ""; el.dataset.fxText = text; }
         const words = text.split(/\s+/).filter(Boolean);
         el.innerHTML = words
           .map(
