@@ -15,6 +15,24 @@ function isAuthenticated(req: NextRequest) {
   return req.cookies.get("admin_session")?.value === adminToken();
 }
 
+// Only these keys are real unlock_codes columns. Everything else the form/UI
+// sends (bulk, bulk_count, prefix, …) is dropped so it can never be mistaken
+// for a column ("Could not find the 'bulk' column …").
+const UNLOCK_CODE_COLUMNS = [
+  "training_type", "code", "course_id", "batch_label",
+  "seats", "seats_used", "max_uses", "used_count",
+  "valid_from", "valid_until", "expires_at",
+  "college_id", "organization_id",
+  "coordinator_name", "coordinator_email", "allowed_email_domain",
+  "notes", "is_active", "status",
+] as const;
+
+function pickCodeColumns(body: Record<string, unknown>): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(body).filter(([k, v]) => UNLOCK_CODE_COLUMNS.includes(k as never) && v !== undefined)
+  );
+}
+
 export async function GET(req: NextRequest) {
   if (!isAuthenticated(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const db = getAdmin();
@@ -51,7 +69,8 @@ export async function POST(req: NextRequest) {
     
     // Check if bulk generation is requested
     if (body.bulk && body.bulk_count && typeof body.bulk_count === "number") {
-      const { bulk, bulk_count, prefix, ...commonFields } = body;
+      const { bulk_count, prefix } = body;
+      const commonFields = pickCodeColumns(body);
       const codesToInsert = [];
       const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
       
@@ -86,8 +105,8 @@ export async function POST(req: NextRequest) {
       
       return NextResponse.json({ codes: data });
     } else {
-      // Single code generation — strip bulk-only params so they aren't sent as columns
-      const { bulk, bulk_count, prefix, ...row } = body;
+      // Single code generation — insert only real columns (drops bulk/prefix/etc.)
+      const row = pickCodeColumns(body);
       const { data, error } = await db.from("unlock_codes").insert([row]).select().single();
       if (error) return NextResponse.json({ error: error.message }, { status: 500 });
       
