@@ -129,12 +129,21 @@ export function SolutionExplorer({
                   transition: "transform 0.4s cubic-bezier(0.03,0.98,0.52,0.99), border-color 0.5s ease",
                 }}
               >
-                <div className="mb-5 flex items-center gap-3" style={{ transform: "translateZ(30px)" }}>
-                  <span className="grid h-12 w-12 place-items-center rounded-2xl bg-brand/10 border border-brand/20 text-brand transition-transform duration-500 group-hover:scale-110">
+                {/* Numbered badge */}
+                <span className="absolute right-6 top-6 font-mono text-[11px] font-black text-brand/50 group-hover:text-brand transition-colors duration-500 tabular-nums">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+
+                <div className="mb-4 flex items-center gap-3" style={{ transform: "translateZ(30px)" }}>
+                  <span className="grid h-12 w-12 place-items-center rounded-2xl bg-brand/10 border border-brand/20 text-brand transition-transform duration-500 group-hover:scale-110 group-hover:shadow-[0_0_20px_rgba(67,245,255,0.25)]">
                     <Icon className="h-6 w-6" />
                   </span>
                   <h3 className="font-display text-xl md:text-2xl font-bold text-ink group-hover:text-brand transition-colors">{c.title}</h3>
                 </div>
+
+                {/* Separator */}
+                <div className="mb-5 h-px bg-gradient-to-r from-brand/20 via-line to-transparent" style={{ transform: "translateZ(15px)" }} />
+
                 <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-2.5" style={{ transform: "translateZ(15px)" }}>
                   {(c.points ?? []).map((p, j) => (
                     <li key={j} className="flex items-center gap-2.5 text-[14px] text-slate">

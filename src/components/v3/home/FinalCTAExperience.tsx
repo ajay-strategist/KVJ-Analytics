@@ -107,7 +107,7 @@ export function FinalCTAExperience({
       <div className="relative z-10 mx-auto max-w-3xl px-5 sm:px-6 text-center">
         <div
           ref={panelRef}
-          className="glow-ring rounded-[32px] card-glass px-8 py-14 md:px-16 md:py-20"
+          className="card-premium rounded-[32px] px-8 py-14 md:px-16 md:py-20"
           style={{ transformStyle: "preserve-3d", perspective: "1200px" }}
         >
           <h2
@@ -120,7 +120,22 @@ export function FinalCTAExperience({
           <p className="mx-auto mt-6 max-w-xl text-base md:text-lg font-light text-slate leading-relaxed">
             {description}
           </p>
-          <div className="mt-10 flex flex-col sm:flex-row gap-4 items-center justify-center">
+
+          {/* Stats strip */}
+          <div className="mt-10 mb-10 grid grid-cols-3 gap-4">
+            {[
+              { value: "500+", label: "Projects Delivered" },
+              { value: "98%", label: "Client Retention" },
+              { value: "12+", label: "Years of Expertise" },
+            ].map((s, i) => (
+              <div key={i} className="rounded-2xl border border-line bg-white/[0.04] px-4 py-4 hover:border-brand/40 transition-colors">
+                <div className="font-display text-2xl md:text-3xl font-black text-brand">{s.value}</div>
+                <div className="mt-1 text-[11px] font-semibold uppercase tracking-wider text-slate/80">{s.label}</div>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
             <Magnetic strength={0.5}>
               <Link
                 href={primaryCta.href}

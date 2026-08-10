@@ -124,6 +124,45 @@ export async function POST(
     // Reset rate limiting on success
     limitStore.delete(limitKey);
 
+    // 4.5 Verify student is in the roster if the roster has students
+    let matchedRosterEntry: any = null;
+    try {
+      const { data: rosterEntries, error: rosterFetchError } = await supabaseAdmin
+        .from("batch_students")
+        .select("*")
+        .eq("batch_id", verifiedBatch.id);
+
+      if (rosterFetchError) {
+        console.error("Roster query error (ignored to avoid blocking redemption):", rosterFetchError);
+      } else if (rosterEntries && rosterEntries.length > 0) {
+        const normalizedEmail = body.email?.trim().toLowerCase();
+        let normalizedPhone = phone?.trim();
+        if (normalizedPhone) {
+          if (!normalizedPhone.startsWith("+")) {
+            normalizedPhone = `+91${normalizedPhone.replace(/\D/g, "")}`;
+          } else {
+            normalizedPhone = `+${normalizedPhone.substring(1).replace(/\D/g, "")}`;
+          }
+        }
+
+        matchedRosterEntry = rosterEntries.find((entry: any) => {
+          const emailMatch = normalizedEmail && entry.email && entry.email.trim().toLowerCase() === normalizedEmail;
+          const entryPhoneCleaned = entry.phone ? entry.phone.replace(/\D/g, "") : "";
+          const phoneMatch = normalizedPhone && entry.phone && entryPhoneCleaned === normalizedPhone.replace(/\D/g, "");
+          return emailMatch || phoneMatch;
+        });
+
+        if (!matchedRosterEntry) {
+          return NextResponse.json(
+            { error: "You are not listed in the student roster for this college batch. Please contact your coordinator." },
+            { status: 403 }
+          );
+        }
+      }
+    } catch (err) {
+      console.error("Error during roster verification check (ignored for safety):", err);
+    }
+
     // 5. Update Profile (Name, Phone, Org)
     const { error: profileError } = await supabaseAdmin
       .from("profiles")
@@ -165,6 +204,21 @@ export async function POST(
         { error: "Failed to create enrollment record." },
         { status: 500 }
       );
+    }
+
+    // 7. Update roster status if matching entry was found
+    if (matchedRosterEntry) {
+      try {
+        await supabaseAdmin
+          .from("batch_students")
+          .update({
+            status: "JOINED",
+            profile_id: userId
+          })
+          .eq("id", matchedRosterEntry.id);
+      } catch (err) {
+        console.error("Failed to update roster entry status:", err);
+      }
     }
 
     return NextResponse.json({ success: true, collegeName: verifiedBatch.college_name });

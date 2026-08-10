@@ -132,6 +132,7 @@ if (!globalForMockDb.mockDb) {
         created_at: new Date(Date.now() - 2 * 86400000).toISOString(),
       },
     ],
+    batch_students: [],
     enrollments: [
       {
         id: "e1",

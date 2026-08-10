@@ -21,7 +21,10 @@ import {
   RefreshCw,
   Maximize2,
   X,
+  Users,
+  Trash2,
 } from "lucide-react";
+import * as XLSX from "xlsx";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { client as sanityClient } from "@/sanity/lib/client";
@@ -79,6 +82,175 @@ export default function AdminBatchesPage() {
   const [newValidTo, setNewValidTo] = useState("");
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState("");
+
+  // Student roster state
+  const [activeBatchForStudents, setActiveBatchForStudents] = useState<Batch | null>(null);
+  const [roster, setRoster] = useState<any[]>([]);
+  const [rosterLoading, setRosterLoading] = useState(false);
+  const [rosterError, setRosterError] = useState("");
+
+  // Excel parsing state
+  const [previewStudents, setPreviewStudents] = useState<any[]>([]);
+  const [previewInvalidCount, setPreviewInvalidCount] = useState(0);
+  const [importResult, setImportResult] = useState<{ inserted: number; skipped: number } | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [fileInputKey, setFileInputKey] = useState(0);
+
+  const fetchRoster = async (batchId: string) => {
+    setRosterLoading(true);
+    setRosterError("");
+    try {
+      const res = await fetch(`/api/admin/batches/${batchId}/students`);
+      if (res.status === 401) {
+        router.push("/admin");
+        return;
+      }
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to load student roster");
+      setRoster(data.students || []);
+    } catch (err: any) {
+      setRosterError(err.message || "Failed to fetch student roster");
+    } finally {
+      setRosterLoading(false);
+    }
+  };
+
+  const handleRemoveStudent = async (studentId: string, batchId: string) => {
+    if (!confirm("Are you sure you want to remove this student from the batch roster?")) return;
+    try {
+      const res = await fetch(`/api/admin/batches/${batchId}/students`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ studentId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to remove student");
+      fetchRoster(batchId);
+    } catch (err: any) {
+      alert(err.message || "Failed to remove student");
+    }
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setImportResult(null);
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const data = new Uint8Array(event.target?.result as ArrayBuffer);
+        const workbook = XLSX.read(data, { type: "array" });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+
+        // Read as array of arrays to find header columns
+        const rows = XLSX.utils.sheet_to_json<any[]>(worksheet, { header: 1 });
+        if (rows.length === 0) {
+          alert("The uploaded Excel file is empty.");
+          return;
+        }
+
+        const headerRow = (rows[0] || []).map((h) => String(h || "").trim().toLowerCase());
+
+        // Find indices for name, email, phone/mobile/contact
+        let nameIdx = -1;
+        let emailIdx = -1;
+        let phoneIdx = -1;
+
+        for (let i = 0; i < headerRow.length; i++) {
+          const val = headerRow[i];
+          if (val === "name") {
+            nameIdx = i;
+          } else if (val === "email") {
+            emailIdx = i;
+          } else if (val === "phone" || val === "mobile" || val === "contact") {
+            phoneIdx = i;
+          }
+        }
+
+        if (nameIdx === -1 && emailIdx === -1 && phoneIdx === -1) {
+          // If no headers matched, assume first 3 columns are Name, Email, Phone
+          nameIdx = 0;
+          emailIdx = 1;
+          phoneIdx = 2;
+        }
+
+        const parsed: any[] = [];
+        let invalidCount = 0;
+
+        for (let r = 1; r < rows.length; r++) {
+          const row = rows[r];
+          if (!row || row.length === 0) continue;
+
+          // Make sure columns are within row limits
+          const rawName = nameIdx !== -1 && row[nameIdx] !== undefined ? String(row[nameIdx]).trim() : "";
+          const rawEmail = emailIdx !== -1 && row[emailIdx] !== undefined ? String(row[emailIdx]).trim() : "";
+          const rawPhone = phoneIdx !== -1 && row[phoneIdx] !== undefined ? String(row[phoneIdx]).trim() : "";
+
+          // Drop/flag if both email and phone are empty
+          const isValid = !!rawEmail || !!rawPhone;
+          if (!isValid) {
+            invalidCount++;
+          }
+
+          parsed.push({
+            name: rawName,
+            email: rawEmail,
+            phone: rawPhone,
+            isValid,
+          });
+        }
+
+        setPreviewStudents(parsed);
+        setPreviewInvalidCount(invalidCount);
+      } catch (err: any) {
+        alert("Failed to parse Excel file: " + err.message);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  };
+
+  const handleImportStudents = async (batchId: string) => {
+    const validStudents = previewStudents.filter((s) => s.isValid);
+    if (validStudents.length === 0) {
+      alert("No valid student rows to import.");
+      return;
+    }
+
+    setImporting(true);
+    try {
+      const res = await fetch(`/api/admin/batches/${batchId}/students`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ students: validStudents }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to import students");
+      setImportResult({
+        inserted: data.inserted,
+        skipped: data.skipped,
+      });
+      // Clear preview
+      setPreviewStudents([]);
+      setPreviewInvalidCount(0);
+      setFileInputKey((prev) => prev + 1);
+      // Reload roster
+      fetchRoster(batchId);
+    } catch (err: any) {
+      alert(err.message || "Failed to import students");
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  const handleDownloadTemplate = () => {
+    const headers = [["Name", "Email", "Phone"]];
+    const ws = XLSX.utils.aoa_to_sheet(headers);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Template");
+    XLSX.writeFile(wb, "student_roster_template.xlsx");
+  };
 
   const fetchBatches = async () => {
     setLoading(true);
@@ -507,6 +679,19 @@ export default function AdminBatchesPage() {
                         {/* Toggler Actions */}
                         <td className="p-4 text-center">
                           <div className="flex items-center justify-center gap-1">
+                            <button
+                              onClick={() => {
+                                setActiveBatchForStudents(batch);
+                                fetchRoster(batch.id);
+                                setPreviewStudents([]);
+                                setPreviewInvalidCount(0);
+                                setImportResult(null);
+                              }}
+                              className="text-slate hover:text-brand transition-colors p-1.5 rounded-lg hover:bg-brand/5 cursor-pointer"
+                              title="Manage Student Roster"
+                            >
+                              <Users className="w-5 h-5" />
+                            </button>
                             {batch.active && !isExpired && (
                               <button
                                 onClick={() => setPresentId(batch.id)}
@@ -586,6 +771,247 @@ export default function AdminBatchesPage() {
           </div>
         );
       })()}
+
+      {/* Student Roster Modal */}
+      {activeBatchForStudents && (
+        <div className="fixed inset-0 z-[150] grid place-items-center bg-slate-900/40 backdrop-blur-sm p-4 animate-fade-in">
+          <div className="w-full max-w-6xl max-h-[90vh] flex flex-col rounded-2xl border border-slate-200 bg-white shadow-xl overflow-hidden animate-fade-up">
+            {/* Modal Header */}
+            <div className="border-b border-slate-100 p-5 flex justify-between items-center bg-slate-50/50">
+              <div>
+                <h3 className="font-bold text-slate-900 text-lg flex items-center gap-2">
+                  <Users className="w-5 h-5 text-brand" />
+                  <span>Student Roster</span>
+                </h3>
+                <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider mt-0.5">
+                  {activeBatchForStudents.college_name} • {getCourseTitle(activeBatchForStudents.course_slug)}
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setActiveBatchForStudents(null);
+                  setRoster([]);
+                }}
+                className="text-slate-400 hover:text-slate-700 transition-colors p-1 rounded-full hover:bg-slate-100 cursor-pointer"
+                aria-label="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Content - Split layout */}
+            <div className="flex-1 overflow-hidden grid grid-cols-1 lg:grid-cols-5 divide-y lg:divide-y-0 lg:divide-x divide-slate-100">
+              
+              {/* Left Column: Import / Upload */}
+              <div className="lg:col-span-2 p-6 overflow-y-auto space-y-6 flex flex-col justify-start">
+                
+                <div>
+                  <h4 className="font-bold text-slate-800 text-sm">Upload Student List</h4>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Upload an Excel spreadsheet with student details. Ensure columns for Name, Email, and Phone/Mobile/Contact are present.
+                  </p>
+                </div>
+
+                {/* File Upload card */}
+                <div className="border border-dashed border-slate-200 hover:border-brand/40 bg-slate-50/30 hover:bg-brand/5 rounded-xl p-6 transition-all relative group flex flex-col items-center justify-center text-center">
+                  <input
+                    key={fileInputKey}
+                    type="file"
+                    accept=".xlsx, .xls"
+                    onChange={handleFileUpload}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                  />
+                  <div className="space-y-2 pointer-events-none">
+                    <div className="w-10 h-10 rounded-full bg-white border border-slate-100 shadow-sm flex items-center justify-center mx-auto text-slate-500 group-hover:text-brand group-hover:border-brand/20 transition-all">
+                      <Plus className="w-5 h-5" />
+                    </div>
+                    <p className="text-xs font-semibold text-slate-700">
+                      Click or drag .xlsx/.xls file here
+                    </p>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                      Supported formats: Excel files
+                    </p>
+                  </div>
+                </div>
+
+                {/* Templates & Info */}
+                <div className="flex items-center justify-between text-xs border border-slate-100 bg-slate-50/50 p-3 rounded-lg">
+                  <span className="text-slate-500 font-medium">Need a starting point?</span>
+                  <button
+                    onClick={handleDownloadTemplate}
+                    className="text-brand hover:underline font-bold flex items-center gap-1 cursor-pointer"
+                  >
+                    Download Template
+                  </button>
+                </div>
+
+                {/* Import Result Banner */}
+                {importResult && (
+                  <div className="border border-emerald-100 bg-emerald-50 text-emerald-800 p-4 rounded-xl space-y-1">
+                    <p className="text-xs font-bold flex items-center gap-1.5 text-emerald-900">
+                      <CheckCircle className="w-4 h-4 text-emerald-600" />
+                      <span>Roster Import Completed</span>
+                    </p>
+                    <p className="text-xs">
+                      Successfully added <strong>{importResult.inserted}</strong> new students.
+                      {importResult.skipped > 0 && (
+                        <span> Skipped <strong>{importResult.skipped}</strong> rows (duplicates or invalid).</span>
+                      )}
+                    </p>
+                  </div>
+                )}
+
+                {/* Excel Preview Panel */}
+                {previewStudents.length > 0 && (
+                  <div className="space-y-3 pt-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs font-bold text-slate-700">
+                        Spreadsheet Preview ({previewStudents.length} rows)
+                      </span>
+                      {previewInvalidCount > 0 && (
+                        <span className="text-[10px] font-bold text-error bg-error/5 border border-error/20 px-2 py-0.5 rounded">
+                          {previewInvalidCount} invalid skipped
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="border border-slate-100 rounded-lg overflow-hidden max-h-[220px] overflow-y-auto">
+                      <table className="w-full text-left border-collapse text-xs">
+                        <thead className="bg-slate-50/80 sticky top-0 border-b border-slate-100">
+                          <tr className="font-bold text-slate-500 uppercase tracking-wider">
+                            <th className="p-2">Name</th>
+                            <th className="p-2">Email</th>
+                            <th className="p-2">Phone</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {previewStudents.map((s, idx) => (
+                            <tr
+                              key={idx}
+                              className={s.isValid ? "hover:bg-slate-50/30" : "bg-error/5 text-error/80"}
+                            >
+                              <td className="p-2 font-medium truncate max-w-[120px]">{s.name || <span className="italic text-slate-400">Empty</span>}</td>
+                              <td className="p-2 truncate max-w-[150px]">{s.email || <span className="italic text-slate-400">Empty</span>}</td>
+                              <td className="p-2 truncate max-w-[120px]">{s.phone || <span className="italic text-slate-400">Empty</span>}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <Button
+                      onClick={() => handleImportStudents(activeBatchForStudents.id)}
+                      disabled={importing}
+                      className="w-full justify-center py-2.5 bg-brand text-white hover:bg-brand/90"
+                    >
+                      {importing ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin mr-1.5" />
+                          <span>Importing...</span>
+                        </>
+                      ) : (
+                        <span>
+                          Import {previewStudents.filter((s) => s.isValid).length} Valid Students
+                        </span>
+                      )}
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              {/* Right Column: Current Roster Table */}
+              <div className="lg:col-span-3 p-6 overflow-y-auto space-y-4 flex flex-col justify-start">
+                
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h4 className="font-bold text-slate-800 text-sm">Enrolled Roster</h4>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      List of students authorized to join this college batch.
+                    </p>
+                  </div>
+                  <span className="text-xs font-bold text-slate bg-slate/10 px-2.5 py-1 rounded-full">
+                    {roster.length} Total
+                  </span>
+                </div>
+
+                {rosterLoading ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-slate-400">
+                    <Loader2 className="w-8 h-8 animate-spin text-brand mb-2" />
+                    <span className="text-xs font-semibold">Loading roster...</span>
+                  </div>
+                ) : rosterError ? (
+                  <div className="border border-error/20 bg-error/5 text-error p-4 rounded-xl flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 mt-0.5 shrink-0" />
+                    <p className="text-xs font-semibold">{rosterError}</p>
+                  </div>
+                ) : roster.length === 0 ? (
+                  <div className="border border-dashed border-slate-100 rounded-xl py-16 text-center text-slate-400">
+                    <Users className="w-12 h-12 mx-auto mb-3 opacity-30 text-slate" />
+                    <p className="text-sm font-semibold text-slate-600">No students registered yet</p>
+                    <p className="text-xs text-slate-400 mt-1 max-w-[280px] mx-auto leading-relaxed">
+                      Upload an Excel spreadsheet on the left to authorize student registrations for this batch.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="border border-slate-100 rounded-xl overflow-hidden flex-1 overflow-y-auto max-h-[50vh]">
+                    <table className="w-full text-left border-collapse text-[13px]">
+                      <thead className="bg-slate-50 sticky top-0 border-b border-slate-100 z-10">
+                        <tr className="font-bold text-slate-500 uppercase tracking-wider text-xs">
+                          <th className="p-3 pl-4">Student Details</th>
+                          <th className="p-3">Email / Phone</th>
+                          <th className="p-3 text-center">Status</th>
+                          <th className="p-3 text-center">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {roster.map((student) => (
+                          <tr key={student.id} className="hover:bg-slate-50/30 transition-colors">
+                            <td className="p-3 pl-4 font-semibold text-slate-900">
+                              {student.name || <span className="italic text-slate-400 text-xs">Unnamed Student</span>}
+                            </td>
+                            <td className="p-3 text-slate">
+                              {student.email && (
+                                <div className="text-xs text-slate-700 font-medium">
+                                  {student.email}
+                                </div>
+                              )}
+                              {student.phone && (
+                                <div className="text-[11px] text-slate-500 font-bold font-mono mt-0.5">
+                                  {student.phone}
+                                </div>
+                              )}
+                            </td>
+                            <td className="p-3 text-center">
+                              {student.status === "JOINED" ? (
+                                <span className="inline-flex items-center text-[9px] font-bold uppercase tracking-wider text-success bg-success/10 px-2 py-0.5 rounded border border-success/20">
+                                  Joined
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center text-[9px] font-bold uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-200/50">
+                                  Invited
+                                </span>
+                              )}
+                            </td>
+                            <td className="p-3 text-center">
+                              <button
+                                onClick={() => handleRemoveStudent(student.id, activeBatchForStudents.id)}
+                                className="text-slate-400 hover:text-error transition-colors p-1.5 rounded-lg hover:bg-error/5 cursor-pointer"
+                                title="Remove student from roster"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
