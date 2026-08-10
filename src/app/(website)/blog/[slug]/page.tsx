@@ -239,17 +239,22 @@ export default async function BlogPostDetailPage({
       />
 
       {/* Premium Hero Section */}
-      <header className="relative w-full h-[55vh] min-h-[480px] max-h-[680px] flex items-end border-b border-white/5 z-10 bg-slate-950/30 overflow-hidden">
+      <header className="relative w-full pt-32 pb-16 min-h-[380px] flex items-end border-b border-white/5 z-10 bg-slate-950/30 overflow-hidden">
         {/* Banner Image Backdrop */}
         <div className="absolute inset-0 select-none pointer-events-none z-0">
           {coverUrl ? (
-            <img src={coverUrl} alt={title} className="w-full h-full object-cover opacity-[0.22] filter blur-[0.5px] scale-102" />
+            <>
+              <img src={coverUrl} alt={title} className="w-full h-full object-cover opacity-[0.22] filter blur-[0.5px] scale-102" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#050608] via-[#050608]/75 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-r from-[#050608] via-[#050608]/20 to-transparent" />
+            </>
           ) : (
-            <div className="w-full h-full bg-gradient-to-tr from-[#050608] via-[#0E1117] to-cyan-950/10" />
+            <div className="w-full h-full bg-[#0E1117] relative">
+              <div className="absolute top-[-30%] right-[-10%] w-[500px] h-[500px] bg-brand/5 rounded-full blur-[120px] pointer-events-none" />
+              <div className="absolute bottom-[-20%] left-[-10%] w-[600px] h-[600px] bg-corporate/5 rounded-full blur-[140px] pointer-events-none" />
+              <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:4rem_4rem]" />
+            </div>
           )}
-          {/* Gradients to blend image */}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#050608] via-[#050608]/75 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#050608] via-[#050608]/20 to-transparent" />
         </div>
 
         <Container className="relative z-10 w-full pb-16 max-w-5xl">
@@ -307,11 +312,32 @@ export default async function BlogPostDetailPage({
             categoryTitle={categoryTitle}
             articleSlug={slug}
           >
+            {/* Elegant Custom Styles for HTML Rendering */}
+            <style dangerouslySetInnerHTML={{ __html: `
+              .prose-editorial h2 { font-size: 1.75rem; font-weight: 700; color: #ffffff; margin-top: 2.5rem; margin-bottom: 1.25rem; font-family: var(--font-display); border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding-bottom: 0.5rem; }
+              .prose-editorial h3 { font-size: 1.35rem; font-weight: 600; color: #ffffff; margin-top: 2rem; margin-bottom: 0.75rem; font-family: var(--font-display); }
+              .prose-editorial h4 { font-size: 1.15rem; font-weight: 600; color: #ffffff; margin-top: 1.75rem; margin-bottom: 0.5rem; }
+              .prose-editorial p { font-size: 1.05rem; line-height: 1.8; color: #cbd5e1; margin-bottom: 1.5rem; font-weight: 300; }
+              .prose-editorial ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 1.5rem; color: #cbd5e1; }
+              .prose-editorial ol { list-style-type: decimal; padding-left: 1.5rem; margin-bottom: 1.5rem; color: #cbd5e1; }
+              .prose-editorial li { margin-bottom: 0.5rem; font-weight: 300; line-height: 1.7; }
+              .prose-editorial a { color: #43F5FF; font-weight: 500; text-decoration: underline; text-underline-offset: 4px; transition: color 0.2s; }
+              .prose-editorial a:hover { color: #16E6D8; }
+              .prose-editorial blockquote { background: rgba(67, 245, 255, 0.03); border-left: 3px solid #43F5FF; padding: 1.25rem 1.75rem; margin: 2rem 0; border-radius: 0 12px 12px 0; }
+              .prose-editorial blockquote p { color: #f1f5f9; font-style: italic; margin-bottom: 0; font-size: 1.1rem; }
+              .prose-editorial img { border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.05); margin: 2.5rem auto; max-width: 100%; height: auto; }
+              .prose-editorial table { width: 100%; border-collapse: collapse; margin: 2rem 0; font-size: 0.95rem; }
+              .prose-editorial th { background: rgba(255, 255, 255, 0.02); color: #ffffff; font-weight: 600; text-align: left; padding: 0.75rem 1rem; border-bottom: 2px solid rgba(255, 255, 255, 0.08); }
+              .prose-editorial td { padding: 0.75rem 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.04); color: #cbd5e1; }
+              .prose-editorial code { background: rgba(255, 255, 255, 0.05); color: #43F5FF; padding: 0.2rem 0.4rem; border-radius: 6px; font-size: 0.85em; font-family: monospace; }
+              .prose-editorial pre { background: #0E1117; border: 1px solid rgba(255, 255, 255, 0.05); padding: 1.25rem; border-radius: 16px; overflow-x: auto; margin: 2rem 0; }
+              .prose-editorial pre code { background: transparent; color: #cbd5e1; padding: 0; font-size: 0.9rem; }
+            ` }} />
             {bodyHtml ? (
               isLegacy ? (
                 /* Legacy fallback text formatting */
                 <div 
-                  className="prose prose-invert prose-slate max-w-none text-slate-300 leading-relaxed space-y-6 font-normal text-[16px]"
+                  className="prose-editorial max-w-none text-slate-300 leading-relaxed font-normal text-[16px]"
                   dangerouslySetInnerHTML={{ __html: bodyHtml }}
                 />
               ) : (
@@ -331,7 +357,7 @@ export default async function BlogPostDetailPage({
               )
             ) : (
               /* Hardcoded Fallback Body Paragraphs */
-              <div className="text-slate-300 leading-relaxed space-y-6 text-[16px] font-normal">
+              <div className="prose-editorial text-slate-300 leading-relaxed font-normal">
                 {(fallback?.body || []).map((p, idx) => (
                   <p key={idx}>{p}</p>
                 ))}

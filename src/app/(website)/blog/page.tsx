@@ -105,27 +105,13 @@ export default async function BlogPage() {
   const posts = fetchedPosts.length > 0 ? fetchedPosts : FALLBACK_POSTS;
 
   return (
-    <Section background="default" className="bg-[#050608] relative overflow-hidden py-16 md:py-24">
+    <div className="relative min-h-screen bg-[#050608] text-white pt-24 pb-16 overflow-hidden">
       {/* Decorative background glows & patterns */}
-      <div className="absolute inset-0 bg-grid-pattern opacity-40 pointer-events-none" />
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-radial-glow opacity-60 pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-radial-glow-teal opacity-40 pointer-events-none" />
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:4rem_4rem] pointer-events-none" />
+      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-cyan-950/20 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-950/15 rounded-full blur-[130px] pointer-events-none" />
 
-      <Container className="relative z-10 max-w-7xl">
-        {/* Header */}
-        <div className="max-w-3xl mx-auto text-center mb-16">
-          <Eyebrow className="mb-4">{header.eyebrow}</Eyebrow>
-          <BoldStatement variant="h1" className="mb-4 text-white leading-tight tracking-tight">
-            {header.headingLead}{header.headingAccent ? ` ${header.headingAccent}` : ""}
-          </BoldStatement>
-          <p className="text-lg text-slate leading-relaxed font-light">
-            {header.intro}
-          </p>
-        </div>
-
-        {/* Dynamic client list component with search, filter, and bento layouts */}
-        <BlogListClient posts={posts} header={header} />
-      </Container>
-    </Section>
+      <BlogListClient posts={posts} header={header} />
+    </div>
   );
 }
