@@ -11,8 +11,6 @@ import {
   Laptop,
   Users,
   Sparkles,
-  Smartphone,
-  Tablet,
   Play,
   CheckSquare,
   FileText,
@@ -33,7 +31,6 @@ import {
 } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { Reveal } from "@/components/ui/Reveal";
-import { CountUp } from "@/components/ui/CountUp";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { supabase } from "@/lib/supabase";
@@ -639,146 +636,7 @@ export function TrainingHubClient({ categories, hub }: TrainingHubClientProps) {
           </div>
         </Container>
       </section>
- 
-      {/* 5. STUDENT DASHBOARD SHOWCASE (DEVICE MOCKUPS) */}
-      <section className="py-24 md:py-32 relative bg-base border-b border-line overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_120%,rgba(58,123,255,0.04),transparent)] pointer-events-none" />
-        
-        <Container>
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-            {/* Left Col (5/12 width): text and statistics */}
-            <div className="lg:col-span-5 text-left space-y-6">
-              <span className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#43F5FF]">Student Portal</span>
-              <h2 className="font-display font-bold text-3xl md:text-5xl text-white tracking-tight leading-tight">
-                Designed for Interactive Excellence
-              </h2>
-              <p className="text-zinc-400 font-light text-[15px] leading-relaxed">
-                Log in as a student to access a premium personalized portal containing your course pipeline, assignments, tests, and certificates.
-              </p>
-              
-              {/* Dynamic stats */}
-              <div className="grid grid-cols-2 gap-6 pt-6 border-t border-line">
-                <div className="space-y-1">
-                  <h4 className="text-3xl font-extrabold font-display text-transparent bg-clip-text bg-gradient-to-r from-brand to-corporate leading-none">
-                    <CountUp value={50000} suffix="+" />
-                  </h4>
-                  <p className="text-xs text-zinc-500 font-medium uppercase tracking-wider">Students Trained</p>
-                </div>
-                <div className="space-y-1">
-                  <h4 className="text-3xl font-extrabold font-display text-transparent bg-clip-text bg-gradient-to-r from-brand to-corporate leading-none">
-                    <CountUp value={15} suffix="+" />
-                  </h4>
-                  <p className="text-xs text-zinc-500 font-medium uppercase tracking-wider">Programs Active</p>
-                </div>
-                <div className="space-y-1">
-                  <h4 className="text-3xl font-extrabold font-display text-transparent bg-clip-text bg-gradient-to-r from-brand to-corporate leading-none">
-                    <CountUp value={20} suffix="+" />
-                  </h4>
-                  <p className="text-xs text-zinc-500 font-medium uppercase tracking-wider">Corporate Clients</p>
-                </div>
-                <div className="space-y-1">
-                  <h4 className="text-3xl font-extrabold font-display text-transparent bg-clip-text bg-gradient-to-r from-brand to-corporate leading-none">
-                    <CountUp value={98} suffix="%" />
-                  </h4>
-                  <p className="text-xs text-zinc-500 font-medium uppercase tracking-wider">Completion Rate</p>
-                </div>
-              </div>
-            </div>
- 
-            {/* Right Col (7/12 width): CSS premium device mockups */}
-            <div className="lg:col-span-7 flex justify-center relative select-none">
-              <div className="relative w-full max-w-[550px] aspect-[16/10] bg-[#0E1117]/85 border border-[#43F5FF]/15 rounded-2xl shadow-2xl p-3 backdrop-blur-xl group hover:border-[#43F5FF]/45 transition-colors duration-500 text-left">
-                {/* Window header controls */}
-                <div className="flex items-center gap-1.5 mb-2.5 pb-2.5 border-b border-white/5 px-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-rose-500/80" />
-                  <span className="w-2.5 h-2.5 rounded-full bg-amber-500/80" />
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/80" />
-                  <span className="text-[10px] text-zinc-500 font-mono ml-4 select-none">training-portal.kvjanalytics.com</span>
-                </div>
-                
-                {/* Dashboard mock layout */}
-                <div className="grid grid-cols-12 gap-3 h-[calc(100%-35px)] overflow-hidden">
-                  {/* Mock Sidebar */}
-                  <div className="col-span-3 border-r border-white/5 pr-2.5 space-y-4 pt-1">
-                    <div className="h-6 w-full bg-white/5 rounded-lg" />
-                    <div className="space-y-2">
-                      <div className="h-4 w-full bg-brand/10 border-l-2 border-brand rounded" />
-                      <div className="h-4 w-4/5 bg-white/5 rounded" />
-                      <div className="h-4 w-5/6 bg-white/5 rounded" />
-                    </div>
-                  </div>
- 
-                  {/* Mock Main content */}
-                  <div className="col-span-9 pl-1 space-y-3.5 pt-1 overflow-y-auto pr-1">
-                    {/* Banner widget */}
-                    <div className="p-3 bg-gradient-to-r from-brand/10 to-corporate/10 border border-brand/20 rounded-xl">
-                      <h4 className="text-white text-xs font-bold leading-tight font-display">Welcome Back, Student!</h4>
-                      <p className="text-[9px] text-zinc-400 mt-1 font-light">Launch your active Excel MIS Automation program below.</p>
-                    </div>
- 
-                    {/* Small grid widgets */}
-                    <div className="grid grid-cols-2 gap-3">
-                      {/* Widget 1 */}
-                      <div className="p-2.5 bg-white/[0.02] border border-line rounded-lg">
-                        <span className="text-[8px] font-mono text-zinc-400 font-bold block uppercase">Overall Grade</span>
-                        <span className="text-base font-bold text-[#43F5FF] font-mono mt-1 block">A+ // 94.6%</span>
-                      </div>
-                      {/* Widget 2 */}
-                      <div className="p-2.5 bg-white/[0.02] border border-line rounded-lg">
-                        <span className="text-[8px] font-mono text-zinc-400 font-bold block uppercase">Active Leaderboard</span>
-                        <span className="text-base font-bold text-white font-mono mt-1 block">Rank 3rd</span>
-                      </div>
-                    </div>
- 
-                    {/* Lesson tracking block */}
-                    <div className="border border-line rounded-xl p-3 bg-white/[0.01]">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-[9px] font-mono font-bold text-brand uppercase">Topic Progression</span>
-                        <span className="text-[8px] text-zinc-500 font-mono">14 / 20 Solved</span>
-                      </div>
-                      <div className="space-y-2">
-                        {[
-                          { title: "Power Query Data Consolidation", status: "completed" },
-                          { title: "Nested Formula Logical Testing", status: "completed" },
-                          { title: "VBA Macro Loop Scripting", status: "in-progress" }
-                        ].map((item, idx) => (
-                          <div key={idx} className="flex items-center justify-between text-[10px] py-1 border-b border-white/5 last:border-0">
-                            <span className="text-zinc-300 font-light truncate max-w-[200px]">{item.title}</span>
-                            <span className={`text-[8px] font-mono font-bold px-1.5 py-0.5 rounded ${
-                              item.status === "completed" 
-                                ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/15" 
-                                : "bg-[#43F5FF]/10 text-brand border border-brand/20 animate-pulse"
-                            }`}>{item.status}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
- 
-              {/* Overlapping mobile mockup floating slightly to the bottom-right on lg screen */}
-              <div className="absolute -bottom-8 -right-4 hidden lg:block w-36 aspect-[9/18] bg-[#050608] border-2 border-line rounded-3xl p-1.5 shadow-2xl z-20 float-b hover:border-[#43F5FF]/40 transition-colors duration-300">
-                <div className="w-full h-full bg-[#0E1117]/90 rounded-[18px] p-2 text-left overflow-hidden">
-                  <div className="w-6 h-1 mx-auto bg-zinc-700 rounded-full mb-3" />
-                  <span className="text-[8px] font-mono font-bold tracking-widest text-[#43F5FF] uppercase block">Mobile Portal</span>
-                  <div className="h-6 w-full bg-white/5 rounded-md mt-2" />
-                  <div className="h-10 w-full bg-white/[0.02] border border-line rounded-md mt-3 p-1">
-                    <div className="h-1.5 w-full bg-white/5 rounded-full mt-1 overflow-hidden">
-                      <div className="h-full bg-brand rounded-full" style={{ width: "70%" }} />
-                    </div>
-                    <span className="text-[8px] font-mono text-zinc-400 mt-1 block leading-none">Modules: 70%</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </Container>
-      </section>
- 
- 
- 
-      {/* 8. FOOTER CTA SECTION */}
+      {/* FOOTER CTA SECTION */}
       <section className="relative z-10">
         <CTASection
           title={hub.cta.title}
