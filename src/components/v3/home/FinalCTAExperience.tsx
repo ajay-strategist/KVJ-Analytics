@@ -87,22 +87,7 @@ export function FinalCTAExperience({
     <section ref={sectionRef} className="relative py-28 md:py-40 overflow-hidden bg-base perspective-container">
       <div className="absolute inset-0 particle-field opacity-50 pointer-events-none" />
 
-      {/* 3D Glowing sphere + aura */}
-      <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-        <div
-          className="aura h-[38rem] w-[38rem] rounded-full opacity-40"
-          style={{
-            background: "conic-gradient(from 0deg, rgba(67,245,255,0.25), rgba(58,123,255,0.15), transparent 45%, rgba(22,230,216,0.2), transparent 80%, rgba(67,245,255,0.25))",
-            filter: "blur(30px)",
-          }}
-        />
-        <div className="absolute inset-0 grid place-items-center">
-          <div className="orb-3d h-64 w-64 opacity-60" />
-        </div>
-        {/* Orbit rings */}
-        <div className="absolute inset-[-2rem] orb-ring" />
-        <div className="absolute inset-[-5rem] orb-ring-reverse" />
-      </div>
+
 
       <div className="relative z-10 mx-auto max-w-3xl px-5 sm:px-6 text-center">
         <div
