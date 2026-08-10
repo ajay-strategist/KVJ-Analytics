@@ -108,7 +108,7 @@ export const FALLBACK_HOME_PAGE = {
   },
   industries: {
     heading: "Solutions Built For Every Industry",
-    items: ["Education", "Healthcare", "Manufacturing", "Retail", "Financial Services", "Government", "NGOs", "Startups", "SMEs", "Large Enterprises"],
+    items: ["Education", "Healthcare", "Manufacturing", "Retail", "Financial Services", "Startups", "SMEs", "Large Enterprises"],
   },
   approach: {
     heading: "A Proven Framework For Digital Transformation",
