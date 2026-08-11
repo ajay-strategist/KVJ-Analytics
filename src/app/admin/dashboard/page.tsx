@@ -80,7 +80,7 @@ export default function AdminDashboardPage() {
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
               <QuickAction label="New Course" href="/admin/courses?action=new" icon={Plus} tone="cyan" />
               <QuickAction label="Edit CMS" href="/admin/content" icon={Globe} tone="blue" />
-              <QuickAction label="New Blog Post" href="/admin/blog?action=new" icon={Newspaper} tone="violet" />
+              <QuickAction label="New Blog Post" href="/admin/blog/new" icon={Newspaper} tone="violet" />
               <QuickAction label="View Leads" href="/admin/leads" icon={MessageSquare} tone="emerald" />
               <QuickAction label="Generate Vouchers" href="/admin/unlock-codes?action=new" icon={Ticket} tone="amber" />
               <QuickAction label="Manage Team" href="/admin/team" icon={UserSquare2} tone="rose" />

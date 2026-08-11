@@ -4,7 +4,7 @@ import React, { useRef, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { 
   AlertCircle, CheckCircle2, Upload, Loader2, BookOpen, Plus, Sparkles, 
-  Eye, Edit2, History, RotateCcw, Link2, HelpCircle 
+  Eye, Edit2, History, RotateCcw, Link2, HelpCircle, Image as ImageIcon, X
 } from "lucide-react";
 import {
   useForm, FormSection, FormRow, CollapsiblePanel, FormActions,
@@ -14,7 +14,7 @@ import {
 import { required, maxLen, slug as slugRule, type FieldSchema } from "@/lib/admin/validators";
 import { LessonIframe } from "@/components/shared/LessonIframe";
 import { BLOG_BLOCKS, ContentBlock } from "@/lib/admin/blogBlocks";
-import { toDirectImageUrl } from "@/lib/mediaUrl";
+import { toDirectImageUrl, isShareLink } from "@/lib/mediaUrl";
 
 const slugify = (s: string) => s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 
@@ -118,6 +118,15 @@ export function BlogForm({ id, initial }: { id?: string; initial?: BlogInitial }
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [selectedBlockCat, setSelectedBlockCat] = useState<string>(BLOG_BLOCKS[0].category);
   const [otherPosts, setOtherPosts] = useState<any[]>([]);
+
+  // Image insertion modal state
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [modalTab, setModalTab] = useState<"upload" | "link">("upload");
+  const [modalLink, setModalLink] = useState("");
+  const [modalAlt, setModalAlt] = useState("");
+  const [modalUploading, setModalUploading] = useState(false);
+  const [modalErr, setModalErr] = useState("");
+  const [modalConverted, setModalConverted] = useState(false);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputId = React.useId();
@@ -254,23 +263,76 @@ export function BlogForm({ id, initial }: { id?: string; initial?: BlogInitial }
     if (!form.isDirty || window.confirm("Discard unsaved changes?")) router.push("/admin/blog"); 
   };
 
-  // HTML content block insertion helper
-  const insertBlock = (block: ContentBlock) => {
+  const insertContent = (content: string) => {
     const textarea = textareaRef.current;
-    if (!textarea) return;
+    if (!textarea) {
+      const current = (form.values.body_html as string) || "";
+      form.setValue("body_html", current + content);
+      return;
+    }
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
     const text = textarea.value;
-    const snippet = `\n${block.template}\n`;
-    const updated = text.substring(0, start) + snippet + text.substring(end);
+    const updated = text.substring(0, start) + content + text.substring(end);
     
     form.setValue("body_html", updated);
     
     // Reposition cursor
     setTimeout(() => {
       textarea.focus();
-      textarea.selectionStart = textarea.selectionEnd = start + snippet.length;
+      textarea.selectionStart = textarea.selectionEnd = start + content.length;
     }, 50);
+  };
+
+  // HTML content block insertion helper
+  const insertBlock = (block: ContentBlock) => {
+    insertContent(`\n${block.template}\n`);
+  };
+
+  const handleModalLinkChange = (raw: string) => {
+    setModalErr("");
+    const direct = toDirectImageUrl(raw);
+    setModalConverted(direct !== raw && isShareLink(raw));
+    setModalLink(direct);
+  };
+
+  const handleModalFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setModalUploading(true);
+    setModalErr("");
+    setModalConverted(false);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Upload failed");
+      
+      // Auto-insert image tag and close modal
+      const imgTag = `\n<img src="${data.url}" alt="${modalAlt || file.name.split(".")[0]}" class="rounded-2xl my-6 w-full object-cover shadow-md" />\n`;
+      insertContent(imgTag);
+      setShowImageModal(false);
+      setModalLink("");
+      setModalAlt("");
+    } catch (err: any) {
+      setModalErr(err.message || "Failed to upload file");
+    } finally {
+      setModalUploading(false);
+      e.target.value = "";
+    }
+  };
+
+  const insertLinkImage = () => {
+    if (!modalLink) {
+      setModalErr("Please enter a valid image URL.");
+      return;
+    }
+    const imgTag = `\n<img src="${modalLink}" alt="${modalAlt || "Article Image"}" class="rounded-2xl my-6 w-full object-cover shadow-md" />\n`;
+    insertContent(imgTag);
+    setShowImageModal(false);
+    setModalLink("");
+    setModalAlt("");
   };
 
   // Dynamic HTML import and relative image uploads
@@ -345,7 +407,8 @@ export function BlogForm({ id, initial }: { id?: string; initial?: BlogInitial }
   ];
 
   return (
-    <div className="mx-auto max-w-[1100px] p-4 pb-24 md:p-6 lg:p-8">
+    <>
+      <div className="mx-auto max-w-[1100px] p-4 pb-24 md:p-6 lg:p-8">
       <div className="mb-5 flex flex-col md:flex-row md:items-center md:justify-between gap-3 border-b border-slate-100 pb-4">
         <div>
           <h2 className="text-xl font-bold text-slate-900">{id ? "Edit blog article" : "Create blog article"}</h2>
@@ -420,6 +483,15 @@ export function BlogForm({ id, initial }: { id?: string; initial?: BlogInitial }
                     {importing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
                     <span>Import HTML file</span>
                   </label>
+                  
+                  <button
+                    type="button"
+                    onClick={() => { setShowImageModal(true); setModalLink(""); setModalAlt(""); setModalErr(""); }}
+                    className="px-2.5 py-1.5 bg-white border border-slate-200 hover:border-[#43F5FF]/30 text-slate-650 hover:text-slate-905 text-[11px] font-bold rounded-lg flex items-center gap-1 shadow-sm shrink-0 cursor-pointer transition-colors"
+                  >
+                    <ImageIcon className="w-3.5 h-3.5 text-brand" />
+                    <span>Insert Image</span>
+                  </button>
                 </div>
               )}
             </div>
@@ -770,5 +842,137 @@ export function BlogForm({ id, initial }: { id?: string; initial?: BlogInitial }
         onCancel={cancel}
       />
     </div>
-  );
+    {/* Insert Image Modal Dialog Overlay */}
+    {showImageModal && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+        <div className="bg-white border border-slate-200 rounded-[24px] max-w-lg w-full p-6 shadow-2xl space-y-5 animate-scale-up text-left">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 className="text-base font-bold text-slate-800 flex items-center gap-1.5">
+              <ImageIcon className="w-4 h-4 text-brand" /> Insert Image Component
+            </h3>
+            <button 
+              type="button" 
+              onClick={() => { setShowImageModal(false); setModalLink(""); setModalAlt(""); setModalErr(""); }}
+              className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-50 hover:text-slate-600 transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Modal Tab Switcher */}
+          <div className="flex bg-slate-100 p-1 rounded-xl w-full gap-1">
+            <button
+              type="button"
+              onClick={() => { setModalTab("upload"); setModalErr(""); }}
+              className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${modalTab === "upload" ? "bg-white text-slate-800 shadow-sm" : "text-slate-500 hover:text-slate-800"}`}
+            >
+              Upload Local File
+            </button>
+            <button
+              type="button"
+              onClick={() => { setModalTab("link"); setModalErr(""); }}
+              className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${modalTab === "link" ? "bg-white text-slate-800 shadow-sm" : "text-slate-500 hover:text-slate-800"}`}
+            >
+              Paste Share Link
+            </button>
+          </div>
+
+          <div className="space-y-4">
+            {modalTab === "upload" ? (
+              <div className="space-y-3">
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500">Choose Image File</label>
+                <div className="border border-dashed border-slate-300 bg-slate-50 hover:bg-slate-100/50 rounded-xl p-6 text-center cursor-pointer relative transition-all group">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleModalFileUpload}
+                    disabled={modalUploading}
+                    className="absolute inset-0 opacity-0 cursor-pointer"
+                  />
+                  <div className="flex flex-col items-center gap-2">
+                    {modalUploading ? (
+                      <Loader2 className="w-8 h-8 animate-spin text-brand" />
+                    ) : (
+                      <Upload className="w-8 h-8 text-slate-400 group-hover:text-brand transition-colors" />
+                    )}
+                    <span className="text-xs font-bold text-slate-700">
+                      {modalUploading ? "Uploading image..." : "Drag image here or click to browse"}
+                    </span>
+                    <span className="text-[10px] text-slate-400">Supports PNG, JPG, WEBP</span>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Image URL / Share Link (OneDrive / Google Drive)</label>
+                  <input
+                    type="text"
+                    value={modalLink}
+                    onChange={(e) => handleModalLinkChange(e.target.value)}
+                    placeholder="https://drive.google.com/file/d/... or https://..."
+                    className="w-full rounded-lg border bg-white px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand/40 border-slate-200 focus:border-brand/40 transition-colors"
+                  />
+                  {modalConverted && (
+                    <p className="mt-1 text-[11px] font-semibold text-emerald-600">✓ Share link converted to a direct embed link.</p>
+                  )}
+                </div>
+
+                {modalLink && !modalErr && (
+                  <div className="p-3 border border-slate-100 rounded-xl bg-slate-50/50">
+                    <span className="block text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-1">Preview</span>
+                    <div className="relative h-32 w-full overflow-hidden rounded-lg border border-slate-200 bg-white">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img 
+                        src={modalLink} 
+                        alt="Preview" 
+                        onError={() => setModalErr("Invalid image link. Make sure the file sharing settings are set to 'Anyone with the link'.")}
+                        className="h-full w-full object-contain" 
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div>
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Image Alt Caption Text (Recommended)</label>
+              <input
+                type="text"
+                value={modalAlt}
+                onChange={(e) => setModalAlt(e.target.value)}
+                placeholder="Describe this image for screen readers and SEO..."
+                className="w-full rounded-lg border bg-white px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand/40 border-slate-200 focus:border-brand/40 transition-colors"
+              />
+            </div>
+
+            {modalErr && (
+              <p className="text-xs font-semibold text-rose-600 bg-rose-50 border border-rose-100 p-2.5 rounded-xl">{modalErr}</p>
+            )}
+          </div>
+
+          <div className="flex justify-end gap-2 border-t border-slate-100 pt-4">
+            <button
+              type="button"
+              onClick={() => { setShowImageModal(false); setModalLink(""); setModalAlt(""); setModalErr(""); }}
+              className="px-4 py-2 border border-slate-200 text-slate-650 hover:bg-slate-50 text-xs font-bold rounded-xl transition-colors cursor-pointer"
+            >
+              Cancel
+            </button>
+            {modalTab === "link" && (
+              <button
+                type="button"
+                onClick={insertLinkImage}
+                disabled={!modalLink}
+                className="px-4 py-2 bg-brand text-black text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-[#16E6D8] transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                Insert Image
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    )}
+  </>
+);
 }
