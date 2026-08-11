@@ -260,6 +260,15 @@ export function TrainingHubClient({ categories, hub }: TrainingHubClientProps) {
  
   return (
     <div className="w-full bg-base text-zinc-200 relative min-h-screen pt-28 overflow-hidden">
+      {/* Custom keyframes for dashboard connections */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes dash {
+          to {
+            stroke-dashoffset: -40;
+          }
+        }
+      `}} />
+
       {/* 1. HERO SECTION */}
       <section className="relative min-h-[92vh] flex items-center py-16 overflow-hidden border-b border-line">
         {/* Living background mesh & glow */}
@@ -328,12 +337,43 @@ export function TrainingHubClient({ categories, hub }: TrainingHubClientProps) {
  
             {/* Right Col (5/12 Width): Premium Floating Glassmorphic UI Mockup */}
             <div className="lg:col-span-5 flex items-center justify-center relative select-none">
-              <div className="relative w-full max-w-[400px] h-[380px] animate-float">
-                {/* Spotlight background spotlight */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-brand/10 rounded-full blur-3xl pointer-events-none" />
+              <div className="relative w-full max-w-[420px] h-[390px] animate-float">
+                {/* Spotlight background glow */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-[#43F5FF]/10 rounded-full blur-[100px] pointer-events-none" />
                 
+                {/* SVG connection lines between widgets */}
+                <svg className="absolute inset-0 w-full h-full pointer-events-none z-0 overflow-visible" viewBox="0 0 400 400">
+                  <defs>
+                    <linearGradient id="glowLineGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#43F5FF" stopOpacity="0.45" />
+                      <stop offset="50%" stopColor="#3A7BFF" stopOpacity="0.25" />
+                      <stop offset="100%" stopColor="#16E6D8" stopOpacity="0.45" />
+                    </linearGradient>
+                  </defs>
+                  
+                  {/* Connection from Telemetry (top-left) to Assignments (mid-right) */}
+                  <path 
+                    d="M 130 90 C 220 90, 200 180, 290 180" 
+                    fill="none" 
+                    stroke="url(#glowLineGrad)" 
+                    strokeWidth="1.5" 
+                    strokeDasharray="6, 6" 
+                    className="animate-[dash_20s_linear_infinite]" 
+                  />
+                  
+                  {/* Connection from Assignments (mid-right) to Badge (bottom-left/mid) */}
+                  <path 
+                    d="M 290 220 C 200 220, 220 310, 140 310" 
+                    fill="none" 
+                    stroke="url(#glowLineGrad)" 
+                    strokeWidth="1.5" 
+                    strokeDasharray="6, 6" 
+                    className="animate-[dash_20s_linear_infinite_reverse]" 
+                  />
+                </svg>
+
                 {/* Floating Widget 1: Student Analytics Progress Card */}
-                <div className="absolute top-4 left-0 w-64 glass-panel rounded-2xl p-5 shadow-lg border border-line z-20 float-a">
+                <div className="absolute top-4 left-0 w-64 glass-panel rounded-2xl p-5 shadow-lg border border-line z-20 hover:border-brand/40 transition-colors duration-300 float-a">
                   <div className="flex items-center justify-between mb-4">
                     <span className="text-[10px] font-mono font-bold tracking-widest text-[#43F5FF] uppercase">Course Telemetry</span>
                     <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -354,9 +394,9 @@ export function TrainingHubClient({ categories, hub }: TrainingHubClientProps) {
                 </div>
  
                 {/* Floating Widget 2: Certificate preview badge */}
-                <div className="absolute bottom-6 right-0 w-56 glass-panel rounded-2xl p-4 shadow-lg border border-line z-20 float-b">
+                <div className="absolute bottom-6 left-6 w-56 glass-panel rounded-2xl p-4 shadow-lg border border-line z-20 hover:border-brand/40 transition-colors duration-300 float-b">
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-corporate/15 border border-corporate/30 flex items-center justify-center text-corporate">
+                    <div className="w-9 h-9 rounded-xl bg-brand/10 border border-brand/20 flex items-center justify-center text-brand">
                       <GraduationCap className="w-5 h-5 text-brand" />
                     </div>
                     <div className="text-left">
@@ -367,7 +407,7 @@ export function TrainingHubClient({ categories, hub }: TrainingHubClientProps) {
                 </div>
  
                 {/* Floating Widget 3: Live stats scoreboard */}
-                <div className="absolute top-36 right-0 w-48 glass-panel rounded-2xl p-4 shadow-lg border border-line z-10 float-c">
+                <div className="absolute top-32 right-0 w-48 glass-panel rounded-2xl p-4 shadow-lg border border-line z-20 hover:border-brand/40 transition-colors duration-300 float-c">
                   <div className="text-left">
                     <span className="text-[9px] font-mono text-zinc-400 font-bold uppercase tracking-wider">Assignments Solved</span>
                     <div className="flex items-baseline gap-1.5 mt-1">
@@ -379,10 +419,6 @@ export function TrainingHubClient({ categories, hub }: TrainingHubClientProps) {
                     </div>
                   </div>
                 </div>
- 
-                {/* Central orbital rings overlay */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 border border-[#43F5FF]/8 rounded-full pointer-events-none z-0" />
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 border border-[#3A7BFF]/5 rounded-full pointer-events-none z-0 animate-spin-slow" />
               </div>
             </div>
           </div>

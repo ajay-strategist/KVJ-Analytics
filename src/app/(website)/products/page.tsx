@@ -109,6 +109,7 @@ export default async function ProductsPage() {
                     slug={product.slug}
                     keyFeatures={product.keyFeatures}
                     isGradeScope={isGradeScope}
+                    animationStyle={product.animation_style || product.animationStyle}
                   />
                 </ScaleIn>
               );
