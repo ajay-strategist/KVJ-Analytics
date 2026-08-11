@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { Plus, Pencil, Trash2, X, Check, Loader2, AlertCircle, LogOut, Users } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { ImageField } from "@/components/admin/ImageField";
 
 interface TeamMember {
   id: string;
@@ -117,7 +118,6 @@ export default function AdminTeamPage() {
               {[
                 { label: "Full Name *", key: "name", placeholder: "Ajay Thomas" },
                 { label: "Role / Designation", key: "role", placeholder: "Founder & Data Analyst" },
-                { label: "Photo URL", key: "photo_url", placeholder: "https://..." },
                 { label: "LinkedIn URL", key: "linkedin_url", placeholder: "https://linkedin.com/in/..." },
               ].map(({ label, key, placeholder }) => (
                 <div key={key}>
@@ -127,6 +127,13 @@ export default function AdminTeamPage() {
                     className="w-full px-3 py-2.5 rounded-input border border-line bg-surface/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand text-sm" />
                 </div>
               ))}
+              <div className="md:col-span-2">
+                <ImageField
+                  label="Photo"
+                  value={form.photo_url}
+                  onChange={(url) => setForm((f) => ({ ...f, photo_url: url }))}
+                />
+              </div>
               <div className="md:col-span-2">
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate mb-1">Bio</label>
                 <textarea rows={3} placeholder="Brief professional bio..."

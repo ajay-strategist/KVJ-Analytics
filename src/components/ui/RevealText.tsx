@@ -29,16 +29,17 @@ export function RevealText({ text, className = "", stagger = 55, delay = 0, as =
       setShown(true);
       return;
     }
+
     const io = new IntersectionObserver(
       (entries) => {
         entries.forEach((e) => {
           if (e.isIntersecting) {
-            setShown(true);          // play once, then stop observing (no re-hide on scroll-back)
+            setShown(true);
             io.unobserve(e.target);
           }
         });
       },
-      { threshold: 0.1, rootMargin: "0px 0px -8% 0px" }
+      { threshold: 0.05, rootMargin: "0px 0px -5% 0px" }
     );
     io.observe(el);
     return () => io.disconnect();

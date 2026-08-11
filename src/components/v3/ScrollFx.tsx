@@ -82,10 +82,11 @@ export function SplitHeading({
     };
   }, [start, stagger]);
 
+  const Component = Tag as React.ElementType;
   return (
-    <Tag ref={ref as React.Ref<HTMLElement>} className={className}>
+    <Component ref={ref} className={className}>
       {children}
-    </Tag>
+    </Component>
   );
 }
 
@@ -135,10 +136,11 @@ export function ScaleIn({
     };
   }, [start, delay, y]);
 
+  const Component = Tag as React.ElementType;
   return (
-    <Tag ref={ref as React.Ref<HTMLElement>} className={className}>
+    <Component ref={ref} className={className}>
       {children}
-    </Tag>
+    </Component>
   );
 }
 
@@ -183,10 +185,11 @@ export function Parallax({
     };
   }, [speed]);
 
+  const Component = Tag as React.ElementType;
   return (
-    <Tag ref={ref as React.Ref<HTMLElement>} className={className}>
+    <Component ref={ref} className={className}>
       {children}
-    </Tag>
+    </Component>
   );
 }
 

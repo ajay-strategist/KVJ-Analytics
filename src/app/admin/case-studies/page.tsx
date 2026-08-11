@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { Plus, Pencil, Trash2, X, Check, Loader2, AlertCircle, LogOut, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { ImageField } from "@/components/admin/ImageField";
 
 interface CaseStudy {
   id: string;
@@ -119,7 +120,6 @@ export default function AdminCaseStudiesPage() {
                 { label: "Title *", key: "title", placeholder: "Power BI Dashboard for XYZ Corp" },
                 { label: "Client Name", key: "client_name", placeholder: "Acme Corp" },
                 { label: "Industry", key: "industry", placeholder: "Manufacturing, FMCG..." },
-                { label: "Cover Image URL", key: "image_url", placeholder: "https://..." },
               ].map(({ label, key, placeholder }) => (
                 <div key={key}>
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate mb-1">{label}</label>
@@ -128,6 +128,13 @@ export default function AdminCaseStudiesPage() {
                     className="w-full px-3 py-2.5 rounded-input border border-line bg-surface/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand text-sm" />
                 </div>
               ))}
+              <div className="md:col-span-2">
+                <ImageField
+                  label="Cover Image"
+                  value={form.image_url}
+                  onChange={(url) => setForm((f) => ({ ...f, image_url: url }))}
+                />
+              </div>
               {[
                 { label: "Challenge", key: "challenge", placeholder: "What problem did the client face?" },
                 { label: "Solution", key: "solution", placeholder: "What did KVJ Analytics deliver?" },

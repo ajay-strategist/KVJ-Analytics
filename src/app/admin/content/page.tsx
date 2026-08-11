@@ -15,6 +15,7 @@ import {
   Settings
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { ImageField } from "@/components/admin/ImageField";
 import {
   FALLBACK_HOME_PAGE,
   FALLBACK_SITE_SETTINGS,
@@ -166,63 +167,7 @@ function Field({
   );
 }
 
-function ImageField({
-  label, value, onChange,
-}: { label: string; value: string; onChange: (url: string) => void }) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [uploading, setUploading] = useState(false);
-  const [uploadErr, setUploadErr] = useState("");
 
-  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploading(true); setUploadErr("");
-    try {
-      const fd = new FormData();
-      fd.append("file", file);
-      const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Upload failed");
-      onChange(data.url);
-    } catch (err: unknown) {
-      setUploadErr(err instanceof Error ? err.message : "Upload failed");
-    } finally {
-      setUploading(false);
-      if (inputRef.current) inputRef.current.value = "";
-    }
-  };
-
-  return (
-    <div>
-      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate mb-1">{label}</label>
-      <div className="space-y-2">
-        {value && (
-          <div className="relative inline-block">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={value} alt="preview" className="h-24 rounded-lg border border-line object-cover max-w-xs" />
-            <button onClick={() => onChange("")}
-              className="absolute -top-2 -right-2 bg-error text-white rounded-full w-5 h-5 flex items-center justify-center">
-              <X className="w-3 h-3" />
-            </button>
-          </div>
-        )}
-        <div className="flex items-center gap-2">
-          <input type="text" value={value} onChange={e => onChange(e.target.value)}
-            placeholder="https://... (or upload below)"
-            className="flex-1 px-3 py-2 rounded-input border border-line bg-surface/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand text-sm" />
-          <button type="button" onClick={() => inputRef.current?.click()}
-            disabled={uploading}
-            className="px-3 py-2 rounded-btn border border-brand text-brand text-xs font-bold flex items-center gap-1.5 hover:bg-brand/5 transition-colors disabled:opacity-50">
-            {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ImageIcon className="w-3.5 h-3.5" />}
-            {uploading ? "Uploading…" : "Upload"}
-          </button>
-          <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
-        </div>
-        {uploadErr && <p className="text-xs text-error font-semibold">{uploadErr}</p>}
-      </div>
-    </div>
-  );
-}
 
 function StringList({
   label, items, onChange, placeholder = "Add item…",

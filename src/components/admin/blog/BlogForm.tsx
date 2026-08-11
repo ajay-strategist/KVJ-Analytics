@@ -14,6 +14,7 @@ import {
 import { required, maxLen, slug as slugRule, type FieldSchema } from "@/lib/admin/validators";
 import { LessonIframe } from "@/components/shared/LessonIframe";
 import { BLOG_BLOCKS, ContentBlock } from "@/lib/admin/blogBlocks";
+import { toDirectImageUrl } from "@/lib/mediaUrl";
 
 const slugify = (s: string) => s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 
@@ -574,7 +575,7 @@ export function BlogForm({ id, initial }: { id?: string; initial?: BlogInitial }
                   <input
                     type="text"
                     value={item.avatar_url || ""}
-                    onChange={(e) => setItem({ avatar_url: e.target.value })}
+                    onChange={(e) => setItem({ avatar_url: toDirectImageUrl(e.target.value) })}
                     className="w-full rounded-lg border bg-white px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand/40 border-slate-200 focus:border-brand/40 transition-colors"
                     placeholder="https://images.unsplash.com/..."
                   />

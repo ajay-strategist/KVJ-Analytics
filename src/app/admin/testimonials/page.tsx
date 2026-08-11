@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { Plus, Pencil, Trash2, X, Check, Loader2, AlertCircle, Star, LogOut, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { ImageField } from "@/components/admin/ImageField";
 
 interface Testimonial {
   id: string;
@@ -118,7 +119,6 @@ export default function AdminTestimonialsPage() {
                 { label: "Client Name *", key: "client_name", placeholder: "John Smith" },
                 { label: "Job Title", key: "client_title", placeholder: "CFO, Director..." },
                 { label: "Company", key: "client_company", placeholder: "Acme Corp" },
-                { label: "Avatar / Photo URL", key: "avatar_url", placeholder: "https://..." },
               ].map(({ label, key, placeholder }) => (
                 <div key={key}>
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate mb-1">{label}</label>
@@ -127,6 +127,13 @@ export default function AdminTestimonialsPage() {
                     className="w-full px-3 py-2.5 rounded-input border border-line bg-surface/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand text-sm" />
                 </div>
               ))}
+              <div className="md:col-span-2">
+                <ImageField
+                  label="Avatar / Photo"
+                  value={form.avatar_url}
+                  onChange={(url) => setForm((f) => ({ ...f, avatar_url: url }))}
+                />
+              </div>
               <div className="md:col-span-2">
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate mb-1">Testimonial Quote *</label>
                 <textarea rows={4} placeholder="What the client said..."

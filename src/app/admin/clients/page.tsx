@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { Plus, Pencil, Trash2, X, Check, Loader2, AlertCircle, Building2, LogOut, Users, Calendar, Layers, Star, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { ImageField } from "@/components/admin/ImageField";
 
 interface Client {
   id: string;
@@ -150,7 +151,6 @@ export default function AdminClientsPage() {
               {[
                 { label: "Client / Company Name *", key: "name", placeholder: "Acme Corp" },
                 { label: "Industry", key: "industry", placeholder: "e.g. Manufacturing, EdTech" },
-                { label: "Logo URL", key: "logo_url", placeholder: "https://..." },
                 { label: "Website URL", key: "website_url", placeholder: "https://..." },
               ].map(({ label, key, placeholder }) => (
                 <div key={key}>
@@ -163,6 +163,13 @@ export default function AdminClientsPage() {
                   />
                 </div>
               ))}
+              <div className="md:col-span-2">
+                <ImageField
+                  label="Logo"
+                  value={form.logo_url}
+                  onChange={(url) => setForm((f) => ({ ...f, logo_url: url }))}
+                />
+              </div>
               <div className="md:col-span-2">
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate mb-1">Description / Notes</label>
                 <textarea

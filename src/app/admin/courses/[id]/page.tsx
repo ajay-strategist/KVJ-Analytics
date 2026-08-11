@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { LessonIframe } from "@/components/shared/LessonIframe";
+import { ImageField } from "@/components/admin/ImageField";
 import dynamic from "next/dynamic";
 const CodeMirror = dynamic(() => import("@uiw/react-codemirror"), { ssr: false });
 import { python } from "@codemirror/lang-python";
@@ -844,7 +845,7 @@ export default function AdminCourseDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [savingCourse, setSavingCourse] = useState(false);
-  const [uploadingThumb, setUploadingThumb] = useState(false);
+
 
   // Form states for modules
   const [addingModule, setAddingModule] = useState(false);
@@ -1000,26 +1001,7 @@ export default function AdminCourseDetailsPage() {
     }
   };
 
-  const handleThumbUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !course) return;
-    setUploadingThumb(true);
-    try {
-      const fd = new FormData();
-      fd.append("file", file);
-      const res = await fetch("/api/admin/upload", {
-        method: "POST",
-        body: fd,
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      setCourse({ ...course, thumbnail_url: data.url });
-    } catch (err: any) {
-      alert(err.message || "Image upload failed.");
-    } finally {
-      setUploadingThumb(false);
-    }
-  };
+
 
   // Module actions
   const handleAddModule = async () => {
@@ -1415,36 +1397,12 @@ export default function AdminCourseDetailsPage() {
                   </div>
                 )}
 
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate mb-1">
-                    Thumbnail Image URL
-                  </label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="text"
-                      value={course.thumbnail_url}
-                      onChange={(e) => setCourse({ ...course, thumbnail_url: e.target.value })}
-                      className="flex-1 px-3 py-2 rounded-input border border-line bg-surface/50 text-sm"
-                    />
-                    <input
-                      type="file"
-                      id="thumb-file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={handleThumbUpload}
-                    />
-                    <label
-                      htmlFor="thumb-file"
-                      className="px-3 py-2 border border-line rounded-btn hover:bg-surface text-slate text-xs font-bold cursor-pointer shrink-0 inline-flex items-center justify-center gap-1.5"
-                    >
-                      {uploadingThumb ? (
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      ) : (
-                        <Upload className="w-3.5 h-3.5" />
-                      )}
-                      <span>Upload</span>
-                    </label>
-                  </div>
+                <div className="md:col-span-2">
+                  <ImageField
+                    label="Thumbnail Image"
+                    value={course.thumbnail_url}
+                    onChange={(url) => setCourse({ ...course, thumbnail_url: url })}
+                  />
                 </div>
 
                 <div>

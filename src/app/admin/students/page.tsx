@@ -8,7 +8,7 @@ import { useAdminFetch } from "@/components/admin/hooks/useAdminFetch";
 
 interface Student {
   id: string; name: string; full_name?: string; organization?: string; phone?: string;
-  profession?: string; account_type?: string; enrollment_count: number; created_at: string;
+  email?: string; profession?: string; account_type?: string; enrollment_count: number; created_at: string;
 }
 interface StudentList { students: Student[]; total: number }
 

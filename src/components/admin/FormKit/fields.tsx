@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
-import { X, Plus, UploadCloud, Trash2 } from "lucide-react";
+import React, { useRef, useState } from "react";
+import { X, Plus, UploadCloud, Trash2, Loader2 } from "lucide-react";
 import type { FormApi } from "./useForm";
+import { toDirectImageUrl, isShareLink } from "@/lib/mediaUrl";
 
 /** FormKit field primitives — reusable, accessible, shared error/help styling. Dependency-free. */
 
@@ -177,14 +178,72 @@ export function TagInput({ form, name, ...b }: Base) {
   );
 }
 
-/** Placeholders (wire to media library / TipTap later without changing callers). */
-export function ImageUploadField({ form, name, ...b }: Base) {
+/**
+ * Image field: upload a file (→ Supabase via /api/admin/upload) OR paste a link.
+ * OneDrive / Google Drive share links are auto-converted to a direct image URL.
+ */
+export function ImageUploadField({ form, name, accept = "image/*", ...b }: Base & { accept?: string }) {
   const f = form.field(name);
+  const value = (f.value as string) ?? "";
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [err, setErr] = useState("");
+  const [converted, setConverted] = useState(false);
+  const [broken, setBroken] = useState(false);
+
+  const handleLink = (raw: string) => {
+    setBroken(false); setErr("");
+    const direct = toDirectImageUrl(raw);
+    setConverted(direct !== raw && isShareLink(raw));
+    f.onChange(direct);
+  };
+
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true); setErr(""); setConverted(false); setBroken(false);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Upload failed");
+      f.onChange(data.url);
+    } catch (e2: unknown) {
+      setErr(e2 instanceof Error ? e2.message : "Upload failed");
+    } finally {
+      setUploading(false);
+      if (inputRef.current) inputRef.current.value = "";
+    }
+  };
+
   return (
-    <FieldShell id={name} label={b.label} required={b.required} description={b.description} error={f.error} help={b.help ?? "Paste a URL or upload (media library — coming soon)."}>
-      <div className="flex items-center gap-3">
-        <div className="grid h-16 w-16 shrink-0 place-items-center rounded-lg border border-dashed border-slate-300 bg-slate-50 text-slate-400"><UploadCloud className="h-5 w-5" /></div>
-        <input type="text" value={(f.value as string) ?? ""} placeholder="https://…" onChange={(e) => f.onChange(e.target.value)} className={inputCls(!!f.error)} />
+    <FieldShell id={name} label={b.label} required={b.required} description={b.description} error={f.error}
+      help={b.help ?? "Paste an image link (OneDrive / Google Drive OK) or upload a file."}>
+      <div className="flex items-start gap-3">
+        <div className="relative grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-lg border border-dashed border-slate-300 bg-slate-50 text-slate-400">
+          {value && !broken ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={value} alt="" onError={() => setBroken(true)} onLoad={() => setBroken(false)} className="h-full w-full object-cover" />
+          ) : (
+            <UploadCloud className="h-5 w-5" />
+          )}
+        </div>
+        <div className="flex-1">
+          <div className="flex items-center gap-2">
+            <input type="text" value={value} placeholder="https://…" onChange={(e) => handleLink(e.target.value)}
+              className={inputCls(!!f.error)} />
+            <button type="button" onClick={() => inputRef.current?.click()} disabled={b.disabled || uploading}
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-brand px-3 py-2 text-xs font-bold text-brand hover:bg-brand/5 disabled:opacity-50">
+              {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <UploadCloud className="h-3.5 w-3.5" />}
+              {uploading ? "Uploading…" : "Upload"}
+            </button>
+            <input ref={inputRef} type="file" accept={accept} className="hidden" onChange={handleFile} />
+          </div>
+          {converted && !broken && <p className="mt-1 text-[12px] font-semibold text-brand">✓ Share link converted to a direct image link.</p>}
+          {broken && value && <p className="mt-1 text-[12px] font-semibold text-red-600">Link isn’t loading as an image — set sharing to “Anyone with the link”, or upload the file.</p>}
+          {err && <p className="mt-1 text-[12px] font-semibold text-red-600">{err}</p>}
+        </div>
       </div>
     </FieldShell>
   );

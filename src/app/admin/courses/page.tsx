@@ -21,6 +21,7 @@ import {
   Eye,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { ImageField } from "@/components/admin/ImageField";
 
 interface Course {
   id: string;
@@ -63,7 +64,7 @@ const NAV_TABS = [
 export default function AdminCoursesPage() {
   const router = useRouter();
   const pathname = usePathname();
-  const fileInputRef = useRef<HTMLInputElement>(null);
+
 
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
@@ -146,26 +147,7 @@ export default function AdminCoursesPage() {
     }
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploading(true);
-    try {
-      const fd = new FormData();
-      fd.append("file", file);
-      const res = await fetch("/api/admin/upload", {
-        method: "POST",
-        body: fd,
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Upload failed");
-      setForm((prev) => ({ ...prev, thumbnail_url: data.url }));
-    } catch (err: any) {
-      alert(err.message || "File upload failed.");
-    } finally {
-      setUploading(false);
-    }
-  };
+
 
   // Reordering helpers
   const handleMove = async (index: number, direction: -1 | 1) => {
@@ -335,43 +317,11 @@ export default function AdminCoursesPage() {
                   )}
 
                   <div className="md:col-span-2">
-                    <label className="block text-xs font-bold uppercase tracking-wider text-slate mb-1">
-                      Thumbnail Image
-                    </label>
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="text"
-                        value={form.thumbnail_url}
-                        onChange={(e) => setForm((prev) => ({ ...prev, thumbnail_url: e.target.value }))}
-                        placeholder="https://... or upload image"
-                        className="flex-1 px-3 py-2.5 rounded-input border border-line bg-surface/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand text-sm"
-                      />
-                      <input
-                        type="file"
-                        ref={fileInputRef}
-                        accept="image/*"
-                        className="hidden"
-                        onChange={handleFileUpload}
-                      />
-                      <Button
-                        type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={uploading}
-                        className="px-4 py-2 bg-slate text-white text-xs font-bold flex items-center gap-1 hover:bg-slate-700 rounded-btn shrink-0"
-                      >
-                        {uploading ? (
-                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        ) : (
-                          <Upload className="w-3.5 h-3.5" />
-                        )}
-                        Upload
-                      </Button>
-                    </div>
-                    {form.thumbnail_url && (
-                      <div className="mt-2 text-xs text-brand truncate">
-                        Loaded: {form.thumbnail_url}
-                      </div>
-                    )}
+                    <ImageField
+                      label="Thumbnail Image"
+                      value={form.thumbnail_url}
+                      onChange={(url) => setForm((prev) => ({ ...prev, thumbnail_url: url }))}
+                    />
                   </div>
 
                   <div className="md:col-span-2">

@@ -40,8 +40,6 @@ export function Reveal({ children, className = "", delay = 0, as = "div", varian
       return () => cancelAnimationFrame(id);
     }
 
-    // Play once: reveal the first time it enters view, then stop observing so it
-    // never re-hides / re-plays on scroll-back (feels premium, not repetitive).
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -51,7 +49,7 @@ export function Reveal({ children, className = "", delay = 0, as = "div", varian
           }
         });
       },
-      { threshold: 0.12, rootMargin: "0px 0px -8% 0px" }
+      { threshold: 0.05, rootMargin: "0px 0px -5% 0px" }
     );
 
     observer.observe(el);
