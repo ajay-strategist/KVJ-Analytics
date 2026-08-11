@@ -99,7 +99,7 @@ export function IndustryGrid({ eyebrow, heading, items }: { eyebrow?: string; he
           <h2 ref={headingRef} className="font-display font-bold text-3xl md:text-5xl text-ink leading-tight tracking-tight">{heading}</h2>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           {items.map((name, i) => {
             const { Icon, tint } = meta(name);
             return (
