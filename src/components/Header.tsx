@@ -50,7 +50,10 @@ export function Header({ siteSettings = FALLBACK_SITE_SETTINGS }: HeaderProps) {
     return () => { document.body.style.overflow = ""; };
   }, [mobileMenuOpen]);
 
-  const navItems = siteSettings.navItems || FALLBACK_SITE_SETTINGS.navItems;
+  const vis = (siteSettings as { pageVisibility?: Record<string, boolean> }).pageVisibility || {};
+  const navItems = (siteSettings.navItems || FALLBACK_SITE_SETTINGS.navItems)
+    // Hide any page toggled OFF in the admin (Home always stays).
+    .filter((item) => item.href === "/" || vis[item.href] !== false);
   const contact = siteSettings.contactInfo || FALLBACK_SITE_SETTINGS.contactInfo;
 
   return (

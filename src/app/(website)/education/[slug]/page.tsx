@@ -28,6 +28,8 @@ export default async function EducationalServiceDetailPage({
     notFound();
   }
 
+  const partner = { ...FALLBACK_EDUCATION.partnerCard, ...((page as any).partnerCard || {}) };
+
   const title = service.title;
   const description = service.shortDescription;
   const details = service.details || [
@@ -93,18 +95,14 @@ export default async function EducationalServiceDetailPage({
                 <Award className="w-6 h-6" />
               </span>
               <h4 className="text-xl font-bold font-display text-ink mb-4 relative z-10">
-                Partner With KVJ Analytics
+                {partner.title}
               </h4>
               <p className="text-sm text-slate leading-relaxed mb-6 font-semibold relative z-10">
-                Collaborate with our team to bring industry-grade analytics labs, certification programs, and curriculum updates to your campus.
+                {partner.description}
               </p>
 
               <div className="space-y-3 mb-8 relative z-10">
-                {[
-                  "Over 50,000+ students trained and certified",
-                  "College credit course integrations available",
-                  "Continuous practical evaluation support"
-                ].map((bullet, bIdx) => (
+                {(partner.bullets || []).map((bullet: string, bIdx: number) => (
                   <div key={bIdx} className="flex items-center space-x-2 text-xs font-bold text-slate/85">
                     <span className="w-1.5 h-1.5 rounded-full bg-education shrink-0" />
                     <span>{bullet}</span>
@@ -116,7 +114,7 @@ export default async function EducationalServiceDetailPage({
                 href={`/contact?interest=${encodeURIComponent("Educational " + title)}`}
                 className="w-full py-4 text-center font-bold bg-education hover:bg-teal-700 text-white shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 relative z-10"
               >
-                Partner With Us
+                {partner.buttonText}
               </Button>
             </div>
           </div>

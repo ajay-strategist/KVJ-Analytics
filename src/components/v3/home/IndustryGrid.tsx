@@ -28,6 +28,27 @@ function meta(name: string) {
   return { ...(MAP.find((e) => e.test.test(name)) ?? { Icon: Boxes }), tint: TINT };
 }
 
+/**
+ * Choose the column count (3–5) that keeps rows the most balanced for a given
+ * item count, so we never get a lonely orphan card on the last row. Prefers 4.
+ */
+function bestCols(n: number): 3 | 4 | 5 {
+  if (n <= 3) return (n as 3);
+  const score = (cols: number) => {
+    const rem = n % cols;               // items on the last (partial) row
+    const orphan = rem === 0 ? 0 : cols - rem; // empty slots on last row
+    return orphan;
+  };
+  // Prefer 4, then whichever of 3/5 leaves the fewest empty slots.
+  const options: (3 | 4 | 5)[] = [4, 3, 5];
+  return options.reduce((best, c) => (score(c) < score(best) ? c : best), 4 as 3 | 4 | 5);
+}
+const COL_CLASS: Record<3 | 4 | 5, string> = {
+  3: "md:grid-cols-3",
+  4: "md:grid-cols-4",
+  5: "md:grid-cols-5",
+};
+
 export function IndustryGrid({ eyebrow, heading, items }: { eyebrow?: string; heading: string; items: string[] }) {
   const sectionRef = useRef<HTMLElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
@@ -99,7 +120,7 @@ export function IndustryGrid({ eyebrow, heading, items }: { eyebrow?: string; he
           <h2 ref={headingRef} className="font-display font-bold text-3xl md:text-5xl text-ink leading-tight tracking-tight">{heading}</h2>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div className={`grid grid-cols-2 ${COL_CLASS[bestCols(items.length)]} gap-6 justify-center`}>
           {items.map((name, i) => {
             const { Icon, tint } = meta(name);
             return (

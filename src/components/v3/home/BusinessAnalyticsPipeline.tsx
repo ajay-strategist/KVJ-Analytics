@@ -34,8 +34,11 @@ const conn = (i: number) => `M${CX},${yOf(i) + ARC} L${CX},${yOf(i + 1) - ARC}`;
 const P_TAIL = `M${CX},${yOf(STAGES.length - 1) + ARC} L${CX},${HTOTAL}`;
 
 export function BusinessAnalyticsPipeline({
-  eyebrow = "Our Approach", heading,
-}: { eyebrow?: string; heading: string }) {
+  eyebrow = "Our Approach", heading, stageNames,
+}: { eyebrow?: string; heading: string; stageNames?: string[] }) {
+  // Stage labels are CMS-editable (by position); fall back to the approved default
+  // name when a CMS title is empty. Icons + geometry stay fixed for the animation.
+  const nameAt = (i: number) => (stageNames?.[i]?.trim() || STAGES[i].name);
   const outer = useRef<HTMLDivElement>(null);
   const leadRef = useRef<SVGPathElement>(null);
   const arcLRefs = useRef<(SVGPathElement | null)[]>([]);
@@ -141,7 +144,7 @@ export function BusinessAnalyticsPipeline({
                       </div>
                       <div className="absolute" style={{ top: yOf(i) - 16, left: CX + ARC + 18, width: 220 }}>
                         <span className={`font-mono text-[10px] font-bold ${on ? "text-brand" : "text-muted"}`}>STAGE {String(i + 1).padStart(2, "0")}</span>
-                        <div className={`text-[15px] font-semibold leading-tight transition-colors ${on ? "text-ink" : "text-slate/70"}`}>{s.name}</div>
+                        <div className={`text-[15px] font-semibold leading-tight transition-colors ${on ? "text-ink" : "text-slate/70"}`}>{nameAt(i)}</div>
                       </div>
                     </div>
                   );
@@ -153,7 +156,7 @@ export function BusinessAnalyticsPipeline({
                 <div className="absolute -top-16 -right-12 h-52 w-52 rounded-full bg-brand/15 blur-[80px] pointer-events-none" />
                 <div key={current} className="animate-fade-up">
                   <span className="font-mono text-xs font-bold text-brand">STAGE {String(current + 1).padStart(2, "0")} / {STAGES.length}</span>
-                  <h3 className="mt-1 font-display text-2xl lg:text-3xl font-bold text-ink mb-6">{STAGES[current].name}</h3>
+                  <h3 className="mt-1 font-display text-2xl lg:text-3xl font-bold text-ink mb-6">{nameAt(current)}</h3>
                   <StageViz variant={current} />
                 </div>
               </div>
@@ -178,7 +181,7 @@ export function BusinessAnalyticsPipeline({
                 </span>
                 <div className="rounded-2xl border border-brand/25 bg-white/[0.03] p-5">
                   <span className="font-mono text-[11px] font-bold text-brand">STAGE {String(i + 1).padStart(2, "0")}</span>
-                  <h3 className="text-lg font-bold text-ink">{s.name}</h3>
+                  <h3 className="text-lg font-bold text-ink">{nameAt(i)}</h3>
                 </div>
               </div>
             ))}

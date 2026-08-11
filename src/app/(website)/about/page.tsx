@@ -9,18 +9,19 @@ export const revalidate = 3600;
 export default async function AboutPage() {
   const data = await getPageContent("about");
   const page = mergePageContent(data, FALLBACK_ABOUT);
+  const cta = { ...FALLBACK_ABOUT.cta, ...(page.cta || {}) };
 
   return (
     <>
       <AboutClientContent pageData={page} />
 
       <CTASection
-        title="Let's Build Smarter Systems Together"
-        description="Whether you are a corporate organization seeking automation and analytics, or an institution wanting industry-ready outcomes, KVJ Analytics is ready to support your transformation journey."
-        primaryCtaText="Contact Our Team"
-        primaryCtaHref="/contact"
-        secondaryCtaText="View Solutions"
-        secondaryCtaHref="/corporate"
+        title={cta.title}
+        description={cta.description}
+        primaryCtaText={cta.primaryText}
+        primaryCtaHref={cta.primaryHref || "/contact"}
+        secondaryCtaText={cta.secondaryText || undefined}
+        secondaryCtaHref={cta.secondaryHref || undefined}
       />
     </>
   );

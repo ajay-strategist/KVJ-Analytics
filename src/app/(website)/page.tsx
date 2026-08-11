@@ -80,7 +80,11 @@ export default async function HomePage() {
 
       <IndustryGrid eyebrow="Industries" heading={industries.heading} items={industries.items} />
 
-      <BusinessAnalyticsPipeline eyebrow="Our Approach" heading={approach.heading} />
+      <BusinessAnalyticsPipeline
+        eyebrow="Our Approach"
+        heading={approach.heading}
+        stageNames={(approach.steps || []).map((s: { title?: string }) => s.title || "")}
+      />
 
       {successStories?.items?.length ? (
         <V3SuccessStories

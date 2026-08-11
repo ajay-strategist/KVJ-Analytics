@@ -4,6 +4,7 @@ import React, { useRef, useState } from "react";
 import { ArrowRight, Layers, Cpu, Check } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { renderHologram } from "./ProductHolograms";
+import { SandboxedAnimation } from "./SandboxedAnimation";
 
 interface ProductCardProps {
   name: string;
@@ -13,6 +14,7 @@ interface ProductCardProps {
   keyFeatures: string[];
   isGradeScope: boolean;
   animationStyle?: string;
+  customAnimationHtml?: string;
   delay?: number;
 }
 
@@ -24,6 +26,7 @@ export function ProductCard({
   keyFeatures,
   isGradeScope,
   animationStyle,
+  customAnimationHtml,
 }: ProductCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [mousePos, setMousePos] = useState({ x: -1000, y: -1000 });
@@ -180,7 +183,9 @@ export function ProductCard({
           )}
 
           {/* 3D Hologram Projection at the top */}
-          {renderHologram(animationStyle, isGradeScope)}
+          {animationStyle === "custom" && customAnimationHtml
+            ? <SandboxedAnimation html={customAnimationHtml} className="h-full w-full" />
+            : renderHologram(animationStyle, isGradeScope)}
 
           <div 
             className="relative flex items-center gap-4 mb-6 text-left"

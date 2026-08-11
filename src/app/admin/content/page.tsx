@@ -55,6 +55,24 @@ interface HomeData {
   finalCta: { title: string; description: string; primaryCta: CtaItem; secondaryCta: CtaItem };
 }
 
+/** Reusable bottom call-to-action block shared by About / Corporate / Education. */
+interface CtaData {
+  title: string;
+  description: string;
+  primaryText: string;
+  primaryHref: string;
+  secondaryText?: string;
+  secondaryHref?: string;
+}
+
+/** Side "request/partner" card on Product & Education detail pages. */
+interface SideCardData {
+  title: string;
+  description: string;
+  bullets: string[];
+  buttonText: string;
+}
+
 interface AboutData {
   title: string;
   intro: string;
@@ -62,6 +80,7 @@ interface AboutData {
   reachLine: string;
   impact: string[];
   vision: { heading: string; body: string };
+  cta?: CtaData;
 }
 
 interface ServiceItem {
@@ -76,6 +95,7 @@ interface CorporateData {
   strapline: string;
   intro: string;
   services: ServiceItem[];
+  cta?: CtaData;
 }
 
 interface EducationData {
@@ -83,6 +103,8 @@ interface EducationData {
   strapline: string;
   intro: string;
   services: ServiceItem[];
+  cta?: CtaData;
+  partnerCard?: SideCardData;
 }
 
 interface ProductItem {
@@ -91,12 +113,33 @@ interface ProductItem {
   tagline: string;
   description: string;
   keyFeatures: string[];
+  animationStyle?: string;       // preset key from the built-in library
+  customAnimationHtml?: string;  // optional pasted HTML/SVG (rendered sandboxed)
 }
+
+/** Built-in animation presets available to pick per card (matches HOLOGRAM_MAP). */
+const ANIMATION_PRESETS: { value: string; label: string }[] = [
+  { value: "", label: "Default (auto)" },
+  { value: "protrix", label: "Microchip / Protrix" },
+  { value: "grade-scope", label: "Bar Chart / GradeScope" },
+  { value: "globe-database", label: "Globe + Database" },
+  { value: "secure-shield", label: "Security Shield" },
+  { value: "data-pipeline", label: "Data Pipeline" },
+  { value: "ai-brain", label: "AI Brain" },
+  { value: "executive-radar", label: "Executive Radar" },
+  { value: "financial-donut", label: "Financial Donut" },
+  { value: "performance-gauge", label: "Performance Gauge" },
+  { value: "predictive-forecast", label: "Predictive Forecast" },
+  { value: "tech-ecosystem", label: "Tech Ecosystem" },
+  { value: "time-scheduler", label: "Time Scheduler" },
+  { value: "custom", label: "Custom (paste HTML below)" },
+];
 
 interface ProductsPageData {
   heading: string;
   intro: string;
   products: ProductItem[];
+  demoCard?: SideCardData;
 }
 
 interface ContactData {
@@ -354,6 +397,30 @@ function ProductList({
             <StringList label="Key Platform Features" items={prod.keyFeatures || []} onChange={v => {
               const n = [...items]; n[i] = { ...n[i], keyFeatures: v }; onChange(n);
             }} placeholder="Add platform feature…" />
+
+            {/* Animation slot — pick a preset from the library, or paste custom HTML */}
+            <div>
+              <label className="block text-[11px] font-bold uppercase tracking-wider text-slate mb-1">Card Animation</label>
+              <select
+                value={prod.animationStyle || ""}
+                onChange={e => { const n = [...items]; n[i] = { ...n[i], animationStyle: e.target.value }; onChange(n); }}
+                className="w-full px-3 py-2 rounded-input border border-line bg-white focus:outline-none focus:ring-2 focus:ring-brand text-sm"
+              >
+                {ANIMATION_PRESETS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+              </select>
+              {prod.animationStyle === "custom" && (
+                <>
+                  <textarea
+                    value={prod.customAnimationHtml || ""}
+                    onChange={e => { const n = [...items]; n[i] = { ...n[i], customAnimationHtml: e.target.value }; onChange(n); }}
+                    rows={5}
+                    placeholder="Paste HTML/SVG animation (e.g. generated with Gemini). It renders in a sandboxed frame."
+                    className="mt-2 w-full px-3 py-2 rounded-input border border-line bg-surface/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand text-xs font-mono resize-y"
+                  />
+                  <p className="mt-1 text-[11px] text-slate">Runs isolated in a sandboxed frame — it can&apos;t affect the rest of the site.</p>
+                </>
+              )}
+            </div>
           </div>
         ))}
         <button type="button" onClick={() => onChange([...items, { name: "", slug: "", tagline: "", description: "", keyFeatures: [] }])}
@@ -516,6 +583,46 @@ function HomeEditor({
 
 // ─── About Editor ────────────────────────────────────────────────────────────
 
+const DEFAULT_CTA: CtaData = {
+  title: "", description: "", primaryText: "", primaryHref: "/contact", secondaryText: "", secondaryHref: "",
+};
+
+/** Editor for the shared bottom call-to-action block. */
+function CtaEditor({ cta, onChange }: { cta?: CtaData; onChange: (c: CtaData) => void }) {
+  const c = { ...DEFAULT_CTA, ...(cta || {}) };
+  const set = <K extends keyof CtaData>(k: K, v: CtaData[K]) => onChange({ ...c, [k]: v });
+  return (
+    <SectionCard title="Bottom Call-to-Action">
+      <Field label="CTA Heading" value={c.title} onChange={v => set("title", v)} />
+      <Field label="CTA Description" value={c.description} rows={2} onChange={v => set("description", v)} />
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Primary Button Label" value={c.primaryText} onChange={v => set("primaryText", v)} />
+        <Field label="Primary Button Link" value={c.primaryHref} onChange={v => set("primaryHref", v)} />
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Secondary Button Label (optional)" value={c.secondaryText ?? ""} onChange={v => set("secondaryText", v)} />
+        <Field label="Secondary Button Link (optional)" value={c.secondaryHref ?? ""} onChange={v => set("secondaryHref", v)} />
+      </div>
+    </SectionCard>
+  );
+}
+
+const DEFAULT_SIDE_CARD: SideCardData = { title: "", description: "", bullets: [], buttonText: "" };
+
+/** Editor for a Product/Education detail-page side card. */
+function SideCardEditor({ title, card, onChange }: { title: string; card?: SideCardData; onChange: (c: SideCardData) => void }) {
+  const c = { ...DEFAULT_SIDE_CARD, ...(card || {}) };
+  const set = <K extends keyof SideCardData>(k: K, v: SideCardData[K]) => onChange({ ...c, [k]: v });
+  return (
+    <SectionCard title={title}>
+      <Field label="Card Heading" value={c.title} onChange={v => set("title", v)} />
+      <Field label="Card Description" value={c.description} rows={3} onChange={v => set("description", v)} />
+      <StringList label="Bullet points" items={c.bullets} onChange={v => set("bullets", v)} placeholder="Add a bullet…" />
+      <Field label="Button Label" value={c.buttonText} onChange={v => set("buttonText", v)} />
+    </SectionCard>
+  );
+}
+
 function AboutEditor({
   data, onChange,
 }: { data: AboutData; onChange: (d: AboutData) => void }) {
@@ -542,6 +649,7 @@ function AboutEditor({
         <Field label="Vision Heading" value={data.vision.heading} onChange={v => set("vision", { ...data.vision, heading: v })} />
         <Field label="Vision Description" value={data.vision.body} rows={3} onChange={v => set("vision", { ...data.vision, body: v })} />
       </SectionCard>
+      <CtaEditor cta={data.cta} onChange={v => set("cta", v)} />
     </div>
   );
 }
@@ -567,6 +675,7 @@ function CorporateEditor({
       <SectionCard title="Corporate Services list">
         <ServiceList label="Edit service card contents" items={data.services || []} onChange={v => set("services", v)} />
       </SectionCard>
+      <CtaEditor cta={data.cta} onChange={v => set("cta", v)} />
     </div>
   );
 }
@@ -592,6 +701,8 @@ function EducationEditor({
       <SectionCard title="Educational Solutions list">
         <ServiceList label="Edit solution cards" items={data.services || []} onChange={v => set("services", v)} />
       </SectionCard>
+      <SideCardEditor title="Detail-page “Partner With Us” card" card={data.partnerCard} onChange={v => set("partnerCard", v)} />
+      <CtaEditor cta={data.cta} onChange={v => set("cta", v)} />
     </div>
   );
 }
@@ -616,6 +727,7 @@ function ProductsEditor({
       <SectionCard title="Software Products list">
         <ProductList label="Edit software products" items={data.products || []} onChange={v => set("products", v)} />
       </SectionCard>
+      <SideCardEditor title="Detail-page “Request a Demo” card" card={data.demoCard} onChange={v => set("demoCard", v)} />
     </div>
   );
 }
@@ -690,6 +802,36 @@ function SiteSettingsEditor({
         <Field label="Footer Description" value={data.footerDescription || ""} rows={3} onChange={v => onChange({ ...data, footerDescription: v })} />
         <Field label="Footer Tagline" value={data.footerTagline || ""} onChange={v => onChange({ ...data, footerTagline: v })} />
       </SectionCard>
+
+      <SectionCard title="Page Visibility (turn tabs on / off)">
+        <p className="text-xs text-slate">Turn a page OFF to instantly hide it from the menu &amp; footer and block its link. Home can&apos;t be turned off. Changes apply on save.</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          {[
+            { href: "/about", label: "About Us" },
+            { href: "/corporate", label: "Corporate Solutions" },
+            { href: "/education", label: "Educational Solutions" },
+            { href: "/products", label: "Products" },
+            { href: "/training", label: "Training" },
+            { href: "/blog", label: "Blog" },
+            { href: "/contact", label: "Contact" },
+          ].map(({ href, label }) => {
+            const on = (data.pageVisibility?.[href] ?? true) !== false;
+            return (
+              <div key={href} className="flex items-center justify-between rounded-lg border border-line bg-surface/40 px-3.5 py-2.5">
+                <span className="text-sm font-semibold text-ink">{label}</span>
+                <button
+                  type="button"
+                  aria-label={`Toggle ${label}`}
+                  onClick={() => onChange({ ...data, pageVisibility: { ...(data.pageVisibility || {}), [href]: !on } })}
+                  className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${on ? "bg-brand" : "bg-slate/40"}`}
+                >
+                  <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${on ? "left-[22px]" : "left-0.5"}`} />
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      </SectionCard>
     </div>
   );
 }
@@ -702,6 +844,17 @@ function TrainingHubEditor({
   const set = (k: string, v: unknown) => onChange({ ...data, [k]: v });
   const setCta = (k: string, v: string) => onChange({ ...data, cta: { ...(data.cta ?? {}), [k]: v } });
   const cta = data.cta ?? {};
+
+  // Journey (curriculum-flow) + Tools (ecosystem) — arrays of small objects.
+  const journey = data.journey ?? FALLBACK_TRAINING_HUB.journey;
+  const tools = data.tools ?? FALLBACK_TRAINING_HUB.tools;
+  const setJourney = (patch: any) => onChange({ ...data, journey: { ...journey, ...patch } });
+  const setTools = (patch: any) => onChange({ ...data, tools: { ...tools, ...patch } });
+  const setStage = (i: number, patch: any) =>
+    setJourney({ stages: journey.stages.map((s: any, j: number) => (j === i ? { ...s, ...patch } : s)) });
+  const setItem = (i: number, patch: any) =>
+    setTools({ items: tools.items.map((s: any, j: number) => (j === i ? { ...s, ...patch } : s)) });
+
   return (
     <div className="space-y-6">
       <div className="bg-white border border-line rounded-card p-6 shadow-soft space-y-4">
@@ -724,6 +877,64 @@ function TrainingHubEditor({
           <Field label="Secondary button text" value={cta.secondaryCtaText || ""} onChange={v => setCta("secondaryCtaText", v)} placeholder={FALLBACK_TRAINING_HUB.cta.secondaryCtaText} />
           <Field label="Secondary button link" value={cta.secondaryCtaHref || ""} onChange={v => setCta("secondaryCtaHref", v)} placeholder={FALLBACK_TRAINING_HUB.cta.secondaryCtaHref} />
         </div>
+      </div>
+
+      {/* The Learning Journey (curriculum flow) */}
+      <div className="bg-white border border-line rounded-card p-6 shadow-soft space-y-4">
+        <h3 className="text-xs font-bold uppercase tracking-widest text-slate border-b border-line pb-2">The Learning Journey</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <Field label="Eyebrow" value={journey.eyebrow || ""} onChange={v => setJourney({ eyebrow: v })} />
+          <Field label="Heading" value={journey.heading || ""} onChange={v => setJourney({ heading: v })} />
+          <Field label="Subtext" value={journey.subtext || ""} onChange={v => setJourney({ subtext: v })} />
+        </div>
+        <div className="space-y-3">
+          {(journey.stages || []).map((s: any, i: number) => (
+            <div key={i} className="rounded-xl border border-line bg-surface/40 p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold uppercase tracking-wide text-slate">Stage #{i + 1}</span>
+                <button type="button" onClick={() => setJourney({ stages: journey.stages.filter((_: any, j: number) => j !== i) })}
+                  className="text-slate hover:text-error"><Trash2 className="w-4 h-4" /></button>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <Field label="Step no." value={s.step || ""} onChange={v => setStage(i, { step: v })} />
+                <Field label="Name" value={s.name || ""} onChange={v => setStage(i, { name: v })} />
+                <Field label="Icon (lucide name)" value={s.icon || ""} onChange={v => setStage(i, { icon: v })} />
+              </div>
+              <Field label="Description" value={s.desc || ""} onChange={v => setStage(i, { desc: v })} rows={2} />
+            </div>
+          ))}
+          <button type="button" onClick={() => setJourney({ stages: [...(journey.stages || []), { step: String((journey.stages?.length || 0) + 1).padStart(2, "0"), name: "", desc: "", icon: "Sparkles" }] })}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-line px-3 py-2 text-[13px] font-semibold text-slate hover:text-brand hover:border-brand/40"><Plus className="w-4 h-4" />Add stage</button>
+        </div>
+      </div>
+
+      {/* Integrated Learning Tools (ecosystem) */}
+      <div className="bg-white border border-line rounded-card p-6 shadow-soft space-y-4">
+        <h3 className="text-xs font-bold uppercase tracking-widest text-slate border-b border-line pb-2">Integrated Learning Tools</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <Field label="Eyebrow" value={tools.eyebrow || ""} onChange={v => setTools({ eyebrow: v })} />
+          <Field label="Heading" value={tools.heading || ""} onChange={v => setTools({ heading: v })} />
+          <Field label="Subtext" value={tools.subtext || ""} onChange={v => setTools({ subtext: v })} />
+        </div>
+        <div className="space-y-3">
+          {(tools.items || []).map((t: any, i: number) => (
+            <div key={i} className="rounded-xl border border-line bg-surface/40 p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold uppercase tracking-wide text-slate">Tool #{i + 1}</span>
+                <button type="button" onClick={() => setTools({ items: tools.items.filter((_: any, j: number) => j !== i) })}
+                  className="text-slate hover:text-error"><Trash2 className="w-4 h-4" /></button>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <Field label="Label" value={t.label || ""} onChange={v => setItem(i, { label: v })} />
+                <Field label="Icon (lucide name)" value={t.icon || ""} onChange={v => setItem(i, { icon: v })} />
+              </div>
+              <Field label="Description" value={t.desc || ""} onChange={v => setItem(i, { desc: v })} rows={2} />
+            </div>
+          ))}
+          <button type="button" onClick={() => setTools({ items: [...(tools.items || []), { label: "", desc: "", icon: "Sparkles" }] })}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-line px-3 py-2 text-[13px] font-semibold text-slate hover:text-brand hover:border-brand/40"><Plus className="w-4 h-4" />Add tool</button>
+        </div>
+        <p className="text-xs text-slate">Icon names use the lucide-react set (e.g. <code>CheckSquare</code>, <code>Clock</code>, <code>Target</code>, <code>GraduationCap</code>, <code>Play</code>, <code>Sparkles</code>).</p>
       </div>
     </div>
   );
@@ -894,7 +1105,8 @@ export default function AdminContentPage() {
             vision: {
               heading: stored.vision?.heading || FALLBACK_ABOUT.vision.heading,
               body: stored.vision?.body || FALLBACK_ABOUT.vision.body,
-            }
+            },
+            cta: { ...FALLBACK_ABOUT.cta, ...(stored.cta ?? {}) },
           });
         } else if (selectedSlug === "corporate") {
           setCorporateData({
@@ -902,6 +1114,7 @@ export default function AdminContentPage() {
             strapline: stored.strapline || FALLBACK_CORPORATE.strapline,
             intro: stored.intro || FALLBACK_CORPORATE.intro,
             services: stored.services?.length ? stored.services : FALLBACK_CORPORATE.services,
+            cta: { ...FALLBACK_CORPORATE.cta, ...(stored.cta ?? {}) },
           });
         } else if (selectedSlug === "education") {
           setEducationData({
@@ -909,12 +1122,15 @@ export default function AdminContentPage() {
             strapline: stored.strapline || FALLBACK_EDUCATION.strapline,
             intro: stored.intro || FALLBACK_EDUCATION.intro,
             services: stored.services?.length ? stored.services : FALLBACK_EDUCATION.services,
+            cta: { ...FALLBACK_EDUCATION.cta, ...(stored.cta ?? {}) },
+            partnerCard: { ...FALLBACK_EDUCATION.partnerCard, ...(stored.partnerCard ?? {}) },
           });
         } else if (selectedSlug === "products") {
           setProductsData({
             heading: stored.heading || FALLBACK_PRODUCTS_PAGE.heading,
             intro: stored.intro || FALLBACK_PRODUCTS_PAGE.intro,
             products: stored.products?.length ? stored.products : FALLBACK_PRODUCTS_PAGE.products,
+            demoCard: { ...FALLBACK_PRODUCTS_PAGE.demoCard, ...(stored.demoCard ?? {}) },
           });
         } else if (selectedSlug === "contact") {
           setContactData({
@@ -930,6 +1146,8 @@ export default function AdminContentPage() {
             headingAccent: stored.headingAccent || FALLBACK_TRAINING_HUB.headingAccent,
             intro: stored.intro || FALLBACK_TRAINING_HUB.intro,
             cta: { ...FALLBACK_TRAINING_HUB.cta, ...(stored.cta ?? {}) },
+            journey: stored.journey?.stages?.length ? stored.journey : FALLBACK_TRAINING_HUB.journey,
+            tools: stored.tools?.items?.length ? stored.tools : FALLBACK_TRAINING_HUB.tools,
           });
         } else if (selectedSlug === "site-settings") {
           setSiteSettingsData({
@@ -948,6 +1166,7 @@ export default function AdminContentPage() {
             footerColumns: stored.footerColumns || FALLBACK_SITE_SETTINGS.footerColumns,
             quickLinks: stored.quickLinks || FALLBACK_SITE_SETTINGS.quickLinks,
             socialLinks: stored.socialLinks || FALLBACK_SITE_SETTINGS.socialLinks,
+            pageVisibility: { ...FALLBACK_SITE_SETTINGS.pageVisibility, ...(stored.pageVisibility ?? {}) },
           });
         } else {
           setGenericData(stored);

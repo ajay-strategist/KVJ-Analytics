@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { Analytics } from "@/components/Analytics";
 import { SITE_URL, SITE_NAME, organizationSchema } from "@/lib/seo";
+import { CURRENT_EXP_YEARS } from "@/lib/constants";
 
 // Webandcrafts primary font pairing: Plus Jakarta Sans for both display and body.
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -19,7 +20,7 @@ export const metadata: Metadata = {
     template: "%s | KVJ Analytics",
   },
   description:
-    "KVJ Analytics delivers Power BI dashboards, Excel & report automation, and data analytics consulting — plus corporate, college & individual training. 16+ years, based in Cochin, serving India, UAE, Oman, USA & Europe.",
+    `KVJ Analytics delivers Power BI dashboards, Excel & report automation, and data analytics consulting — plus corporate, college & individual training. ${CURRENT_EXP_YEARS}+ years, based in Cochin, serving India, UAE, Oman, USA & Europe.`,
   keywords: [
     "Power BI training", "Excel training", "report automation", "data analytics consulting",
     "corporate training", "college training", "Power BI consulting", "dashboard development",

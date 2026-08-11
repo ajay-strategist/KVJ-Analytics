@@ -25,6 +25,7 @@ export default async function EducationalSolutionsPage() {
   const pageData = await getPageContent("education");
   const page = mergePageContent(pageData, FALLBACK_EDUCATION);
   const services = page.services && page.services.length > 0 ? page.services : FALLBACK_EDUCATION.services;
+  const cta = { ...FALLBACK_EDUCATION.cta, ...(page.cta || {}) };
 
   return (
     <>
@@ -141,23 +142,23 @@ export default async function EducationalSolutionsPage() {
               />
               
               <h4 className="relative z-10 text-2xl md:text-3xl font-medium text-white mb-4">
-                Looking to run a certificate program or skill lab?
+                {cta.title}
               </h4>
               <p className="relative z-10 text-base text-slate font-light mb-8 max-w-lg mx-auto leading-relaxed">
-                We partner with academic institutions to provide practical workshops, syllabus updates, and assessment platforms.
+                {cta.description}
               </p>
-              
+
               <div className="relative z-10 inline-block overflow-visible mt-2">
                 {/* Ripple rings */}
                 <span className="absolute -inset-2 rounded-full border border-[#43F5FF]/25 animate-[ripple_3s_ease-out_infinite] pointer-events-none z-0" />
                 <span className="absolute -inset-4 rounded-full border border-[#3A7BFF]/15 animate-[ripple_3s_ease-out_infinite_1.5s] pointer-events-none z-0" />
-                
-                <Button 
-                  href="/contact" 
-                  variant="primary" 
+
+                <Button
+                  href={cta.primaryHref || "/contact"}
+                  variant="primary"
                   className="relative z-10 shadow-[0_0_20px_rgba(67,245,255,0.15)] hover:shadow-[0_0_35px_rgba(67,245,255,0.35)]"
                 >
-                  Request an Institutional Partnership Proposal
+                  {cta.primaryText}
                 </Button>
               </div>
             </div>

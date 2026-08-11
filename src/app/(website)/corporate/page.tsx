@@ -25,6 +25,7 @@ export default async function CorporateSolutionsPage() {
   const pageData = await getPageContent("corporate");
   const page = mergePageContent(pageData, FALLBACK_CORPORATE);
   const services = page.services && page.services.length > 0 ? page.services : FALLBACK_CORPORATE.services;
+  const cta = { ...FALLBACK_CORPORATE.cta, ...(page.cta || {}) };
 
   return (
     <>
@@ -133,23 +134,23 @@ export default async function CorporateSolutionsPage() {
               />
               
               <h4 className="relative z-10 text-2xl md:text-3xl font-medium text-white mb-4">
-                Looking for custom automation, reports or dashboards?
+                {cta.title}
               </h4>
               <p className="relative z-10 text-base text-slate font-light mb-8 max-w-lg mx-auto leading-relaxed">
-                We provide full-spectrum consultation, audit, development, and training integration tailored to your company.
+                {cta.description}
               </p>
-              
+
               <div className="relative z-10 inline-block overflow-visible mt-2">
                 {/* Ripple rings */}
                 <span className="absolute -inset-2 rounded-full border border-[#43F5FF]/20 animate-[ripple_3s_ease-out_infinite] pointer-events-none z-0" />
                 <span className="absolute -inset-4 rounded-full border border-[#3A7BFF]/10 animate-[ripple_3s_ease-out_infinite_1.5s] pointer-events-none z-0" />
-                
-                <Button 
-                  href="/contact" 
-                  variant="primary" 
+
+                <Button
+                  href={cta.primaryHref || "/contact"}
+                  variant="primary"
                   className="relative z-10 shadow-[0_0_20px_rgba(67,245,255,0.15)] hover:shadow-[0_0_35px_rgba(67,245,255,0.35)]"
                 >
-                  Schedule a Free Discovery Session
+                  {cta.primaryText}
                 </Button>
               </div>
             </div>

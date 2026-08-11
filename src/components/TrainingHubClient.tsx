@@ -35,6 +35,14 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { supabase } from "@/lib/supabase";
 import { CTASection } from "@/components/ui/CTASection";
+import { FALLBACK_TRAINING_HUB } from "@/lib/constants";
+
+// Map CMS icon-name strings → lucide components (for admin-editable journey/tools).
+const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+  AlertCircle, Database, Settings, BarChart3, Gauge, FileSpreadsheet, TrendingUp,
+  CheckSquare, Clock, Target, GraduationCap, Play, Sparkles, BookOpen, Cpu, Laptop, Users, FileText, Code, Compass,
+};
+const iconOf = (name?: string) => ICONS[name || ""] || Sparkles;
  
 interface Category {
   id: string;
@@ -59,6 +67,18 @@ interface TrainingHubClientProps {
       primaryCtaHref: string;
       secondaryCtaText: string;
       secondaryCtaHref: string;
+    };
+    journey?: {
+      eyebrow?: string;
+      heading?: string;
+      subtext?: string;
+      stages?: { step: string; name: string; desc: string; icon: string }[];
+    };
+    tools?: {
+      eyebrow?: string;
+      heading?: string;
+      subtext?: string;
+      items?: { label: string; desc: string; icon: string }[];
     };
   };
 }
@@ -269,156 +289,69 @@ export function TrainingHubClient({ categories, hub }: TrainingHubClientProps) {
         }
       `}} />
 
-      {/* 1. HERO SECTION */}
-      <section className="relative min-h-[92vh] flex items-center py-16 overflow-hidden border-b border-line">
-        {/* Living background mesh & glow */}
-        <div className="absolute top-[10%] left-[-15%] w-[600px] h-[600px] bg-[#00F0FF]/6 rounded-full blur-[140px] pointer-events-none animate-pulse duration-[10s]" />
-        <div className="absolute bottom-[10%] right-[-15%] w-[600px] h-[600px] bg-[#0072FF]/8 rounded-full blur-[160px] pointer-events-none animate-pulse duration-[12s]" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:4rem_4rem] pointer-events-none" />
- 
+      {/* 1. HERO SECTION — editorial, professional, text-forward (no mock UI) */}
+      <section className="relative flex items-center py-24 md:py-32 overflow-hidden border-b border-line">
+        {/* Restrained ambient field: one soft aurora, a masked hairline grid */}
+        <div className="absolute -top-[12%] left-1/2 -translate-x-1/2 w-[900px] h-[520px] bg-[#00F0FF]/[0.05] rounded-full blur-[170px] pointer-events-none" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.012)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.012)_1px,transparent_1px)] bg-[size:5rem_5rem] [mask-image:radial-gradient(ellipse_60%_55%_at_50%_35%,black,transparent)] pointer-events-none" />
+
         <Container className="relative z-10 w-full">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-            {/* Left Col (7/12 Width): Text block & CTA */}
-            <div className="lg:col-span-7 flex flex-col justify-center space-y-8 text-left">
-              <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-[#43F5FF] px-4 py-2 bg-[#43F5FF]/10 rounded-full w-fit border border-[#43F5FF]/20 animate-pulse">
+          <div className="max-w-4xl">
+            {/* Calm eyebrow */}
+            <div className="flex items-center gap-3 animate-[fade-up_1s_cubic-bezier(0.16,1,0.3,1)]">
+              <span className="h-px w-10 bg-gradient-to-r from-transparent to-[#43F5FF]/70" />
+              <span className="text-[11px] font-mono font-bold uppercase tracking-[0.3em] text-[#43F5FF]">
                 {hub.eyebrow}
               </span>
-              
-              <h1 className="font-display font-bold text-4xl sm:text-5xl lg:text-[70px] leading-[1.05] tracking-tight text-white">
-                <span className="block overflow-hidden">
-                  <span className="inline-block animate-[fade-up_1.2s_cubic-bezier(0.16,1,0.3,1)]">
-                    {hub.headingLead || "Training"}
-                  </span>
-                </span>
-                <span className="block overflow-hidden text-transparent bg-clip-text bg-gradient-to-r from-brand via-corporate to-brand animate-[signature-flow_6s_linear_infinite] bg-[size:200%_auto] pb-1">
-                  <span className="inline-block animate-[fade-up_1.2s_cubic-bezier(0.16,1,0.3,1)_150ms_both]">
-                    {hub.headingAccent || "Programs"}
-                  </span>
-                </span>
-              </h1>
- 
-              <p className="text-slate font-light text-lg md:text-xl leading-relaxed max-w-xl animate-[fade-up_1.2s_cubic-bezier(0.16,1,0.3,1)_300ms_both]">
-                {hub.intro}
-              </p>
- 
-              {/* Premium Student Portal CTA block */}
-              <div className="animate-[fade-up_1.2s_cubic-bezier(0.16,1,0.3,1)_450ms_both]">
-                {user ? (
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-4 mt-2">
-                    <Button
-                      variant="accent"
-                      onClick={() => router.push("/account")}
-                      className="py-3 px-8 text-[15px] flex items-center gap-2.5 rounded-full shadow-[0_8px_25px_rgba(67,245,255,0.3)] w-full sm:w-auto hover:scale-105 active:scale-95 transition-all duration-300 font-semibold"
-                    >
-                      <User className="w-4 h-4 text-white" />
-                      <span>Access Student Dashboard</span>
-                    </Button>
-                    <span className="text-xs text-zinc-400 font-mono">
-                      Logged in as: <span className="text-white font-bold">{user.email}</span>
-                    </span>
-                  </div>
-                ) : (
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5 mt-2">
-                    <Button
-                      variant="accent"
-                      onClick={() => router.push("/signin?redirect=/training")}
-                      className="py-3 px-8 text-[15px] flex items-center gap-2.5 rounded-full shadow-[0_8px_25px_rgba(67,245,255,0.35)] w-full sm:w-auto hover:scale-105 active:scale-95 transition-all duration-300 font-semibold group/login-btn"
-                    >
-                      <LogIn className="w-4 h-4 text-white group-hover/login-btn:rotate-12 transition-transform duration-300" />
-                      <span>Student Portal Login</span>
-                    </Button>
-                    <p className="text-xs text-zinc-400 font-light leading-relaxed max-w-xs">
-                      Already enrolled? Log in to launch your course player, assessments, and grades.
-                    </p>
-                  </div>
-                )}
-              </div>
             </div>
- 
-            {/* Right Col (5/12 Width): Premium Floating Glassmorphic UI Mockup */}
-            <div className="lg:col-span-5 flex items-center justify-center relative select-none">
-              <div className="relative w-full max-w-[420px] h-[390px] animate-float">
-                {/* Spotlight background glow */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-[#43F5FF]/10 rounded-full blur-[100px] pointer-events-none" />
-                
-                {/* SVG connection lines between widgets */}
-                <svg className="absolute inset-0 w-full h-full pointer-events-none z-0 overflow-visible" viewBox="0 0 400 400">
-                  <defs>
-                    <linearGradient id="glowLineGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#43F5FF" stopOpacity="0.45" />
-                      <stop offset="50%" stopColor="#3A7BFF" stopOpacity="0.25" />
-                      <stop offset="100%" stopColor="#16E6D8" stopOpacity="0.45" />
-                    </linearGradient>
-                  </defs>
-                  
-                  {/* Connection from Telemetry (top-left) to Assignments (mid-right) */}
-                  <path 
-                    d="M 130 90 C 220 90, 200 180, 290 180" 
-                    fill="none" 
-                    stroke="url(#glowLineGrad)" 
-                    strokeWidth="1.5" 
-                    strokeDasharray="6, 6" 
-                    className="animate-[dash_20s_linear_infinite]" 
-                  />
-                  
-                  {/* Connection from Assignments (mid-right) to Badge (bottom-left/mid) */}
-                  <path 
-                    d="M 290 220 C 200 220, 220 310, 140 310" 
-                    fill="none" 
-                    stroke="url(#glowLineGrad)" 
-                    strokeWidth="1.5" 
-                    strokeDasharray="6, 6" 
-                    className="animate-[dash_20s_linear_infinite_reverse]" 
-                  />
-                </svg>
 
-                {/* Floating Widget 1: Student Analytics Progress Card */}
-                <div className="absolute top-4 left-0 w-64 glass-panel rounded-2xl p-5 shadow-lg border border-line z-20 hover:border-brand/40 transition-colors duration-300 float-a">
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-[10px] font-mono font-bold tracking-widest text-[#43F5FF] uppercase">Course Telemetry</span>
-                    <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="relative w-14 h-14 flex items-center justify-center shrink-0">
-                      <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
-                        <circle cx="18" cy="18" r="15.9" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="3" />
-                        <circle cx="18" cy="18" r="15.9" fill="none" stroke="#43F5FF" strokeWidth="3" strokeDasharray="78 100" strokeLinecap="round" className="animate-pulse" />
-                      </svg>
-                      <span className="absolute text-[11px] font-bold text-white font-mono">78%</span>
-                    </div>
-                    <div>
-                      <h4 className="text-white text-sm font-bold font-display leading-tight">Advanced Excel</h4>
-                      <p className="text-[10px] text-zinc-400 mt-1 font-light leading-none">Modules completed: 8 / 11</p>
-                    </div>
-                  </div>
-                </div>
- 
-                {/* Floating Widget 2: Certificate preview badge */}
-                <div className="absolute bottom-6 left-6 w-56 glass-panel rounded-2xl p-4 shadow-lg border border-line z-20 hover:border-brand/40 transition-colors duration-300 float-b">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-brand/10 border border-brand/20 flex items-center justify-center text-brand">
-                      <GraduationCap className="w-5 h-5 text-brand" />
-                    </div>
-                    <div className="text-left">
-                      <span className="text-[9px] font-mono text-zinc-400 font-bold uppercase tracking-wider block">Credential Generated</span>
-                      <h4 className="text-white text-xs font-bold font-display mt-0.5 leading-none">Verified Badge</h4>
-                    </div>
-                  </div>
-                </div>
- 
-                {/* Floating Widget 3: Live stats scoreboard */}
-                <div className="absolute top-32 right-0 w-48 glass-panel rounded-2xl p-4 shadow-lg border border-line z-20 hover:border-brand/40 transition-colors duration-300 float-c">
-                  <div className="text-left">
-                    <span className="text-[9px] font-mono text-zinc-400 font-bold uppercase tracking-wider">Assignments Solved</span>
-                    <div className="flex items-baseline gap-1.5 mt-1">
-                      <span className="text-2xl font-bold text-white font-mono">18</span>
-                      <span className="text-[10px] text-zinc-400 font-mono">/ 20</span>
-                    </div>
-                    <div className="h-1.5 w-full bg-white/5 rounded-full mt-2.5 overflow-hidden">
-                      <div className="h-full bg-gradient-to-r from-brand to-corporate rounded-full" style={{ width: "90%" }} />
-                    </div>
-                  </div>
-                </div>
+            <h1 className="mt-7 font-display font-bold text-[13vw] sm:text-7xl lg:text-[92px] leading-[0.95] tracking-[-0.025em] text-white">
+              <span className="block animate-[fade-up_1.1s_cubic-bezier(0.16,1,0.3,1)_80ms_both]">
+                {hub.headingLead || "Training"}
+              </span>
+              <span className="block pb-1 text-transparent bg-clip-text bg-gradient-to-r from-[#43F5FF] via-[#3A7BFF] to-[#16E6D8] animate-[fade-up_1.1s_cubic-bezier(0.16,1,0.3,1)_180ms_both]">
+                {hub.headingAccent || "Programs"}
+              </span>
+            </h1>
+
+            <p className="mt-7 text-slate font-light text-lg md:text-2xl leading-relaxed max-w-2xl animate-[fade-up_1.1s_cubic-bezier(0.16,1,0.3,1)_300ms_both]">
+              {hub.intro}
+            </p>
+
+            {/* Dual CTA */}
+            <div className="mt-10 flex flex-col sm:flex-row sm:items-center gap-4 animate-[fade-up_1.1s_cubic-bezier(0.16,1,0.3,1)_420ms_both]">
+              <Button
+                variant="accent"
+                onClick={() => router.push("/training/online-courses")}
+                className="py-3.5 px-8 text-[15px] flex items-center justify-center gap-2 rounded-full shadow-[0_8px_28px_rgba(67,245,255,0.28)] w-full sm:w-auto hover:scale-[1.03] active:scale-95 transition-transform duration-300 font-semibold group/explore"
+              >
+                <span>Explore Courses</span>
+                <ArrowRight className="w-4 h-4 group-hover/explore:translate-x-0.5 transition-transform duration-300" />
+              </Button>
+              <button
+                type="button"
+                onClick={() => router.push(user ? "/account" : "/signin?redirect=/training")}
+                className="py-3.5 px-7 text-[15px] flex items-center justify-center gap-2 rounded-full w-full sm:w-auto border border-line text-white/90 hover:text-white hover:border-brand/45 hover:bg-white/[0.03] transition-colors duration-300 font-semibold group/login"
+              >
+                {user ? <User className="w-4 h-4 text-brand" /> : <LogIn className="w-4 h-4 text-brand group-hover/login:rotate-12 transition-transform duration-300" />}
+                <span>{user ? "Student Dashboard" : "Student Portal Login"}</span>
+              </button>
+            </div>
+
+            {/* Curriculum strip — the real disciplines KVJ teaches (no fabricated data) */}
+            <div className="mt-14 pt-8 border-t border-line animate-[fade-up_1.1s_cubic-bezier(0.16,1,0.3,1)_560ms_both]">
+              <span className="text-[11px] font-mono font-bold uppercase tracking-[0.24em] text-zinc-500">
+                Core disciplines
+              </span>
+              <div className="mt-4 flex flex-wrap gap-2.5">
+                {["Advanced Excel", "Power BI", "Data Analytics", "Dashboards", "Report Automation", "Business Intelligence"].map((d, i) => (
+                  <span
+                    key={i}
+                    className="rounded-full border border-line bg-white/[0.03] px-4 py-2 text-[13.5px] font-medium text-zinc-300 hover:border-brand/40 hover:text-white transition-colors duration-300"
+                  >
+                    {d}
+                  </span>
+                ))}
               </div>
             </div>
           </div>
@@ -501,12 +434,12 @@ export function TrainingHubClient({ categories, hub }: TrainingHubClientProps) {
         
         <Container className="relative z-10 max-w-[960px]">
           <div className="max-w-2xl mb-20 text-left">
-            <span className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#43F5FF]">Curriculum Flow</span>
+            <span className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#43F5FF]">{hub?.journey?.eyebrow || "Curriculum Flow"}</span>
             <h2 className="font-display font-bold text-3xl md:text-5xl text-white mt-3 leading-tight tracking-tight">
-              The Learning Journey
+              {hub?.journey?.heading || "The Learning Journey"}
             </h2>
             <p className="text-zinc-400 font-light mt-3 text-sm md:text-base leading-relaxed">
-              Our structured approach translates absolute beginners into industry-ready data specialists.
+              {hub?.journey?.subtext || "Our structured approach translates absolute beginners into industry-ready data specialists."}
             </p>
           </div>
  
@@ -521,54 +454,11 @@ export function TrainingHubClient({ categories, hub }: TrainingHubClientProps) {
             />
  
             <div className="space-y-12 md:space-y-16">
-              {[
-                { 
-                  step: "01", 
-                  name: "Business Challenge", 
-                  desc: "Translate complex corporate problems into structured analytical frameworks.",
-                  icon: AlertCircle
-                },
-                { 
-                  step: "02", 
-                  name: "Data Collection", 
-                  desc: "Aggregate ERP database outputs, CRM tables, and live transactional streams.",
-                  icon: Database
-                },
-                { 
-                  step: "03", 
-                  name: "Data Engineering", 
-                  desc: "Build query views, clean null anomalies, and consolidate reporting directories.",
-                  icon: Settings
-                },
-                { 
-                  step: "04", 
-                  name: "Analytics", 
-                  desc: "Apply nesting, calculation tables, and advanced DAX loops.",
-                  icon: BarChart3
-                },
-                { 
-                  step: "05", 
-                  name: "Visualization", 
-                  desc: "Design high-density interactive dashboards with real-time KPI thresholds.",
-                  icon: Gauge
-                },
-                { 
-                  step: "06", 
-                  name: "Report Automation", 
-                  desc: "Eliminate copy-paste loops via robust macro schedules.",
-                  icon: FileSpreadsheet
-                },
-                { 
-                  step: "07", 
-                  name: "Business Decisions", 
-                  desc: "Empower decision-makers with confident, automated data intelligence.",
-                  icon: TrendingUp
-                }
-              ].map((item, idx) => {
+              {(((hub?.journey?.stages as { step: string; name: string; desc: string; icon: string }[]) || FALLBACK_TRAINING_HUB.journey.stages)).map((item, idx, arr) => {
                 // Determine active state based on scroll progress percentage
-                const nodeThreshold = (idx + 0.5) / 7;
+                const nodeThreshold = (idx + 0.5) / (arr.length || 7);
                 const active = journeyProgress >= nodeThreshold;
-                const Icon = item.icon;
+                const Icon = iconOf(item.icon);
                 
                 return (
                   <div key={idx} className="relative flex items-start pl-16 sm:pl-24 transition-all duration-500">
@@ -617,58 +507,26 @@ export function TrainingHubClient({ categories, hub }: TrainingHubClientProps) {
  
         <Container>
           <div className="text-center max-w-2xl mx-auto mb-16">
-            <span className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#43F5FF]">Ecosystem</span>
+            <span className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#43F5FF]">{hub?.tools?.eyebrow || "Ecosystem"}</span>
             <h2 className="font-display font-bold text-3xl md:text-5xl text-white mt-3 tracking-tight leading-tight">
-              Integrated Learning Tools
+              {hub?.tools?.heading || "Integrated Learning Tools"}
             </h2>
             <p className="text-zinc-400 font-light mt-4 text-base leading-relaxed">
-              Every course is backed by a robust suite of digital learning tools.
+              {hub?.tools?.subtext || "Every course is backed by a robust suite of digital learning tools."}
             </p>
           </div>
- 
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-            <FloatingFeatureCard 
-              icon={CheckSquare} 
-              label="Assignments" 
-              desc="Project-focused work solving real corporate models." 
-              delay={0}
-              floatClass="float-b"
-            />
-            <FloatingFeatureCard 
-              icon={Clock} 
-              label="Mock Tests" 
-              desc="Time-bound simulation of actual placement tests." 
-              delay={50}
-              floatClass="float-c"
-            />
-            <FloatingFeatureCard 
-              icon={Target} 
-              label="Assessments" 
-              desc="Automatic test checking and granular output evaluation." 
-              delay={100}
-              floatClass="float-a"
-            />
-            <FloatingFeatureCard 
-              icon={GraduationCap} 
-              label="Certificates" 
-              desc="Verified downloadable credential credentials with unique IDs." 
-              delay={150}
-              floatClass="float-b"
-            />
-            <FloatingFeatureCard 
-              icon={Play} 
-              label="Video Lessons" 
-              desc="Step-by-step video instructions mapping analytical loops." 
-              delay={200}
-              floatClass="float-a"
-            />
-            <FloatingFeatureCard 
-              icon={Sparkles} 
-              label="Progress Tracking" 
-              desc="Interactive visual scoring of your modular checklist." 
-              delay={250}
-              floatClass="float-b"
-            />
+            {(((hub?.tools?.items as { label: string; desc: string; icon: string }[]) || FALLBACK_TRAINING_HUB.tools.items)).map((t, i) => (
+              <FloatingFeatureCard
+                key={i}
+                icon={iconOf(t.icon)}
+                label={t.label}
+                desc={t.desc}
+                delay={i * 50}
+                floatClass={["float-a", "float-b", "float-c"][i % 3]}
+              />
+            ))}
           </div>
         </Container>
       </section>

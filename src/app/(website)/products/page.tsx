@@ -110,6 +110,7 @@ export default async function ProductsPage() {
                     keyFeatures={product.keyFeatures}
                     isGradeScope={isGradeScope}
                     animationStyle={product.animation_style || product.animationStyle}
+                    customAnimationHtml={product.customAnimationHtml || product.custom_animation_html}
                   />
                 </ScaleIn>
               );

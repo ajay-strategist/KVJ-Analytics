@@ -7,7 +7,10 @@ import { MetricCounter } from "@/components/ui/MetricCounter";
 import { LogoStrip } from "@/components/ui/LogoStrip";
 import { CTASection } from "@/components/ui/CTASection";
 import { ClientLogoCarousel } from "@/components/ui/ClientLogoCarousel";
+import { CaseStudiesSection, type CaseStudy } from "@/components/ui/CaseStudiesSection";
+import { TestimonialsSection, type Testimonial } from "@/components/ui/TestimonialsSection";
 import { getPageContent, mergePageContent } from "@/lib/content";
+import { supabase } from "@/lib/supabase";
 import { FALLBACK_IMPACT } from "@/lib/constants";
 import { GraduationCap, Briefcase, ShoppingBag, Users, Truck, Settings, TrendingUp, HelpCircle } from "lucide-react";
 
@@ -37,6 +40,20 @@ const getIndustryIcon = (industry: string) => {
 export default async function ImpactPage() {
   const page = mergePageContent(await getPageContent("impact"), FALLBACK_IMPACT);
   const clients: any[] = [];
+
+  // Admin-managed proof: case studies + testimonials (render only when present).
+  let caseStudies: CaseStudy[] = [];
+  let testimonials: Testimonial[] = [];
+  try {
+    const [cs, ts] = await Promise.all([
+      supabase.from("case_studies").select("*").eq("is_active", true).order("created_at", { ascending: false }),
+      supabase.from("testimonials").select("*").eq("is_active", true).order("created_at", { ascending: false }),
+    ]);
+    caseStudies = (cs.data as CaseStudy[]) ?? [];
+    testimonials = (ts.data as Testimonial[]) ?? [];
+  } catch {
+    /* keep empty on any error — sections self-hide */
+  }
 
   return (
     <>
@@ -97,6 +114,12 @@ export default async function ImpactPage() {
 
       {/* Dynamic Client Logo Carousel */}
       <ClientLogoCarousel clients={clients} />
+
+      {/* Case studies (admin-managed; self-hides when empty) */}
+      <CaseStudiesSection items={caseStudies} />
+
+      {/* Testimonials (admin-managed; self-hides when empty) */}
+      <TestimonialsSection items={testimonials} />
 
       {/* Closing CTA */}
       <CTASection

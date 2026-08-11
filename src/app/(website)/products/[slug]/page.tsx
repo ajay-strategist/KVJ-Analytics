@@ -33,6 +33,7 @@ export default async function ProductDetailPage({
   const description = product.description;
   const features = product.keyFeatures || [];
   const isGradeScope = slug === "grade-scope";
+  const demo = { ...FALLBACK_PRODUCTS_PAGE.demoCard, ...((page as any).demoCard || {}) };
 
   return (
     <Section background="default" className="bg-base relative overflow-hidden text-left">
@@ -105,18 +106,14 @@ export default async function ProductDetailPage({
                 <Layers className="w-6 h-6" />
               </span>
               <h4 className="text-xl font-bold font-display text-white mb-4 relative z-10">
-                Request a Product Demonstration
+                {demo.title}
               </h4>
               <p className="text-sm text-slate leading-relaxed mb-6 font-semibold relative z-10">
-                Connect with our product specialists to schedule an interactive video walkthrough of the software and see how it fits your institution.
+                {demo.description}
               </p>
 
               <div className="space-y-3 mb-8 relative z-10">
-                {[
-                  "Custom setup configured for your course structure",
-                  "Integration audits and student sandbox environment",
-                  "Free consultation for college administrators"
-                ].map((bullet, bIdx) => (
+                {(demo.bullets || []).map((bullet: string, bIdx: number) => (
                   <div key={bIdx} className="flex items-center space-x-2 text-xs font-bold text-slate/85">
                     <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
                       isGradeScope ? "bg-[#43F5FF]" : "bg-[#3A7BFF]"
@@ -131,14 +128,14 @@ export default async function ProductDetailPage({
                   href={`/contact?interest=${encodeURIComponent("Demo Request " + name)}`}
                   className="w-full py-4 text-center font-bold text-black bg-[#43F5FF] hover:bg-[#43F5FF]/90 transition-all duration-200 relative z-10"
                 >
-                  Schedule Demo
+                  {demo.buttonText}
                 </Button>
               ) : (
                 <Button
                   href={`/contact?interest=${encodeURIComponent("Demo Request " + name)}`}
                   className="w-full py-4 text-center font-bold text-white bg-[#3A7BFF] hover:bg-[#3A7BFF]/90 transition-all duration-200 relative z-10 border-none"
                 >
-                  Schedule Demo
+                  {demo.buttonText}
                 </Button>
               )}
             </div>

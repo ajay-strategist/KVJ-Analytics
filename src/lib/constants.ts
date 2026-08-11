@@ -1,4 +1,8 @@
-const CURRENT_EXP_YEARS = new Date().getFullYear() - 2010;
+// Founding year — change this ONE number if the company's start year differs.
+// Everything that shows "N+ years of experience" derives from it, so it
+// auto-increments every January without any manual edits.
+export const FOUNDING_YEAR = 2010;
+export const CURRENT_EXP_YEARS = new Date().getFullYear() - FOUNDING_YEAR;
 
 export const FALLBACK_SITE_SETTINGS = {
   companyName: "KVJ Analytics",
@@ -21,6 +25,17 @@ export const FALLBACK_SITE_SETTINGS = {
     { label: "Blog", href: "/blog" },
     { label: "Contact", href: "/contact" },
   ],
+  // Per-page ON/OFF. Set a value to false in the admin to hide that page from the
+  // nav + footer AND block its route (middleware redirects it home). Home is always on.
+  pageVisibility: {
+    "/about": true,
+    "/corporate": true,
+    "/education": true,
+    "/products": true,
+    "/training": true,
+    "/blog": true,
+    "/contact": true,
+  } as Record<string, boolean>,
   footerDescription:
     `KVJ Analytics is a leading analytics, automation, and training organization with ${CURRENT_EXP_YEARS}+ years of experience in delivering business-focused technology solutions and industry-oriented learning systems.`,
   footerTagline:
@@ -112,13 +127,16 @@ export const FALLBACK_HOME_PAGE = {
   },
   approach: {
     heading: "A Proven Framework For Digital Transformation",
-    // Step names approved; one-line descriptions to be added via CMS (not fabricated).
+    // These 7 stages are what the animated pipeline on the Home page actually renders.
+    // Titles are editable in the admin CMS; the live pipeline reads them by position.
     steps: [
-      { no: "01", title: "Discover", body: "" },
-      { no: "02", title: "Design", body: "" },
-      { no: "03", title: "Build", body: "" },
-      { no: "04", title: "Deploy", body: "" },
-      { no: "05", title: "Optimize", body: "" },
+      { no: "01", title: "Business Challenge", body: "" },
+      { no: "02", title: "Data Collection", body: "" },
+      { no: "03", title: "Data Engineering", body: "" },
+      { no: "04", title: "Analytics", body: "" },
+      { no: "05", title: "Visualization", body: "" },
+      { no: "06", title: "Report Automation", body: "" },
+      { no: "07", title: "Business Decisions", body: "" },
     ],
   },
   successStories: {
@@ -185,6 +203,35 @@ export const FALLBACK_TRAINING_HUB = {
     secondaryCtaText: "Contact a Training Advisor",
     secondaryCtaHref: "/contact",
   },
+  // "The Learning Journey" curriculum-flow timeline (icons = lucide names).
+  journey: {
+    eyebrow: "Curriculum Flow",
+    heading: "The Learning Journey",
+    subtext: "Our structured approach translates absolute beginners into industry-ready data specialists.",
+    stages: [
+      { step: "01", name: "Business Challenge", desc: "Translate complex corporate problems into structured analytical frameworks.", icon: "AlertCircle" },
+      { step: "02", name: "Data Collection", desc: "Aggregate ERP database outputs, CRM tables, and live transactional streams.", icon: "Database" },
+      { step: "03", name: "Data Engineering", desc: "Build query views, clean null anomalies, and consolidate reporting directories.", icon: "Settings" },
+      { step: "04", name: "Analytics", desc: "Apply nesting, calculation tables, and advanced DAX loops.", icon: "BarChart3" },
+      { step: "05", name: "Visualization", desc: "Design high-density interactive dashboards with real-time KPI thresholds.", icon: "Gauge" },
+      { step: "06", name: "Report Automation", desc: "Eliminate copy-paste loops via robust macro schedules.", icon: "FileSpreadsheet" },
+      { step: "07", name: "Business Decisions", desc: "Empower decision-makers with confident, automated data intelligence.", icon: "TrendingUp" },
+    ],
+  },
+  // "Integrated Learning Tools" ecosystem cards (icons = lucide names).
+  tools: {
+    eyebrow: "Ecosystem",
+    heading: "Integrated Learning Tools",
+    subtext: "Every course is backed by a robust suite of digital learning tools.",
+    items: [
+      { label: "Assignments", desc: "Project-focused work solving real corporate models.", icon: "CheckSquare" },
+      { label: "Mock Tests", desc: "Time-bound simulation of actual placement tests.", icon: "Clock" },
+      { label: "Assessments", desc: "Automatic test checking and granular output evaluation.", icon: "Target" },
+      { label: "Certificates", desc: "Verified downloadable credentials with unique IDs.", icon: "GraduationCap" },
+      { label: "Video Lessons", desc: "Step-by-step video instructions mapping analytical loops.", icon: "Play" },
+      { label: "Progress Tracking", desc: "Interactive visual scoring of your modular checklist.", icon: "Sparkles" },
+    ],
+  },
 };
 
 export const FALLBACK_ONLINE_COURSES = {
@@ -232,7 +279,7 @@ export const FALLBACK_IMPACT = {
   eyebrow: "Clients & Milestones",
   heading: "Our Impact",
   intro:
-    "For over 16 years, KVJ Analytics has delivered analytics, automation, and training solutions to corporates and educational institutions.",
+    `For over ${CURRENT_EXP_YEARS} years, KVJ Analytics has delivered analytics, automation, and training solutions to corporates and educational institutions.`,
   highlights: [
     "50,000+ Young Professionals Trained",
     "5,000+ Senior Professionals Trained",
@@ -289,6 +336,15 @@ export const FALLBACK_ABOUT = {
     heading: "Our Vision",
     body: "To build smarter organizations and industry-ready professionals through analytics, automation, and practical learning.",
   },
+  cta: {
+    title: "Let's Build Smarter Systems Together",
+    description:
+      "Whether you are a corporate organization seeking automation and analytics, or an institution wanting industry-ready outcomes, KVJ Analytics is ready to support your transformation journey.",
+    primaryText: "Contact Our Team",
+    primaryHref: "/contact",
+    secondaryText: "View Solutions",
+    secondaryHref: "/corporate",
+  },
 };
 
 export const FALLBACK_CORPORATE = {
@@ -296,6 +352,15 @@ export const FALLBACK_CORPORATE = {
   strapline: "Smarter Reporting. Faster Decisions.",
   intro:
     "We help organizations automate reporting, improve visibility, optimize workflows, and make faster business decisions.",
+  cta: {
+    title: "Looking for custom automation, reports or dashboards?",
+    description:
+      "We provide full-spectrum consultation, audit, development, and training integration tailored to your company.",
+    primaryText: "Schedule a Free Discovery Session",
+    primaryHref: "/contact",
+    secondaryText: "",
+    secondaryHref: "",
+  },
   services: [
     {
       title: "Report Automation",
@@ -389,6 +454,27 @@ export const FALLBACK_EDUCATION = {
   strapline: "Building Industry-Ready Learning Systems",
   intro:
     "KVJ Analytics helps institutions bridge the gap between academics and industry through practical training, automation, and analytics platforms.",
+  cta: {
+    title: "Looking to run a certificate program or skill lab?",
+    description:
+      "We partner with academic institutions to provide practical workshops, syllabus updates, and assessment platforms.",
+    primaryText: "Request an Institutional Partnership Proposal",
+    primaryHref: "/contact",
+    secondaryText: "",
+    secondaryHref: "",
+  },
+  // Side "partner with us" card shown on each education detail page (editable in admin).
+  partnerCard: {
+    title: "Partner With KVJ Analytics",
+    description:
+      "Collaborate with our team to bring industry-grade analytics labs, certification programs, and curriculum updates to your campus.",
+    bullets: [
+      "Practical, industry-aligned analytics labs",
+      "College credit course integrations available",
+      "Continuous practical evaluation support",
+    ],
+    buttonText: "Partner With Us",
+  },
   services: [
     {
       title: "Training Programs",
@@ -398,7 +484,7 @@ export const FALLBACK_EDUCATION = {
       details: [
         "Practical labs where students solve cases using actual business data.",
         "Comprehensive assignments on dashboard layout and data filtering.",
-        "Live instruction by training specialists with 16+ years of exposure.",
+        `Live instruction by training specialists with ${CURRENT_EXP_YEARS}+ years of exposure.`,
         "Job-readiness programs focused on immediate workplace capability."
       ]
     },
@@ -475,7 +561,19 @@ export const FALLBACK_PRODUCTS = [
 export const FALLBACK_PRODUCTS_PAGE = {
   heading: "Our Products",
   intro: "Automate Reporting. Elevate Institutions.",
-  products: FALLBACK_PRODUCTS
+  products: FALLBACK_PRODUCTS,
+  // Side "request a demo" card shown on each product detail page (editable in admin).
+  demoCard: {
+    title: "Request a Product Demonstration",
+    description:
+      "Connect with our product specialists to schedule an interactive video walkthrough of the software and see how it fits your institution.",
+    bullets: [
+      "Custom setup configured for your course structure",
+      "Integration audits and student sandbox environment",
+      "Free consultation for college administrators",
+    ],
+    buttonText: "Schedule Demo",
+  },
 };
 
 export const FALLBACK_CONTACT = {
