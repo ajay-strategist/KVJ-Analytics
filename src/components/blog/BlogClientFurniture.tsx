@@ -20,6 +20,7 @@ interface BlogClientLayoutProps {
   wordCount: number;
   publishedDate: string;
   categoryTitle: string;
+  categorySlug: string;
   articleSlug: string;
   children: React.ReactNode;
 }
@@ -32,6 +33,7 @@ export function BlogClientFurniture({
   wordCount,
   publishedDate,
   categoryTitle,
+  categorySlug,
   articleSlug,
   children
 }: BlogClientLayoutProps) {
@@ -119,9 +121,45 @@ export function BlogClientFurniture({
     return () => window.removeEventListener("message", handleIframeMessage);
   }, []);
 
+  // IntersectionObserver scroll-spy for parent-document elements (legacy/standard articles)
+  useEffect(() => {
+    if (headings.length === 0) return;
+    
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setActiveHeading(entry.target.id);
+          }
+        });
+      },
+      { rootMargin: "-80px 0px -60% 0px", threshold: 0.1 }
+    );
+    
+    headings.forEach((h) => {
+      const el = document.getElementById(h.id);
+      if (el) observer.observe(el);
+    });
+    
+    return () => {
+      headings.forEach((h) => {
+        const el = document.getElementById(h.id);
+        if (el) observer.unobserve(el);
+      });
+    };
+  }, [headings]);
+
   const handleHeadingClick = (id: string) => {
     setActiveHeading(id);
     setMobileDrawerOpen(false);
+    
+    // Check if element exists directly in parent document (for legacy/non-iframe reading)
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
+    
     const iframe = iframeWrapperRef.current?.querySelector("iframe");
     if (iframe && iframe.contentWindow) {
       iframe.contentWindow.postMessage({ type: "SCROLL_TO_HEADING", id }, "*");
@@ -143,6 +181,64 @@ export function BlogClientFurniture({
   const twitterLink = `https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareTitle)}`;
   const linkedinLink = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`;
   const facebookLink = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
+
+  const renderLeadCard = (slug: string) => {
+    const s = slug.toLowerCase();
+    const isExcel = s.includes("excel") || s.includes("spreadsheet");
+    const isPowerBI = s.includes("power-bi") || s.includes("powerbi") || s.includes("dashboard") || s.includes("intelligence");
+    
+    let leadTitle = "Data Analytics Roadmap & Career Kit";
+    let leadDesc = "Get our practical guidebook outlining data cleaning systems, key metrics, and modern analytics careers.";
+    let leadBtn = "Download Analytics Guide";
+    let leadTag = "Analytics Roadmap";
+    let accentColor = "from-purple-500/10 to-cyan-500/10 border-cyan-500/20 text-cyan-400";
+    
+    if (isExcel) {
+      leadTitle = "Free Advanced Excel Modeling Toolkit";
+      leadDesc = "Download our library of pre-built financial models, data cleaning macros, and workbook shortcuts.";
+      leadBtn = "Download Excel Toolkit";
+      leadTag = "Excel Toolkit";
+      accentColor = "from-emerald-500/10 to-teal-500/10 border-emerald-500/20 text-emerald-400";
+    } else if (isPowerBI) {
+      leadTitle = "Power BI Dashboard Design Checklist";
+      leadDesc = "Get our internal UX/UI checklist for building high-visibility executive reports and clean DAX models.";
+      leadBtn = "Download Checklist";
+      leadTag = "Power BI Checklist";
+      accentColor = "from-amber-500/10 to-blue-500/10 border-amber-500/20 text-amber-400";
+    }
+    
+    return (
+      <div className={`mt-12 p-6 md:p-8 rounded-3xl bg-gradient-to-br ${accentColor} border border-white/5 shadow-2xl relative overflow-hidden text-left`}>
+        <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl pointer-events-none" />
+        <div className="relative z-10 space-y-4">
+          <span className="text-[9px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-white/5 border border-white/10">
+            {leadTag}
+          </span>
+          <h4 className="text-lg md:text-xl font-bold font-display text-white">
+            {leadTitle}
+          </h4>
+          <p className="text-xs text-zinc-400 leading-relaxed max-w-lg font-light">
+            {leadDesc}
+          </p>
+          <form action="/api/inquiries" method="POST" className="pt-2 flex flex-col sm:flex-row gap-2 max-w-md">
+            <input 
+              type="email" 
+              name="email"
+              placeholder="you@company.com" 
+              required 
+              className="px-4 py-2.5 text-xs bg-[#050608]/85 border border-white/10 rounded-xl text-white focus:outline-none focus:border-[#43F5FF]/30 placeholder-zinc-500 w-full sm:w-64 font-medium" 
+            />
+            <button 
+              type="submit" 
+              className="px-5 py-2.5 bg-brand hover:bg-[#16E6D8] text-black text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-md shrink-0 border-0 cursor-pointer"
+            >
+              {leadBtn} →
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <>
@@ -213,6 +309,7 @@ export function BlogClientFurniture({
         {/* CENTER COLUMN: Sandboxed Article Iframe Wrapper */}
         <main className="col-span-1 lg:col-span-6 w-full max-w-[72ch] mx-auto" ref={iframeWrapperRef}>
           {children}
+          {renderLeadCard(categorySlug)}
         </main>
 
         {/* RIGHT COLUMN: Floating Share Panel */}

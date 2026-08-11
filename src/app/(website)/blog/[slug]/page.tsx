@@ -142,6 +142,18 @@ export default async function BlogPostDetailPage({
   const coverUrl = post?.cover_url || null;
   const bodyHtml = post?.body_html || null;
   
+  // Inject IDs into headings for anchor scrolls and scroll spy
+  let processedHtml = bodyHtml;
+  if (bodyHtml) {
+    processedHtml = bodyHtml.replace(/<h([23])([^>]*)>(.*?)<\/h\1>/gi, (match: string, level: string, attrs: string, text: string) => {
+      const id = text.replace(/<[^>]*>/g, "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
+      if (!attrs.includes("id=")) {
+        return `<h${level}${attrs} id="${id}">${text}</h${level}>`;
+      }
+      return match;
+    });
+  }
+  
   // Category variables
   const categoryTitle = post?.category_title || fallback.category;
   const categorySlug = post?.category_slug || fallback.catSlug;
@@ -237,6 +249,39 @@ export default async function BlogPostDetailPage({
           mainEntityOfPage: shareUrl,
         }) }}
       />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          itemListElement: [
+            {
+              "@type": "ListItem",
+              position: 1,
+              name: "Home",
+              item: SITE_URL
+            },
+            {
+              "@type": "ListItem",
+              position: 2,
+              name: "Blog",
+              item: `${SITE_URL}/blog`
+            },
+            {
+              "@type": "ListItem",
+              position: 3,
+              name: categoryTitle,
+              item: `${SITE_URL}/blog/category/${categorySlug}`
+            },
+            {
+              "@type": "ListItem",
+              position: 4,
+              name: title,
+              item: shareUrl
+            }
+          ]
+        }) }}
+      />
 
       {/* Premium Hero Section */}
       <header className="relative w-full pt-32 pb-16 min-h-[380px] flex items-end border-b border-white/5 z-10 bg-slate-950/30 overflow-hidden">
@@ -258,14 +303,14 @@ export default async function BlogPostDetailPage({
         </div>
 
         <Container className="relative z-10 w-full pb-16 max-w-5xl">
-          {/* Back Nav Link */}
-          <Link
-            href="/blog"
-            className="inline-flex items-center text-[10px] font-bold uppercase tracking-[0.2em] text-slate-450 hover:text-[#00F0FF] mb-6 group transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2 transition-transform duration-200 group-hover:-translate-x-1" />
-            <span>Back to publication</span>
-          </Link>
+          {/* Breadcrumb Navigation */}
+          <nav className="flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400 mb-6 font-mono select-none">
+            <Link href="/" className="hover:text-brand transition-colors">Home</Link>
+            <span className="text-white/20">/</span>
+            <Link href="/blog" className="hover:text-brand transition-colors">Blog</Link>
+            <span className="text-white/20">/</span>
+            <Link href={`/blog/category/${categorySlug}`} className="hover:text-brand transition-colors text-brand">{categoryTitle}</Link>
+          </nav>
 
           <div className="space-y-4 max-w-4xl text-left animate-fade-in">
             {/* Category */}
@@ -310,6 +355,7 @@ export default async function BlogPostDetailPage({
             wordCount={wordCount}
             publishedDate={dateStr}
             categoryTitle={categoryTitle}
+            categorySlug={categorySlug}
             articleSlug={slug}
           >
             {/* Elegant Custom Styles for HTML Rendering */}
@@ -333,18 +379,18 @@ export default async function BlogPostDetailPage({
               .prose-editorial pre { background: #0E1117; border: 1px solid rgba(255, 255, 255, 0.05); padding: 1.25rem; border-radius: 16px; overflow-x: auto; margin: 2rem 0; }
               .prose-editorial pre code { background: transparent; color: #cbd5e1; padding: 0; font-size: 0.9rem; }
             ` }} />
-            {bodyHtml ? (
+            {processedHtml ? (
               isLegacy ? (
                 /* Legacy fallback text formatting */
                 <div 
                   className="prose-editorial max-w-none text-slate-300 leading-relaxed font-normal text-[16px]"
-                  dangerouslySetInnerHTML={{ __html: bodyHtml }}
+                  dangerouslySetInnerHTML={{ __html: processedHtml }}
                 />
               ) : (
                 /* Premium Sandbox Iframe Renderer */
                 <div className="w-full overflow-hidden bg-transparent">
                   <LessonIframe
-                    html={bodyHtml}
+                    html={processedHtml}
                     onContentWindow={(win) => {
                       if (iframeRef.current) {
                         (iframeRef as any).current.contentWindow = win;

@@ -1,12 +1,8 @@
 import React from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Calendar, User, Tag } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Container } from "@/components/ui/Container";
-import { Section } from "@/components/ui/Section";
-import { Eyebrow } from "@/components/ui/Eyebrow";
-import { BoldStatement } from "@/components/ui/BoldStatement";
-import { Card } from "@/components/ui/Card";
 import { supabase } from "@/lib/supabase";
 
 export const revalidate = 3600;
@@ -95,61 +91,62 @@ export default async function CategoryFilterPage({
   const categoryDesc = fallbackCat?.desc || "Articles and insights from KVJ Analytics.";
 
   return (
-    <Section background="default" className="bg-surface/30 relative overflow-hidden py-16 md:py-24">
+    <div className="relative min-h-screen bg-[#050608] text-white pt-32 pb-16 overflow-hidden">
       {/* Decorative background glows & patterns */}
-      <div className="absolute inset-0 bg-grid-pattern opacity-60 pointer-events-none" />
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-radial-glow opacity-80 pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-radial-glow-teal opacity-60 pointer-events-none" />
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:4rem_4rem] pointer-events-none" />
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-cyan-950/20 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-950/15 rounded-full blur-[130px] pointer-events-none" />
 
-      <Container className="relative z-10">
+      <Container className="relative z-10 max-w-5xl">
         {/* Back Link */}
         <Link
           href="/blog"
-          className="inline-flex items-center text-sm font-bold text-slate hover:text-brand mb-8 group transition-colors"
+          className="inline-flex items-center text-xs font-bold font-mono uppercase tracking-[0.2em] text-slate-400 hover:text-brand mb-8 group transition-colors"
         >
           <ArrowLeft className="w-4 h-4 mr-2 transition-transform duration-200 group-hover:-translate-x-1" />
           <span>Back to Blog</span>
         </Link>
 
         {/* Category Header */}
-        <div className="max-w-3xl mb-12 border-l-4 border-brand pl-6 relative">
-          <span className="text-xs font-bold text-slate uppercase tracking-wider">
+        <div className="max-w-3xl mb-16 border-l-4 border-brand pl-6 relative">
+          <span className="text-[10px] font-bold font-mono text-brand uppercase tracking-[0.25em] block mb-2">
             Category Archive
           </span>
-          <BoldStatement variant="h1" className="mt-1 mb-3 text-ink tracking-tight leading-tight">
+          <h1 className="text-3xl md:text-5xl font-extrabold text-white tracking-tight leading-tight font-display mb-3">
             {categoryTitle}
-          </BoldStatement>
-          <p className="text-base text-slate leading-relaxed">
+          </h1>
+          <p className="text-base text-zinc-400 font-light leading-relaxed">
             {categoryDesc}
           </p>
         </div>
 
         {/* List Grid */}
         {posts.length === 0 ? (
-          <div className="p-12 text-center text-slate max-w-md mx-auto bg-card border border-line/80 rounded-card shadow-soft">
-            <p className="text-base font-semibold">No posts in this category yet.</p>
+          <div className="p-12 text-center border border-dashed border-white/10 rounded-3xl max-w-md mx-auto">
+            <p className="text-sm text-zinc-400 font-light">No posts in this category yet.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {posts.map((post: any, idx: number) => (
-              <Card key={idx} hoverLift className="flex flex-col justify-between h-full border-line/80 p-6 bg-card shadow-soft relative overflow-hidden">
-                <div className="absolute top-0 left-0 right-0 h-1 bg-surface" />
+              <div 
+                key={idx} 
+                className="bg-[#0E1117]/60 border border-white/5 hover:border-brand/20 p-6 rounded-3xl flex flex-col justify-between hover:-translate-y-1 transition-all duration-500 relative group overflow-hidden"
+              >
                 <div>
-                  <div className="text-[10px] font-bold text-corporate uppercase tracking-wider mb-2">
+                  <span className="text-[9px] font-mono font-bold text-brand uppercase tracking-wider block mb-3">
                     {categoryTitle}
-                  </div>
+                  </span>
                   <Link href={`/blog/${post.slug}`}>
-                    <h3 className="text-xl font-bold font-display text-ink mb-3 hover:text-brand cursor-pointer transition-colors duration-200">
+                    <h3 className="text-lg font-bold font-display text-white mb-2 group-hover:text-brand transition-colors leading-snug">
                       {post.title}
                     </h3>
                   </Link>
-                  <p className="text-sm text-slate leading-relaxed mb-6 font-medium">
+                  <p className="text-xs text-zinc-400 leading-relaxed mb-6 font-light">
                     {post.description || "Discover automation techniques and models for immediate workplace application."}
                   </p>
                 </div>
-                <div className="border-t border-line pt-4 flex items-center justify-between text-xs font-semibold text-slate/85 mt-auto">
+                <div className="border-t border-white/5 pt-4 flex items-center justify-between text-[10px] font-mono text-slate-400 mt-auto">
                   <span className="flex items-center">
-                    <User className="w-3.5 h-3.5 mr-1 text-slate/60" />
                     {post.author?.name || "K. V. Jacob"}
                   </span>
                   <span>
@@ -160,11 +157,11 @@ export default async function CategoryFilterPage({
                     })}
                   </span>
                 </div>
-              </Card>
+              </div>
             ))}
           </div>
         )}
       </Container>
-    </Section>
+    </div>
   );
 }

@@ -184,15 +184,15 @@ export function BlogListClient({ posts, header }: BlogListClientProps) {
                 INSIGHTS / KNOWLEDGE
               </span>
               
-              <h1 className="font-display font-bold text-4xl sm:text-5xl lg:text-6xl leading-[1.1] tracking-tight text-white max-w-2xl">
-                Ideas that help businesses <br/>
+              <h1 className="font-display font-bold text-4xl sm:text-5xl lg:text-6xl leading-[1.1] tracking-tight text-white max-w-3xl">
+                Data Analytics, Excel <br/>
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand via-[#3A7BFF] to-brand animate-[signature-flow_6s_linear_infinite] bg-[size:200%_auto]">
-                  make smarter decisions.
+                  & Power BI Insights
                 </span>
               </h1>
 
               <p className="text-slate font-light text-base sm:text-lg leading-relaxed max-w-xl">
-                Explore perspectives on Data Analytics, Business Intelligence, AI and Digital Transformation.
+                Practical guides, expert tutorials, and corporate insights on building automated dashboard reports, writing advanced Excel models, and unlocking data-driven business intelligence.
               </p>
 
               <div className="pt-2">
@@ -289,7 +289,7 @@ export function BlogListClient({ posts, header }: BlogListClientProps) {
             </div>
 
             {/* Editorial Category Pill Navigation */}
-            <div className="flex overflow-x-auto gap-2.5 pb-4 px-1 justify-start md:justify-center scrollbar-none mask-fade">
+            <div className="flex overflow-x-auto gap-2.5 pb-4 px-6 md:px-1 justify-start md:justify-center scrollbar-none mask-fade">
               {categories.map(cat => (
                 <button
                   key={cat}
@@ -471,10 +471,7 @@ export function BlogListClient({ posts, header }: BlogListClientProps) {
                         </div>
                         
                         <div className="space-y-2">
-                          <span className="text-[9px] font-mono font-bold text-brand uppercase tracking-wider block">
-                            {post.category_title}
-                          </span>
-                          <h4 className="text-base font-bold text-white group-hover:text-brand transition-colors leading-snug">
+                          <h4 className="text-base md:text-[17px] font-bold text-white group-hover:text-brand transition-colors leading-snug">
                             <Link href={`/blog/${post.slug}`}>{highlightText(post.title, searchQuery)}</Link>
                           </h4>
                           <p className="text-xs text-slate leading-relaxed line-clamp-3 font-light">
