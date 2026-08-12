@@ -377,6 +377,81 @@ const LessonEditor = React.memo(function LessonEditor({
 </div>`;
           }
         }
+        if (b.type === "html") {
+          return b.html || "";
+        }
+        if (b.type === "activity") {
+          return `<div class="my-6 p-6 border border-brand/20 bg-brand/5 rounded-2xl text-center space-y-4">
+  <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-brand/10 text-brand">
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M14.7 15.3a1 1 0 011.4 0l3 3a1 1 0 01-1.4 1.4l-3-3a1 1 0 010-1.4zM4 9a5 5 0 1110 0A5 5 0 014 9z"/>
+    </svg>
+  </div>
+  <h4 class="text-white font-bold text-lg">${b.title || "Interactive Activity"}</h4>
+  <p class="text-slate-400 text-sm max-w-md mx-auto">${b.desc || "Complete this interactive activity below."}</p>
+  ${b.url ? `<iframe src="${b.url}" class="w-full h-96 rounded-xl border border-white/10 shadow-lg bg-black" allow="autoplay; fullscreen"></iframe>` : `<div class="p-8 border border-dashed border-white/10 rounded-xl text-slate-500 text-sm">No activity source URL configured.</div>`}
+</div>`;
+        }
+        if (b.type === "assessment") {
+          const questionsJson = JSON.stringify(b.questions || []);
+          const blockId = `quiz-\${Math.random().toString(36).substring(2, 9)}`;
+          return `<div class="my-8 p-6 bg-card border border-white/5 rounded-2xl text-left space-y-6" id="\${blockId}">
+  <div class="flex items-center justify-between border-b border-white/10 pb-3">
+    <h4 class="text-white font-bold text-base flex items-center gap-2">
+      <span class="w-2.5 h-2.5 rounded-full bg-brand animate-pulse"></span>
+      \${b.title || "Quick Knowledge Check"}
+    </h4>
+    <span class="text-xs text-slate-400 font-mono">\${(b.questions || []).length} Questions</span>
+  </div>
+  <div class="space-y-6">
+    \${(b.questions || []).map((q: any, qIdx: number) => \`
+    <div class="space-y-3" data-qidx="\${qIdx}">
+      <p class="text-slate-200 text-sm font-medium">\${qIdx + 1}. \${q.text}</p>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        \${(q.options || []).map((opt: string, optIdx: number) => \`
+        <button type="button" class="w-full text-left px-4 py-2.5 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 text-slate-300 text-xs transition-all flex items-center justify-between group" data-optidx="\${optIdx}" onclick="
+          const parent = this.closest('[data-qidx]');
+          parent.querySelectorAll('button').forEach(btn => btn.className = btn.className.replace(' border-brand bg-brand/10 text-white', ' border-white/5 bg-white/5 text-slate-300'));
+          this.className += ' border-brand bg-brand/10 text-white';
+          parent.setAttribute('data-selected', '\${optIdx}');
+        ">
+          <span>\${opt}</span>
+          <span class="w-4 h-4 rounded-full border border-white/20 flex items-center justify-center text-[10px] font-bold text-transparent group-hover:border-brand/40">✓</span>
+        </button>\`).join('\\n')}
+      </div>
+    </div>\`).join('\\n')}
+  </div>
+  <div class="pt-4 border-t border-white/10 flex items-center justify-between">
+    <button type="button" class="px-5 py-2 bg-brand text-black hover:bg-brand/90 rounded-xl text-xs font-bold transition-all shadow-md" onclick="
+      const quiz = this.closest('#\${blockId}');
+      const questions = \${questionsJson.replace(/"/g, '&quot;')};
+      let correct = 0;
+      let answeredAll = true;
+      quiz.querySelectorAll('[data-qidx]').forEach((qEl, idx) => {
+        const selected = qEl.getAttribute('data-selected');
+        if (selected === null) { answeredAll = false; return; }
+        const correctOpt = questions[idx].correct;
+        const buttons = qEl.querySelectorAll('button');
+        buttons.forEach((btn, bIdx) => {
+          btn.disabled = true;
+          if (bIdx === Number(correctOpt)) {
+            btn.className = btn.className.replace('bg-white/5', 'bg-green-500/10').replace('border-white/5', 'border-green-500/30').replace('text-slate-300', 'text-green-400');
+          } else if (bIdx === Number(selected)) {
+            btn.className = btn.className.replace('bg-white/5', 'bg-red-500/10').replace('border-white/5', 'border-red-500/30').replace('text-slate-300', 'text-red-400');
+          }
+        });
+        if (Number(selected) === Number(correctOpt)) correct++;
+      });
+      if (!answeredAll) { alert('Please answer all questions before submitting.'); return; }
+      this.style.display = 'none';
+      const result = document.createElement('div');
+      result.className = 'text-sm font-bold text-brand mt-2';
+      result.textContent = 'Score: ' + correct + ' / ' + questions.length + ' correct answers!';
+      this.parentNode.appendChild(result);
+    ">Submit Answers</button>
+  </div>
+</div>`;
+        }
         return "";
       }).join("\n");
       return metaStr + blocksHtml;
@@ -414,6 +489,17 @@ const LessonEditor = React.memo(function LessonEditor({
       newBlock.comparison = [
         { category: "Option A", title: "", points: [""] },
         { category: "Option B", title: "", points: [""] }
+      ];
+    } else if (type === "html") {
+      newBlock.html = "";
+    } else if (type === "activity") {
+      newBlock.title = "Interactive Activity";
+      newBlock.desc = "Complete this interactive activity below.";
+      newBlock.url = "";
+    } else if (type === "assessment") {
+      newBlock.title = "Pop Quiz";
+      newBlock.questions = [
+        { text: "What is data?", options: ["Raw facts", "Processed facts", "Knowledge", "None of these"], correct: "0" }
       ];
     }
     setDocumentBlocks((prev) => [...prev, newBlock]);
@@ -1797,6 +1883,151 @@ const LessonEditor = React.memo(function LessonEditor({
                                   )}
                                 </div>
                               )}
+
+                              {b.type === "html" && (
+                                <div className="space-y-1.5">
+                                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">Raw HTML Code Block</label>
+                                  <textarea
+                                    rows={6}
+                                    value={b.html || ""}
+                                    onChange={(e) => updateDocumentBlock(b.id, { html: e.target.value })}
+                                    placeholder="<div>Write your custom HTML/CSS here...</div>"
+                                    className="w-full px-3 py-2 border border-line bg-white text-slate-800 dark:text-slate-100 dark:bg-slate-900 rounded-lg text-xs font-mono resize-y"
+                                  />
+                                </div>
+                              )}
+
+                              {b.type === "activity" && (
+                                <div className="space-y-3">
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-1.5">
+                                      <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">Activity Title</label>
+                                      <input
+                                        type="text"
+                                        value={b.title || ""}
+                                        onChange={(e) => updateDocumentBlock(b.id, { title: e.target.value })}
+                                        className="w-full px-3 py-2 border border-line bg-white text-slate-800 dark:text-slate-100 dark:bg-slate-900 rounded-lg text-sm"
+                                        placeholder="Interactive Activity"
+                                      />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                      <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">Activity URL</label>
+                                      <input
+                                        type="text"
+                                        value={b.url || ""}
+                                        onChange={(e) => updateDocumentBlock(b.id, { url: e.target.value })}
+                                        className="w-full px-3 py-2 border border-line bg-white text-slate-800 dark:text-slate-100 dark:bg-slate-900 rounded-lg text-sm"
+                                        placeholder="https://example.com/activity"
+                                      />
+                                    </div>
+                                  </div>
+                                  <div className="space-y-1.5">
+                                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">Description</label>
+                                    <textarea
+                                      rows={2}
+                                      value={b.desc || ""}
+                                      onChange={(e) => updateDocumentBlock(b.id, { desc: e.target.value })}
+                                      className="w-full px-3 py-2 border border-line bg-white text-slate-800 dark:text-slate-100 dark:bg-slate-900 rounded-lg text-xs"
+                                      placeholder="Complete this interactive activity below..."
+                                    />
+                                  </div>
+                                </div>
+                              )}
+
+                              {b.type === "assessment" && (
+                                <div className="space-y-4">
+                                  <div className="space-y-1.5">
+                                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">Quiz Title</label>
+                                    <input
+                                      type="text"
+                                      value={b.title || ""}
+                                      onChange={(e) => updateDocumentBlock(b.id, { title: e.target.value })}
+                                      className="w-full px-3 py-2 border border-line bg-white text-slate-800 dark:text-slate-100 dark:bg-slate-900 rounded-lg text-sm"
+                                      placeholder="Pop Quiz"
+                                    />
+                                  </div>
+                                  <div className="space-y-4">
+                                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">Questions List</label>
+                                    <div className="space-y-4">
+                                      {(b.questions || []).map((q: any, qIdx: number) => (
+                                        <div key={qIdx} className="p-3 bg-slate-50 dark:bg-slate-900 rounded-lg border border-line space-y-3">
+                                          <div className="flex gap-2 items-center justify-between">
+                                            <span className="text-[10px] font-bold text-slate-400">QUESTION {qIdx + 1}</span>
+                                            <button
+                                              type="button"
+                                              onClick={() => {
+                                                const questions = (b.questions || []).filter((_: any, idx: number) => idx !== qIdx);
+                                                updateDocumentBlock(b.id, { questions });
+                                              }}
+                                              className="text-red-500 hover:text-red-650 font-bold px-1.5 py-0.5 rounded text-xs"
+                                            >
+                                              Delete Question
+                                            </button>
+                                          </div>
+                                          <input
+                                            type="text"
+                                            value={q.text || ""}
+                                            onChange={(e) => {
+                                              const questions = [...(b.questions || [])];
+                                              questions[qIdx] = { ...q, text: e.target.value };
+                                              updateDocumentBlock(b.id, { questions });
+                                            }}
+                                            className="w-full px-3 py-1.5 border border-line bg-white rounded-lg text-xs"
+                                            placeholder="Question Text"
+                                          />
+                                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                            {(q.options || []).map((opt: string, optIdx: number) => (
+                                              <div key={optIdx} className="flex items-center gap-1.5">
+                                                <span className="text-xs font-bold text-slate-400 font-mono">{String.fromCharCode(65 + optIdx)})</span>
+                                                <input
+                                                  type="text"
+                                                  value={opt}
+                                                  onChange={(e) => {
+                                                    const questions = [...(b.questions || [])];
+                                                    const opts = [...(q.options || [])];
+                                                    opts[optIdx] = e.target.value;
+                                                    questions[qIdx] = { ...q, options: opts };
+                                                    updateDocumentBlock(b.id, { questions });
+                                                  }}
+                                                  className="w-full px-2 py-1 text-xs border border-line bg-white rounded"
+                                                  placeholder={`Option ${optIdx + 1}`}
+                                                />
+                                              </div>
+                                            ))}
+                                          </div>
+                                          <div className="space-y-1.5 pt-2 border-t border-line">
+                                            <label className="block text-[10px] font-bold text-slate-400 uppercase">Correct Option</label>
+                                            <select
+                                              value={q.correct || "0"}
+                                              onChange={(e) => {
+                                                const questions = [...(b.questions || [])];
+                                                questions[qIdx] = { ...q, correct: e.target.value };
+                                                updateDocumentBlock(b.id, { questions });
+                                              }}
+                                              className="px-2 py-1 text-xs border border-line bg-white rounded text-slate-800"
+                                            >
+                                              <option value="0">Option A</option>
+                                              <option value="1">Option B</option>
+                                              <option value="2">Option C</option>
+                                              <option value="3">Option D</option>
+                                            </select>
+                                          </div>
+                                        </div>
+                                      ))}
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const newQ = { text: "", options: ["", "", "", ""], correct: "0" };
+                                          updateDocumentBlock(b.id, { questions: [...(b.questions || []), newQ] });
+                                        }}
+                                        className="text-xs text-brand hover:underline font-bold"
+                                      >
+                                        + Add Quiz Question
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           ))}
                         </div>
@@ -1861,6 +2092,27 @@ const LessonEditor = React.memo(function LessonEditor({
                             className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-355 rounded text-xs font-bold transition-colors"
                           >
                             + Smart Art
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => addDocumentBlock("html")}
+                            className="px-3 py-1.5 bg-brand/10 hover:bg-brand/20 text-brand rounded text-xs font-bold transition-colors"
+                          >
+                            + Theory (HTML)
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => addDocumentBlock("activity")}
+                            className="px-3 py-1.5 bg-brand/10 hover:bg-brand/20 text-brand rounded text-xs font-bold transition-colors"
+                          >
+                            + Interactive Activity
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => addDocumentBlock("assessment")}
+                            className="px-3 py-1.5 bg-brand/10 hover:bg-brand/20 text-brand rounded text-xs font-bold transition-colors"
+                          >
+                            + Assessment (MCQ)
                           </button>
                         </div>
                       </div>
