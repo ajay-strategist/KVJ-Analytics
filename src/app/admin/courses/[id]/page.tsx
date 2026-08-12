@@ -133,6 +133,155 @@ const LessonEditor = React.memo(function LessonEditor({
   const standaloneImageId = React.useId();
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
 
+  // Structured Simple Type States
+  const [editorKind, setEditorKind] = React.useState<string>("theory");
+  const [headingText, setHeadingText] = React.useState("");
+  const [subheadingText, setSubheadingText] = React.useState("");
+  const [paragraphText, setParagraphText] = React.useState("");
+  const [simpleImageUrl, setSimpleImageUrl] = React.useState("");
+  const [simpleImageCaption, setSimpleImageCaption] = React.useState("");
+  const [infoCards, setInfoCards] = React.useState([
+    { title: "Key Point One", desc: "", number: "01" },
+    { title: "Key Point Two", desc: "", number: "02" },
+    { title: "Key Point Three", desc: "", number: "03" },
+  ]);
+  const [smartArtType, setSmartArtType] = React.useState<"pillars" | "timeline" | "comparison">("pillars");
+  const [smartPillars, setSmartPillars] = React.useState([
+    { title: "Pillar One", desc: "", badge: "Pillar 01" },
+    { title: "Pillar Two", desc: "", badge: "Pillar 02" },
+    { title: "Pillar Three", desc: "", badge: "Pillar 03" },
+  ]);
+  const [smartTimeline, setSmartTimeline] = React.useState([
+    { title: "Step One Title", desc: "", step: "01" },
+    { title: "Step Two Title", desc: "", step: "02" },
+    { title: "Step Three Title", desc: "", step: "03" },
+  ]);
+  const [smartComparison, setSmartComparison] = React.useState([
+    { category: "Option A", title: "Title A", points: [""] },
+    { category: "Option B", title: "Title B", points: [""] },
+  ]);
+
+  const generateHtmlFromMetadata = React.useCallback((type: string, data: any): string => {
+    const metaStr = `<!-- KVJ_MATERIAL_METADATA: ${JSON.stringify({ type, ...data })} -->\n`;
+    
+    if (type === "heading") {
+      return metaStr + `<h2 class="text-white text-2xl font-extrabold tracking-tight border-b border-white/10 pb-3 mb-6">${data.text}</h2>`;
+    }
+    if (type === "subheading") {
+      return metaStr + `<h3 class="text-brand text-lg font-bold tracking-tight mb-3">${data.text}</h3>`;
+    }
+    if (type === "paragraph") {
+      return metaStr + `<p class="text-slate-355 text-base leading-relaxed mb-6">${data.text}</p>`;
+    }
+    if (type === "image") {
+      return metaStr + `<figure class="my-8 text-center bg-card border border-white/5 p-4 rounded-2xl">
+  <img src="${data.url}" alt="${data.caption || "Image"}" class="rounded-xl border border-white/10 shadow-xl max-w-full mx-auto" />
+  ${data.caption ? `<figcaption class="text-xs text-slate-400 mt-3 font-medium">${data.caption}</figcaption>` : ""}
+</figure>`;
+    }
+    if (type === "infographics") {
+      const cardsHtml = data.cards.map((c: any) => `  <div class="relative bg-card border border-white/5 rounded-2xl p-6 overflow-hidden group hover:border-brand/30 transition-all duration-300">
+    <div class="absolute top-0 right-0 w-24 h-24 bg-brand/5 rounded-full blur-xl group-hover:bg-brand/15 transition-all duration-300"></div>
+    <div class="w-12 h-12 rounded-xl bg-brand/10 border border-brand/20 flex items-center justify-center mb-4 text-brand text-lg font-extrabold shadow-sm">${c.number}</div>
+    <h4 class="text-white font-bold text-base mb-2 group-hover:text-brand transition-colors">${c.title}</h4>
+    <p class="text-slate-400 text-xs leading-relaxed mb-0">${c.desc}</p>
+  </div>`).join("\n");
+      return metaStr + `<div class="grid grid-cols-1 md:grid-cols-3 gap-6 my-8">\n${cardsHtml}\n</div>`;
+    }
+    if (type === "smartarts") {
+      if (data.layout === "pillars") {
+        const pillarsHtml = data.pillars.map((p: any) => `    <div class="p-6 space-y-3">
+      <div class="flex items-center gap-2">
+        <div class="w-3 h-3 rounded-full bg-brand animate-pulse"></div>
+        <span class="text-xs uppercase tracking-wider text-slate-400 font-bold">${p.badge}</span>
+      </div>
+      <h4 class="text-white font-bold text-base mt-0">${p.title}</h4>
+      <p class="text-slate-400 text-xs leading-relaxed mb-0">${p.desc}</p>
+    </div>`).join("\n");
+        return metaStr + `<div class="my-8 border border-white/10 rounded-2xl overflow-hidden bg-card/40 backdrop-blur-sm">
+  <div class="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-white/10">
+\n${pillarsHtml}\n  </div>
+</div>`;
+      }
+      if (data.layout === "timeline") {
+        const stepsHtml = data.steps.map((s: any, idx: number) => `  <div class="flex items-start gap-4">
+    <div class="flex flex-col items-center shrink-0">
+      <div class="w-8 h-8 rounded-full bg-brand text-black font-bold flex items-center justify-center text-sm shadow-[0_0_15px_rgba(0,240,255,0.3)]">${s.step}</div>
+      ${idx < data.steps.length - 1 ? `<div class="w-0.5 h-16 bg-gradient-to-b from-brand to-transparent"></div>` : ""}
+    </div>
+    <div>
+      <h4 class="text-white font-bold text-base mb-1">${s.title}</h4>
+      <p class="text-slate-400 text-xs leading-relaxed">${s.desc}</p>
+    </div>
+  </div>`).join("\n");
+        return metaStr + `<div class="space-y-6 my-8 bg-card/30 border border-white/5 p-6 rounded-2xl text-left">
+\n${stepsHtml}\n</div>`;
+      }
+      if (data.layout === "comparison") {
+        const left = data.comparison[0];
+        const right = data.comparison[1];
+        const leftPoints = (left.points || []).map((p: any) => `      <li>${p}</li>`).join("\n");
+        const rightPoints = (right.points || []).map((p: any) => `      <li>${p}</li>`).join("\n");
+        return metaStr + `<div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-8 text-left">
+  <div class="border border-red-500/20 bg-red-950/5 p-6 rounded-2xl space-y-3">
+    <div class="px-2 py-1 rounded bg-red-500/10 text-red-400 text-[10px] font-bold uppercase tracking-wider w-fit">${left.category}</div>
+    <h4 class="text-white font-bold text-base mt-0">${left.title}</h4>
+    <ul class="text-xs text-slate-400 space-y-2 pl-4 list-disc">
+\n${leftPoints}\n    </ul>
+  </div>
+  <div class="border border-brand/20 bg-brand/5 p-6 rounded-2xl space-y-3">
+    <div class="px-2 py-1 rounded bg-brand/10 text-brand text-[10px] font-bold uppercase tracking-wider w-fit">${right.category}</div>
+    <h4 class="text-white font-bold text-base mt-0">${right.title}</h4>
+    <ul class="text-xs text-slate-400 space-y-2 pl-4 list-disc">
+\n${rightPoints}\n    </ul>
+  </div>
+</div>`;
+      }
+    }
+    return "";
+  }, []);
+
+  const getCurrentPreviewHtml = React.useCallback((): string => {
+    if (editorKind === "heading") {
+      return generateHtmlFromMetadata("heading", { text: headingText });
+    }
+    if (editorKind === "subheading") {
+      return generateHtmlFromMetadata("subheading", { text: subheadingText });
+    }
+    if (editorKind === "paragraph") {
+      return generateHtmlFromMetadata("paragraph", { text: paragraphText });
+    }
+    if (editorKind === "image") {
+      return generateHtmlFromMetadata("image", { url: simpleImageUrl, caption: simpleImageCaption });
+    }
+    if (editorKind === "infographics") {
+      return generateHtmlFromMetadata("infographics", { cards: infoCards });
+    }
+    if (editorKind === "smartarts") {
+      return generateHtmlFromMetadata("smartarts", { 
+        layout: smartArtType, 
+        pillars: smartPillars, 
+        steps: smartTimeline, 
+        comparison: smartComparison 
+      });
+    }
+    return contentHtml;
+  }, [
+    editorKind,
+    headingText,
+    subheadingText,
+    paragraphText,
+    simpleImageUrl,
+    simpleImageCaption,
+    infoCards,
+    smartArtType,
+    smartPillars,
+    smartTimeline,
+    smartComparison,
+    contentHtml,
+    generateHtmlFromMetadata
+  ]);
+
   const insertSnippet = React.useCallback((snippet: string) => {
     const el = textareaRef.current;
     if (el) {
@@ -207,6 +356,76 @@ const LessonEditor = React.memo(function LessonEditor({
       loadTestDetails();
     }
   }, [initial.id, initial.kind]);
+
+  React.useEffect(() => {
+    let parseKind: string = initial.kind || "theory";
+    let parsedMeta: any = null;
+    
+    if (initial.content_html && initial.content_html.startsWith("<!-- KVJ_MATERIAL_METADATA:")) {
+      try {
+        const match = initial.content_html.match(/^<!-- KVJ_MATERIAL_METADATA: (\{.*?\}) -->/);
+        if (match) {
+          parsedMeta = JSON.parse(match[1]);
+          parseKind = parsedMeta.type;
+        }
+      } catch (err) {
+        console.error("Failed to parse material metadata:", err);
+      }
+    }
+    
+    setEditorKind(parseKind);
+    
+    if (parsedMeta) {
+      if (parseKind === "heading") {
+        setHeadingText(parsedMeta.text || "");
+      } else if (parseKind === "subheading") {
+        setSubheadingText(parsedMeta.text || "");
+      } else if (parseKind === "paragraph") {
+        setParagraphText(parsedMeta.text || "");
+      } else if (parseKind === "image") {
+        setSimpleImageUrl(parsedMeta.url || "");
+        setSimpleImageCaption(parsedMeta.caption || "");
+      } else if (parseKind === "infographics") {
+        setInfoCards(parsedMeta.cards || []);
+      } else if (parseKind === "smartarts") {
+        setSmartArtType(parsedMeta.layout || "pillars");
+        if (parsedMeta.layout === "pillars") {
+          setSmartPillars(parsedMeta.pillars || []);
+        } else if (parsedMeta.layout === "timeline") {
+          setSmartTimeline(parsedMeta.steps || []);
+        } else if (parsedMeta.layout === "comparison") {
+          setSmartComparison(parsedMeta.comparison || []);
+        }
+      }
+    } else {
+      // Clear/Reset fields if no metadata
+      setHeadingText("");
+      setSubheadingText("");
+      setParagraphText("");
+      setSimpleImageUrl("");
+      setSimpleImageCaption("");
+      setInfoCards([
+        { title: "Key Point One", desc: "", number: "01" },
+        { title: "Key Point Two", desc: "", number: "02" },
+        { title: "Key Point Three", desc: "", number: "03" },
+      ]);
+      setSmartArtType("pillars");
+      setSmartPillars([
+        { title: "Pillar One", desc: "", badge: "Pillar 01" },
+        { title: "Pillar Two", desc: "", badge: "Pillar 02" },
+        { title: "Pillar Three", desc: "", badge: "Pillar 03" },
+      ]);
+      setSmartTimeline([
+        { title: "Step One Title", desc: "", step: "01" },
+        { title: "Step Two Title", desc: "", step: "02" },
+        { title: "Step Three Title", desc: "", step: "03" },
+      ]);
+      setSmartComparison([
+        { category: "Option A", title: "Title A", points: [""] },
+        { category: "Option B", title: "Title B", points: [""] },
+      ]);
+    }
+  }, [initial]);
 
   /**
    * Standalone Image Upload: Uploads selected images to Supabase storage
@@ -375,19 +594,30 @@ const LessonEditor = React.memo(function LessonEditor({
         <div>
           <label className="block text-[10px] font-bold uppercase tracking-wider text-slate mb-1">Material Type</label>
           <select
-            value={kind}
+            value={editorKind}
             onChange={(e) => {
-              const newKind = e.target.value as "theory" | "activity" | "assessment";
-              setKind(newKind);
-              if (newKind === "assessment") {
+              const val = e.target.value;
+              setEditorKind(val);
+              if (val === "assessment") {
+                setKind("assessment");
                 setMaxScore(100);
+              } else if (val === "activity") {
+                setKind("activity");
+              } else {
+                setKind("theory");
               }
             }}
-            className="w-full px-3 py-2 rounded-lg border border-line bg-white text-sm"
+            className="w-full px-3 py-2 rounded-lg border border-line bg-white text-slate-800 text-sm"
           >
             <option value="theory">Theory (HTML)</option>
             <option value="activity">Interactive Activity (HTML)</option>
             <option value="assessment">Assessment (MCQ)</option>
+            <option value="heading">Heading (No-Code)</option>
+            <option value="subheading">Subheading (No-Code)</option>
+            <option value="paragraph">Paragraph (No-Code)</option>
+            <option value="image">Image (No-Code)</option>
+            <option value="infographics">Infographics (No-Code)</option>
+            <option value="smartarts">Smart Arts (No-Code)</option>
           </select>
         </div>
 
@@ -530,7 +760,7 @@ const LessonEditor = React.memo(function LessonEditor({
                       editorTab === "code" ? "bg-white text-ink shadow-sm" : "text-slate hover:text-ink"
                     }`}
                   >
-                    HTML Source
+                    {editorKind === "theory" || editorKind === "activity" ? "HTML Source" : "Edit Content"}
                   </button>
                   <button
                     type="button"
@@ -545,89 +775,92 @@ const LessonEditor = React.memo(function LessonEditor({
                 </div>
               </div>
 
-              <div className="flex items-center gap-1.5 flex-wrap">
-                {/* Standalone Image Upload */}
-                <input
-                  type="file"
-                  id={standaloneImageId}
-                  accept="image/*"
-                  multiple
-                  className="hidden"
-                  onChange={handleStandaloneImageUpload}
-                />
-                <label
-                  htmlFor={standaloneImageId}
-                  className="cursor-pointer px-2.5 py-1 bg-white border border-line hover:border-brand/40 text-slate hover:text-brand text-[10px] font-bold rounded-md flex items-center gap-1 shadow-sm shrink-0"
-                  title="Upload image files and insert <img> tags into HTML source"
-                >
-                  {uploadingImage ? <Loader2 className="w-3 h-3 animate-spin text-brand" /> : <ImageIcon className="w-3 h-3 text-brand" />}
-                  <span>+ Upload Image</span>
-                </label>
+              {(editorKind === "theory" || editorKind === "activity") && (
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {/* Standalone Image Upload */}
+                  <input
+                    type="file"
+                    id={standaloneImageId}
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={handleStandaloneImageUpload}
+                  />
+                  <label
+                    htmlFor={standaloneImageId}
+                    className="cursor-pointer px-2.5 py-1 bg-white border border-line hover:border-brand/40 text-slate hover:text-brand text-[10px] font-bold rounded-md flex items-center gap-1 shadow-sm shrink-0"
+                    title="Upload image files and insert <img> tags into HTML source"
+                  >
+                    {uploadingImage ? <Loader2 className="w-3 h-3 animate-spin text-brand" /> : <ImageIcon className="w-3 h-3 text-brand" />}
+                    <span>+ Upload Image</span>
+                  </label>
 
-                {/* Multi-file HTML + Images import */}
-                <input
-                  type="file"
-                  id={fileId}
-                  accept=".html,.htm,image/*"
-                  multiple
-                  className="hidden"
-                  onChange={importHtml}
-                />
-                <label
-                  htmlFor={fileId}
-                  className="cursor-pointer px-2.5 py-1 bg-white border border-line hover:border-brand/40 text-brand text-[10px] font-bold rounded-md flex items-center gap-1 shadow-sm shrink-0"
-                  title="Import an .html file with its referenced relative image files together"
-                >
-                  {importing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
-                  <span>Import HTML + images</span>
-                </label>
-              </div>
+                  {/* Multi-file HTML + Images import */}
+                  <input
+                    type="file"
+                    id={fileId}
+                    accept=".html,.htm,image/*"
+                    multiple
+                    className="hidden"
+                    onChange={importHtml}
+                  />
+                  <label
+                    htmlFor={fileId}
+                    className="cursor-pointer px-2.5 py-1 bg-white border border-line hover:border-brand/40 text-brand text-[10px] font-bold rounded-md flex items-center gap-1 shadow-sm shrink-0"
+                    title="Import an .html file with its referenced relative image files together"
+                  >
+                    {importing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
+                    <span>Import HTML + images</span>
+                  </label>
+                </div>
+              )}
             </div>
 
             {editorTab === "code" ? (
-              <div className="space-y-2">
-                {/* Quick Insert Toolbar */}
-                <div className="flex flex-wrap items-center gap-1.5 bg-slate-50 dark:bg-slate-900/50 p-2 rounded-lg border border-line">
-                  <span className="text-[9px] font-bold uppercase tracking-wider text-slate mr-1.5 select-none">Quick Insert:</span>
-                  
-                  <button
-                    type="button"
-                    onClick={() => insertSnippet(`<h2 class="text-white text-2xl font-extrabold tracking-tight border-b border-white/10 pb-3 mb-6">Heading Title</h2>`)}
-                    className="px-2.5 py-1 bg-white hover:bg-slate-50 border border-line text-slate-800 hover:text-black text-[10px] font-bold rounded-md shadow-sm transition-colors cursor-pointer"
-                  >
-                    Heading
-                  </button>
+              editorKind === "theory" || editorKind === "activity" ? (
+                <div className="space-y-2">
+                  {/* Quick Insert Toolbar */}
+                  <div className="flex flex-wrap items-center gap-1.5 bg-slate-50 dark:bg-slate-900/50 p-2 rounded-lg border border-line">
+                    <span className="text-[9px] font-bold uppercase tracking-wider text-slate mr-1.5 select-none">Quick Insert:</span>
+                    
+                    <button
+                      type="button"
+                      onClick={() => insertSnippet(`<h2 class="text-white text-2xl font-extrabold tracking-tight border-b border-white/10 pb-3 mb-6">Heading Title</h2>`)}
+                      className="px-2.5 py-1 bg-white hover:bg-slate-50 border border-line text-slate-800 hover:text-black text-[10px] font-bold rounded-md shadow-sm transition-colors cursor-pointer"
+                    >
+                      Heading
+                    </button>
 
-                  <button
-                    type="button"
-                    onClick={() => insertSnippet(`<h3 class="text-brand text-lg font-bold tracking-tight mb-3">Subheading Title</h3>`)}
-                    className="px-2.5 py-1 bg-white hover:bg-slate-50 border border-line text-slate-800 hover:text-black text-[10px] font-bold rounded-md shadow-sm transition-colors cursor-pointer"
-                  >
-                    Subheading
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => insertSnippet(`<h3 class="text-brand text-lg font-bold tracking-tight mb-3">Subheading Title</h3>`)}
+                      className="px-2.5 py-1 bg-white hover:bg-slate-50 border border-line text-slate-800 hover:text-black text-[10px] font-bold rounded-md shadow-sm transition-colors cursor-pointer"
+                    >
+                      Subheading
+                    </button>
 
-                  <button
-                    type="button"
-                    onClick={() => insertSnippet(`<p class="text-slate-350 text-base leading-relaxed mb-6">Write your paragraph content here.</p>`)}
-                    className="px-2.5 py-1 bg-white hover:bg-slate-50 border border-line text-slate-800 hover:text-black text-[10px] font-bold rounded-md shadow-sm transition-colors cursor-pointer"
-                  >
-                    Paragraph
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => insertSnippet(`<p class="text-slate-350 text-base leading-relaxed mb-6">Write your paragraph content here.</p>`)}
+                      className="px-2.5 py-1 bg-white hover:bg-slate-50 border border-line text-slate-800 hover:text-black text-[10px] font-bold rounded-md shadow-sm transition-colors cursor-pointer"
+                    >
+                      Paragraph
+                    </button>
 
-                  <button
-                    type="button"
-                    onClick={() => insertSnippet(`<figure class="my-8 text-center bg-card border border-white/5 p-4 rounded-2xl">
+                    <button
+                      type="button"
+                      onClick={() => insertSnippet(`<figure class="my-8 text-center bg-card border border-white/5 p-4 rounded-2xl">
   <img src="https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=800&q=80" alt="Visual Description" class="rounded-xl border border-white/10 shadow-lg mx-auto" />
   <figcaption class="text-xs text-slate-400 mt-3 font-medium">Figure description caption</figcaption>
 </figure>`)}
-                    className="px-2.5 py-1 bg-white hover:bg-slate-50 border border-line text-slate-800 hover:text-black text-[10px] font-bold rounded-md shadow-sm transition-colors cursor-pointer"
-                  >
-                    Image
-                  </button>
+                      className="px-2.5 py-1 bg-white hover:bg-slate-50 border border-line text-slate-800 hover:text-black text-[10px] font-bold rounded-md shadow-sm transition-colors cursor-pointer"
+                    >
+                      Image
+                    </button>
 
-                  <button
-                    type="button"
-                    onClick={() => insertSnippet(`<!-- Infographic: Key Insights Grid -->
+                    <button
+                      type="button"
+                      onClick={() => insertSnippet(`<!-- Infographic: Key Insights Grid -->
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 my-8">
   <div class="relative bg-card border border-white/5 rounded-2xl p-6 overflow-hidden group hover:border-brand/30 transition-all duration-300">
     <div class="absolute top-0 right-0 w-24 h-24 bg-brand/5 rounded-full blur-xl group-hover:bg-brand/15 transition-all duration-300"></div>
@@ -648,23 +881,23 @@ const LessonEditor = React.memo(function LessonEditor({
     <p class="text-slate-400 text-xs leading-relaxed mb-0">Describe the third key insight or value proposition here.</p>
   </div>
 </div>`)}
-                    className="px-2.5 py-1 bg-white hover:bg-slate-50 border border-line text-slate-800 hover:text-black text-[10px] font-bold rounded-md shadow-sm transition-colors cursor-pointer"
-                  >
-                    Infographics
-                  </button>
-
-                  <div className="relative group/smartart">
-                    <button
-                      type="button"
-                      className="px-2.5 py-1 bg-white hover:bg-slate-50 border border-line text-slate-800 hover:text-black text-[10px] font-bold rounded-md shadow-sm transition-colors flex items-center gap-1 cursor-pointer"
+                      className="px-2.5 py-1 bg-white hover:bg-slate-50 border border-line text-slate-800 hover:text-black text-[10px] font-bold rounded-md shadow-sm transition-colors cursor-pointer"
                     >
-                      <span>Smart Arts</span>
-                      <span className="text-[8px] opacity-60">▼</span>
+                      Infographics
                     </button>
-                    <div className="absolute left-0 mt-1 hidden group-hover/smartart:block bg-white border border-line rounded-lg shadow-xl py-1 z-50 min-w-[180px]">
+
+                    <div className="relative group/smartart">
                       <button
                         type="button"
-                        onClick={() => insertSnippet(`<!-- Smart Art: Pillars Grid -->
+                        className="px-2.5 py-1 bg-white hover:bg-slate-50 border border-line text-slate-800 hover:text-black text-[10px] font-bold rounded-md shadow-sm transition-colors flex items-center gap-1 cursor-pointer"
+                      >
+                        <span>Smart Arts</span>
+                        <span className="text-[8px] opacity-60">▼</span>
+                      </button>
+                      <div className="absolute left-0 mt-1 hidden group-hover/smartart:block bg-white border border-line rounded-lg shadow-xl py-1 z-50 min-w-[180px]">
+                        <button
+                          type="button"
+                          onClick={() => insertSnippet(`<!-- Smart Art: Pillars Grid -->
 <div class="my-8 border border-white/10 rounded-2xl overflow-hidden bg-card/40 backdrop-blur-sm">
   <div class="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-white/10">
     <div class="p-6 space-y-3">
@@ -693,13 +926,13 @@ const LessonEditor = React.memo(function LessonEditor({
     </div>
   </div>
 </div>`)}
-                        className="w-full text-left px-3 py-1.5 hover:bg-slate-50 text-[10px] text-slate-800 font-bold cursor-pointer"
-                      >
-                        Pillars Layout
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => insertSnippet(`<!-- Smart Art: Process Flow -->
+                          className="w-full text-left px-3 py-1.5 hover:bg-slate-50 text-[10px] text-slate-800 font-bold cursor-pointer"
+                        >
+                          Pillars Layout
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => insertSnippet(`<!-- Smart Art: Process Flow -->
 <div class="space-y-6 my-8 bg-card/30 border border-white/5 p-6 rounded-2xl text-left">
   <div class="flex items-start gap-4">
     <div class="flex flex-col items-center shrink-0">
@@ -731,13 +964,13 @@ const LessonEditor = React.memo(function LessonEditor({
     </div>
   </div>
 </div>`)}
-                        className="w-full text-left px-3 py-1.5 hover:bg-slate-50 text-[10px] text-slate-800 font-bold border-t border-slate-100 cursor-pointer"
-                      >
-                        Process Timeline
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => insertSnippet(`<!-- Smart Art: Comparison Grid -->
+                          className="w-full text-left px-3 py-1.5 hover:bg-slate-50 text-[10px] text-slate-800 font-bold border-t border-slate-100 cursor-pointer"
+                        >
+                          Process Timeline
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => insertSnippet(`<!-- Smart Art: Comparison Grid -->
 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-8 text-left">
   <div class="border border-red-500/20 bg-red-950/5 p-6 rounded-2xl space-y-3">
     <div class="px-2 py-1 rounded bg-red-500/10 text-red-400 text-[10px] font-bold uppercase tracking-wider w-fit">Option A</div>
@@ -756,31 +989,373 @@ const LessonEditor = React.memo(function LessonEditor({
     </ul>
   </div>
 </div>`)}
-                        className="w-full text-left px-3 py-1.5 hover:bg-slate-50 text-[10px] text-slate-800 font-bold border-t border-slate-100 cursor-pointer"
-                      >
-                        Comparison Columns
-                      </button>
+                          className="w-full text-left px-3 py-1.5 hover:bg-slate-50 text-[10px] text-slate-800 font-bold border-t border-slate-100 cursor-pointer"
+                        >
+                          Comparison Columns
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <textarea
-                  ref={textareaRef}
-                  rows={12}
-                  placeholder="<div>Paste or write lesson HTML markup here...</div>"
-                  value={contentHtml}
-                  onChange={(e) => setContentHtml(e.target.value)}
-                  className="w-full px-3 py-2 border border-line bg-white text-slate-800 rounded-lg text-xs font-mono resize-y"
-                />
-              </div>
+                  <textarea
+                    ref={textareaRef}
+                    rows={12}
+                    placeholder="<div>Paste or write lesson HTML markup here...</div>"
+                    value={contentHtml}
+                    onChange={(e) => setContentHtml(e.target.value)}
+                    className="w-full px-3 py-2 border border-line bg-white text-slate-800 rounded-lg text-xs font-mono resize-y"
+                  />
+                </div>
+              ) : (
+                <div className="space-y-4 bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-line">
+                  {editorKind === "heading" && (
+                    <div className="space-y-2">
+                      <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">Heading Text</label>
+                      <input
+                        type="text"
+                        value={headingText}
+                        onChange={(e) => {
+                          setHeadingText(e.target.value);
+                          if (!title) setTitle(e.target.value);
+                        }}
+                        placeholder="Enter heading text..."
+                        className="w-full px-3 py-2 border border-line bg-white text-slate-800 rounded-lg text-sm"
+                      />
+                    </div>
+                  )}
+
+                  {editorKind === "subheading" && (
+                    <div className="space-y-2">
+                      <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">Subheading Text</label>
+                      <input
+                        type="text"
+                        value={subheadingText}
+                        onChange={(e) => {
+                          setSubheadingText(e.target.value);
+                          if (!title) setTitle(e.target.value);
+                        }}
+                        placeholder="Enter subheading text..."
+                        className="w-full px-3 py-2 border border-line bg-white text-slate-800 rounded-lg text-sm"
+                      />
+                    </div>
+                  )}
+
+                  {editorKind === "paragraph" && (
+                    <div className="space-y-2">
+                      <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">Paragraph Text</label>
+                      <textarea
+                        rows={6}
+                        value={paragraphText}
+                        onChange={(e) => setParagraphText(e.target.value)}
+                        placeholder="Enter paragraph text..."
+                        className="w-full px-3 py-2 border border-line bg-white text-slate-800 rounded-lg text-sm"
+                      />
+                    </div>
+                  )}
+
+                  {editorKind === "image" && (
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">Image URL / Upload</label>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={simpleImageUrl}
+                            onChange={(e) => setSimpleImageUrl(e.target.value)}
+                            placeholder="https://example.com/image.jpg"
+                            className="w-full px-3 py-2 border border-line bg-white text-slate-800 rounded-lg text-sm"
+                          />
+                          <input
+                            type="file"
+                            id="simple-image-upload"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              const fd = new FormData();
+                              fd.append("file", file);
+                              try {
+                                const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
+                                const data = await res.json();
+                                if (!res.ok) throw new Error(data.error);
+                                setSimpleImageUrl(data.url);
+                              } catch (err: any) {
+                                alert("Upload failed: " + err.message);
+                              }
+                            }}
+                          />
+                          <label
+                            htmlFor="simple-image-upload"
+                            className="cursor-pointer px-4 py-2 bg-brand text-black text-xs font-bold rounded-lg flex items-center justify-center shrink-0 shadow-sm"
+                          >
+                            Upload File
+                          </label>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">Caption</label>
+                        <input
+                          type="text"
+                          value={simpleImageCaption}
+                          onChange={(e) => setSimpleImageCaption(e.target.value)}
+                          placeholder="Enter image caption..."
+                          className="w-full px-3 py-2 border border-line bg-white text-slate-800 rounded-lg text-sm"
+                        />
+                      </div>
+                      {simpleImageUrl && (
+                        <div className="border border-line rounded-lg p-2 bg-slate-50 w-fit">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={simpleImageUrl} alt="Preview" className="max-w-[200px] max-h-[150px] rounded-lg object-cover" />
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {editorKind === "infographics" && (
+                    <div className="space-y-4">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate border-b border-line pb-2 block">Infographics Cards (Max 3)</span>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {infoCards.map((card, idx) => (
+                          <div key={idx} className="border border-line rounded-xl p-4 bg-slate-50 dark:bg-slate-900/10 space-y-3">
+                            <span className="text-[10px] font-bold text-slate border-b border-line/40 pb-1 block">Card {idx + 1}</span>
+                            <div>
+                              <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-1">Index / Step Number</label>
+                              <input
+                                type="text"
+                                value={card.number}
+                                onChange={(e) => {
+                                  const updated = [...infoCards];
+                                  updated[idx].number = e.target.value;
+                                  setInfoCards(updated);
+                                }}
+                                className="w-full px-2.5 py-1.5 border border-line bg-white text-slate-800 rounded text-xs"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-1">Title</label>
+                              <input
+                                type="text"
+                                value={card.title}
+                                onChange={(e) => {
+                                  const updated = [...infoCards];
+                                  updated[idx].title = e.target.value;
+                                  setInfoCards(updated);
+                                }}
+                                className="w-full px-2.5 py-1.5 border border-line bg-white text-slate-800 rounded text-xs"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-1">Description</label>
+                              <textarea
+                                rows={3}
+                                value={card.desc}
+                                onChange={(e) => {
+                                  const updated = [...infoCards];
+                                  updated[idx].desc = e.target.value;
+                                  setInfoCards(updated);
+                                }}
+                                className="w-full px-2.5 py-1.5 border border-line bg-white text-slate-800 rounded text-xs"
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {editorKind === "smartarts" && (
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">Smart Art Layout Type</label>
+                        <select
+                          value={smartArtType}
+                          onChange={(e) => setSmartArtType(e.target.value as "pillars" | "timeline" | "comparison")}
+                          className="w-full px-3 py-2 rounded-lg border border-line bg-white text-slate-800 text-sm"
+                        >
+                          <option value="pillars">Pillars Layout (3 Core Columns)</option>
+                          <option value="timeline">Process Timeline (Vertical Flow)</option>
+                          <option value="comparison">Comparison Grid (2 Options Side-by-Side)</option>
+                        </select>
+                      </div>
+
+                      {smartArtType === "pillars" && (
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-line/60 pt-4">
+                          {smartPillars.map((pillar, idx) => (
+                            <div key={idx} className="border border-line rounded-xl p-4 bg-slate-50 dark:bg-slate-900/10 space-y-3">
+                              <span className="text-[10px] font-bold text-slate border-b border-line/40 pb-1 block">Pillar {idx + 1}</span>
+                              <div>
+                                <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-1">Badge (e.g. Pillar 01)</label>
+                                <input
+                                  type="text"
+                                  value={pillar.badge}
+                                  onChange={(e) => {
+                                    const updated = [...smartPillars];
+                                    updated[idx].badge = e.target.value;
+                                    setSmartPillars(updated);
+                                  }}
+                                  className="w-full px-2.5 py-1.5 border border-line bg-white text-slate-800 rounded text-xs"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-1">Title</label>
+                                <input
+                                  type="text"
+                                  value={pillar.title}
+                                  onChange={(e) => {
+                                    const updated = [...smartPillars];
+                                    updated[idx].title = e.target.value;
+                                    setSmartPillars(updated);
+                                  }}
+                                  className="w-full px-2.5 py-1.5 border border-line bg-white text-slate-800 rounded text-xs"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-1">Description</label>
+                                <textarea
+                                  rows={3}
+                                  value={pillar.desc}
+                                  onChange={(e) => {
+                                    const updated = [...smartPillars];
+                                    updated[idx].desc = e.target.value;
+                                    setSmartPillars(updated);
+                                  }}
+                                  className="w-full px-2.5 py-1.5 border border-line bg-white text-slate-800 rounded text-xs"
+                                />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {smartArtType === "timeline" && (
+                        <div className="space-y-4 border-t border-line/60 pt-4">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-bold text-slate">Steps (Timeline Flow)</span>
+                            <button
+                              type="button"
+                              onClick={() => setSmartTimeline([...smartTimeline, { title: "New Step", desc: "", step: String(smartTimeline.length + 1).padStart(2, "0") }])}
+                              className="px-2.5 py-1 bg-brand text-black text-[10px] font-bold rounded hover:bg-brand-secondary cursor-pointer"
+                            >
+                              + Add Step
+                            </button>
+                          </div>
+                          <div className="space-y-3">
+                            {smartTimeline.map((step, idx) => (
+                              <div key={idx} className="border border-line rounded-xl p-4 bg-slate-50 dark:bg-slate-900/10 flex gap-4 items-start relative group">
+                                <button
+                                  type="button"
+                                  onClick={() => setSmartTimeline(smartTimeline.filter((_, i) => i !== idx))}
+                                  className="absolute top-2 right-2 text-xs text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer font-bold"
+                                >
+                                  Remove
+                                </button>
+                                <div className="w-12">
+                                  <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-1">Step</label>
+                                  <input
+                                    type="text"
+                                    value={step.step}
+                                    onChange={(e) => {
+                                      const updated = [...smartTimeline];
+                                      updated[idx].step = e.target.value;
+                                      setSmartTimeline(updated);
+                                    }}
+                                    className="w-full px-2 py-1 border border-line bg-white text-slate-800 rounded text-xs text-center"
+                                  />
+                                </div>
+                                <div className="flex-1">
+                                  <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-1">Title</label>
+                                  <input
+                                    type="text"
+                                    value={step.title}
+                                    onChange={(e) => {
+                                      const updated = [...smartTimeline];
+                                      updated[idx].title = e.target.value;
+                                      setSmartTimeline(updated);
+                                    }}
+                                    className="w-full px-2 py-1 border border-line bg-white text-slate-800 rounded text-xs"
+                                  />
+                                </div>
+                                <div className="flex-[2]">
+                                  <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-1">Description</label>
+                                  <textarea
+                                    rows={1}
+                                    value={step.desc}
+                                    onChange={(e) => {
+                                      const updated = [...smartTimeline];
+                                      updated[idx].desc = e.target.value;
+                                      setSmartTimeline(updated);
+                                    }}
+                                    className="w-full px-2 py-1 border border-line bg-white text-slate-800 rounded text-xs"
+                                  />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {smartArtType === "comparison" && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-line/60 pt-4">
+                          {smartComparison.map((comp, idx) => (
+                            <div key={idx} className="border border-line rounded-xl p-4 bg-slate-50 dark:bg-slate-900/10 space-y-3">
+                              <span className="text-[10px] font-bold text-slate border-b border-line/40 pb-1 block">Column {idx + 1} ({idx === 0 ? "Left Option" : "Right Option"})</span>
+                              <div>
+                                <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-1">Category (e.g. Legacy System)</label>
+                                <input
+                                  type="text"
+                                  value={comp.category}
+                                  onChange={(e) => {
+                                    const updated = [...smartComparison];
+                                    updated[idx].category = e.target.value;
+                                    setSmartComparison(updated);
+                                  }}
+                                  className="w-full px-2.5 py-1.5 border border-line bg-white text-slate-800 rounded text-xs"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-1">Title</label>
+                                <input
+                                  type="text"
+                                  value={comp.title}
+                                  onChange={(e) => {
+                                    const updated = [...smartComparison];
+                                    updated[idx].title = e.target.value;
+                                    setSmartComparison(updated);
+                                  }}
+                                  className="w-full px-2.5 py-1.5 border border-line bg-white text-slate-800 rounded text-xs"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-1">Bullet Points (One per line)</label>
+                                <textarea
+                                  rows={4}
+                                  value={comp.points.join("\n")}
+                                  onChange={(e) => {
+                                    const updated = [...smartComparison];
+                                    updated[idx].points = e.target.value.split("\n");
+                                    setSmartComparison(updated);
+                                  }}
+                                  placeholder="Point 1&#10;Point 2&#10;Point 3"
+                                  className="w-full px-2.5 py-1.5 border border-line bg-white text-slate-800 rounded text-xs font-mono"
+                                />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )
             ) : (
               <div className="w-full min-h-[340px] max-h-[500px] overflow-y-auto border border-line rounded-xl bg-[#050505] p-4">
-                {contentHtml ? (
-                  <LessonIframe html={contentHtml} darkMode={true} />
+                {getCurrentPreviewHtml() ? (
+                  <LessonIframe html={getCurrentPreviewHtml()} darkMode={true} />
                 ) : (
                   <div className="py-16 text-center space-y-2">
                     <ImageIcon className="w-10 h-10 text-slate/30 mx-auto" />
-                    <p className="text-xs text-slate/60">No HTML content added yet. Add HTML or upload images to preview.</p>
+                    <p className="text-xs text-slate/60">No content added yet. Fill in the fields or add content to preview.</p>
                   </div>
                 )}
               </div>
@@ -1007,14 +1582,43 @@ const LessonEditor = React.memo(function LessonEditor({
         <Button
           onClick={() => {
             if (!title.trim()) { alert("Lesson title is required."); return; }
+            
+            let finalKind = kind;
+            let finalContentHtml = contentHtml;
+            
+            if (editorKind === "heading") {
+              finalKind = "theory";
+              finalContentHtml = generateHtmlFromMetadata("heading", { text: headingText || title.trim() });
+            } else if (editorKind === "subheading") {
+              finalKind = "theory";
+              finalContentHtml = generateHtmlFromMetadata("subheading", { text: subheadingText || title.trim() });
+            } else if (editorKind === "paragraph") {
+              finalKind = "theory";
+              finalContentHtml = generateHtmlFromMetadata("paragraph", { text: paragraphText });
+            } else if (editorKind === "image") {
+              finalKind = "theory";
+              finalContentHtml = generateHtmlFromMetadata("image", { url: simpleImageUrl, caption: simpleImageCaption });
+            } else if (editorKind === "infographics") {
+              finalKind = "theory";
+              finalContentHtml = generateHtmlFromMetadata("infographics", { cards: infoCards });
+            } else if (editorKind === "smartarts") {
+              finalKind = "theory";
+              finalContentHtml = generateHtmlFromMetadata("smartarts", { 
+                layout: smartArtType, 
+                pillars: smartPillars, 
+                steps: smartTimeline, 
+                comparison: smartComparison 
+              });
+            }
+
             onSave({
               id: initial.id,
               module_id: initial.module_id,
               title: title.trim(),
-              kind,
-              content_html: kind === "assessment" ? "" : contentHtml,
-              max_score: kind === "activity" ? maxScore : null,
-              assessment_settings: kind === "assessment" ? {
+              kind: finalKind,
+              content_html: finalKind === "assessment" ? "" : finalContentHtml,
+              max_score: finalKind === "activity" ? maxScore : null,
+              assessment_settings: finalKind === "assessment" ? {
                 duration_mins: durationMins,
                 pass_mark: passMark,
                 attempts_allowed: attemptsAllowed,
