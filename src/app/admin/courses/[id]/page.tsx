@@ -131,6 +131,27 @@ const LessonEditor = React.memo(function LessonEditor({
   const [copiedPrompt, setCopiedPrompt] = React.useState(false);
   const fileId = React.useId();
   const standaloneImageId = React.useId();
+  const textareaRef = React.useRef<HTMLTextAreaElement>(null);
+
+  const insertSnippet = React.useCallback((snippet: string) => {
+    const el = textareaRef.current;
+    if (el) {
+      const start = el.selectionStart;
+      const end = el.selectionEnd;
+      const text = el.value;
+      const before = text.substring(0, start);
+      const after = text.substring(end, text.length);
+      const newValue = before + snippet + after;
+      setContentHtml(newValue);
+      
+      setTimeout(() => {
+        el.focus();
+        el.selectionStart = el.selectionEnd = start + snippet.length;
+      }, 0);
+    } else {
+      setContentHtml((prev) => prev + snippet);
+    }
+  }, []);
 
   // Every image embedded in THIS lesson's HTML (persisted), so admins can always see what's
   // uploaded to the lesson — not just files added in the current editing session.
@@ -208,7 +229,7 @@ const LessonEditor = React.memo(function LessonEditor({
         imageTags += `\n<img src="${data.url}" alt="${file.name.replace(/\.[^/.]+$/, "")}" class="my-4 rounded-xl max-w-full border border-white/10 shadow-lg" />\n`;
       }
       setUploadedImages((prev) => [...prev, ...newUrls]);
-      setContentHtml((prev) => prev + imageTags);
+      insertSnippet(imageTags);
       setImportStatus(`✓ ${newUrls.length} image(s) uploaded and inserted into HTML!`);
     } catch (err: any) {
       alert("Image upload failed: " + (err.message || String(err)));
@@ -223,7 +244,7 @@ const LessonEditor = React.memo(function LessonEditor({
    */
   const insertImageTag = (url: string) => {
     const tag = `\n<img src="${url}" alt="Lesson image" class="my-4 rounded-xl max-w-full border border-white/10 shadow-lg" />\n`;
-    setContentHtml((prev) => prev + tag);
+    insertSnippet(tag);
     setImportStatus("✓ Image tag inserted into HTML!");
   };
 
@@ -564,13 +585,194 @@ const LessonEditor = React.memo(function LessonEditor({
             </div>
 
             {editorTab === "code" ? (
-              <textarea
-                rows={12}
-                placeholder="<div>Paste or write lesson HTML markup here...</div>"
-                value={contentHtml}
-                onChange={(e) => setContentHtml(e.target.value)}
-                className="w-full px-3 py-2 border border-line bg-white rounded-lg text-xs font-mono resize-y"
-              />
+              <div className="space-y-2">
+                {/* Quick Insert Toolbar */}
+                <div className="flex flex-wrap items-center gap-1.5 bg-slate-50 dark:bg-slate-900/50 p-2 rounded-lg border border-line">
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-slate mr-1.5 select-none">Quick Insert:</span>
+                  
+                  <button
+                    type="button"
+                    onClick={() => insertSnippet(`<h2 class="text-white text-2xl font-extrabold tracking-tight border-b border-white/10 pb-3 mb-6">Heading Title</h2>`)}
+                    className="px-2.5 py-1 bg-white hover:bg-slate-50 border border-line text-slate-800 hover:text-black text-[10px] font-bold rounded-md shadow-sm transition-colors cursor-pointer"
+                  >
+                    Heading
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => insertSnippet(`<h3 class="text-brand text-lg font-bold tracking-tight mb-3">Subheading Title</h3>`)}
+                    className="px-2.5 py-1 bg-white hover:bg-slate-50 border border-line text-slate-800 hover:text-black text-[10px] font-bold rounded-md shadow-sm transition-colors cursor-pointer"
+                  >
+                    Subheading
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => insertSnippet(`<p class="text-slate-350 text-base leading-relaxed mb-6">Write your paragraph content here.</p>`)}
+                    className="px-2.5 py-1 bg-white hover:bg-slate-50 border border-line text-slate-800 hover:text-black text-[10px] font-bold rounded-md shadow-sm transition-colors cursor-pointer"
+                  >
+                    Paragraph
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => insertSnippet(`<figure class="my-8 text-center bg-card border border-white/5 p-4 rounded-2xl">
+  <img src="https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=800&q=80" alt="Visual Description" class="rounded-xl border border-white/10 shadow-lg mx-auto" />
+  <figcaption class="text-xs text-slate-400 mt-3 font-medium">Figure description caption</figcaption>
+</figure>`)}
+                    className="px-2.5 py-1 bg-white hover:bg-slate-50 border border-line text-slate-800 hover:text-black text-[10px] font-bold rounded-md shadow-sm transition-colors cursor-pointer"
+                  >
+                    Image
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => insertSnippet(`<!-- Infographic: Key Insights Grid -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 my-8">
+  <div class="relative bg-card border border-white/5 rounded-2xl p-6 overflow-hidden group hover:border-brand/30 transition-all duration-300">
+    <div class="absolute top-0 right-0 w-24 h-24 bg-brand/5 rounded-full blur-xl group-hover:bg-brand/15 transition-all duration-300"></div>
+    <div class="w-12 h-12 rounded-xl bg-brand/10 border border-brand/20 flex items-center justify-center mb-4 text-brand text-lg font-extrabold shadow-sm">01</div>
+    <h4 class="text-white font-bold text-base mb-2 group-hover:text-brand transition-colors">Key Point One</h4>
+    <p class="text-slate-400 text-xs leading-relaxed mb-0">Describe the first key insight or value proposition here.</p>
+  </div>
+  <div class="relative bg-card border border-white/5 rounded-2xl p-6 overflow-hidden group hover:border-brand/30 transition-all duration-300">
+    <div class="absolute top-0 right-0 w-24 h-24 bg-brand/5 rounded-full blur-xl group-hover:bg-brand/15 transition-all duration-300"></div>
+    <div class="w-12 h-12 rounded-xl bg-brand/10 border border-brand/20 flex items-center justify-center mb-4 text-brand text-lg font-extrabold shadow-sm">02</div>
+    <h4 class="text-white font-bold text-base mb-2 group-hover:text-brand transition-colors">Key Point Two</h4>
+    <p class="text-slate-400 text-xs leading-relaxed mb-0">Describe the second key insight or value proposition here.</p>
+  </div>
+  <div class="relative bg-card border border-white/5 rounded-2xl p-6 overflow-hidden group hover:border-brand/30 transition-all duration-300">
+    <div class="absolute top-0 right-0 w-24 h-24 bg-brand/5 rounded-full blur-xl group-hover:bg-brand/15 transition-all duration-300"></div>
+    <div class="w-12 h-12 rounded-xl bg-brand/10 border border-brand/20 flex items-center justify-center mb-4 text-brand text-lg font-extrabold shadow-sm">03</div>
+    <h4 class="text-white font-bold text-base mb-2 group-hover:text-brand transition-colors">Key Point Three</h4>
+    <p class="text-slate-400 text-xs leading-relaxed mb-0">Describe the third key insight or value proposition here.</p>
+  </div>
+</div>`)}
+                    className="px-2.5 py-1 bg-white hover:bg-slate-50 border border-line text-slate-800 hover:text-black text-[10px] font-bold rounded-md shadow-sm transition-colors cursor-pointer"
+                  >
+                    Infographics
+                  </button>
+
+                  <div className="relative group/smartart">
+                    <button
+                      type="button"
+                      className="px-2.5 py-1 bg-white hover:bg-slate-50 border border-line text-slate-800 hover:text-black text-[10px] font-bold rounded-md shadow-sm transition-colors flex items-center gap-1 cursor-pointer"
+                    >
+                      <span>Smart Arts</span>
+                      <span className="text-[8px] opacity-60">▼</span>
+                    </button>
+                    <div className="absolute left-0 mt-1 hidden group-hover/smartart:block bg-white border border-line rounded-lg shadow-xl py-1 z-50 min-w-[180px]">
+                      <button
+                        type="button"
+                        onClick={() => insertSnippet(`<!-- Smart Art: Pillars Grid -->
+<div class="my-8 border border-white/10 rounded-2xl overflow-hidden bg-card/40 backdrop-blur-sm">
+  <div class="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-white/10">
+    <div class="p-6 space-y-3">
+      <div class="flex items-center gap-2">
+        <div class="w-3 h-3 rounded-full bg-brand animate-pulse"></div>
+        <span class="text-xs uppercase tracking-wider text-slate-400 font-bold">Pillar 01</span>
+      </div>
+      <h4 class="text-white font-bold text-base mt-0">Pillar Title</h4>
+      <p class="text-slate-400 text-xs leading-relaxed mb-0">Core concept description goes here.</p>
+    </div>
+    <div class="p-6 space-y-3">
+      <div class="flex items-center gap-2">
+        <div class="w-3 h-3 rounded-full bg-brand animate-pulse"></div>
+        <span class="text-xs uppercase tracking-wider text-slate-400 font-bold">Pillar 02</span>
+      </div>
+      <h4 class="text-white font-bold text-base mt-0">Pillar Title</h4>
+      <p class="text-slate-400 text-xs leading-relaxed mb-0">Core concept description goes here.</p>
+    </div>
+    <div class="p-6 space-y-3">
+      <div class="flex items-center gap-2">
+        <div class="w-3 h-3 rounded-full bg-brand animate-pulse"></div>
+        <span class="text-xs uppercase tracking-wider text-slate-400 font-bold">Pillar 03</span>
+      </div>
+      <h4 class="text-white font-bold text-base mt-0">Pillar Title</h4>
+      <p class="text-slate-400 text-xs leading-relaxed mb-0">Core concept description goes here.</p>
+    </div>
+  </div>
+</div>`)}
+                        className="w-full text-left px-3 py-1.5 hover:bg-slate-50 text-[10px] text-slate-800 font-bold cursor-pointer"
+                      >
+                        Pillars Layout
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => insertSnippet(`<!-- Smart Art: Process Flow -->
+<div class="space-y-6 my-8 bg-card/30 border border-white/5 p-6 rounded-2xl text-left">
+  <div class="flex items-start gap-4">
+    <div class="flex flex-col items-center shrink-0">
+      <div class="w-8 h-8 rounded-full bg-brand text-black font-bold flex items-center justify-center text-sm shadow-[0_0_15px_rgba(0,240,255,0.3)]">01</div>
+      <div class="w-0.5 h-16 bg-gradient-to-b from-brand to-transparent"></div>
+    </div>
+    <div>
+      <h4 class="text-white font-bold text-base mb-1">Step One Title</h4>
+      <p class="text-slate-400 text-xs leading-relaxed">Establish clear goals and initial inputs.</p>
+    </div>
+  </div>
+  <div class="flex items-start gap-4">
+    <div class="flex flex-col items-center shrink-0">
+      <div class="w-8 h-8 rounded-full bg-brand text-black font-bold flex items-center justify-center text-sm shadow-[0_0_15px_rgba(0,240,255,0.3)]">02</div>
+      <div class="w-0.5 h-16 bg-gradient-to-b from-brand to-transparent"></div>
+    </div>
+    <div>
+      <h4 class="text-white font-bold text-base mb-1">Step Two Title</h4>
+      <p class="text-slate-400 text-xs leading-relaxed">Process and transform inputs.</p>
+    </div>
+  </div>
+  <div class="flex items-start gap-4">
+    <div class="flex flex-col items-center shrink-0">
+      <div class="w-8 h-8 rounded-full bg-brand text-black font-bold flex items-center justify-center text-sm shadow-[0_0_15px_rgba(0,240,255,0.3)]">03</div>
+    </div>
+    <div>
+      <h4 class="text-white font-bold text-base mb-1">Step Three Title</h4>
+      <p class="text-slate-400 text-xs leading-relaxed">Deliver final results and output insights.</p>
+    </div>
+  </div>
+</div>`)}
+                        className="w-full text-left px-3 py-1.5 hover:bg-slate-50 text-[10px] text-slate-800 font-bold border-t border-slate-100 cursor-pointer"
+                      >
+                        Process Timeline
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => insertSnippet(`<!-- Smart Art: Comparison Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-8 text-left">
+  <div class="border border-red-500/20 bg-red-950/5 p-6 rounded-2xl space-y-3">
+    <div class="px-2 py-1 rounded bg-red-500/10 text-red-400 text-[10px] font-bold uppercase tracking-wider w-fit">Option A</div>
+    <h4 class="text-white font-bold text-base mt-0">Title A</h4>
+    <ul class="text-xs text-slate-400 space-y-2 pl-4 list-disc">
+      <li>Point number one</li>
+      <li>Point number two</li>
+    </ul>
+  </div>
+  <div class="border border-brand/20 bg-brand/5 p-6 rounded-2xl space-y-3">
+    <div class="px-2 py-1 rounded bg-brand/10 text-brand text-[10px] font-bold uppercase tracking-wider w-fit">Option B</div>
+    <h4 class="text-white font-bold text-base mt-0">Title B</h4>
+    <ul class="text-xs text-slate-400 space-y-2 pl-4 list-disc">
+      <li>Point number one</li>
+      <li>Point number two</li>
+    </ul>
+  </div>
+</div>`)}
+                        className="w-full text-left px-3 py-1.5 hover:bg-slate-50 text-[10px] text-slate-800 font-bold border-t border-slate-100 cursor-pointer"
+                      >
+                        Comparison Columns
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <textarea
+                  ref={textareaRef}
+                  rows={12}
+                  placeholder="<div>Paste or write lesson HTML markup here...</div>"
+                  value={contentHtml}
+                  onChange={(e) => setContentHtml(e.target.value)}
+                  className="w-full px-3 py-2 border border-line bg-white text-slate-800 rounded-lg text-xs font-mono resize-y"
+                />
+              </div>
             ) : (
               <div className="w-full min-h-[340px] max-h-[500px] overflow-y-auto border border-line rounded-xl bg-[#050505] p-4">
                 {contentHtml ? (
