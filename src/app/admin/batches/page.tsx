@@ -153,10 +153,12 @@ export default function AdminBatchesPage() {
 
         const headerRow = (rows[0] || []).map((h) => String(h || "").trim().toLowerCase());
 
-        // Find indices for name, email, phone/mobile/contact
+        // Find indices for name, email, phone/mobile/contact, student_id, and department
         let nameIdx = -1;
         let emailIdx = -1;
         let phoneIdx = -1;
+        let studentIdIdx = -1;
+        let deptIdx = -1;
 
         for (let i = 0; i < headerRow.length; i++) {
           const val = headerRow[i];
@@ -166,6 +168,10 @@ export default function AdminBatchesPage() {
             emailIdx = i;
           } else if (val === "phone" || val === "mobile" || val === "contact") {
             phoneIdx = i;
+          } else if (val === "student id" || val === "employee id" || val === "student_id" || val === "employee_id" || val === "id") {
+            studentIdIdx = i;
+          } else if (val === "department" || val === "dept") {
+            deptIdx = i;
           }
         }
 
@@ -187,6 +193,8 @@ export default function AdminBatchesPage() {
           const rawName = nameIdx !== -1 && row[nameIdx] !== undefined ? String(row[nameIdx]).trim() : "";
           const rawEmail = emailIdx !== -1 && row[emailIdx] !== undefined ? String(row[emailIdx]).trim() : "";
           const rawPhone = phoneIdx !== -1 && row[phoneIdx] !== undefined ? String(row[phoneIdx]).trim() : "";
+          const rawStudentId = studentIdIdx !== -1 && row[studentIdIdx] !== undefined ? String(row[studentIdIdx]).trim() : "";
+          const rawDept = deptIdx !== -1 && row[deptIdx] !== undefined ? String(row[deptIdx]).trim() : "";
 
           // Drop/flag if both email and phone are empty
           const isValid = !!rawEmail || !!rawPhone;
@@ -198,6 +206,8 @@ export default function AdminBatchesPage() {
             name: rawName,
             email: rawEmail,
             phone: rawPhone,
+            student_id: rawStudentId,
+            department: rawDept,
             isValid,
           });
         }
@@ -245,7 +255,7 @@ export default function AdminBatchesPage() {
   };
 
   const handleDownloadTemplate = () => {
-    const headers = [["Name", "Email", "Phone"]];
+    const headers = [["Name", "Email", "Phone", "Student ID", "Department"]];
     const ws = XLSX.utils.aoa_to_sheet(headers);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Template");
@@ -880,6 +890,7 @@ export default function AdminBatchesPage() {
                         <thead className="bg-slate-50/80 sticky top-0 border-b border-slate-100">
                           <tr className="font-bold text-slate-500 uppercase tracking-wider">
                             <th className="p-2">Name</th>
+                            <th className="p-2">ID / Dept</th>
                             <th className="p-2">Email</th>
                             <th className="p-2">Phone</th>
                           </tr>
@@ -887,10 +898,14 @@ export default function AdminBatchesPage() {
                         <tbody className="divide-y divide-slate-100">
                           {previewStudents.map((s, idx) => (
                             <tr
-                              key={idx}
-                              className={s.isValid ? "hover:bg-slate-50/30" : "bg-error/5 text-error/80"}
+                               key={idx}
+                               className={s.isValid ? "hover:bg-slate-50/30" : "bg-error/5 text-error/80"}
                             >
                               <td className="p-2 font-medium truncate max-w-[120px]">{s.name || <span className="italic text-slate-400">Empty</span>}</td>
+                              <td className="p-2 truncate max-w-[120px]">
+                                {s.student_id ? <span className="font-mono">{s.student_id}</span> : <span className="italic text-slate-400">—</span>}
+                                {s.department && <span className="text-[10px] text-slate-550 block">{s.department}</span>}
+                              </td>
                               <td className="p-2 truncate max-w-[150px]">{s.email || <span className="italic text-slate-400">Empty</span>}</td>
                               <td className="p-2 truncate max-w-[120px]">{s.phone || <span className="italic text-slate-400">Empty</span>}</td>
                             </tr>
@@ -955,9 +970,10 @@ export default function AdminBatchesPage() {
                 ) : (
                   <div className="border border-slate-100 rounded-xl overflow-hidden flex-1 overflow-y-auto max-h-[50vh]">
                     <table className="w-full text-left border-collapse text-[13px]">
-                      <thead className="bg-slate-50 sticky top-0 border-b border-slate-100 z-10">
+                      <thead className="bg-slate-55 sticky top-0 border-b border-slate-100 z-10 bg-slate-50">
                         <tr className="font-bold text-slate-500 uppercase tracking-wider text-xs">
                           <th className="p-3 pl-4">Student Details</th>
+                          <th className="p-3">ID / Department</th>
                           <th className="p-3">Email / Phone</th>
                           <th className="p-3 text-center">Status</th>
                           <th className="p-3 text-center">Action</th>
@@ -968,6 +984,20 @@ export default function AdminBatchesPage() {
                           <tr key={student.id} className="hover:bg-slate-50/30 transition-colors">
                             <td className="p-3 pl-4 font-semibold text-slate-900">
                               {student.name || <span className="italic text-slate-400 text-xs">Unnamed Student</span>}
+                            </td>
+                            <td className="p-3 text-slate">
+                              {student.student_id ? (
+                                <div className="text-xs text-slate-700 font-semibold font-mono">
+                                  {student.student_id}
+                                </div>
+                              ) : (
+                                <span className="text-xs text-slate-400 italic">—</span>
+                              )}
+                              {student.department && (
+                                <div className="text-[11px] text-slate-500 mt-0.5">
+                                  {student.department}
+                                </div>
+                              )}
                             </td>
                             <td className="p-3 text-slate">
                               {student.email && (

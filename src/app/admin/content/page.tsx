@@ -12,7 +12,7 @@ import { useRouter } from "next/navigation";
 import {
   AlertCircle, ArrowDown, ArrowUp, Check, ChevronRight,
   FileText, ImageIcon, Loader2, Plus, Save, Trash2, X,
-  Settings
+  Settings, ExternalLink, Building2
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { ImageField } from "@/components/admin/ImageField";
@@ -432,6 +432,102 @@ function ProductList({
   );
 }
 
+// ─── Clients Preview (auto-sourced logos) ─────────────────────────────────────
+
+/**
+ * Read-only widget shown inside the "Trusted By" section of the Home CMS editor.
+ * Logos are pulled automatically from the admin-managed Clients module — no manual
+ * entry needed. Shows a live preview of active clients (logo if available, name
+ * otherwise) and a link to manage them.
+ */
+function ClientsPreview() {
+  const [clients, setClients] = useState<{ id: string; name: string; logo_url: string | null; is_active: boolean }[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState("");
+
+  useEffect(() => {
+    fetch("/api/admin/clients")
+      .then(r => r.json())
+      .then(data => {
+        setClients(
+          (data.clients ?? []).filter((c: any) => c.is_active)
+        );
+      })
+      .catch(() => setErr("Could not load clients."))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const isDirectImage = (u?: string | null) =>
+    !!u && typeof u === "string" && u.trim().length > 0 &&
+    (/^https?:\/\//i.test(u) || u.startsWith("/"));
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <label className="block text-[11px] font-bold uppercase tracking-wider text-slate">
+          Logos (from Clients module)
+        </label>
+        <a
+          href="/admin/clients"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-1 text-xs font-semibold text-brand hover:underline"
+        >
+          Manage clients <ExternalLink className="w-3 h-3" />
+        </a>
+      </div>
+
+      <div className="rounded-xl border border-line bg-surface/40 p-4">
+        {loading && (
+          <div className="flex items-center gap-2 text-sm text-slate">
+            <Loader2 className="w-4 h-4 animate-spin" /> Loading clients…
+          </div>
+        )}
+        {!loading && err && (
+          <p className="text-xs text-red-500">{err}</p>
+        )}
+        {!loading && !err && clients.length === 0 && (
+          <p className="text-xs text-slate">
+            No active clients yet.{" "}
+            <a href="/admin/clients" target="_blank" rel="noopener noreferrer" className="text-brand hover:underline font-semibold">
+              Add clients →
+            </a>
+          </p>
+        )}
+        {!loading && !err && clients.length > 0 && (
+          <div className="flex flex-wrap gap-3">
+            {clients.map(c => (
+              <div
+                key={c.id}
+                className="flex items-center gap-2 rounded-lg border border-line bg-white px-3 py-2 shadow-sm"
+              >
+                {isDirectImage(c.logo_url) ? (
+                  <img
+                    src={c.logo_url!}
+                    alt={c.name}
+                    className="h-6 max-w-[80px] object-contain"
+                  />
+                ) : (
+                  <Building2 className="w-4 h-4 text-slate/60 shrink-0" />
+                )}
+                <span className="text-xs font-medium text-ink leading-tight max-w-[120px] truncate">{c.name}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <p className="text-[11px] text-slate leading-snug">
+        ✦ Logos are automatically sourced from the{" "}
+        <a href="/admin/clients" target="_blank" rel="noopener noreferrer" className="text-brand hover:underline font-semibold">
+          Clients
+        </a>{" "}
+        module. To add or remove a logo from this section, edit the client there.
+      </p>
+    </div>
+  );
+}
+
 // ─── Home Editor ─────────────────────────────────────────────────────────────
 
 function HomeEditor({
@@ -482,8 +578,7 @@ function HomeEditor({
       <SectionCard title="Trusted By (logos only)">
         <Field label="Heading" value={data.trustedBy.heading}
           onChange={v => set("trustedBy", { ...data.trustedBy, heading: v })} />
-        <StringList label="Organization names" items={data.trustedBy.logos}
-          onChange={v => set("trustedBy", { ...data.trustedBy, logos: v })} placeholder="Add organization…" />
+        <ClientsPreview />
       </SectionCard>
 
       <SectionCard title="Our Solutions">

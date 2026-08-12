@@ -92,6 +92,17 @@ export async function POST(
       );
     }
 
+    // Fetch batch details to get course slug and college/organization name
+    const { data: batch, error: batchFetchError } = await supabaseAdmin
+      .from("batches")
+      .select("course_slug, college_name")
+      .eq("id", id)
+      .single();
+
+    if (batchFetchError || !batch) {
+      throw new Error(batchFetchError?.message || "Batch not found.");
+    }
+
     // Fetch existing students in this batch to prevent duplicates
     const { data: existingStudents, error: fetchError } = await supabaseAdmin
       .from("batch_students")
@@ -120,6 +131,8 @@ export async function POST(
       const email = student.email?.trim().toLowerCase() || null;
       const phone = normalizePhone(student.phone);
       const name = student.name?.trim() || null;
+      const studentIdVal = student.student_id?.trim() || student.employee_id?.trim() || null;
+      const departmentVal = student.department?.trim() || null;
 
       // Drop rows with neither email nor phone
       if (!email && !phone) {
@@ -148,13 +161,48 @@ export async function POST(
         continue;
       }
 
+      // Determine if student has a registered account and auto-link
+      let profileId = null;
+      let status = "INVITED";
+
+      if (email) {
+        try {
+          const { data: authUser } = await supabaseAdmin.auth.admin.getUserByEmail(email);
+          if (authUser?.user) {
+            profileId = authUser.user.id;
+            status = "JOINED";
+          }
+        } catch (err) {
+          console.warn(`User search failed for email ${email}:`, err);
+        }
+      }
+
+      if (!profileId && phone) {
+        try {
+          const { data: profile } = await supabaseAdmin
+            .from("profiles")
+            .select("id")
+            .eq("phone", phone)
+            .maybeSingle();
+          if (profile) {
+            profileId = profile.id;
+            status = "JOINED";
+          }
+        } catch (err) {
+          console.warn(`User search failed for phone ${phone}:`, err);
+        }
+      }
+
       // Add to insertion list
       toInsert.push({
         batch_id: id,
         name,
         email,
         phone,
-        status: "INVITED"
+        status,
+        profile_id: profileId,
+        student_id: studentIdVal,
+        department: departmentVal,
       });
 
       if (email) processedEmails.add(email);
@@ -167,6 +215,36 @@ export async function POST(
         .insert(toInsert);
 
       if (insertError) throw insertError;
+
+      // Auto-enroll matched registered students
+      const joinedStudents = toInsert.filter(s => s.status === "JOINED" && s.profile_id);
+      if (joinedStudents.length > 0) {
+        const enrollmentsToInsert = joinedStudents.map(s => ({
+          user_id: s.profile_id,
+          course_slug: batch.course_slug,
+          enrollment_method: "college_code",
+          status: "active"
+        }));
+
+        const { error: enrollError } = await supabaseAdmin
+          .from("enrollments")
+          .upsert(enrollmentsToInsert, { onConflict: "user_id,course_slug" });
+
+        if (enrollError) {
+          console.error("Auto-enrollment error for joined batch students:", enrollError);
+        }
+
+        // Also update their profile organization and account type
+        for (const js of joinedStudents) {
+          await supabaseAdmin
+            .from("profiles")
+            .update({
+              organization: batch.college_name,
+              account_type: "college"
+            })
+            .eq("id", js.profile_id);
+        }
+      }
     }
 
     return NextResponse.json({

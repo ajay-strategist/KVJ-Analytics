@@ -437,6 +437,7 @@ export function CourseClientWrapper({ course, modules }: CourseClientWrapperProp
           <OfferCountdown expiryDate={course.offer_expiry} pulse={pulseTimer} />
         )}
 
+
         {enrolled ? (
           <Card hoverLift={false} className="border border-emerald-500/25 bg-emerald-500/5 p-8 text-center rounded-3xl relative overflow-hidden w-full">
             <div className="absolute inset-0 bg-emerald-500/2 opacity-[0.02] pointer-events-none" />
@@ -462,10 +463,9 @@ export function CourseClientWrapper({ course, modules }: CourseClientWrapperProp
             {/* Title / Header */}
             <div>
               <h4 className="text-xl font-bold font-display text-white">
-                Get Program Access
+                {isOneToOne ? "Personal Mentorship" : isCollegeOrCompany ? "Institutional Roster" : "Get Program Access"}
               </h4>
             </div>
-
 
             {/* Duration block */}
             <div>
@@ -478,40 +478,50 @@ export function CourseClientWrapper({ course, modules }: CourseClientWrapperProp
               </div>
             </div>
 
-            {/* Pricing block */}
+            {/* Pricing / Investment block */}
             <div>
               <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider block font-mono">
                 Course Investment
               </span>
-              {course.isPaid ? (
-                <div className="space-y-2 mt-2">
-                  <div className="flex items-baseline gap-2.5">
-                    <span className="text-3xl font-bold text-white font-display">
-                      ₹{finalPrice}
-                    </span>
-                    {isDiscounted && (
-                      <span className="text-zinc-500 line-through text-sm font-mono">
-                        ₹{course.fee_inr}
+              {isOnline ? (
+                course.isPaid ? (
+                  <div className="space-y-2 mt-2">
+                    <div className="flex items-baseline gap-2.5">
+                      <span className="text-3xl font-bold text-white font-display">
+                        ₹{finalPrice}
+                      </span>
+                      {isDiscounted && (
+                        <span className="text-zinc-500 line-through text-sm font-mono">
+                          ₹{course.fee_inr}
+                        </span>
+                      )}
+                    </div>
+                    {isDiscounted && course.offer_label && (
+                      <span className="text-xs font-bold text-[#43F5FF] mt-1 block">
+                        ★ {course.offer_label}
                       </span>
                     )}
                   </div>
-                  {isDiscounted && course.offer_label && (
-                    <span className="text-xs font-bold text-[#43F5FF] mt-1 block">
-                      ★ {course.offer_label}
-                    </span>
-                  )}
+                ) : (
+                  <div className="mt-2 text-zinc-300 text-sm font-semibold">
+                    Free Enrollment
+                  </div>
+                )
+              ) : isOneToOne ? (
+                <div className="mt-2 text-zinc-300 text-sm font-semibold">
+                  Personalized 1:1 Training Plan
                 </div>
               ) : (
                 <div className="mt-2 text-zinc-300 text-sm font-semibold">
-                  Free Enrollment / Passcode Required
+                  Managed by Organization / College
                 </div>
               )}
             </div>
 
             {/* CTA Buttons */}
             <div className="space-y-3">
-              {/* Register Now Button */}
-              {course.isPaid ? (
+              {/* Register Now / Enquire Button based on Segment */}
+              {isOnline ? (
                 <Button
                   variant="primary"
                   onClick={finalPrice > 0 ? handlePayment : handleFreeEnroll}
@@ -524,13 +534,28 @@ export function CourseClientWrapper({ course, modules }: CourseClientWrapperProp
                       Initializing...
                     </span>
                   ) : (
-                    <span>Register Now</span>
+                    <span>Buy Now / Enroll Now</span>
                   )}
                 </Button>
-              ) : null}
+              ) : isOneToOne ? (
+                <Button
+                  variant="primary"
+                  onClick={() => router.push("/#contact")}
+                  className="w-full py-4 text-center font-bold text-[15px] block whitespace-nowrap rounded-full shrink-0"
+                >
+                  Enquire Now / Contact Us
+                </Button>
+              ) : (
+                <div className="p-4 bg-zinc-900/30 border border-white/5 rounded-2xl text-center space-y-1.5">
+                  <div className="text-xs font-bold text-zinc-350">Controlled Enrollment</div>
+                  <div className="text-[11px] text-zinc-500 leading-relaxed">
+                    Enrollment is managed directly by your company or college roster administrator.
+                  </div>
+                </div>
+              )}
 
-              {/* Get Offer outline button */}
-              {isDiscounted && !offerApplied && (
+              {/* Get Offer outline button for Online Courses only */}
+              {isOnline && isDiscounted && !offerApplied && (
                 <Button
                   variant="secondary"
                   onClick={() => {
@@ -548,7 +573,7 @@ export function CourseClientWrapper({ course, modules }: CourseClientWrapperProp
               )}
 
               {/* Confirmation + copyable dummy coupon code */}
-              {offerApplied && isDiscounted && (
+              {isOnline && offerApplied && isDiscounted && (
                 <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-2xl text-center space-y-2.5 animate-fadeIn">
                   <div className="text-sm font-bold flex items-center justify-center gap-1.5">
                     <span>Offer Applied ✓</span>
@@ -571,15 +596,15 @@ export function CourseClientWrapper({ course, modules }: CourseClientWrapperProp
               )}
             </div>
 
-            {/* Unlock Code section */}
-            {(course.is_locked || !course.isPaid) && (
+            {/* Unlock Code section - only visible for One-to-One, College/Company, or locked courses */}
+            {(!isOnline || course.is_locked) && (
               <div className="border-t border-line pt-6 space-y-4">
                 <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block font-mono">
-                  Have an unlock code?
+                  {isOneToOne ? "Redeem Voucher Code" : "Enter Institutional Code"}
                 </span>
 
                 {unlockError && (
-                  <div className="bg-rose-500/5 border border-rose-500/15 p-3 rounded-xl flex items-start space-x-2 text-rose-400">
+                  <div className="bg-rose-500/5 border border-rose-500/15 p-3 rounded-xl flex items-start space-x-2 text-rose-450">
                     <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                     <span className="text-xs font-semibold">{unlockError}</span>
                   </div>
@@ -599,7 +624,7 @@ export function CourseClientWrapper({ course, modules }: CourseClientWrapperProp
                     required
                     value={unlockCode}
                     onChange={(e) => setUnlockCode(e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, ""))}
-                    placeholder="Enter access code"
+                    placeholder={isOneToOne ? "ENTER VOUCHER CODE" : "ENTER BATCH PASSCODE"}
                     className="w-full px-4 py-2.5 rounded-xl border border-line text-sm bg-[#0A0D13] text-white placeholder-zinc-500 focus:outline-none focus:border-[#43F5FF]/40 text-center font-mono tracking-wider font-bold"
                   />
                   <Button
@@ -607,13 +632,12 @@ export function CourseClientWrapper({ course, modules }: CourseClientWrapperProp
                     disabled={unlockLoading}
                     className="w-full py-2.5 bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold flex items-center justify-center shrink-0 border border-line rounded-xl"
                   >
-                    {unlockLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Unlock Course"}
+                    {unlockLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : isOneToOne ? "Redeem Voucher" : "Verify Code"}
                   </Button>
                 </form>
               </div>
             )}
 
-            {/* Login Link below card */}
             {!user && (
               <div className="text-center border-t border-line pt-4">
                 <p className="text-xs text-zinc-400 font-light">
