@@ -55,8 +55,22 @@ blockquote p {
 /* Strip hardcoded light background colors from imported HTML containers */
 [style*="background-color: white"], [style*="background-color:#fff"], [style*="background-color: #fff"], [style*="background-color:#ffffff"], [style*="background-color: #ffffff"],
 [style*="background-color: rgb(255"], [style*="background-color: rgb(24"], [style*="background-color: rgb(25"],
-[style*="background: white"], [style*="background: #fff"], [style*="background: #ffffff"] {
+[style*="background: white"], [style*="background: #fff"], [style*="background: #ffffff"],
+.bg-white,
+.bg-slate-50, .bg-slate-100, .bg-slate-200,
+.bg-gray-50, .bg-gray-100, .bg-gray-200,
+.bg-zinc-50, .bg-zinc-100, .bg-zinc-200,
+.bg-neutral-50, .bg-neutral-100, .bg-neutral-200,
+[class*="bg-white"],
+[class*="bg-slate-50"], [class*="bg-slate-100"],
+[class*="bg-gray-50"], [class*="bg-gray-100"],
+[class*="bg-zinc-50"], [class*="bg-zinc-100"] {
   background-color: transparent !important;
+}
+
+.text-black, .text-slate-800, .text-slate-900, .text-zinc-800, .text-zinc-900, .text-neutral-800, .text-neutral-900,
+[class*="text-slate-8"], [class*="text-slate-9"], [class*="text-zinc-8"], [class*="text-zinc-9"], [class*="text-neutral-8"], [class*="text-neutral-9"] {
+  color: #cbd5e1 !important;
 }
 
 /* Tables in dark mode */
@@ -527,6 +541,74 @@ ${html}
       }
     }
   });
+
+  // Smart Theme Contrast Enhancer
+  const applySmartTheme = () => {
+    const isDark = document.body.classList.contains('dark');
+    document.querySelectorAll('*').forEach(el => {
+      if (['HTML', 'HEAD', 'SCRIPT', 'STYLE', 'BODY'].includes(el.tagName)) return;
+      if (isDark) {
+        if (!el.hasAttribute('data-org-bg')) {
+          el.setAttribute('data-org-bg', el.style.backgroundColor || 'NONE');
+        }
+        if (!el.hasAttribute('data-org-color')) {
+          el.setAttribute('data-org-color', el.style.color || 'NONE');
+        }
+        if (!el.hasAttribute('data-org-border')) {
+          el.setAttribute('data-org-border', el.style.borderColor || 'NONE');
+        }
+        
+        const style = window.getComputedStyle(el);
+        const bg = style.backgroundColor;
+        const m = bg.match(/[\\d.]+/g);
+        if (m && m.length >= 3) {
+          const r = Number(m[0]);
+          const g = Number(m[1]);
+          const b = Number(m[2]);
+          const a = m[3] !== undefined ? Number(m[3]) : 1;
+          if (a > 0.1) {
+            const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+            if (lum > 0.5) {
+              const isLarge = el.offsetWidth > 300 || el.offsetHeight > 300;
+              el.style.setProperty('background-color', isLarge ? 'transparent' : 'rgba(255,255,255,0.03)', 'important');
+              el.style.setProperty('border-color', 'rgba(255,255,255,0.08)', 'important');
+            }
+          }
+        }
+        const color = style.color;
+        const cm = color.match(/[\\d.]+/g);
+        if (cm && cm.length >= 3) {
+          const cr = Number(cm[0]);
+          const cg = Number(cm[1]);
+          const cb = Number(cm[2]);
+          const ca = cm[3] !== undefined ? Number(cm[3]) : 1;
+          if (ca > 0.1) {
+            const clum = (0.299 * cr + 0.587 * cg + 0.114 * cb) / 255;
+            if (clum < 0.45) {
+              el.style.setProperty('color', '#cbd5e1', 'important');
+            }
+          }
+        }
+      } else {
+        const orgBg = el.getAttribute('data-org-bg');
+        const orgColor = el.getAttribute('data-org-color');
+        const orgBorder = el.getAttribute('data-org-border');
+        if (orgBg && orgBg !== 'NONE') el.style.setProperty('background-color', orgBg);
+        else el.style.removeProperty('background-color');
+        if (orgColor && orgColor !== 'NONE') el.style.setProperty('color', orgColor);
+        else el.style.removeProperty('color');
+        if (orgBorder && orgBorder !== 'NONE') el.style.setProperty('border-color', orgBorder);
+        else el.style.removeProperty('border-color');
+      }
+    });
+  };
+
+  const themeObserver = new MutationObserver(applySmartTheme);
+  themeObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+  applySmartTheme();
+  setTimeout(applySmartTheme, 100);
+  setTimeout(applySmartTheme, 300);
+  setTimeout(applySmartTheme, 600);
 </script>
 </body>
 </html>`;
