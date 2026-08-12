@@ -169,6 +169,9 @@ const LessonEditor = React.memo(function LessonEditor({
   const [listTitle, setListTitle] = React.useState("");
   const [listPoints, setListPoints] = React.useState<string[]>([""]);
 
+  // Document Blocks (Word Document format)
+  const [documentBlocks, setDocumentBlocks] = React.useState<any[]>([]);
+
   const generateHtmlFromMetadata = React.useCallback((type: string, data: any): string => {
     const metaStr = `<!-- KVJ_MATERIAL_METADATA: ${JSON.stringify({ type, ...data })} -->\n`;
     
@@ -272,8 +275,171 @@ const LessonEditor = React.memo(function LessonEditor({
 </div>`;
       }
     }
+    if (type === "document") {
+      const blocksHtml = (data.blocks || []).map((b: any) => {
+        if (b.type === "heading") {
+          return `<h2 class="text-white text-2xl font-extrabold tracking-tight border-b border-white/10 pb-3 mb-6">${b.text}</h2>`;
+        }
+        if (b.type === "subheading") {
+          return `<h3 class="text-brand text-lg font-bold tracking-tight mb-3">${b.text}</h3>`;
+        }
+        if (b.type === "paragraph") {
+          return `<p class="text-slate-355 text-base leading-relaxed mb-6">${b.text}</p>`;
+        }
+        if (b.type === "image") {
+          return `<figure class="my-8 text-center bg-card border border-white/5 p-4 rounded-2xl">
+  <img src="${b.url}" alt="${b.caption || "Image"}" class="rounded-xl border border-white/10 shadow-xl max-w-full mx-auto" />
+  ${b.caption ? `<figcaption class="text-xs text-slate-400 mt-3 font-medium">${b.caption}</figcaption>` : ""}
+</figure>`;
+        }
+        if (b.type === "callout") {
+          const pointsHtml = (b.points || []).map((p: string) => `    <li class="flex items-start gap-2.5 text-slate-300 text-sm leading-relaxed">
+      <svg class="w-2.5 h-2.5 text-brand fill-current shrink-0 mt-1.5" viewBox="0 0 24 24">
+        <path d="M12 2L22 12L12 22L2 12Z" />
+      </svg>
+      <span>${p}</span>
+    </li>`).join("\n");
+          return `<div class="my-6 border-l-4 border-brand bg-brand/5 p-6 rounded-r-2xl text-left">
+  ${b.title ? `<h4 class="text-white font-bold text-sm mb-3">${b.title}</h4>` : ""}
+  <ul class="space-y-3">
+\n${pointsHtml}\n  </ul>
+</div>`;
+        }
+        if (b.type === "list") {
+          const pointsHtml = (b.points || []).map((p: string) => `    <li class="flex items-start gap-2.5 text-slate-300 text-sm leading-relaxed">
+      <svg class="w-2.5 h-2.5 text-brand fill-current shrink-0 mt-1.5" viewBox="0 0 24 24">
+        <path d="M12 2L22 12L12 22L2 12Z" />
+      </svg>
+      <span>${p}</span>
+    </li>`).join("\n");
+          return `<div class="my-6 text-left space-y-4">
+  ${b.title ? `<h4 class="text-white font-bold text-base mb-3">${b.title}</h4>` : ""}
+  <ul class="space-y-3">
+\n${pointsHtml}\n  </ul>
+</div>`;
+        }
+        if (b.type === "infographics") {
+          const cardsHtml = b.cards.map((c: any) => `  <div class="relative bg-card border border-white/5 rounded-2xl p-6 overflow-hidden group hover:border-brand/30 transition-all duration-300">
+    <div class="absolute top-0 right-0 w-24 h-24 bg-brand/5 rounded-full blur-xl group-hover:bg-brand/15 transition-all duration-300"></div>
+    <div class="w-12 h-12 rounded-xl bg-brand/10 border border-brand/20 flex items-center justify-center mb-4 text-brand text-lg font-extrabold shadow-sm">${c.number}</div>
+    <h4 class="text-white font-bold text-base mb-2 group-hover:text-brand transition-colors">${c.title}</h4>
+    <p class="text-slate-400 text-xs leading-relaxed mb-0">${c.desc}</p>
+  </div>`).join("\n");
+          return `<div class="grid grid-cols-1 md:grid-cols-3 gap-6 my-8">\n${cardsHtml}\n</div>`;
+        }
+        if (b.type === "smartarts") {
+          if (b.layout === "pillars") {
+            const pillarsHtml = b.pillars.map((p: any) => `    <div class="p-6 space-y-3">
+      <div class="flex items-center gap-2">
+        <div class="w-3 h-3 rounded-full bg-brand animate-pulse"></div>
+        <span class="text-xs uppercase tracking-wider text-slate-400 font-bold">${p.badge}</span>
+      </div>
+      <h4 class="text-white font-bold text-base mt-0">${p.title}</h4>
+      <p class="text-slate-400 text-xs leading-relaxed mb-0">${p.desc}</p>
+    </div>`).join("\n");
+            return `<div class="my-8 border border-white/10 rounded-2xl overflow-hidden bg-card/40 backdrop-blur-sm">
+  <div class="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-white/10">
+\n${pillarsHtml}\n  </div>
+</div>`;
+          }
+          if (b.layout === "timeline") {
+            const stepsHtml = b.steps.map((s: any, idx: number) => `  <div class="flex items-start gap-4">
+    <div class="flex flex-col items-center shrink-0">
+      <div class="w-8 h-8 rounded-full bg-brand text-black font-bold flex items-center justify-center text-sm shadow-[0_0_15px_rgba(0,240,255,0.3)]">${s.step}</div>
+      ${idx < b.steps.length - 1 ? `<div class="w-0.5 h-16 bg-gradient-to-b from-brand to-transparent"></div>` : ""}
+    </div>
+    <div>
+      <h4 class="text-white font-bold text-base mb-1">${s.title}</h4>
+      <p class="text-slate-400 text-xs leading-relaxed">${s.desc}</p>
+    </div>
+  </div>`).join("\n");
+            return `<div class="space-y-6 my-8 bg-card/30 border border-white/5 p-6 rounded-2xl text-left">
+\n${stepsHtml}\n</div>`;
+          }
+          if (b.layout === "comparison") {
+            const left = b.comparison[0];
+            const right = b.comparison[1];
+            const leftPoints = (left.points || []).map((p: any) => `      <li>${p}</li>`).join("\n");
+            const rightPoints = (right.points || []).map((p: any) => `      <li>${p}</li>`).join("\n");
+            return `<div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-8 text-left">
+  <div class="border border-red-500/20 bg-red-950/5 p-6 rounded-2xl space-y-3">
+    <div class="px-2 py-1 rounded bg-red-500/10 text-red-400 text-[10px] font-bold uppercase tracking-wider w-fit">${left.category}</div>
+    <h4 class="text-white font-bold text-base mt-0">${left.title}</h4>
+    <ul class="text-xs text-slate-400 space-y-2 pl-4 list-disc">
+\n${leftPoints}\n    </ul>
+  </div>
+  <div class="border border-brand/20 bg-brand/5 p-6 rounded-2xl space-y-3">
+    <div class="px-2 py-1 rounded bg-brand/10 text-brand text-[10px] font-bold uppercase tracking-wider w-fit">${right.category}</div>
+    <h4 class="text-white font-bold text-base mt-0">${right.title}</h4>
+    <ul class="text-xs text-slate-400 space-y-2 pl-4 list-disc">
+\n${rightPoints}\n    </ul>
+  </div>
+</div>`;
+          }
+        }
+        return "";
+      }).join("\n");
+      return metaStr + blocksHtml;
+    }
     return "";
   }, []);
+
+  const addDocumentBlock = (type: string) => {
+    const id = Math.random().toString(36).substring(2, 9);
+    let newBlock: any = { id, type };
+    if (type === "heading" || type === "subheading" || type === "paragraph") {
+      newBlock.text = "";
+    } else if (type === "image") {
+      newBlock.url = "";
+      newBlock.caption = "";
+    } else if (type === "callout" || type === "list") {
+      newBlock.title = "";
+      newBlock.points = [""];
+    } else if (type === "infographics") {
+      newBlock.cards = [
+        { number: "01", title: "", desc: "" },
+        { number: "02", title: "", desc: "" },
+        { number: "03", title: "", desc: "" }
+      ];
+    } else if (type === "smartarts") {
+      newBlock.layout = "pillars";
+      newBlock.pillars = [
+        { badge: "Pillar 01", title: "", desc: "" },
+        { badge: "Pillar 02", title: "", desc: "" },
+        { badge: "Pillar 03", title: "", desc: "" }
+      ];
+      newBlock.steps = [
+        { step: "01", title: "", desc: "" }
+      ];
+      newBlock.comparison = [
+        { category: "Option A", title: "", points: [""] },
+        { category: "Option B", title: "", points: [""] }
+      ];
+    }
+    setDocumentBlocks((prev) => [...prev, newBlock]);
+  };
+
+  const updateDocumentBlock = (id: string, fields: any) => {
+    setDocumentBlocks((prev) =>
+      prev.map((b) => (b.id === id ? { ...b, ...fields } : b))
+    );
+  };
+
+  const deleteDocumentBlock = (id: string) => {
+    setDocumentBlocks((prev) => prev.filter((b) => b.id !== id));
+  };
+
+  const moveDocumentBlock = (index: number, direction: "up" | "down") => {
+    setDocumentBlocks((prev) => {
+      const copy = [...prev];
+      const targetIndex = direction === "up" ? index - 1 : index + 1;
+      if (targetIndex < 0 || targetIndex >= copy.length) return prev;
+      const temp = copy[index];
+      copy[index] = copy[targetIndex];
+      copy[targetIndex] = temp;
+      return copy;
+    });
+  };
 
   const getCurrentPreviewHtml = React.useCallback((): string => {
     if (editorKind === "heading") {
@@ -305,6 +471,9 @@ const LessonEditor = React.memo(function LessonEditor({
         smartComparison 
       });
     }
+    if (editorKind === "document") {
+      return generateHtmlFromMetadata("document", { blocks: documentBlocks });
+    }
     return contentHtml;
   }, [
     editorKind,
@@ -322,6 +491,7 @@ const LessonEditor = React.memo(function LessonEditor({
     smartPillars,
     smartTimeline,
     smartComparison,
+    documentBlocks,
     contentHtml,
     generateHtmlFromMetadata
   ]);
@@ -417,38 +587,79 @@ const LessonEditor = React.memo(function LessonEditor({
       }
     }
     
-    setEditorKind(parseKind);
-    
     if (parsedMeta) {
-      if (parseKind === "heading") {
-        setHeadingText(parsedMeta.text || "");
-      } else if (parseKind === "subheading") {
-        setSubheadingText(parsedMeta.text || "");
-      } else if (parseKind === "paragraph") {
-        setParagraphText(parsedMeta.text || "");
-      } else if (parseKind === "image") {
-        setSimpleImageUrl(parsedMeta.url || "");
-        setSimpleImageCaption(parsedMeta.caption || "");
-      } else if (parseKind === "infographics") {
-        setInfoCards(parsedMeta.cards || []);
-      } else if (parseKind === "callout") {
-        setCalloutTitle(parsedMeta.title || "");
-        setCalloutPoints(parsedMeta.points || [""]);
-      } else if (parseKind === "list") {
-        setListTitle(parsedMeta.title || "");
-        setListPoints(parsedMeta.points || [""]);
-      } else if (parseKind === "smartarts") {
-        setSmartArtType(parsedMeta.layout || "pillars");
-        if (parsedMeta.layout === "pillars") {
-          setSmartPillars(parsedMeta.pillars || []);
-        } else if (parsedMeta.layout === "timeline") {
-          setSmartTimeline(parsedMeta.steps || []);
-        } else if (parsedMeta.layout === "comparison") {
-          setSmartComparison(parsedMeta.comparison || []);
+      if (parseKind === "document") {
+        setDocumentBlocks(parsedMeta.blocks || []);
+      } else {
+        // Automatically migrate single-element no-code formats to the document-style block structure
+        const migratedBlock: any = { id: Math.random().toString(36).substring(2, 9), type: parseKind };
+        if (parseKind === "heading" || parseKind === "subheading" || parseKind === "paragraph") {
+          migratedBlock.text = parsedMeta.text || "";
+        } else if (parseKind === "image") {
+          migratedBlock.url = parsedMeta.url || "";
+          migratedBlock.caption = parsedMeta.caption || "";
+        } else if (parseKind === "infographics") {
+          migratedBlock.cards = parsedMeta.cards || [];
+        } else if (parseKind === "callout") {
+          migratedBlock.title = parsedMeta.title || "";
+          migratedBlock.points = parsedMeta.points || [""];
+        } else if (parseKind === "list") {
+          migratedBlock.title = parsedMeta.title || "";
+          migratedBlock.points = parsedMeta.points || [""];
+        } else if (parseKind === "smartarts") {
+          migratedBlock.layout = parsedMeta.layout || "pillars";
+          migratedBlock.pillars = parsedMeta.pillars || [];
+          migratedBlock.steps = parsedMeta.steps || [];
+          migratedBlock.comparison = parsedMeta.comparison || [];
         }
+        setDocumentBlocks([migratedBlock]);
+        parseKind = "document"; // Force visual editor mode
       }
     } else {
-      // Clear/Reset fields if no metadata
+      // Clear/Reset fields and load a rich template by default matching the user's textbook document
+      setDocumentBlocks([
+        {
+          id: "1",
+          type: "heading",
+          text: "1.1 DATA, INFORMATION AND KNOWLEDGE"
+        },
+        {
+          id: "2",
+          type: "subheading",
+          text: "Data"
+        },
+        {
+          id: "3",
+          type: "paragraph",
+          text: "Data refers to raw facts, figures, or observations collected for analysis or reference. On its own, data is often meaningless because it lacks context."
+        },
+        {
+          id: "4",
+          type: "callout",
+          title: "Examples of Data:",
+          points: [
+            "The number 42.",
+            "A list of dates: 12/05, 14/05, 19/05.",
+            "The word \"Cochin.\""
+          ]
+        },
+        {
+          id: "5",
+          type: "paragraph",
+          text: "Data can appear in many forms such as:"
+        },
+        {
+          id: "6",
+          type: "list",
+          title: "",
+          points: [
+            "Numbers",
+            "Text",
+            "Images",
+            "Audio"
+          ]
+        }
+      ]);
       setHeadingText("");
       setSubheadingText("");
       setParagraphText("");
@@ -479,6 +690,8 @@ const LessonEditor = React.memo(function LessonEditor({
         { category: "Option B", title: "Title B", points: [""] },
       ]);
     }
+    
+    setEditorKind(parseKind);
   }, [initial]);
 
   /**
@@ -666,6 +879,7 @@ const LessonEditor = React.memo(function LessonEditor({
             <option value="theory">Theory (HTML)</option>
             <option value="activity">Interactive Activity (HTML)</option>
             <option value="assessment">Assessment (MCQ)</option>
+            <option value="document">Document Builder (No-Code)</option>
             <option value="heading">Heading (No-Code)</option>
             <option value="subheading">Subheading (No-Code)</option>
             <option value="paragraph">Paragraph (No-Code)</option>
@@ -1101,6 +1315,562 @@ const LessonEditor = React.memo(function LessonEditor({
                 </div>
               ) : (
                 <div className="space-y-4 bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-line">
+                  {editorKind === "document" && (
+                    <div className="space-y-6">
+                      <div className="flex items-center justify-between border-b border-line pb-2 mb-4">
+                        <div>
+                          <h4 className="text-slate-800 dark:text-slate-200 font-bold text-sm">Document Builder Blocks</h4>
+                          <p className="text-xs text-slate-500">Construct your lesson by combining multiple styled blocks sequentially.</p>
+                        </div>
+                        <span className="text-xs font-mono bg-brand/10 text-brand px-2 py-0.5 rounded-full">{documentBlocks.length} blocks</span>
+                      </div>
+
+                      {documentBlocks.length === 0 ? (
+                        <div className="p-8 text-center border border-dashed border-line rounded-xl bg-white dark:bg-slate-900">
+                          <p className="text-sm text-slate-400 italic">No blocks added yet. Click one of the buttons below to add blocks!</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          {documentBlocks.map((b, idx) => (
+                            <div key={b.id} className="p-4 border border-line rounded-xl bg-white dark:bg-slate-950 shadow-sm space-y-4">
+                              {/* Block Header */}
+                              <div className="flex items-center justify-between border-b border-line pb-2">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs font-bold text-slate-400 font-mono">#{idx + 1}</span>
+                                  <span className="text-xs font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded">
+                                    {b.type}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                  <button
+                                    type="button"
+                                    disabled={idx === 0}
+                                    onClick={() => moveDocumentBlock(idx, "up")}
+                                    className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded disabled:opacity-30 text-slate-500"
+                                    title="Move Up"
+                                  >
+                                    ↑
+                                  </button>
+                                  <button
+                                    type="button"
+                                    disabled={idx === documentBlocks.length - 1}
+                                    onClick={() => moveDocumentBlock(idx, "down")}
+                                    className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded disabled:opacity-30 text-slate-500"
+                                    title="Move Down"
+                                  >
+                                    ↓
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => deleteDocumentBlock(b.id)}
+                                    className="p-1 hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-500 rounded text-slate-400 transition-colors"
+                                    title="Delete Block"
+                                  >
+                                    ✕
+                                  </button>
+                                </div>
+                              </div>
+
+                              {/* Block Inputs */}
+                              {b.type === "heading" && (
+                                <div className="space-y-1.5">
+                                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">Heading Text</label>
+                                  <input
+                                    type="text"
+                                    value={b.text || ""}
+                                    onChange={(e) => updateDocumentBlock(b.id, { text: e.target.value })}
+                                    placeholder="Enter heading text..."
+                                    className="w-full px-3 py-2 border border-line bg-white text-slate-800 dark:text-slate-100 dark:bg-slate-900 rounded-lg text-sm"
+                                  />
+                                </div>
+                              )}
+
+                              {b.type === "subheading" && (
+                                <div className="space-y-1.5">
+                                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">Subheading Text</label>
+                                  <input
+                                    type="text"
+                                    value={b.text || ""}
+                                    onChange={(e) => updateDocumentBlock(b.id, { text: e.target.value })}
+                                    placeholder="Enter subheading text..."
+                                    className="w-full px-3 py-2 border border-line bg-white text-slate-800 dark:text-slate-100 dark:bg-slate-900 rounded-lg text-sm"
+                                  />
+                                </div>
+                              )}
+
+                              {b.type === "paragraph" && (
+                                <div className="space-y-1.5">
+                                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">Paragraph Body Text</label>
+                                  <textarea
+                                    rows={4}
+                                    value={b.text || ""}
+                                    onChange={(e) => updateDocumentBlock(b.id, { text: e.target.value })}
+                                    placeholder="Enter paragraph description text..."
+                                    className="w-full px-3 py-2 border border-line bg-white text-slate-800 dark:text-slate-100 dark:bg-slate-900 rounded-lg text-sm font-sans"
+                                  />
+                                </div>
+                              )}
+
+                              {b.type === "image" && (
+                                <div className="space-y-3">
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-1.5">
+                                      <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">Image URL</label>
+                                      <input
+                                        type="text"
+                                        value={b.url || ""}
+                                        onChange={(e) => updateDocumentBlock(b.id, { url: e.target.value })}
+                                        placeholder="Paste image URL..."
+                                        className="w-full px-3 py-2 border border-line bg-white text-slate-800 dark:text-slate-100 dark:bg-slate-900 rounded-lg text-sm"
+                                      />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                      <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">Caption</label>
+                                      <input
+                                        type="text"
+                                        value={b.caption || ""}
+                                        onChange={(e) => updateDocumentBlock(b.id, { caption: e.target.value })}
+                                        placeholder="Caption text (optional)..."
+                                        className="w-full px-3 py-2 border border-line bg-white text-slate-800 dark:text-slate-100 dark:bg-slate-900 rounded-lg text-sm"
+                                      />
+                                    </div>
+                                  </div>
+                                  
+                                  {/* Direct Image Upload Block Integration */}
+                                  <div className="p-3 bg-slate-50 dark:bg-slate-900 rounded-lg border border-line flex items-center justify-between gap-4">
+                                    <div className="text-xs text-slate-500">
+                                      {b.url ? (
+                                        <div className="flex items-center gap-2">
+                                          <img src={b.url} className="w-8 h-8 rounded object-cover border border-line" alt="Preview" />
+                                          <span className="truncate max-w-[200px] font-mono">{b.url}</span>
+                                        </div>
+                                      ) : "No file uploaded. Choose a file to upload directly."}
+                                    </div>
+                                    <label className="shrink-0 bg-brand text-black hover:bg-brand/90 px-3 py-1 rounded text-xs font-bold cursor-pointer transition-colors">
+                                      Upload Image
+                                      <input
+                                        type="file"
+                                        accept="image/*"
+                                        className="hidden"
+                                        onChange={async (e) => {
+                                          const file = e.target.files?.[0];
+                                          if (file) {
+                                            try {
+                                              const fileExt = file.name.split('.').pop();
+                                              const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+                                              const filePath = `curriculum-images/${fileName}`;
+
+                                              const { data, error } = await supabase.storage
+                                                .from("course-materials")
+                                                .upload(filePath, file);
+
+                                              if (error) throw error;
+                                              const { data: { publicUrl } } = supabase.storage
+                                                .from("course-materials")
+                                                .getPublicUrl(filePath);
+
+                                              updateDocumentBlock(b.id, { url: publicUrl });
+                                              setUploadedImages((prev) => [...prev, publicUrl]);
+                                            } catch (err: any) {
+                                              alert("Upload failed: " + err.message);
+                                            }
+                                          }
+                                        }}
+                                      />
+                                    </label>
+                                  </div>
+                                </div>
+                              )}
+
+                              {(b.type === "callout" || b.type === "list") && (
+                                <div className="space-y-3">
+                                  <div className="space-y-1.5">
+                                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">
+                                      {b.type === "callout" ? "Callout Header Title" : "List Header Title"}
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={b.title || ""}
+                                      onChange={(e) => updateDocumentBlock(b.id, { title: e.target.value })}
+                                      placeholder="Header Title (optional)..."
+                                      className="w-full px-3 py-2 border border-line bg-white text-slate-800 dark:text-slate-100 dark:bg-slate-900 rounded-lg text-sm"
+                                    />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">Bullet Points</label>
+                                    <div className="space-y-2">
+                                      {(b.points || []).map((pt: string, ptIdx: number) => (
+                                        <div key={ptIdx} className="flex items-center gap-2">
+                                          <span className="text-brand shrink-0 text-xs">◆</span>
+                                          <input
+                                            type="text"
+                                            value={pt}
+                                            onChange={(e) => {
+                                              const pts = [...(b.points || [])];
+                                              pts[ptIdx] = e.target.value;
+                                              updateDocumentBlock(b.id, { points: pts });
+                                            }}
+                                            placeholder="Enter point..."
+                                            className="w-full px-3 py-1.5 border border-line bg-white text-slate-800 dark:text-slate-100 dark:bg-slate-900 rounded-lg text-xs"
+                                          />
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              const pts = (b.points || []).filter((_: any, pIdx: number) => pIdx !== ptIdx);
+                                              updateDocumentBlock(b.id, { points: pts });
+                                            }}
+                                            className="text-red-500 hover:text-red-650 font-bold px-1.5 py-0.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-sm"
+                                          >
+                                            ✕
+                                          </button>
+                                        </div>
+                                      ))}
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          updateDocumentBlock(b.id, { points: [...(b.points || []), ""] });
+                                        }}
+                                        className="text-xs text-brand hover:underline font-bold"
+                                      >
+                                        + Add Bullet Point
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+
+                              {b.type === "infographics" && (
+                                <div className="space-y-4">
+                                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">Infographic Grid Cards (Max 3)</label>
+                                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    {(b.cards || []).map((c: any, cIdx: number) => (
+                                      <div key={cIdx} className="p-3 bg-slate-50 dark:bg-slate-900 rounded-lg border border-line space-y-3">
+                                        <div className="flex items-center justify-between">
+                                          <span className="text-[10px] font-bold text-slate-400 uppercase">Card {cIdx + 1}</span>
+                                          <input
+                                            type="text"
+                                            value={c.number || ""}
+                                            onChange={(e) => {
+                                              const cards = [...(b.cards || [])];
+                                              cards[cIdx] = { ...c, number: e.target.value };
+                                              updateDocumentBlock(b.id, { cards });
+                                            }}
+                                            className="w-10 px-1 py-0.5 text-center text-xs border border-line bg-white rounded font-mono text-brand font-bold"
+                                            placeholder="01"
+                                          />
+                                        </div>
+                                        <div className="space-y-1">
+                                          <input
+                                            type="text"
+                                            value={c.title || ""}
+                                            onChange={(e) => {
+                                              const cards = [...(b.cards || [])];
+                                              cards[cIdx] = { ...c, title: e.target.value };
+                                              updateDocumentBlock(b.id, { cards });
+                                            }}
+                                            className="w-full px-2 py-1 text-xs border border-line bg-white rounded font-bold"
+                                            placeholder="Card Title"
+                                          />
+                                        </div>
+                                        <div className="space-y-1">
+                                          <textarea
+                                            rows={3}
+                                            value={c.desc || ""}
+                                            onChange={(e) => {
+                                              const cards = [...(b.cards || [])];
+                                              cards[cIdx] = { ...c, desc: e.target.value };
+                                              updateDocumentBlock(b.id, { cards });
+                                            }}
+                                            className="w-full px-2 py-1 text-xs border border-line bg-white rounded resize-none"
+                                            placeholder="Card Description"
+                                          />
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              {b.type === "smartarts" && (
+                                <div className="space-y-4">
+                                  <div className="space-y-1.5">
+                                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">Smart Art Layout Template</label>
+                                    <select
+                                      value={b.layout || "pillars"}
+                                      onChange={(e) => updateDocumentBlock(b.id, { layout: e.target.value })}
+                                      className="w-full px-3 py-1.5 border border-line bg-white text-slate-800 dark:text-slate-100 dark:bg-slate-900 rounded-lg text-xs font-medium"
+                                    >
+                                      <option value="pillars">Three Pillars Column Layout</option>
+                                      <option value="timeline">Step-by-Step Process Timeline</option>
+                                      <option value="comparison">Pro vs Con Comparison Columns</option>
+                                    </select>
+                                  </div>
+
+                                  {/* Pillars Form */}
+                                  {b.layout === "pillars" && (
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                      {(b.pillars || []).map((pl: any, plIdx: number) => (
+                                        <div key={plIdx} className="p-3 bg-slate-50 dark:bg-slate-900 rounded-lg border border-line space-y-2">
+                                          <div className="flex items-center justify-between">
+                                            <span className="text-[10px] font-bold text-slate-400">PILLAR {plIdx + 1}</span>
+                                            <input
+                                              type="text"
+                                              value={pl.badge || ""}
+                                              onChange={(e) => {
+                                                const pillars = [...(b.pillars || [])];
+                                                pillars[plIdx] = { ...pl, badge: e.target.value };
+                                                updateDocumentBlock(b.id, { pillars });
+                                              }}
+                                              className="w-20 px-1 py-0.5 text-xs border border-line bg-white rounded uppercase font-mono"
+                                              placeholder="Badge"
+                                            />
+                                          </div>
+                                          <input
+                                            type="text"
+                                            value={pl.title || ""}
+                                            onChange={(e) => {
+                                              const pillars = [...(b.pillars || [])];
+                                              pillars[plIdx] = { ...pl, title: e.target.value };
+                                              updateDocumentBlock(b.id, { pillars });
+                                            }}
+                                            className="w-full px-2 py-1 text-xs border border-line bg-white rounded font-bold"
+                                            placeholder="Pillar Title"
+                                          />
+                                          <textarea
+                                            rows={3}
+                                            value={pl.desc || ""}
+                                            onChange={(e) => {
+                                              const pillars = [...(b.pillars || [])];
+                                              pillars[plIdx] = { ...pl, desc: e.target.value };
+                                              updateDocumentBlock(b.id, { pillars });
+                                            }}
+                                            className="w-full px-2 py-1 text-xs border border-line bg-white rounded resize-none"
+                                            placeholder="Pillar description..."
+                                          />
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+
+                                  {/* Timeline Steps Form */}
+                                  {b.layout === "timeline" && (
+                                    <div className="space-y-3">
+                                      <div className="space-y-3">
+                                        {(b.steps || []).map((st: any, stIdx: number) => (
+                                          <div key={stIdx} className="flex gap-3 items-start p-3 bg-slate-50 dark:bg-slate-900 rounded-lg border border-line">
+                                            <div className="flex flex-col items-center shrink-0 gap-1.5">
+                                              <span className="text-[10px] font-bold text-slate-400">STEP</span>
+                                              <input
+                                                type="text"
+                                                value={st.step || ""}
+                                                onChange={(e) => {
+                                                  const steps = [...(b.steps || [])];
+                                                  steps[stIdx] = { ...st, step: e.target.value };
+                                                  updateDocumentBlock(b.id, { steps });
+                                                }}
+                                                className="w-8 px-1 py-0.5 text-center text-xs border border-line bg-white rounded font-bold font-mono"
+                                                placeholder="01"
+                                              />
+                                            </div>
+                                            <div className="grow grid grid-cols-1 md:grid-cols-2 gap-3">
+                                              <input
+                                                type="text"
+                                                value={st.title || ""}
+                                                onChange={(e) => {
+                                                  const steps = [...(b.steps || [])];
+                                                  steps[stIdx] = { ...st, title: e.target.value };
+                                                  updateDocumentBlock(b.id, { steps });
+                                                }}
+                                                className="w-full px-2 py-1 text-xs border border-line bg-white rounded font-bold"
+                                                placeholder="Step Title"
+                                              />
+                                              <input
+                                                type="text"
+                                                value={st.desc || ""}
+                                                onChange={(e) => {
+                                                  const steps = [...(b.steps || [])];
+                                                  steps[stIdx] = { ...st, desc: e.target.value };
+                                                  updateDocumentBlock(b.id, { steps });
+                                                }}
+                                                className="w-full px-2 py-1 text-xs border border-line bg-white rounded"
+                                                placeholder="Step description..."
+                                              />
+                                            </div>
+                                            <button
+                                              type="button"
+                                              onClick={() => {
+                                                const steps = (b.steps || []).filter((_: any, sIdx: number) => sIdx !== stIdx);
+                                                updateDocumentBlock(b.id, { steps });
+                                              }}
+                                              className="text-red-500 hover:text-red-650 font-bold px-1.5 py-0.5 rounded hover:bg-slate-100 text-sm"
+                                            >
+                                              ✕
+                                            </button>
+                                          </div>
+                                        ))}
+                                      </div>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const defaultStep = String((b.steps || []).length + 1).padStart(2, "0");
+                                          updateDocumentBlock(b.id, { steps: [...(b.steps || []), { step: defaultStep, title: "", desc: "" }] });
+                                        }}
+                                        className="text-xs text-brand hover:underline font-bold"
+                                      >
+                                        + Add Timeline Step
+                                      </button>
+                                    </div>
+                                  )}
+
+                                  {/* Comparison Form */}
+                                  {b.layout === "comparison" && (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                      {/* Left vs Right */}
+                                      {[(b.comparison || [])[0], (b.comparison || [])[1]].map((col: any, colIdx: number) => (
+                                        <div key={colIdx} className="p-3 bg-slate-50 dark:bg-slate-900 rounded-lg border border-line space-y-3">
+                                          <div className="flex gap-2 items-center">
+                                            <input
+                                              type="text"
+                                              value={col.category || ""}
+                                              onChange={(e) => {
+                                                const comp = [...(b.comparison || [])];
+                                                comp[colIdx] = { ...col, category: e.target.value };
+                                                updateDocumentBlock(b.id, { comparison: comp });
+                                              }}
+                                              className="w-fit text-[10px] font-bold border border-line bg-white px-2 py-0.5 uppercase tracking-wider rounded text-slate"
+                                              placeholder={colIdx === 0 ? "Option A" : "Option B"}
+                                            />
+                                          </div>
+                                          <input
+                                            type="text"
+                                            value={col.title || ""}
+                                            onChange={(e) => {
+                                              const comp = [...(b.comparison || [])];
+                                              comp[colIdx] = { ...col, title: e.target.value };
+                                              updateDocumentBlock(b.id, { comparison: comp });
+                                            }}
+                                            className="w-full px-2 py-1 text-xs border border-line bg-white rounded font-bold"
+                                            placeholder="Column Title"
+                                          />
+                                          <div className="space-y-1.5">
+                                            <span className="text-[10px] font-bold text-slate-400">Bullet Points</span>
+                                            {(col.points || []).map((cp: string, cpIdx: number) => (
+                                              <div key={cpIdx} className="flex gap-1.5 items-center">
+                                                <input
+                                                  type="text"
+                                                  value={cp}
+                                                  onChange={(e) => {
+                                                    const comp = [...(b.comparison || [])];
+                                                    const pts = [...(col.points || [])];
+                                                    pts[cpIdx] = e.target.value;
+                                                    comp[colIdx] = { ...col, points: pts };
+                                                    updateDocumentBlock(b.id, { comparison: comp });
+                                                  }}
+                                                  className="w-full px-2 py-1 text-xs border border-line bg-white rounded"
+                                                  placeholder="Bullet Point"
+                                                />
+                                                <button
+                                                  type="button"
+                                                  onClick={() => {
+                                                    const comp = [...(b.comparison || [])];
+                                                    const pts = (col.points || []).filter((_: any, pIdx: number) => pIdx !== cpIdx);
+                                                    comp[colIdx] = { ...col, points: pts };
+                                                    updateDocumentBlock(b.id, { comparison: comp });
+                                                  }}
+                                                  className="text-red-500 hover:text-red-650 font-bold px-1.5 py-0.5 rounded text-xs"
+                                                >
+                                                  ✕
+                                                </button>
+                                              </div>
+                                            ))}
+                                            <button
+                                              type="button"
+                                              onClick={() => {
+                                                const comp = [...(b.comparison || [])];
+                                                comp[colIdx] = { ...col, points: [...(col.points || []), ""] };
+                                                updateDocumentBlock(b.id, { comparison: comp });
+                                              }}
+                                              className="text-[10px] text-brand hover:underline font-bold"
+                                            >
+                                              + Add Compare Point
+                                            </button>
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Add Block Toolbar */}
+                      <div className="space-y-2 border-t border-line pt-4">
+                        <label className="block text-[10px] font-bold uppercase tracking-wider text-slate mb-1">Add Content Block</label>
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            onClick={() => addDocumentBlock("heading")}
+                            className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-355 rounded text-xs font-bold transition-colors"
+                          >
+                            + Heading
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => addDocumentBlock("subheading")}
+                            className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-355 rounded text-xs font-bold transition-colors"
+                          >
+                            + Subheading
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => addDocumentBlock("paragraph")}
+                            className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-355 rounded text-xs font-bold transition-colors"
+                          >
+                            + Paragraph
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => addDocumentBlock("image")}
+                            className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-355 rounded text-xs font-bold transition-colors"
+                          >
+                            + Image
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => addDocumentBlock("callout")}
+                            className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-355 rounded text-xs font-bold transition-colors"
+                          >
+                            + Callout Box
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => addDocumentBlock("list")}
+                            className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-355 rounded text-xs font-bold transition-colors"
+                          >
+                            + Diamond List
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => addDocumentBlock("infographics")}
+                            className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-355 rounded text-xs font-bold transition-colors"
+                          >
+                            + Infographics
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => addDocumentBlock("smartarts")}
+                            className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-355 rounded text-xs font-bold transition-colors"
+                          >
+                            + Smart Art
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {editorKind === "heading" && (
                     <div className="space-y-2">
                       <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">Heading Text</label>
@@ -1816,6 +2586,9 @@ const LessonEditor = React.memo(function LessonEditor({
                 steps: smartTimeline, 
                 comparison: smartComparison 
               });
+            } else if (editorKind === "document") {
+              finalKind = "theory";
+              finalContentHtml = generateHtmlFromMetadata("document", { blocks: documentBlocks });
             }
 
             onSave({
