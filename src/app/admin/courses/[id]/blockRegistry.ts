@@ -25,6 +25,7 @@ export type BlockType =
   | "smartarts"
   | "table"
   | "html"
+  | "borderedtext"
   | "activity"
   | "assessment";
 
@@ -63,6 +64,7 @@ export const BLOCK_REGISTRY: BlockConfig[] = [
   { type: "table",       label: "Table",        description: "Structured data grid (≤5×5)",    category: "data",        icon: "⊞"  },
   // Interactive
   { type: "html",        label: "HTML Block",   description: "Raw HTML / CSS code block",      category: "interactive", icon: "<>" },
+  { type: "borderedtext",label: "Bordered Text", description: "Bordered box with title & text",category: "layout",      icon: "▎"  },
   { type: "activity",    label: "Activity",     description: "Embedded interactive iframe",    category: "interactive", icon: "⚡" },
   { type: "assessment",  label: "Quiz (MCQ)",   description: "Inline multiple-choice quiz",    category: "interactive", icon: "✅" },
 ];
@@ -144,6 +146,8 @@ export function createBlock(type: BlockType): BlockData {
           { text: "", options: ["", "", "", ""], correct: "0" },
         ],
       };
+    case "borderedtext":
+      return { id, type, title: "", text: "" };
   }
 }
 
@@ -437,6 +441,12 @@ ${qHtml}
   </div>
 </div>`;
     }
+
+    case "borderedtext":
+      return `<div class="my-6 border-l-4 border-white bg-white/5 p-6 rounded-r-2xl text-left">
+  ${b.title ? `<h4 class="text-white font-bold text-sm mb-3">${escHtml(b.title)}</h4>` : ""}
+  <p class="text-slate-355 text-sm leading-relaxed mb-0">${escHtml(b.text || "")}</p>
+</div>`;
 
     default:
       return "";

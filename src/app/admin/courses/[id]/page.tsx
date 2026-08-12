@@ -387,6 +387,7 @@ const LessonEditor = React.memo(function LessonEditor({
     callout: "border-l-amber-400", list: "border-l-emerald-400",
     infographics: "border-l-blue-400", smartarts: "border-l-pink-400",
     table: "border-l-teal-400", html: "border-l-orange-400",
+    borderedtext: "border-l-white",
     activity: "border-l-brand", assessment: "border-l-green-400",
   };
 
@@ -1397,6 +1398,149 @@ const LessonEditor = React.memo(function LessonEditor({
                                 </div>
                               )}
 
+                              {b.type === "borderedtext" && (
+                                <div className="space-y-3">
+                                  <div className="space-y-1.5">
+                                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">
+                                      Bordered Block Header Title
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={b.title || ""}
+                                      onChange={(e) => updateDocumentBlock(b.id, { title: e.target.value })}
+                                      placeholder="Header Title (optional)..."
+                                      className="w-full px-3 py-2 border border-line bg-white text-slate-800 dark:text-slate-100 dark:bg-slate-900 rounded-lg text-sm"
+                                    />
+                                  </div>
+                                  <div className="space-y-1.5">
+                                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">Bordered Block Content</label>
+                                    <textarea
+                                      rows={4}
+                                      value={b.text || ""}
+                                      onChange={(e) => updateDocumentBlock(b.id, { text: e.target.value })}
+                                      placeholder="Write content here..."
+                                      className="w-full px-3 py-2 border border-line bg-white text-slate-800 dark:text-slate-100 dark:bg-slate-900 rounded-lg text-xs"
+                                    />
+                                  </div>
+                                </div>
+                              )}
+
+                              {b.type === "table" && (
+                                <div className="space-y-4">
+                                  <div className="flex justify-between items-center pb-2 border-b border-line">
+                                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">Table Data Editor</label>
+                                    <div className="flex gap-2">
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const colsCount = (b.headers || []).length;
+                                          if (colsCount >= 6) {
+                                            alert("Maximum 6 columns allowed.");
+                                            return;
+                                          }
+                                          const nextColLetter = String.fromCharCode(65 + colsCount);
+                                          const headers = [...(b.headers || []), `Column ${nextColLetter}`];
+                                          const rows = (b.rows || []).map((row: string[]) => [...row, ""]);
+                                          updateDocumentBlock(b.id, { headers, rows });
+                                        }}
+                                        className="px-2 py-1 bg-white hover:bg-slate-50 border border-line text-slate-700 hover:text-black text-[10px] font-bold rounded shadow-sm cursor-pointer"
+                                      >
+                                        + Add Column
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const colsCount = (b.headers || []).length;
+                                          if (colsCount <= 1) {
+                                            alert("Minimum 1 column required.");
+                                            return;
+                                          }
+                                          const headers = (b.headers || []).slice(0, -1);
+                                          const rows = (b.rows || []).map((row: string[]) => row.slice(0, -1));
+                                          updateDocumentBlock(b.id, { headers, rows });
+                                        }}
+                                        className="px-2 py-1 bg-white hover:bg-slate-50 border border-line text-red-500 hover:text-red-700 text-[10px] font-bold rounded shadow-sm cursor-pointer"
+                                      >
+                                        ✕ Delete Column
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const colsCount = (b.headers || []).length;
+                                          const rows = [...(b.rows || []), Array(colsCount).fill("")];
+                                          updateDocumentBlock(b.id, { rows });
+                                        }}
+                                        className="px-2 py-1 bg-white hover:bg-slate-50 border border-line text-slate-700 hover:text-black text-[10px] font-bold rounded shadow-sm cursor-pointer"
+                                      >
+                                        + Add Row
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const rowsCount = (b.rows || []).length;
+                                          if (rowsCount <= 1) {
+                                            alert("Minimum 1 row required.");
+                                            return;
+                                          }
+                                          const rows = (b.rows || []).slice(0, -1);
+                                          updateDocumentBlock(b.id, { rows });
+                                        }}
+                                        className="px-2 py-1 bg-white hover:bg-slate-50 border border-line text-red-500 hover:text-red-700 text-[10px] font-bold rounded shadow-sm cursor-pointer"
+                                      >
+                                        ✕ Delete Row
+                                      </button>
+                                    </div>
+                                  </div>
+
+                                  <div className="overflow-x-auto rounded-lg border border-line bg-white/40">
+                                    <table className="w-full border-collapse text-left">
+                                      <thead>
+                                        <tr className="bg-slate-50 border-b border-line">
+                                          {(b.headers || []).map((h: string, colIdx: number) => (
+                                            <th key={colIdx} className="p-2 border-r border-line last:border-r-0">
+                                              <input
+                                                type="text"
+                                                value={h}
+                                                onChange={(e) => {
+                                                  const headers = [...(b.headers || [])];
+                                                  headers[colIdx] = e.target.value;
+                                                  updateDocumentBlock(b.id, { headers });
+                                                }}
+                                                className="w-full bg-transparent px-1 py-0.5 text-xs font-bold text-slate-800 focus:outline-none focus:bg-white"
+                                                placeholder="Header Name"
+                                              />
+                                            </th>
+                                          ))}
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {(b.rows || []).map((row: string[], rowIdx: number) => (
+                                          <tr key={rowIdx} className="border-b border-line last:border-b-0 hover:bg-slate-50/20">
+                                            {row.map((cell: string, colIdx: number) => (
+                                              <td key={colIdx} className="p-2 border-r border-line last:border-r-0">
+                                                <input
+                                                  type="text"
+                                                  value={cell}
+                                                  onChange={(e) => {
+                                                    const rows = [...(b.rows || [])];
+                                                    const newRow = [...row];
+                                                    newRow[colIdx] = e.target.value;
+                                                    rows[rowIdx] = newRow;
+                                                    updateDocumentBlock(b.id, { rows });
+                                                  }}
+                                                  className="w-full bg-transparent px-1 py-0.5 text-xs text-slate-700 focus:outline-none focus:bg-white"
+                                                  placeholder="..."
+                                                />
+                                              </td>
+                                            ))}
+                                          </tr>
+                                        ))}
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                </div>
+                              )}
+
                               {b.type === "activity" && (
                                 <div className="space-y-3">
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1581,6 +1725,13 @@ const LessonEditor = React.memo(function LessonEditor({
                           </button>
                           <button
                             type="button"
+                            onClick={() => addDocumentBlock("borderedtext")}
+                            className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-355 rounded text-xs font-bold transition-colors"
+                          >
+                            + Bordered Text
+                          </button>
+                          <button
+                            type="button"
                             onClick={() => addDocumentBlock("infographics")}
                             className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-355 rounded text-xs font-bold transition-colors"
                           >
@@ -1592,6 +1743,13 @@ const LessonEditor = React.memo(function LessonEditor({
                             className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-355 rounded text-xs font-bold transition-colors"
                           >
                             + Smart Art
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => addDocumentBlock("table")}
+                            className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-355 rounded text-xs font-bold transition-colors"
+                          >
+                            + Table
                           </button>
                           <button
                             type="button"
