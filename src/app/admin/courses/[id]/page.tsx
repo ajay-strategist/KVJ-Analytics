@@ -134,7 +134,7 @@ const LessonEditor = React.memo(function LessonEditor({
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
 
   // Structured Simple Type States
-  const [editorKind, setEditorKind] = React.useState<string>("theory");
+  const [editorKind, setEditorKind] = React.useState<string>("document");
   const [headingText, setHeadingText] = React.useState("");
   const [subheadingText, setSubheadingText] = React.useState("");
   const [paragraphText, setParagraphText] = React.useState("");
@@ -572,7 +572,7 @@ const LessonEditor = React.memo(function LessonEditor({
   }, [initial.id, initial.kind]);
 
   React.useEffect(() => {
-    let parseKind: string = initial.kind || "theory";
+    let parseKind: string = "document";
     let parsedMeta: any = null;
     
     if (initial.content_html && initial.content_html.startsWith("<!-- KVJ_MATERIAL_METADATA:")) {
@@ -585,6 +585,10 @@ const LessonEditor = React.memo(function LessonEditor({
       } catch (err) {
         console.error("Failed to parse material metadata:", err);
       }
+    } else if (initial.content_html && initial.content_html.trim() !== "") {
+      parseKind = "theory";
+    } else if (initial.kind) {
+      parseKind = initial.kind === "theory" ? "document" : initial.kind;
     }
     
     if (parsedMeta) {
@@ -879,15 +883,7 @@ const LessonEditor = React.memo(function LessonEditor({
             <option value="theory">Theory (HTML)</option>
             <option value="activity">Interactive Activity (HTML)</option>
             <option value="assessment">Assessment (MCQ)</option>
-            <option value="document">Document Builder (No-Code)</option>
-            <option value="heading">Heading (No-Code)</option>
-            <option value="subheading">Subheading (No-Code)</option>
-            <option value="paragraph">Paragraph (No-Code)</option>
-            <option value="image">Image (No-Code)</option>
-            <option value="callout">Callout Box (No-Code)</option>
-            <option value="list">Diamond List (No-Code)</option>
-            <option value="infographics">Infographics (No-Code)</option>
-            <option value="smartarts">Smart Arts (No-Code)</option>
+            <option value="document">Content Block (No-Code)</option>
           </select>
         </div>
 
