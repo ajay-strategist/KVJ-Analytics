@@ -161,6 +161,14 @@ const LessonEditor = React.memo(function LessonEditor({
     { category: "Option B", title: "Title B", points: [""] },
   ]);
 
+  // Callout Box
+  const [calloutTitle, setCalloutTitle] = React.useState("");
+  const [calloutPoints, setCalloutPoints] = React.useState<string[]>([""]);
+
+  // Diamond List
+  const [listTitle, setListTitle] = React.useState("");
+  const [listPoints, setListPoints] = React.useState<string[]>([""]);
+
   const generateHtmlFromMetadata = React.useCallback((type: string, data: any): string => {
     const metaStr = `<!-- KVJ_MATERIAL_METADATA: ${JSON.stringify({ type, ...data })} -->\n`;
     
@@ -187,6 +195,32 @@ const LessonEditor = React.memo(function LessonEditor({
     <p class="text-slate-400 text-xs leading-relaxed mb-0">${c.desc}</p>
   </div>`).join("\n");
       return metaStr + `<div class="grid grid-cols-1 md:grid-cols-3 gap-6 my-8">\n${cardsHtml}\n</div>`;
+    }
+    if (type === "callout") {
+      const pointsHtml = (data.points || []).map((p: string) => `    <li class="flex items-start gap-2.5 text-slate-300 text-sm leading-relaxed">
+      <svg class="w-2.5 h-2.5 text-brand fill-current shrink-0 mt-1.5" viewBox="0 0 24 24">
+        <path d="M12 2L22 12L12 22L2 12Z" />
+      </svg>
+      <span>${p}</span>
+    </li>`).join("\n");
+      return metaStr + `<div class="my-6 border-l-4 border-brand bg-brand/5 p-6 rounded-r-2xl text-left">
+  ${data.title ? `<h4 class="text-white font-bold text-sm mb-3">${data.title}</h4>` : ""}
+  <ul class="space-y-3">
+\n${pointsHtml}\n  </ul>
+</div>`;
+    }
+    if (type === "list") {
+      const pointsHtml = (data.points || []).map((p: string) => `    <li class="flex items-start gap-2.5 text-slate-300 text-sm leading-relaxed">
+      <svg class="w-2.5 h-2.5 text-brand fill-current shrink-0 mt-1.5" viewBox="0 0 24 24">
+        <path d="M12 2L22 12L12 22L2 12Z" />
+      </svg>
+      <span>${p}</span>
+    </li>`).join("\n");
+      return metaStr + `<div class="my-6 text-left space-y-4">
+  ${data.title ? `<h4 class="text-white font-bold text-base mb-3">${data.title}</h4>` : ""}
+  <ul class="space-y-3">
+\n${pointsHtml}\n  </ul>
+</div>`;
     }
     if (type === "smartarts") {
       if (data.layout === "pillars") {
@@ -257,12 +291,18 @@ const LessonEditor = React.memo(function LessonEditor({
     if (editorKind === "infographics") {
       return generateHtmlFromMetadata("infographics", { cards: infoCards });
     }
+    if (editorKind === "callout") {
+      return generateHtmlFromMetadata("callout", { title: calloutTitle, points: calloutPoints });
+    }
+    if (editorKind === "list") {
+      return generateHtmlFromMetadata("list", { title: listTitle, points: listPoints });
+    }
     if (editorKind === "smartarts") {
       return generateHtmlFromMetadata("smartarts", { 
         layout: smartArtType, 
         pillars: smartPillars, 
         steps: smartTimeline, 
-        comparison: smartComparison 
+        smartComparison 
       });
     }
     return contentHtml;
@@ -274,6 +314,10 @@ const LessonEditor = React.memo(function LessonEditor({
     simpleImageUrl,
     simpleImageCaption,
     infoCards,
+    calloutTitle,
+    calloutPoints,
+    listTitle,
+    listPoints,
     smartArtType,
     smartPillars,
     smartTimeline,
@@ -387,6 +431,12 @@ const LessonEditor = React.memo(function LessonEditor({
         setSimpleImageCaption(parsedMeta.caption || "");
       } else if (parseKind === "infographics") {
         setInfoCards(parsedMeta.cards || []);
+      } else if (parseKind === "callout") {
+        setCalloutTitle(parsedMeta.title || "");
+        setCalloutPoints(parsedMeta.points || [""]);
+      } else if (parseKind === "list") {
+        setListTitle(parsedMeta.title || "");
+        setListPoints(parsedMeta.points || [""]);
       } else if (parseKind === "smartarts") {
         setSmartArtType(parsedMeta.layout || "pillars");
         if (parsedMeta.layout === "pillars") {
@@ -404,6 +454,10 @@ const LessonEditor = React.memo(function LessonEditor({
       setParagraphText("");
       setSimpleImageUrl("");
       setSimpleImageCaption("");
+      setCalloutTitle("");
+      setCalloutPoints([""]);
+      setListTitle("");
+      setListPoints([""]);
       setInfoCards([
         { title: "Key Point One", desc: "", number: "01" },
         { title: "Key Point Two", desc: "", number: "02" },
@@ -616,6 +670,8 @@ const LessonEditor = React.memo(function LessonEditor({
             <option value="subheading">Subheading (No-Code)</option>
             <option value="paragraph">Paragraph (No-Code)</option>
             <option value="image">Image (No-Code)</option>
+            <option value="callout">Callout Box (No-Code)</option>
+            <option value="list">Diamond List (No-Code)</option>
             <option value="infographics">Infographics (No-Code)</option>
             <option value="smartarts">Smart Arts (No-Code)</option>
           </select>
@@ -886,6 +942,43 @@ const LessonEditor = React.memo(function LessonEditor({
                       Infographics
                     </button>
 
+                    <button
+                      type="button"
+                      onClick={() => insertSnippet(`<div class="my-6 border-l-4 border-brand bg-brand/5 p-6 rounded-r-2xl text-left">
+  <h4 class="text-white font-bold text-sm mb-3">Examples of Data:</h4>
+  <ul class="space-y-3">
+    <li class="flex items-start gap-2.5 text-slate-300 text-sm leading-relaxed">
+      <svg class="w-2.5 h-2.5 text-brand fill-current shrink-0 mt-1.5" viewBox="0 0 24 24"><path d="M12 2L22 12L12 22L2 12Z"/></svg>
+      <span>The number 42.</span>
+    </li>
+    <li class="flex items-start gap-2.5 text-slate-300 text-sm leading-relaxed">
+      <svg class="w-2.5 h-2.5 text-brand fill-current shrink-0 mt-1.5" viewBox="0 0 24 24"><path d="M12 2L22 12L12 22L2 12Z"/></svg>
+      <span>A list of dates: 12/05, 14/05, 19/05.</span>
+    </li>
+  </ul>
+</div>`)}
+                      className="px-2.5 py-1 bg-white hover:bg-slate-50 border border-line text-slate-800 hover:text-black text-[10px] font-bold rounded-md shadow-sm transition-colors cursor-pointer"
+                    >
+                      Callout Box
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => insertSnippet(`<ul class="space-y-3 my-6">
+  <li class="flex items-start gap-2.5 text-slate-300 text-sm leading-relaxed">
+    <svg class="w-2.5 h-2.5 text-brand fill-current shrink-0 mt-1.5" viewBox="0 0 24 24"><path d="M12 2L22 12L12 22L2 12Z"/></svg>
+    <span>Numbers</span>
+  </li>
+  <li class="flex items-start gap-2.5 text-slate-300 text-sm leading-relaxed">
+    <svg class="w-2.5 h-2.5 text-brand fill-current shrink-0 mt-1.5" viewBox="0 0 24 24"><path d="M12 2L22 12L12 22L2 12Z"/></svg>
+    <span>Text</span>
+  </li>
+</ul>`)}
+                      className="px-2.5 py-1 bg-white hover:bg-slate-50 border border-line text-slate-800 hover:text-black text-[10px] font-bold rounded-md shadow-sm transition-colors cursor-pointer"
+                    >
+                      Diamond List
+                    </button>
+
                     <div className="relative group/smartart">
                       <button
                         type="button"
@@ -1109,6 +1202,114 @@ const LessonEditor = React.memo(function LessonEditor({
                           <img src={simpleImageUrl} alt="Preview" className="max-w-[200px] max-h-[150px] rounded-lg object-cover" />
                         </div>
                       )}
+                    </div>
+                  )}
+
+                  {editorKind === "callout" && (
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">Callout Box Header Title</label>
+                        <input
+                          type="text"
+                          value={calloutTitle}
+                          onChange={(e) => setCalloutTitle(e.target.value)}
+                          placeholder="e.g. Examples of Data:"
+                          className="w-full px-3 py-2 border border-line bg-white text-slate-800 rounded-lg text-sm"
+                        />
+                      </div>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">Bulleted Points</label>
+                          <button
+                            type="button"
+                            onClick={() => setCalloutPoints([...calloutPoints, ""])}
+                            className="px-2.5 py-1 bg-brand text-black text-[10px] font-bold rounded hover:bg-brand-secondary cursor-pointer"
+                          >
+                            + Add Bullet
+                          </button>
+                        </div>
+                        <div className="space-y-2">
+                          {calloutPoints.map((pt, idx) => (
+                            <div key={idx} className="flex gap-2 items-center">
+                              <span className="text-[10px] text-slate-400 font-bold shrink-0">{String(idx + 1).padStart(2, "0")}</span>
+                              <input
+                                type="text"
+                                value={pt}
+                                onChange={(e) => {
+                                  const updated = [...calloutPoints];
+                                  updated[idx] = e.target.value;
+                                  setCalloutPoints(updated);
+                                }}
+                                placeholder="Bullet text..."
+                                className="flex-1 px-3 py-1.5 border border-line bg-white text-slate-800 rounded-lg text-xs"
+                              />
+                              {calloutPoints.length > 1 && (
+                                <button
+                                  type="button"
+                                  onClick={() => setCalloutPoints(calloutPoints.filter((_, i) => i !== idx))}
+                                  className="text-xs text-slate-400 hover:text-red-500 font-bold cursor-pointer px-1"
+                                >
+                                  Remove
+                                </button>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {editorKind === "list" && (
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">List Title (Optional)</label>
+                        <input
+                          type="text"
+                          value={listTitle}
+                          onChange={(e) => setListTitle(e.target.value)}
+                          placeholder="e.g. Data can appear in many forms such as:"
+                          className="w-full px-3 py-2 border border-line bg-white text-slate-800 rounded-lg text-sm"
+                        />
+                      </div>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">Bulleted Points</label>
+                          <button
+                            type="button"
+                            onClick={() => setListPoints([...listPoints, ""])}
+                            className="px-2.5 py-1 bg-brand text-black text-[10px] font-bold rounded hover:bg-brand-secondary cursor-pointer"
+                          >
+                            + Add Bullet
+                          </button>
+                        </div>
+                        <div className="space-y-2">
+                          {listPoints.map((pt, idx) => (
+                            <div key={idx} className="flex gap-2 items-center">
+                              <span className="text-[10px] text-slate-400 font-bold shrink-0">{String(idx + 1).padStart(2, "0")}</span>
+                              <input
+                                type="text"
+                                value={pt}
+                                onChange={(e) => {
+                                  const updated = [...listPoints];
+                                  updated[idx] = e.target.value;
+                                  setListPoints(updated);
+                                }}
+                                placeholder="Bullet text..."
+                                className="flex-1 px-3 py-1.5 border border-line bg-white text-slate-800 rounded-lg text-xs"
+                              />
+                              {listPoints.length > 1 && (
+                                <button
+                                  type="button"
+                                  onClick={() => setListPoints(listPoints.filter((_, i) => i !== idx))}
+                                  className="text-xs text-slate-400 hover:text-red-500 font-bold cursor-pointer px-1"
+                                >
+                                  Remove
+                                </button>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   )}
 
@@ -1601,6 +1802,12 @@ const LessonEditor = React.memo(function LessonEditor({
             } else if (editorKind === "infographics") {
               finalKind = "theory";
               finalContentHtml = generateHtmlFromMetadata("infographics", { cards: infoCards });
+            } else if (editorKind === "callout") {
+              finalKind = "theory";
+              finalContentHtml = generateHtmlFromMetadata("callout", { title: calloutTitle, points: calloutPoints });
+            } else if (editorKind === "list") {
+              finalKind = "theory";
+              finalContentHtml = generateHtmlFromMetadata("list", { title: listTitle, points: listPoints });
             } else if (editorKind === "smartarts") {
               finalKind = "theory";
               finalContentHtml = generateHtmlFromMetadata("smartarts", { 
