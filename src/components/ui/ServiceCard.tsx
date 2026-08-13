@@ -387,12 +387,20 @@ const ICONS: Record<string, React.ComponentType> = {
   "edu-assessment": EduAssessmentIcon,
 };
 
+export type ServiceCardTone = "emerald" | "teal" | "amber" | "violet" | "blue" | "neutral";
+const TONE_ACCENT: Record<ServiceCardTone, string> = {
+  emerald: "#047857", teal: "#0F766E", amber: "#B45309",
+  violet: "#6D28D9", blue: "#1D4ED8", neutral: "#0B2A22",
+};
+
 interface ServiceCardProps {
   title: string;
   description: string;
   href: string;
   iconName: string;
   accentColor?: "cyan" | "blue";
+  /** Soft category color for the card. */
+  tone?: ServiceCardTone;
   tag?: string;
   delay?: number;
   /** When provided, clicking the card opens this handler (e.g. a drawer) instead of navigating.
@@ -406,10 +414,12 @@ export function ServiceCard({
   href,
   iconName,
   accentColor = "cyan",
+  tone = "teal",
   tag,
   delay = 0,
   onLearnMore,
 }: ServiceCardProps) {
+  const accent = TONE_ACCENT[tone];
   const cardRef = useRef<HTMLDivElement>(null);
   const [mousePos, setMousePos] = useState({ x: -1000, y: -1000 });
   const [rotate, setRotate] = useState({ x: 0, y: 0 });
@@ -477,7 +487,7 @@ export function ServiceCard({
         }}
       >
         <div
-          className="relative h-full flex flex-col justify-between p-8 rounded-[24px] bg-glass-card backdrop-blur-[18px] border border-line overflow-hidden transition-all duration-500"
+          className={`relative h-full flex flex-col justify-between p-8 rounded-[24px] card-tone-${tone} border overflow-hidden transition-all duration-500`}
           style={{
             boxShadow: isHovered
               ? accentColor === "cyan"
@@ -503,12 +513,10 @@ export function ServiceCard({
 
           {/* Icon Container */}
           <div
-            className="w-16 h-16 rounded-2xl bg-white/5 border border-line flex items-center justify-center transition-all duration-300"
+            className={`w-16 h-16 rounded-2xl card-chip-${tone} border border-line flex items-center justify-center transition-all duration-300`}
             style={{
               transform: isHovered ? "translateZ(30px)" : "translateZ(0)",
-              borderColor: isHovered 
-                ? accentColor === "cyan" ? "rgba(16, 185, 129, 0.45)" : "rgba(13, 148, 136, 0.45)"
-                : "rgba(60, 255, 255, 0.15)",
+              borderColor: isHovered ? accent : "var(--color-line)",
             }}
           >
             <IconComponent />
@@ -528,11 +536,7 @@ export function ServiceCard({
             )}
             <h3
               className="text-xl font-bold mt-2 mb-3 transition-colors duration-300"
-              style={{
-                color: isHovered 
-                  ? accentColor === "cyan" ? "#10B981" : "#0D9488"
-                  : "#FFFFFF",
-              }}
+              style={{ color: isHovered ? accent : "var(--color-ink)" }}
             >
               {title}
             </h3>
@@ -544,9 +548,7 @@ export function ServiceCard({
           <div
             className="mt-6 flex items-center gap-2 text-sm font-semibold transition-all duration-300"
             style={{
-              color: isHovered 
-                ? accentColor === "cyan" ? "#10B981" : "#0D9488"
-                : "#A7B1C4",
+              color: isHovered ? accent : "var(--color-slate)",
               transform: isHovered ? "translateZ(25px)" : "translateZ(0)",
             }}
           >

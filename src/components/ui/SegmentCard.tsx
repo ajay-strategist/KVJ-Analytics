@@ -56,7 +56,7 @@ export function SegmentCard({
           <span className={`block text-xs font-bold uppercase tracking-[0.25em] mb-2 ${c.text}`}>
             {segment}
           </span>
-          <h3 className="text-2xl font-bold font-display text-white mb-3 group-hover:text-brand transition-colors duration-200">
+          <h3 className="text-2xl font-bold font-display text-ink mb-3 group-hover:text-brand transition-colors duration-200">
             {title}
           </h3>
           <p className="text-sm font-semibold text-slate mb-4">

@@ -234,6 +234,39 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(5, 150, 105, 0.3) 30%, rgba(245, 158, 11, 0.15) 70%, rgba(255, 255, 255, 0.5));
 }
 
+/* ── Card tones — soft category color for cards (all text AA on light) ──
+   Use via <Card tone="emerald"> etc. Background + border tint; pair the
+   .card-accent-* color on the icon/eyebrow. */
+.card-tone-neutral { background: var(--color-card); border-color: var(--color-line); }
+.card-tone-emerald { background: #ECFDF5; border-color: #A7F3D0; }
+.card-tone-teal    { background: #F0FDFA; border-color: #99F6E4; }
+.card-tone-amber   { background: #FFFBEB; border-color: #FDE68A; }
+.card-tone-violet  { background: #F5F3FF; border-color: #DDD6FE; }
+.card-tone-blue    { background: #EFF6FF; border-color: #BFDBFE; }
+
+/* Deepen border on hover for toned cards */
+.card-tone-emerald:hover { border-color: #6EE7B7; }
+.card-tone-teal:hover    { border-color: #5EEAD4; }
+.card-tone-amber:hover   { border-color: #FCD34D; }
+.card-tone-violet:hover  { border-color: #C4B5FD; }
+.card-tone-blue:hover    { border-color: #93C5FD; }
+
+/* Accent color for icon/eyebrow inside a toned card (WCAG AA) */
+.card-accent-neutral { color: var(--color-ink); }
+.card-accent-emerald { color: #047857; }
+.card-accent-teal    { color: #0F766E; }
+.card-accent-amber   { color: #B45309; }
+.card-accent-violet  { color: #6D28D9; }
+.card-accent-blue    { color: #1D4ED8; }
+
+/* Soft tint chip background for icons (~10-12% of accent) */
+.card-chip-neutral { background: rgba(11, 42, 34, 0.06); }
+.card-chip-emerald { background: rgba(4, 120, 87, 0.10); }
+.card-chip-teal    { background: rgba(15, 118, 110, 0.10); }
+.card-chip-amber   { background: rgba(180, 83, 9, 0.10); }
+.card-chip-violet  { background: rgba(109, 40, 217, 0.10); }
+.card-chip-blue    { background: rgba(29, 78, 216, 0.10); }
+
 /* Holographic Card wrapper */
 .holo-card {
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04), 0 0 16px rgba(5, 150, 105, 0.04), 0 0 32px rgba(245, 158, 11, 0.02);

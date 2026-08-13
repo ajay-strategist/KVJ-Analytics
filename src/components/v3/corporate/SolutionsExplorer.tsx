@@ -3,7 +3,7 @@
 import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Reveal } from "@/components/ui/Reveal";
-import { ServiceCard } from "@/components/ui/ServiceCard";
+import { ServiceCard, type ServiceCardTone } from "@/components/ui/ServiceCard";
 
 interface Sol { title: string; slug: string; shortDescription?: string }
 
@@ -14,7 +14,7 @@ interface Sol { title: string; slug: string; shortDescription?: string }
  * skeleton if data isn't ready. No popup.
  */
 export function SolutionsExplorer({
-  services, basePath, accentColor, iconMap, defaultIcon, tag, gridClassName,
+  services, basePath, accentColor, iconMap, defaultIcon, tag, gridClassName, tone,
 }: {
   services: Sol[];
   basePath: string;
@@ -23,8 +23,10 @@ export function SolutionsExplorer({
   defaultIcon: string;
   tag: string;
   gridClassName: string;
+  tone?: ServiceCardTone;
 }) {
   const router = useRouter();
+  const cardTone: ServiceCardTone = tone ?? (basePath === "education" ? "emerald" : "teal");
 
   useEffect(() => {
     services.forEach((s) => { try { router.prefetch(`/${basePath}/${s.slug}`); } catch { /* noop */ } });
@@ -41,6 +43,7 @@ export function SolutionsExplorer({
             iconName={iconMap[s.slug] || defaultIcon}
             tag={tag}
             accentColor={accentColor}
+            tone={cardTone}
           />
         </Reveal>
       ))}
