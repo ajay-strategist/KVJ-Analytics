@@ -119,10 +119,10 @@ function StudentAccountDashboard() {
 
   if (loading) {
     return (
-      <div className="w-full min-h-screen bg-[#050505] flex items-center justify-center">
+      <div className="w-full min-h-screen bg-surface flex items-center justify-center">
         <div className="text-center space-y-4">
           <Loader2 className="w-8 h-8 animate-spin text-[#10B981] mx-auto" />
-          <p className="text-zinc-500 text-sm font-light">Loading student account...</p>
+          <p className="text-muted text-sm font-light">Loading student account...</p>
         </div>
       </div>
     );
@@ -134,14 +134,14 @@ function StudentAccountDashboard() {
   );
 
   return (
-    <div className="w-full min-h-screen bg-[#050505] text-zinc-200 pt-32 pb-24 relative overflow-hidden">
+    <div className="w-full min-h-screen bg-base text-slate pt-32 pb-24 relative overflow-hidden">
       {/* Background neon glows */}
       <div className="absolute top-[10%] left-[-10%] w-[500px] h-[500px] bg-[#10B981]/5 rounded-full blur-[140px] pointer-events-none" />
       <div className="absolute bottom-[20%] right-[-10%] w-[500px] h-[500px] bg-[#0D9488]/5 rounded-full blur-[140px] pointer-events-none" />
 
       <Container>
         {/* Profile Card */}
-        <div className="relative bg-[#0A0A0C]/55 border border-white/5 p-6 md:p-8 rounded-3xl backdrop-blur-xl mb-12 flex flex-col md:flex-row md:items-center justify-between gap-6 overflow-hidden">
+        <div className="relative card-tone-emerald border border-line p-6 md:p-8 rounded-3xl backdrop-blur-xl mb-12 flex flex-col md:flex-row md:items-center justify-between gap-6 overflow-hidden">
           <div className="absolute inset-0 bg-[#10B981]/2 opacity-[0.02] pointer-events-none" />
           
           <div className="flex items-center space-x-5">
@@ -149,10 +149,10 @@ function StudentAccountDashboard() {
               {profile?.name?.charAt(0).toUpperCase() || "S"}
             </div>
             <div>
-              <h2 className="text-2xl font-bold font-display text-white leading-tight">
+              <h2 className="text-2xl font-bold font-display text-ink leading-tight">
                 {profile?.name || profile?.full_name}
               </h2>
-              <p className="text-sm text-zinc-400 font-light mt-1.5 flex flex-wrap gap-x-3 gap-y-1">
+              <p className="text-sm text-slate font-light mt-1.5 flex flex-wrap gap-x-3 gap-y-1">
                 <span>{user?.email}</span>
                 {profile?.organization && (
                   <>
@@ -172,7 +172,7 @@ function StudentAccountDashboard() {
 
           <button
             onClick={handleSignOut}
-            className="flex items-center text-xs font-bold text-zinc-400 hover:text-rose-400 transition-colors bg-zinc-900 border border-white/5 rounded-xl px-4 py-2.5 shadow-sm shrink-0 active:scale-95"
+            className="flex items-center text-xs font-bold text-slate hover:text-rose-400 transition-colors bg-zinc-900 border border-line rounded-xl px-4 py-2.5 shadow-sm shrink-0 active:scale-95"
           >
             <LogOut className="w-4 h-4 mr-2" />
             Sign Out Account
@@ -187,22 +187,22 @@ function StudentAccountDashboard() {
             
             {/* 1. Enrolled Courses */}
             <div className="space-y-4">
-              <div className="border-b border-white/5 pb-3">
-                <h3 className="text-xl font-bold font-display text-white">
+              <div className="border-b border-line pb-3">
+                <h3 className="text-xl font-bold font-display text-ink">
                   My Enrolled Programs
                 </h3>
-                <p className="text-xs text-zinc-500 font-light mt-1">
+                <p className="text-xs text-muted font-light mt-1">
                   Launch the interactive course players to access curriculum videos, files, and exercises.
                 </p>
               </div>
 
               {enrolledCourses.length === 0 ? (
-                <div className="p-12 border border-dashed border-zinc-800 rounded-3xl text-center bg-[#0A0A0C]/20 backdrop-blur-sm">
-                  <BookOpen className="w-10 h-10 text-zinc-650 mx-auto mb-4" />
-                  <h4 className="text-lg font-bold text-white mb-1.5 font-display">
+                <div className="p-12 border border-dashed border-zinc-800 rounded-3xl text-center card-tone-emerald backdrop-blur-sm">
+                  <BookOpen className="w-10 h-10 text-muted mx-auto mb-4" />
+                  <h4 className="text-lg font-bold text-ink mb-1.5 font-display">
                     No Enrolled Programs
                   </h4>
-                  <p className="text-sm text-zinc-500 max-w-sm mx-auto mb-6 font-light">
+                  <p className="text-sm text-muted max-w-sm mx-auto mb-6 font-light">
                     You have not enrolled in or unlocked any courses yet. Browse the catalog to start learning.
                   </p>
                   <Button
@@ -217,11 +217,11 @@ function StudentAccountDashboard() {
                   {enrolledCourses.map((course) => (
                     <div
                       key={course.id}
-                      className="bg-[#0A0A0C]/55 border border-white/5 p-6 rounded-3xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 hover:border-[#10B981]/25 transition-all duration-300 relative group overflow-hidden"
+                      className="card-tone-emerald border border-line p-6 rounded-3xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 hover:border-[#10B981]/25 transition-all duration-300 relative group overflow-hidden"
                     >
                       {/* Left: Banner + Titles */}
                       <div className="flex gap-4 items-center">
-                        <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 border border-white/5 bg-zinc-900 hidden sm:block">
+                        <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 border border-line bg-zinc-900 hidden sm:block">
                           {course.banner_url ? (
                             <img src={course.banner_url} alt={course.title} className="w-full h-full object-cover" />
                           ) : (
@@ -236,10 +236,10 @@ function StudentAccountDashboard() {
                               {course.duration || "Self-Paced"}
                             </span>
                           </div>
-                          <h4 className="text-md font-bold font-display text-white mt-1.5 group-hover:text-[#10B981] transition-colors">
+                          <h4 className="text-md font-bold font-display text-ink mt-1.5 group-hover:text-[#10B981] transition-colors">
                             {course.title}
                           </h4>
-                          <p className="text-zinc-500 text-xs mt-1 line-clamp-1 max-w-md font-light">
+                          <p className="text-muted text-xs mt-1 line-clamp-1 max-w-md font-light">
                             {course.summary}
                           </p>
                         </div>
@@ -247,7 +247,7 @@ function StudentAccountDashboard() {
 
                       {/* Launch Button */}
                       <Link href={`/training/${course.slug}/learn`} className="w-full sm:w-auto shrink-0">
-                        <Button className="w-full sm:w-auto py-2.5 px-5 bg-zinc-800 hover:bg-[#0D9488] hover:text-black font-bold text-xs border-white/5 transition-all flex items-center justify-center gap-1">
+                        <Button className="w-full sm:w-auto py-2.5 px-5 bg-zinc-800 hover:bg-[#0D9488] hover:text-black font-bold text-xs border-line transition-all flex items-center justify-center gap-1">
                           Launch Player <ChevronRight className="w-4 h-4" />
                         </Button>
                       </Link>
@@ -259,17 +259,17 @@ function StudentAccountDashboard() {
 
             {/* 2. Applied Internships */}
             <div className="space-y-4">
-              <div className="border-b border-white/5 pb-3">
-                <h3 className="text-xl font-bold font-display text-white">
+              <div className="border-b border-line pb-3">
+                <h3 className="text-xl font-bold font-display text-ink">
                   Applied Internships
                 </h3>
-                <p className="text-xs text-zinc-500 font-light mt-1">
+                <p className="text-xs text-muted font-light mt-1">
                   Applications submitted for KVJ Analytics internship cohorts.
                 </p>
               </div>
 
               {appliedInternships.length === 0 ? (
-                <div className="p-8 border border-zinc-800 rounded-3xl bg-[#0A0A0C]/25 text-center text-sm text-zinc-500 font-light">
+                <div className="p-8 border border-zinc-800 rounded-3xl card-tone-emerald text-center text-sm text-muted font-light">
                   You have not applied for any internship programs yet.
                 </div>
               ) : (
@@ -286,10 +286,10 @@ function StudentAccountDashboard() {
                     return (
                       <div
                         key={app.id}
-                        className="bg-[#0A0A0C]/35 border border-white/5 p-4.5 rounded-2xl flex items-center justify-between gap-4"
+                        className="card-tone-emerald border border-line p-4.5 rounded-2xl flex items-center justify-between gap-4"
                       >
                         <div>
-                          <h4 className="text-sm font-semibold text-white">
+                          <h4 className="text-sm font-semibold text-ink">
                             {internTitle}
                           </h4>
                           <p className="text-[10px] text-zinc-550 font-bold uppercase tracking-wider mt-1 font-mono">
@@ -313,8 +313,8 @@ function StudentAccountDashboard() {
             
             {/* 3. Suggested & Offers */}
             <div className="space-y-4">
-              <div className="border-b border-white/5 pb-3">
-                <h3 className="text-lg font-bold font-display text-white flex items-center gap-2">
+              <div className="border-b border-line pb-3">
+                <h3 className="text-lg font-bold font-display text-ink flex items-center gap-2">
                   <Sparkles className="w-5 h-5 text-brand" /> Suggested Programs
                 </h3>
               </div>
@@ -329,7 +329,7 @@ function StudentAccountDashboard() {
                     return (
                       <div
                         key={c.id}
-                        className="bg-[#0A0A0C]/55 border border-white/5 p-5 rounded-2xl hover:border-zinc-700 transition-colors flex flex-col space-y-3.5 relative overflow-hidden"
+                        className="card-tone-emerald border border-line p-5 rounded-2xl hover:border-zinc-700 transition-colors flex flex-col space-y-3.5 relative overflow-hidden"
                       >
                         {hasOffer && (
                           <div className="absolute top-2 right-2 bg-brand/90 text-black text-[8px] font-extrabold px-1.5 py-0.5 rounded uppercase tracking-wider font-mono">
@@ -338,16 +338,16 @@ function StudentAccountDashboard() {
                         )}
 
                         <div>
-                          <h4 className="text-sm font-bold text-white leading-tight">
+                          <h4 className="text-sm font-bold text-ink leading-tight">
                             {c.title}
                           </h4>
-                          <p className="text-zinc-500 text-xs mt-1.5 line-clamp-2 leading-relaxed font-light">
+                          <p className="text-muted text-xs mt-1.5 line-clamp-2 leading-relaxed font-light">
                             {c.summary}
                           </p>
                         </div>
 
                         {/* Price & Action */}
-                        <div className="flex items-center justify-between border-t border-white/5 pt-3">
+                        <div className="flex items-center justify-between border-t border-line pt-3">
                           <span className="text-xs font-bold text-zinc-450 font-mono">
                             {hasOffer ? `₹${c.offer_price_inr} (demo)` : (c.fee_inr > 0 ? `₹${c.fee_inr} (demo)` : "Free")}
                           </span>
@@ -375,10 +375,10 @@ function StudentAccountDashboard() {
 
                 <div className="mt-4 space-y-3">
                   {activeOffers.map((c) => (
-                    <div key={c.id} className="bg-[#050505]/45 border border-white/5 p-3.5 rounded-xl flex items-center justify-between">
+                    <div key={c.id} className="bg-surface border border-line p-3.5 rounded-xl flex items-center justify-between">
                       <div>
-                        <span className="text-xs font-bold text-white block leading-tight">{c.title}</span>
-                        <span className="text-[10px] text-zinc-500 font-mono mt-1 block">Expires: {new Date(c.offer_expiry!).toLocaleDateString("en-IN")}</span>
+                        <span className="text-xs font-bold text-ink block leading-tight">{c.title}</span>
+                        <span className="text-[10px] text-muted font-mono mt-1 block">Expires: {new Date(c.offer_expiry!).toLocaleDateString("en-IN")}</span>
                       </div>
                       <Link href={`/training/${c.slug}`} className="py-1 px-3 rounded bg-[#10B981] hover:bg-[#00D8FF] text-black font-extrabold text-[9px] uppercase tracking-wider font-mono transition-colors">
                         Claim
@@ -391,14 +391,14 @@ function StudentAccountDashboard() {
 
             {/* 5. Timed Test Results */}
             <div className="space-y-4">
-              <div className="border-b border-white/5 pb-3">
-                <h3 className="text-lg font-bold font-display text-white">
+              <div className="border-b border-line pb-3">
+                <h3 className="text-lg font-bold font-display text-ink">
                   Evaluation Scorecards
                 </h3>
               </div>
 
               {testAttempts.length === 0 ? (
-                <div className="p-6 border border-white/5 bg-[#0A0A0C]/25 rounded-2xl text-center text-xs text-zinc-500 font-light">
+                <div className="p-6 border border-line card-tone-emerald rounded-2xl text-center text-xs text-muted font-light">
                   No mock test assessments submitted yet.
                 </div>
               ) : (
@@ -412,15 +412,15 @@ function StudentAccountDashboard() {
                     return (
                       <div
                         key={attempt.id}
-                        className={`p-4 rounded-xl border bg-[#0A0A0C]/45 flex items-center justify-between transition-colors ${
+                        className={`p-4 rounded-xl border card-tone-emerald flex items-center justify-between transition-colors ${
                           attempt.passed ? "border-emerald-500/20" : "border-rose-500/20"
                         }`}
                       >
                         <div>
-                          <span className="text-xs font-bold text-white block truncate max-w-[140px]">
+                          <span className="text-xs font-bold text-ink block truncate max-w-[140px]">
                             Test ID: {attempt.test_slug.slice(0, 8)}...
                           </span>
-                          <span className="text-[9px] text-zinc-500 font-bold uppercase tracking-wider block mt-1 font-mono">
+                          <span className="text-[9px] text-muted font-bold uppercase tracking-wider block mt-1 font-mono">
                             {submitDate} • Score: {attempt.score} / {attempt.max_score || "10"}
                           </span>
                         </div>
@@ -450,7 +450,7 @@ export default function StudentAccountPage() {
   return (
     <Suspense
       fallback={
-        <div className="w-full min-h-screen bg-[#050505] flex items-center justify-center">
+        <div className="w-full min-h-screen bg-surface flex items-center justify-center">
           <Loader2 className="w-8 h-8 animate-spin text-[#10B981]" />
         </div>
       }
