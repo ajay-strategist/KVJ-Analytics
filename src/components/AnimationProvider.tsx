@@ -54,6 +54,11 @@ export function AnimationProvider({ children }: { children: React.ReactNode }) {
       });
       gsap.ticker.lagSmoothing(0);
 
+      // Recompute all trigger positions once layout/fonts settle so inner-page
+      // scroll animations fire at the correct scroll position.
+      requestAnimationFrame(() => ScrollTrigger.refresh());
+      window.addEventListener("load", () => ScrollTrigger.refresh(), { once: true });
+
       setReady(true);
     };
 
