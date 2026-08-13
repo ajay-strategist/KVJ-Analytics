@@ -35,7 +35,7 @@ export function OnlineCoursesClient({ courses, header }: OnlineCoursesClientProp
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
 
   return (
-    <div className="w-full hero-emerald text-zinc-200 min-h-screen pt-28 pb-24 text-left">
+    <div className="w-full bg-base text-slate min-h-screen pt-28 pb-24 text-left">
       {/* Backlight spotlights */}
       <div className="absolute top-[20%] right-[-10%] w-[500px] h-[500px] bg-[#0D9488]/5 rounded-full blur-[140px] pointer-events-none" />
       <div className="absolute bottom-[20%] left-[-10%] w-[500px] h-[500px] bg-[#10B981]/5 rounded-full blur-[140px] pointer-events-none" />
@@ -43,13 +43,13 @@ export function OnlineCoursesClient({ courses, header }: OnlineCoursesClientProp
       <Container>
         {/* Breadcrumb & Title */}
         <div className="max-w-3xl mb-16 text-left">
-          <div className="flex items-center gap-2 text-sm text-zinc-400 font-light mb-4">
+          <div className="flex items-center gap-2 text-sm text-slate font-light mb-4">
             <Link href="/training" className="hover:text-[#10B981] transition-colors">Training Hub</Link>
             <span>/</span>
             <span className="text-[#10B981] font-semibold">Online Courses</span>
           </div>
 
-          <h1 className="font-display font-bold text-4xl sm:text-5xl text-white tracking-tight leading-none">
+          <h1 className="font-display font-bold text-4xl sm:text-5xl text-ink tracking-tight leading-none">
             {h.headingLead} <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#10B981] via-[#0D9488] to-[#10B981] bg-[size:200%_auto]">{h.headingAccent}</span>
           </h1>
           <p className="text-slate font-light text-lg leading-relaxed mt-4">
@@ -59,9 +59,9 @@ export function OnlineCoursesClient({ courses, header }: OnlineCoursesClientProp
 
         {/* Catalog Grid */}
         {courses.length === 0 ? (
-          <div className="border border-line bg-[#0B2A22]/55 rounded-3xl p-16 text-center max-w-2xl mx-auto backdrop-blur-xl">
-            <Laptop className="w-12 h-12 text-zinc-500 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-white mb-2">No Courses Available</h3>
+          <div className="border border-line card-tone-emerald rounded-3xl p-16 text-center max-w-2xl mx-auto backdrop-blur-xl">
+            <Laptop className="w-12 h-12 text-muted mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-ink mb-2">No Courses Available</h3>
             <p className="text-slate font-light">Our syllabus catalog is being updated. Please check back shortly or request a custom program.</p>
           </div>
         ) : (
@@ -72,7 +72,7 @@ export function OnlineCoursesClient({ courses, header }: OnlineCoursesClientProp
 
               return (
                 <Reveal key={course.id} delay={idx * 85} variant="up">
-                  <div className="bg-[#0B2A22]/72 border border-line hover:border-[#10B981]/30 rounded-3xl p-6 flex flex-col h-full hover:shadow-soft hover:-translate-y-1 transition-all duration-300 relative group overflow-hidden">
+                  <div className="card-tone-emerald border hover:border-[#10B981]/50 rounded-3xl p-6 flex flex-col h-full hover:shadow-soft hover:-translate-y-1 transition-all duration-300 relative group overflow-hidden">
 
                     {/* Course Banner */}
                     <div className="relative w-full h-44 rounded-2xl overflow-hidden bg-zinc-900 border border-line mb-5 shrink-0">
@@ -107,7 +107,7 @@ export function OnlineCoursesClient({ courses, header }: OnlineCoursesClientProp
                     {/* Title & description */}
                     <div className="flex-1 flex flex-col justify-between">
                       <div>
-                        <h3 className="text-xl font-bold font-display text-white group-hover:text-[#10B981] transition-colors leading-snug">
+                        <h3 className="text-xl font-bold font-display text-ink group-hover:text-[#10B981] transition-colors leading-snug">
                           {course.title}
                         </h3>
                         <p className="text-slate text-sm font-light leading-relaxed mt-2.5 line-clamp-3">
@@ -121,7 +121,7 @@ export function OnlineCoursesClient({ courses, header }: OnlineCoursesClientProp
                           <span className="text-slate flex items-center gap-1.5 font-light">
                             <Calendar className="w-4 h-4 text-[#0D9488]" /> Duration
                           </span>
-                          <span className="text-zinc-200 font-medium">{course.duration || "Self-Paced"}</span>
+                          <span className="text-ink font-medium">{course.duration || "Self-Paced"}</span>
                         </div>
                         <div className="flex items-center justify-between text-sm">
                           <span className="text-slate flex items-center gap-1.5 font-light">
@@ -134,7 +134,7 @@ export function OnlineCoursesClient({ courses, header }: OnlineCoursesClientProp
                                 <span className="text-[#10B981] font-bold">₹{displayPrice}</span>
                               </div>
                             ) : (
-                              <span className="text-zinc-200 font-bold">
+                              <span className="text-ink font-bold">
                                 {course.fee_inr > 0 ? `₹${course.fee_inr}` : "Free"}
                               </span>
                             )}
@@ -146,7 +146,7 @@ export function OnlineCoursesClient({ courses, header }: OnlineCoursesClientProp
                     {/* Action buttons */}
                     <div className="grid grid-cols-2 gap-4 border-t border-line pt-5 mt-5">
                       <Link href={`/training/${course.slug}`} className="w-full">
-                        <Button variant="secondary" className="w-full text-xs py-2 bg-[#07130E]/50 hover:bg-zinc-900 border-line text-white">
+                        <Button variant="secondary" className="w-full text-xs py-2 bg-surface hover:bg-emerald-50 border-line text-ink">
                           Details
                         </Button>
                       </Link>
