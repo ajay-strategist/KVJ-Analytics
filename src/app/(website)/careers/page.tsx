@@ -72,7 +72,7 @@ export default async function CareersPage() {
   const header = mergePageContent(await getPageContent("careers"), FALLBACK_CAREERS);
 
   return (
-    <div className="w-full bg-[#050505] text-zinc-200 min-h-screen pt-28 pb-24 relative overflow-hidden">
+    <div className="w-full bg-base text-slate min-h-screen pt-28 pb-24 relative overflow-hidden">
       {/* Background spotlights */}
       <div className="absolute top-[20%] right-[-10%] w-[500px] h-[500px] bg-[#0D9488]/5 rounded-full blur-[140px] pointer-events-none" />
       <div className="absolute bottom-[20%] left-[-10%] w-[500px] h-[500px] bg-[#10B981]/5 rounded-full blur-[140px] pointer-events-none" />
@@ -83,10 +83,10 @@ export default async function CareersPage() {
           <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-[#10B981] px-3.5 py-1.5 bg-[#10B981]/10 rounded-full w-fit border border-[#10B981]/20 font-mono">
             {header.eyebrow}
           </span>
-          <h1 className="font-display font-bold text-4xl sm:text-5xl lg:text-6xl text-white mt-6 tracking-tight leading-tight">
+          <h1 className="font-display font-bold text-4xl sm:text-5xl lg:text-6xl text-ink mt-6 tracking-tight leading-tight">
             {header.headingLead} <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#10B981] via-[#0D9488] to-[#10B981] bg-[size:200%_auto]">{header.headingAccent}</span>
           </h1>
-          <p className="text-zinc-400 font-light text-lg md:text-xl leading-relaxed mt-4">
+          <p className="text-slate font-light text-lg md:text-xl leading-relaxed mt-4">
             {header.intro}
           </p>
         </div>
@@ -95,7 +95,7 @@ export default async function CareersPage() {
         <div className="max-w-4xl mx-auto space-y-6">
           {jobs.map((job, idx) => (
             <Reveal key={job.id} delay={idx * 80} variant="up">
-              <div className="bg-[#0A0A0C]/55 border border-white/5 p-6 md:p-8 rounded-3xl hover:border-[#0D9488]/30 hover:shadow-[0_8px_32px_rgba(16,185,129,0.04)] transition-all duration-300 relative group overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
+              <div className="card-tone-emerald border p-6 md:p-8 rounded-3xl hover:border-[#0D9488]/30 hover:shadow-[0_8px_32px_rgba(16,185,129,0.04)] transition-all duration-300 relative group overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
                 
                 {/* Job Title and Meta details */}
                 <div className="space-y-3.5">
@@ -103,15 +103,15 @@ export default async function CareersPage() {
                     <span className="text-[9px] font-bold font-mono tracking-widest text-[#10B981] uppercase bg-[#10B981]/10 px-2.5 py-0.5 rounded border border-[#10B981]/15">
                       {job.department}
                     </span>
-                    <span className="text-zinc-650 text-xs font-light">•</span>
-                    <span className="text-[9px] font-bold font-mono tracking-widest text-zinc-400 uppercase bg-zinc-900 px-2.5 py-0.5 rounded border border-white/5">
+                    <span className="text-muted text-xs font-light">•</span>
+                    <span className="text-[9px] font-bold font-mono tracking-widest text-slate uppercase bg-surface px-2.5 py-0.5 rounded border border-white/5">
                       {job.type.replace("_", " ")}
                     </span>
                   </div>
-                  <h3 className="text-xl font-bold font-display text-white group-hover:text-[#10B981] transition-colors leading-tight">
+                  <h3 className="text-xl font-bold font-display text-ink group-hover:text-[#10B981] transition-colors leading-tight">
                     {job.title}
                   </h3>
-                  <div className="flex items-center gap-4 text-xs font-mono text-zinc-500">
+                  <div className="flex items-center gap-4 text-xs font-mono text-muted">
                     <span className="flex items-center gap-1.5 font-light">
                       <MapPin className="w-4 h-4 text-[#0D9488] shrink-0" />
                       {job.location}

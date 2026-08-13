@@ -57,7 +57,7 @@ export default async function ProductDetailPage({
             <Eyebrow segment={isGradeScope ? "corporate" : "education"} className="mb-3">
               EdTech Platform
             </Eyebrow>
-            <BoldStatement variant="hero" className="mb-4 leading-tight text-white">
+            <BoldStatement variant="hero" className="mb-4 leading-tight text-ink">
               {name}
             </BoldStatement>
             <p className="text-lg md:text-xl font-bold font-display signature-gradient-text mb-6">
@@ -68,7 +68,7 @@ export default async function ProductDetailPage({
             </p>
 
             <div className="space-y-6 mb-8">
-              <h4 className="text-xl font-bold font-display text-white flex items-center mb-4">
+              <h4 className="text-xl font-bold font-display text-ink flex items-center mb-4">
                 <Monitor className={`w-5 h-5 mr-2.5 ${isGradeScope ? "text-[#10B981]" : "text-[#0D9488]"}`} />
                 Platform Capabilities
               </h4>
@@ -76,10 +76,10 @@ export default async function ProductDetailPage({
                 {features.map((item: string, idx: number) => (
                   <div
                     key={idx}
-                    className="flex items-start space-x-3.5 bg-[#0B2A22]/70 border border-line rounded-xl p-4 shadow-soft hover:shadow-hover-lift transition-all duration-300"
+                    className="flex items-start space-x-3.5 card-tone-violet border rounded-xl p-4 shadow-soft hover:shadow-hover-lift transition-all duration-300"
                   >
                     <CheckCircle2 className={`w-5 h-5 shrink-0 mt-0.5 ${isGradeScope ? "text-[#10B981]" : "text-[#0D9488]"}`} />
-                    <span className="text-base text-zinc-200 font-semibold leading-relaxed">
+                    <span className="text-base text-slate font-semibold leading-relaxed">
                       {item}
                     </span>
                   </div>
@@ -90,7 +90,7 @@ export default async function ProductDetailPage({
 
           {/* Sidebar Conversion Card */}
           <div className="lg:col-span-5 lg:sticky lg:top-28 w-full">
-            <div className={`relative overflow-hidden bg-[#0B2A22]/72 rounded-[24px] border border-line p-8 shadow-soft border-l-4 hover:shadow-hover-lift hover:-translate-y-1 transition-all duration-300 ${
+            <div className={`relative overflow-hidden card-tone-violet rounded-[24px] border p-8 shadow-soft border-l-4 hover:shadow-hover-lift hover:-translate-y-1 transition-all duration-300 ${
               isGradeScope ? "border-l-[#10B981]" : "border-l-[#0D9488]"
             }`}>
               <div className={`absolute -top-12 -left-12 w-48 h-48 rounded-full blur-2xl pointer-events-none ${
@@ -105,7 +105,7 @@ export default async function ProductDetailPage({
               >
                 <Layers className="w-6 h-6" />
               </span>
-              <h4 className="text-xl font-bold font-display text-white mb-4 relative z-10">
+              <h4 className="text-xl font-bold font-display text-ink mb-4 relative z-10">
                 {demo.title}
               </h4>
               <p className="text-sm text-slate leading-relaxed mb-6 font-semibold relative z-10">
