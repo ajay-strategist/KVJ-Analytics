@@ -96,7 +96,7 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
     return (
       <div className="bg-[#0D9488]/5 border border-[#0D9488]/30 rounded-[24px] p-8 text-center flex flex-col items-center w-full shadow-sm animate-fade-up">
         <CheckCircle2 className="w-16 h-16 text-[#10B981] mb-6 animate-pulse" />
-        <h3 className="text-2xl font-bold font-display text-white mb-3">
+        <h3 className="text-2xl font-bold font-display text-ink mb-3">
           Message Sent Successfully!
         </h3>
         <p className="text-base text-slate font-light leading-relaxed mb-6">
@@ -109,7 +109,7 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
     );
   }
 
-  const inputClasses = "peer w-full px-0 pt-6 pb-2 rounded-none border-0 border-b border-white/10 bg-transparent focus:border-b-[#10B981] text-white text-sm transition-all outline-none";
+  const inputClasses = "peer w-full px-0 pt-6 pb-2 rounded-none border-0 border-b border-line bg-transparent focus:border-b-[#10B981] text-ink text-sm transition-all outline-none";
 
   return (
     <form onSubmit={handleSubmit} className="w-full space-y-8 relative">
@@ -251,16 +251,16 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
           onChange={handleChange}
           onFocus={() => setFocusedField("serviceInterest")}
           onBlur={() => setFocusedField("")}
-          className="peer w-full px-0 pt-6 pb-2 rounded-none border-0 border-b border-white/10 bg-transparent focus:border-b-[#10B981] text-white text-sm transition-all outline-none appearance-none cursor-pointer"
+          className="peer w-full px-0 pt-6 pb-2 rounded-none border-0 border-b border-line bg-transparent focus:border-b-[#10B981] text-ink text-sm transition-all outline-none appearance-none cursor-pointer"
         >
-          <option value="" className="bg-[#07130E] text-slate-500">-- Select Interest Category --</option>
+          <option value="" className="bg-white text-slate-500">-- Select Interest Category --</option>
           {inquiryAreas.map((area, idx) => (
-            <option key={idx} value={area} className="bg-[#07130E] text-white">
+            <option key={idx} value={area} className="bg-white text-ink">
               {area}
             </option>
           ))}
           {formData.serviceInterest && !inquiryAreas.includes(formData.serviceInterest) && (
-            <option value={formData.serviceInterest} className="bg-[#07130E] text-white">{formData.serviceInterest}</option>
+            <option value={formData.serviceInterest} className="bg-white text-ink">{formData.serviceInterest}</option>
           )}
         </select>
         <label
@@ -273,7 +273,7 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
         >
           Service Interested In *
         </label>
-        <div className="absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none border-l border-white/10 pl-3">
+        <div className="absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none border-l border-line pl-3">
           <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
           </svg>
@@ -291,7 +291,7 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
           onChange={handleChange}
           onFocus={() => setFocusedField("message")}
           onBlur={() => setFocusedField("")}
-          className="peer w-full px-0 pt-6 pb-2 rounded-none border-0 border-b border-white/10 bg-transparent focus:border-b-[#10B981] text-white text-sm transition-all outline-none resize-none"
+          className="peer w-full px-0 pt-6 pb-2 rounded-none border-0 border-b border-line bg-transparent focus:border-b-[#10B981] text-ink text-sm transition-all outline-none resize-none"
         />
         <label
           htmlFor="message"

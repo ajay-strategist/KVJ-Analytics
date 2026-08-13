@@ -27,7 +27,7 @@ export default async function ContactPage() {
   const inquiryAreas = page.inquiryAreas || FALLBACK_CONTACT.inquiryAreas;
 
   return (
-    <section className="relative overflow-hidden pt-28 pb-20 md:pb-28 hero-emerald text-zinc-200 min-h-screen text-left">
+    <section className="relative overflow-hidden pt-28 pb-20 md:pb-28 bg-base text-slate min-h-screen text-left">
       {/* 3D Grid / Data streams overlay */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(16,185,129,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(16,185,129,0.02)_1px,transparent_1px)] bg-[size:4rem_4rem] pointer-events-none opacity-40" />
       <div className="blob animate-blob absolute -top-24 right-[-4rem] w-[28rem] h-[28rem] bg-[#10B981]/5 pointer-events-none blur-[100px]" />
@@ -38,7 +38,7 @@ export default async function ContactPage() {
         <Reveal className="max-w-3xl mx-auto text-center mb-12 md:mb-14">
           <SplitHeading
             as="h1"
-            className="text-[34px] lg:text-[54px] font-medium tracking-[-0.025em] leading-[1.1] font-display text-white mb-4"
+            className="text-[34px] lg:text-[54px] font-medium tracking-[-0.025em] leading-[1.1] font-display text-ink mb-4"
           >
             {page.heading}
           </SplitHeading>
@@ -49,7 +49,7 @@ export default async function ContactPage() {
         </Reveal>
 
         {/* Unified two-panel card */}
-        <Reveal className="max-w-6xl mx-auto rounded-[32px] overflow-hidden shadow-soft border border-line bg-[#0B2A22]/72 backdrop-blur-[24px]">
+        <Reveal className="max-w-6xl mx-auto rounded-[32px] overflow-hidden shadow-soft border border-line bg-card">
           <div className="grid lg:grid-cols-12">
             
             {/* Info panel */}
@@ -168,7 +168,7 @@ export default async function ContactPage() {
 
             {/* Form panel */}
             <div className="lg:col-span-7 p-8 sm:p-10 bg-transparent backdrop-blur-[24px] text-left">
-              <h2 className="text-2xl font-bold font-display text-white mb-1.5 tracking-tight">Send Us a Message</h2>
+              <h2 className="text-2xl font-bold font-display text-ink mb-1.5 tracking-tight">Send Us a Message</h2>
               <p className="text-sm text-slate font-light mb-8">
                 Fill out the form and our team will get back to you within 24 hours.
               </p>
