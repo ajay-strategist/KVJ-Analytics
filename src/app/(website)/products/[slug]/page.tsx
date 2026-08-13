@@ -38,14 +38,14 @@ export default async function ProductDetailPage({
   return (
     <Section background="default" className="bg-base relative overflow-hidden text-left">
       <div className="absolute inset-0 bg-grid-pattern opacity-45 pointer-events-none" />
-      <div className="absolute top-20 right-0 w-96 h-96 bg-[#43F5FF]/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-20 left-0 w-96 h-96 bg-[#3A7BFF]/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-20 right-0 w-96 h-96 bg-[#10B981]/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-20 left-0 w-96 h-96 bg-[#0D9488]/5 rounded-full blur-3xl pointer-events-none" />
 
       <Container className="relative z-10">
         {/* Back Link */}
         <Link
           href="/products"
-          className="inline-flex items-center text-sm font-bold text-slate hover:text-[#43F5FF] mb-8 group transition-colors"
+          className="inline-flex items-center text-sm font-bold text-slate hover:text-[#10B981] mb-8 group transition-colors"
         >
           <ArrowLeft className="w-4 h-4 mr-2 transition-transform duration-200 group-hover:-translate-x-1" />
           <span>Back to Products</span>
@@ -69,16 +69,16 @@ export default async function ProductDetailPage({
 
             <div className="space-y-6 mb-8">
               <h4 className="text-xl font-bold font-display text-white flex items-center mb-4">
-                <Monitor className={`w-5 h-5 mr-2.5 ${isGradeScope ? "text-[#43F5FF]" : "text-[#3A7BFF]"}`} />
+                <Monitor className={`w-5 h-5 mr-2.5 ${isGradeScope ? "text-[#10B981]" : "text-[#0D9488]"}`} />
                 Platform Capabilities
               </h4>
               <div className="grid grid-cols-1 gap-4">
                 {features.map((item: string, idx: number) => (
                   <div
                     key={idx}
-                    className="flex items-start space-x-3.5 bg-[#0E1117]/70 border border-line rounded-xl p-4 shadow-soft hover:shadow-hover-lift transition-all duration-300"
+                    className="flex items-start space-x-3.5 bg-[#0B2A22]/70 border border-line rounded-xl p-4 shadow-soft hover:shadow-hover-lift transition-all duration-300"
                   >
-                    <CheckCircle2 className={`w-5 h-5 shrink-0 mt-0.5 ${isGradeScope ? "text-[#43F5FF]" : "text-[#3A7BFF]"}`} />
+                    <CheckCircle2 className={`w-5 h-5 shrink-0 mt-0.5 ${isGradeScope ? "text-[#10B981]" : "text-[#0D9488]"}`} />
                     <span className="text-base text-zinc-200 font-semibold leading-relaxed">
                       {item}
                     </span>
@@ -90,17 +90,17 @@ export default async function ProductDetailPage({
 
           {/* Sidebar Conversion Card */}
           <div className="lg:col-span-5 lg:sticky lg:top-28 w-full">
-            <div className={`relative overflow-hidden bg-[#0E1117]/72 rounded-[24px] border border-line p-8 shadow-soft border-l-4 hover:shadow-hover-lift hover:-translate-y-1 transition-all duration-300 ${
-              isGradeScope ? "border-l-[#43F5FF]" : "border-l-[#3A7BFF]"
+            <div className={`relative overflow-hidden bg-[#0B2A22]/72 rounded-[24px] border border-line p-8 shadow-soft border-l-4 hover:shadow-hover-lift hover:-translate-y-1 transition-all duration-300 ${
+              isGradeScope ? "border-l-[#10B981]" : "border-l-[#0D9488]"
             }`}>
               <div className={`absolute -top-12 -left-12 w-48 h-48 rounded-full blur-2xl pointer-events-none ${
-                isGradeScope ? "bg-[#43F5FF]/5" : "bg-[#3A7BFF]/5"
+                isGradeScope ? "bg-[#10B981]/5" : "bg-[#0D9488]/5"
               }`} />
               <span
                 className={`inline-flex p-3 rounded-xl mb-6 relative z-10 ${
                   isGradeScope
-                    ? "bg-[#43F5FF]/10 text-[#43F5FF]"
-                    : "bg-[#3A7BFF]/10 text-[#3A7BFF]"
+                    ? "bg-[#10B981]/10 text-[#10B981]"
+                    : "bg-[#0D9488]/10 text-[#0D9488]"
                 }`}
               >
                 <Layers className="w-6 h-6" />
@@ -116,7 +116,7 @@ export default async function ProductDetailPage({
                 {(demo.bullets || []).map((bullet: string, bIdx: number) => (
                   <div key={bIdx} className="flex items-center space-x-2 text-xs font-bold text-slate/85">
                     <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                      isGradeScope ? "bg-[#43F5FF]" : "bg-[#3A7BFF]"
+                      isGradeScope ? "bg-[#10B981]" : "bg-[#0D9488]"
                     }`} />
                     <span>{bullet}</span>
                   </div>
@@ -126,14 +126,14 @@ export default async function ProductDetailPage({
               {isGradeScope ? (
                 <Button
                   href={`/contact?interest=${encodeURIComponent("Demo Request " + name)}`}
-                  className="w-full py-4 text-center font-bold text-black bg-[#43F5FF] hover:bg-[#43F5FF]/90 transition-all duration-200 relative z-10"
+                  className="w-full py-4 text-center font-bold text-black bg-[#10B981] hover:bg-[#10B981]/90 transition-all duration-200 relative z-10"
                 >
                   {demo.buttonText}
                 </Button>
               ) : (
                 <Button
                   href={`/contact?interest=${encodeURIComponent("Demo Request " + name)}`}
-                  className="w-full py-4 text-center font-bold text-white bg-[#3A7BFF] hover:bg-[#3A7BFF]/90 transition-all duration-200 relative z-10 border-none"
+                  className="w-full py-4 text-center font-bold text-white bg-[#0D9488] hover:bg-[#0D9488]/90 transition-all duration-200 relative z-10 border-none"
                 >
                   {demo.buttonText}
                 </Button>

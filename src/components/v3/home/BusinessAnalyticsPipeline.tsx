@@ -114,20 +114,20 @@ export function BusinessAnalyticsPipeline({
                   {/* base track */}
                   {[P_LEAD, P_TAIL, ...STAGES.map((_, i) => arcL(i)), ...STAGES.map((_, i) => arcR(i)),
                     ...STAGES.slice(0, -1).map((_, i) => conn(i))].map((d, i) => (
-                    <path key={i} d={d} stroke="rgba(67,245,255,0.12)" strokeWidth="2" strokeLinecap="round" />
+                    <path key={i} d={d} stroke="rgba(16,185,129,0.12)" strokeWidth="2" strokeLinecap="round" />
                   ))}
                   {/* animated flow (normalized dash) */}
-                  <path ref={leadRef} d={P_LEAD} pathLength={1} stroke="#43F5FF" strokeWidth="2.5" strokeLinecap="round" />
+                  <path ref={leadRef} d={P_LEAD} pathLength={1} stroke="#10B981" strokeWidth="2.5" strokeLinecap="round" />
                   {STAGES.map((_, i) => (
-                    <path key={`al${i}`} ref={(el) => { arcLRefs.current[i] = el; }} d={arcL(i)} pathLength={1} stroke="#43F5FF" strokeWidth="2.5" strokeLinecap="round" />
+                    <path key={`al${i}`} ref={(el) => { arcLRefs.current[i] = el; }} d={arcL(i)} pathLength={1} stroke="#10B981" strokeWidth="2.5" strokeLinecap="round" />
                   ))}
                   {STAGES.map((_, i) => (
-                    <path key={`ar${i}`} ref={(el) => { arcRRefs.current[i] = el; }} d={arcR(i)} pathLength={1} stroke="#43F5FF" strokeWidth="2.5" strokeLinecap="round" />
+                    <path key={`ar${i}`} ref={(el) => { arcRRefs.current[i] = el; }} d={arcR(i)} pathLength={1} stroke="#10B981" strokeWidth="2.5" strokeLinecap="round" />
                   ))}
                   {STAGES.slice(0, -1).map((_, i) => (
-                    <path key={`c${i}`} ref={(el) => { connRefs.current[i] = el; }} d={conn(i)} pathLength={1} stroke="#3A7BFF" strokeWidth="2.5" strokeLinecap="round" />
+                    <path key={`c${i}`} ref={(el) => { connRefs.current[i] = el; }} d={conn(i)} pathLength={1} stroke="#0D9488" strokeWidth="2.5" strokeLinecap="round" />
                   ))}
-                  <path ref={tailRef} d={P_TAIL} pathLength={1} stroke="#3A7BFF" strokeWidth="2.5" strokeLinecap="round" />
+                  <path ref={tailRef} d={P_TAIL} pathLength={1} stroke="#0D9488" strokeWidth="2.5" strokeLinecap="round" />
                 </svg>
 
                 {/* nodes + labels */}
@@ -138,7 +138,7 @@ export function BusinessAnalyticsPipeline({
                       <div className="absolute" style={{ top: yOf(i) - R, left: CX - R, width: 2 * R, height: 2 * R }}>
                         {on && <span className="node-ripple absolute inset-0 rounded-full border border-brand/60" />}
                         <span className={`relative grid h-full w-full place-items-center rounded-full border transition-all duration-500 ${
-                          on ? "border-brand bg-brand/20 text-brand shadow-[0_0_18px_-2px_rgba(67,245,255,0.8)]" : "border-line bg-base text-muted"}`}>
+                          on ? "border-brand bg-brand/20 text-brand shadow-[0_0_18px_-2px_rgba(16,185,129,0.8)]" : "border-line bg-base text-muted"}`}>
                           <s.Icon className="h-4 w-4" />
                         </span>
                       </div>
@@ -202,11 +202,11 @@ function StageViz({ variant }: { variant: number }) {
   if (variant === 2)
     return <div className="flex w-full max-w-sm items-end gap-1.5 h-[70px]">{[40, 62, 50, 78, 56, 84, 66].map((h, i) => <div key={i} className="build-line flex-1 rounded-t bg-gradient-to-t from-corporate/40 to-brand/70" style={{ height: `${h}%`, animationDelay: `${i * 0.2}s` }} />)}</div>;
   if (variant === 3)
-    return <svg viewBox="0 0 240 70" className={cls} preserveAspectRatio="none"><path d="M0 56 C30 50 46 26 70 32 S120 8 150 18 S210 6 240 12" fill="none" stroke="#43F5FF" strokeWidth="2.5" /></svg>;
+    return <svg viewBox="0 0 240 70" className={cls} preserveAspectRatio="none"><path d="M0 56 C30 50 46 26 70 32 S120 8 150 18 S210 6 240 12" fill="none" stroke="#10B981" strokeWidth="2.5" /></svg>;
   if (variant === 4)
     return (
       <div className="flex items-center gap-5">
-        <svg viewBox="0 0 42 42" className="h-16 w-16 -rotate-90"><circle cx="21" cy="21" r="15.9" fill="none" stroke="rgba(167,177,196,0.15)" strokeWidth="6" /><circle cx="21" cy="21" r="15.9" fill="none" stroke="#43F5FF" strokeWidth="6" strokeDasharray="64 100" strokeLinecap="round" /></svg>
+        <svg viewBox="0 0 42 42" className="h-16 w-16 -rotate-90"><circle cx="21" cy="21" r="15.9" fill="none" stroke="rgba(167,177,196,0.15)" strokeWidth="6" /><circle cx="21" cy="21" r="15.9" fill="none" stroke="#10B981" strokeWidth="6" strokeDasharray="64 100" strokeLinecap="round" /></svg>
         <div className="space-y-2">{[70, 48, 32].map((w, i) => <div key={i} className="h-2 rounded-full bg-gradient-to-r from-brand/70 to-corporate/30" style={{ width: `${w * 1.6}px` }} />)}</div>
       </div>
     );

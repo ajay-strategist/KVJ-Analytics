@@ -294,7 +294,7 @@ export default async function BlogPostDetailPage({
               <div className="absolute inset-0 bg-gradient-to-r from-[#050608] via-[#050608]/20 to-transparent" />
             </>
           ) : (
-            <div className="w-full h-full bg-[#0E1117] relative">
+            <div className="w-full h-full bg-[#0B2A22] relative">
               <div className="absolute top-[-30%] right-[-10%] w-[500px] h-[500px] bg-brand/5 rounded-full blur-[120px] pointer-events-none" />
               <div className="absolute bottom-[-20%] left-[-10%] w-[600px] h-[600px] bg-corporate/5 rounded-full blur-[140px] pointer-events-none" />
               <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:4rem_4rem]" />
@@ -317,7 +317,7 @@ export default async function BlogPostDetailPage({
             <div>
               <Link
                 href={`/blog/category/${categorySlug}`}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1 text-[10px] font-extrabold uppercase tracking-widest text-[#00F0FF] bg-[#00F0FF]/10 border border-[#00F0FF]/20 rounded-full hover:bg-[#00F0FF]/25 transition-all"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1 text-[10px] font-extrabold uppercase tracking-widest text-[#10B981] bg-[#10B981]/10 border border-[#10B981]/20 rounded-full hover:bg-[#10B981]/25 transition-all"
               >
                 {categoryTitle}
               </Link>
@@ -367,16 +367,16 @@ export default async function BlogPostDetailPage({
               .prose-editorial ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 1.5rem; color: #cbd5e1; }
               .prose-editorial ol { list-style-type: decimal; padding-left: 1.5rem; margin-bottom: 1.5rem; color: #cbd5e1; }
               .prose-editorial li { margin-bottom: 0.5rem; font-weight: 300; line-height: 1.7; }
-              .prose-editorial a { color: #43F5FF; font-weight: 500; text-decoration: underline; text-underline-offset: 4px; transition: color 0.2s; }
-              .prose-editorial a:hover { color: #16E6D8; }
-              .prose-editorial blockquote { background: rgba(67, 245, 255, 0.03); border-left: 3px solid #43F5FF; padding: 1.25rem 1.75rem; margin: 2rem 0; border-radius: 0 12px 12px 0; }
+              .prose-editorial a { color: #10B981; font-weight: 500; text-decoration: underline; text-underline-offset: 4px; transition: color 0.2s; }
+              .prose-editorial a:hover { color: #34D399; }
+              .prose-editorial blockquote { background: rgba(16, 185, 129, 0.03); border-left: 3px solid #10B981; padding: 1.25rem 1.75rem; margin: 2rem 0; border-radius: 0 12px 12px 0; }
               .prose-editorial blockquote p { color: #f1f5f9; font-style: italic; margin-bottom: 0; font-size: 1.1rem; }
               .prose-editorial img { border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.05); margin: 2.5rem auto; max-width: 100%; height: auto; }
               .prose-editorial table { width: 100%; border-collapse: collapse; margin: 2rem 0; font-size: 0.95rem; }
               .prose-editorial th { background: rgba(255, 255, 255, 0.02); color: #ffffff; font-weight: 600; text-align: left; padding: 0.75rem 1rem; border-bottom: 2px solid rgba(255, 255, 255, 0.08); }
               .prose-editorial td { padding: 0.75rem 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.04); color: #cbd5e1; }
-              .prose-editorial code { background: rgba(255, 255, 255, 0.05); color: #43F5FF; padding: 0.2rem 0.4rem; border-radius: 6px; font-size: 0.85em; font-family: monospace; }
-              .prose-editorial pre { background: #0E1117; border: 1px solid rgba(255, 255, 255, 0.05); padding: 1.25rem; border-radius: 16px; overflow-x: auto; margin: 2rem 0; }
+              .prose-editorial code { background: rgba(255, 255, 255, 0.05); color: #10B981; padding: 0.2rem 0.4rem; border-radius: 6px; font-size: 0.85em; font-family: monospace; }
+              .prose-editorial pre { background: #0B2A22; border: 1px solid rgba(255, 255, 255, 0.05); padding: 1.25rem; border-radius: 16px; overflow-x: auto; margin: 2rem 0; }
               .prose-editorial pre code { background: transparent; color: #cbd5e1; padding: 0; font-size: 0.9rem; }
             ` }} />
             {processedHtml ? (
@@ -417,10 +417,10 @@ export default async function BlogPostDetailPage({
             {/* Promo CTA Cards (Training & Services) */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {/* Promo Card 1: Enterprise Training */}
-              <div className="relative group bg-[#0A0D13]/40 border border-white/5 rounded-3xl p-8 hover:border-[#00F0FF]/25 transition-all duration-300 flex flex-col justify-between overflow-hidden shadow-soft">
-                <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#00F0FF]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="relative group bg-[#07130E]/40 border border-white/5 rounded-3xl p-8 hover:border-[#10B981]/25 transition-all duration-300 flex flex-col justify-between overflow-hidden shadow-soft">
+                <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#10B981]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                 <div className="space-y-4">
-                  <div className="h-10 w-10 rounded-2xl bg-cyan-950/20 border border-[#00F0FF]/15 flex items-center justify-center text-[#00F0FF]">
+                  <div className="h-10 w-10 rounded-2xl bg-cyan-950/20 border border-[#10B981]/15 flex items-center justify-center text-[#10B981]">
                     <GraduationCap className="w-5 h-5" />
                   </div>
                   <h3 className="text-lg font-bold text-white">Unlock Live Analytics Training</h3>
@@ -432,7 +432,7 @@ export default async function BlogPostDetailPage({
                   <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Enterprise &amp; College Cohorts</span>
                   <Link 
                     href="/training" 
-                    className="inline-flex items-center gap-1 text-[11px] font-extrabold text-[#00F0FF] hover:underline"
+                    className="inline-flex items-center gap-1 text-[11px] font-extrabold text-[#10B981] hover:underline"
                   >
                     <span>Explore training</span>
                     <ArrowUpRight className="w-3.5 h-3.5" />
@@ -441,10 +441,10 @@ export default async function BlogPostDetailPage({
               </div>
 
               {/* Promo Card 2: Consulting Services */}
-              <div className="relative group bg-[#0A0D13]/40 border border-white/5 rounded-3xl p-8 hover:border-[#3A7BFF]/25 transition-all duration-300 flex flex-col justify-between overflow-hidden shadow-soft">
-                <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#3A7BFF]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="relative group bg-[#07130E]/40 border border-white/5 rounded-3xl p-8 hover:border-[#0D9488]/25 transition-all duration-300 flex flex-col justify-between overflow-hidden shadow-soft">
+                <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#0D9488]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                 <div className="space-y-4">
-                  <div className="h-10 w-10 rounded-2xl bg-blue-950/20 border border-[#3A7BFF]/15 flex items-center justify-center text-[#3A7BFF]">
+                  <div className="h-10 w-10 rounded-2xl bg-blue-950/20 border border-[#0D9488]/15 flex items-center justify-center text-[#0D9488]">
                     <Building2 className="w-5 h-5" />
                   </div>
                   <h3 className="text-lg font-bold text-white">Bespoke Reporting Audits</h3>
@@ -456,7 +456,7 @@ export default async function BlogPostDetailPage({
                   <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Consulting &amp; Solutions</span>
                   <Link 
                     href="/#contact" 
-                    className="inline-flex items-center gap-1 text-[11px] font-extrabold text-[#3A7BFF] hover:underline"
+                    className="inline-flex items-center gap-1 text-[11px] font-extrabold text-[#0D9488] hover:underline"
                   >
                     <span>Explore services</span>
                     <ArrowUpRight className="w-3.5 h-3.5" />
@@ -466,10 +466,10 @@ export default async function BlogPostDetailPage({
             </div>
 
             {/* Newsletter Glass Card */}
-            <div className="relative bg-gradient-to-br from-[#0E1117]/80 to-[#0A0D13]/40 border border-white/5 p-8 md:p-12 rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row items-center justify-between gap-8 text-left">
-              <div className="absolute top-[-30%] right-[-10%] w-[350px] h-[350px] bg-[#00F0FF]/5 rounded-full blur-[100px] pointer-events-none" />
+            <div className="relative bg-gradient-to-br from-[#0B2A22]/80 to-[#07130E]/40 border border-white/5 p-8 md:p-12 rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row items-center justify-between gap-8 text-left">
+              <div className="absolute top-[-30%] right-[-10%] w-[350px] h-[350px] bg-[#10B981]/5 rounded-full blur-[100px] pointer-events-none" />
               <div className="max-w-xl space-y-3">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-[#00F0FF]">Stay Informed</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-[#10B981]">Stay Informed</span>
                 <h3 className="text-2xl font-extrabold text-white">Subscribe to Analytics Insights</h3>
                 <p className="text-xs md:text-sm text-slate-350 leading-relaxed font-light">
                   Join 2,000+ data leaders receiving weekly spreadsheet automations, dashboard layouts, and direct SQL workflows directly in their inbox.
@@ -481,7 +481,7 @@ export default async function BlogPostDetailPage({
                   name="email"
                   placeholder="name@company.com" 
                   required 
-                  className="px-4 py-2.5 text-xs bg-[#050608] border border-white/10 rounded-xl text-white focus:outline-none focus:border-[#00F0FF]/30 placeholder-zinc-500 w-full sm:w-64 font-medium" 
+                  className="px-4 py-2.5 text-xs bg-[#050608] border border-white/10 rounded-xl text-white focus:outline-none focus:border-[#10B981]/30 placeholder-zinc-500 w-full sm:w-64 font-medium" 
                 />
                 <button 
                   type="submit" 
@@ -496,21 +496,21 @@ export default async function BlogPostDetailPage({
             {relatedPosts.length > 0 && (
               <div className="space-y-8 pt-10">
                 <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                  <BookOpen className="w-4 h-4 text-[#00F0FF]" /> Related Articles
+                  <BookOpen className="w-4 h-4 text-[#10B981]" /> Related Articles
                 </h3>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   {relatedPosts.map((rel: any) => {
                     const relReadingTime = getReadingTime(rel.body_html, [rel.description]);
                     return (
-                      <div key={rel.slug} className="group bg-[#0E1117]/35 border border-white/5 rounded-3xl p-5 hover:border-[#00F0FF]/20 transition-all flex flex-col md:flex-row gap-4 items-start shadow-soft">
+                      <div key={rel.slug} className="group bg-[#0B2A22]/35 border border-white/5 rounded-3xl p-5 hover:border-[#10B981]/20 transition-all flex flex-col md:flex-row gap-4 items-start shadow-soft">
                         <div className="w-full md:w-32 aspect-video md:aspect-square overflow-hidden rounded-2xl shrink-0 bg-white/5 border border-white/5 relative">
                           {rel.cover_url ? (
                             <img src={rel.cover_url} alt={rel.title} className="w-full h-full object-cover transition-transform duration-350 group-hover:scale-102" />
                           ) : (
-                            <div className="absolute inset-0 bg-gradient-to-tr from-[#050608] via-[#0E1117] to-cyan-950/15" />
+                            <div className="absolute inset-0 bg-gradient-to-tr from-[#050608] via-[#0B2A22] to-cyan-950/15" />
                           )}
-                          <div className="absolute top-2 left-2 bg-[#050608]/75 backdrop-blur-md px-2 py-0.5 rounded text-[8px] font-bold text-[#00F0FF] uppercase tracking-wider">
+                          <div className="absolute top-2 left-2 bg-[#050608]/75 backdrop-blur-md px-2 py-0.5 rounded text-[8px] font-bold text-[#10B981] uppercase tracking-wider">
                             {rel.category_title}
                           </div>
                         </div>
@@ -521,14 +521,14 @@ export default async function BlogPostDetailPage({
                               <span>•</span>
                               <span>{relReadingTime} min read</span>
                             </div>
-                            <h4 className="text-sm font-bold text-white group-hover:text-[#00F0FF] transition-colors mt-1.5 leading-snug">
+                            <h4 className="text-sm font-bold text-white group-hover:text-[#10B981] transition-colors mt-1.5 leading-snug">
                               <Link href={`/blog/${rel.slug}`}>{rel.title}</Link>
                             </h4>
                             <p className="text-[11px] text-slate-400 mt-2 line-clamp-2 leading-relaxed">
                               {rel.description}
                             </p>
                           </div>
-                          <Link href={`/blog/${rel.slug}`} className="text-[10px] font-extrabold uppercase text-[#00F0FF] tracking-wider mt-4 flex items-center gap-1">
+                          <Link href={`/blog/${rel.slug}`} className="text-[10px] font-extrabold uppercase text-[#10B981] tracking-wider mt-4 flex items-center gap-1">
                             <span>Read Article</span>
                             <ChevronRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />
                           </Link>
@@ -549,9 +549,9 @@ export default async function BlogPostDetailPage({
               <div className="pt-2 flex flex-wrap justify-center gap-3">
                 <Link 
                   href="/#contact"
-                  className="px-4 py-2 bg-[#0A0D13]/60 border border-white/10 hover:border-[#00F0FF]/30 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition-all shadow-sm"
+                  className="px-4 py-2 bg-[#07130E]/60 border border-white/10 hover:border-[#10B981]/30 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition-all shadow-sm"
                 >
-                  <PhoneCall className="w-3.5 h-3.5 text-[#00F0FF]" /> Consult an Engineer
+                  <PhoneCall className="w-3.5 h-3.5 text-[#10B981]" /> Consult an Engineer
                 </Link>
               </div>
             </div>

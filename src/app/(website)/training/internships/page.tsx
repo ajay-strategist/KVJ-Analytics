@@ -66,20 +66,20 @@ export default async function InternshipsPage() {
   return (
     <div className="w-full bg-[#050505] text-zinc-200 min-h-screen pt-28 pb-24 relative overflow-hidden">
       {/* Background gradients */}
-      <div className="absolute top-[20%] right-[-10%] w-[500px] h-[500px] bg-[#0072FF]/5 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute bottom-[20%] left-[-10%] w-[500px] h-[500px] bg-[#00F0FF]/5 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute top-[20%] right-[-10%] w-[500px] h-[500px] bg-[#0D9488]/5 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute bottom-[20%] left-[-10%] w-[500px] h-[500px] bg-[#10B981]/5 rounded-full blur-[140px] pointer-events-none" />
 
       <Container>
         {/* Title */}
         <div className="max-w-3xl mb-16 text-left">
           <div className="flex items-center gap-2 text-sm text-zinc-400 font-light mb-4">
-            <Link href="/training" className="hover:text-[#00F0FF] transition-colors">Training Hub</Link>
+            <Link href="/training" className="hover:text-[#10B981] transition-colors">Training Hub</Link>
             <span>/</span>
-            <span className="text-[#00F0FF]">Internships</span>
+            <span className="text-[#10B981]">Internships</span>
           </div>
 
           <h1 className="font-display font-bold text-4xl sm:text-5xl text-white tracking-tight leading-none">
-            {header.headingLead} <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00F0FF] via-[#0072FF] to-[#00F0FF] bg-[size:200%_auto]">{header.headingAccent}</span>
+            {header.headingLead} <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#10B981] via-[#0D9488] to-[#10B981] bg-[size:200%_auto]">{header.headingAccent}</span>
           </h1>
           <p className="text-zinc-400 font-light text-lg leading-relaxed mt-4">
             {header.intro}
@@ -90,7 +90,7 @@ export default async function InternshipsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {internships.map((intern, idx) => (
             <Reveal key={intern.id} delay={idx * 80} variant="up">
-              <div className="bg-[#0A0A0C]/55 border border-white/5 p-6 rounded-3xl flex flex-col h-full hover:border-[#00F0FF]/25 hover:shadow-[0_8px_32px_rgba(0,240,255,0.04)] transition-all duration-300 relative group overflow-hidden">
+              <div className="bg-[#0A0A0C]/55 border border-white/5 p-6 rounded-3xl flex flex-col h-full hover:border-[#10B981]/25 hover:shadow-[0_8px_32px_rgba(16,185,129,0.04)] transition-all duration-300 relative group overflow-hidden">
                 
                 {/* Banner */}
                 <div className="relative w-full h-40 rounded-2xl overflow-hidden bg-zinc-950 border border-white/5 mb-5 shrink-0">
@@ -101,7 +101,7 @@ export default async function InternshipsPage() {
                 {/* Content */}
                 <div className="flex-1 flex flex-col justify-between">
                   <div>
-                    <h3 className="text-xl font-bold font-display text-white group-hover:text-[#00F0FF] transition-colors leading-snug">
+                    <h3 className="text-xl font-bold font-display text-white group-hover:text-[#10B981] transition-colors leading-snug">
                       {intern.title}
                     </h3>
                     <p className="text-zinc-400 text-sm font-light leading-relaxed mt-2.5 line-clamp-3">
@@ -113,13 +113,13 @@ export default async function InternshipsPage() {
                   <div className="border-t border-white/5 pt-4 mt-5 space-y-2.5">
                     <div className="flex items-center justify-between text-xs font-mono text-zinc-500">
                       <span className="flex items-center gap-1.5 font-light">
-                        <Clock className="w-4 h-4 text-[#0072FF]" /> Duration
+                        <Clock className="w-4 h-4 text-[#0D9488]" /> Duration
                       </span>
                       <span className="text-zinc-200 font-bold">{intern.duration}</span>
                     </div>
                     <div className="flex items-center justify-between text-xs font-mono text-zinc-500">
                       <span className="flex items-center gap-1.5 font-light">
-                        <DollarSign className="w-4 h-4 text-[#00F0FF]" /> Stipend
+                        <DollarSign className="w-4 h-4 text-[#10B981]" /> Stipend
                       </span>
                       <span className="text-zinc-200 font-bold">{intern.stipend}</span>
                     </div>
@@ -129,7 +129,7 @@ export default async function InternshipsPage() {
                 {/* Action button */}
                 <div className="border-t border-white/5 pt-4 mt-5 shrink-0">
                   <Link href={`/training/internships/${intern.slug}`} className="w-full">
-                    <Button className="w-full py-2.5 bg-gradient-to-r from-[#00F0FF] to-[#0072FF] text-black font-bold text-xs border-none flex items-center justify-center gap-1.5">
+                    <Button className="w-full py-2.5 bg-gradient-to-r from-[#10B981] to-[#0D9488] text-black font-bold text-xs border-none flex items-center justify-center gap-1.5">
                       View Details &amp; Apply <ArrowRight className="w-3.5 h-3.5" />
                     </Button>
                   </Link>

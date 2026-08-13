@@ -29,11 +29,11 @@ a {
   color: #38bdf8 !important;
 }
 a:hover {
-  color: #00f0ff !important;
+  color: #10B981 !important;
 }
 blockquote {
-  background: rgba(0, 240, 255, 0.03) !important;
-  border-left-color: #00f0ff !important;
+  background: rgba(16, 185, 129, 0.03) !important;
+  border-left-color: #10B981 !important;
   color: #f1f5f9 !important;
 }
 blockquote p {
@@ -194,12 +194,12 @@ export function LessonIframe({
   *{box-sizing:border-box}
   :root {
     --color-base: #050608;
-    --color-base-2: #0A0D13;
-    --color-surface: #0A0D13;
-    --color-card: #0E1117;
-    --color-line: rgba(67, 245, 255, 0.12);
-    --color-brand: #00F0FF;
-    --color-brand-secondary: #16E6D8;
+    --color-base-2: #07130E;
+    --color-surface: #07130E;
+    --color-card: #0B2A22;
+    --color-line: rgba(16, 185, 129, 0.12);
+    --color-brand: #10B981;
+    --color-brand-secondary: #34D399;
     --color-ink: #FFFFFF;
     --color-slate: #CBD5E1;
   }
@@ -242,7 +242,7 @@ export function LessonIframe({
     color: var(--color-brand);
     text-decoration: none;
     font-weight: 500;
-    border-bottom: 1px solid rgba(0, 240, 255, 0.2);
+    border-bottom: 1px solid rgba(16, 185, 129, 0.2);
     transition: all 0.2s ease;
   }
   a:hover {
@@ -269,7 +269,7 @@ export function LessonIframe({
   /* Blockquotes */
   blockquote {
     border-left: 4px solid var(--color-brand);
-    background: rgba(0, 240, 255, 0.02);
+    background: rgba(16, 185, 129, 0.02);
     padding: 1.25rem 1.75rem;
     margin: 2.5rem 0;
     border-radius: 0 1rem 1rem 0;
@@ -383,12 +383,12 @@ export function LessonIframe({
   }
   img:hover {
     transform: scale(1.005);
-    box-shadow: 0 15px 40px -15px rgba(0, 240, 255, 0.15);
+    box-shadow: 0 15px 40px -15px rgba(16, 185, 129, 0.15);
   }
   
   /* Code Blocks */
   pre {
-    background-color: #080b11 !important;
+    background-color: #07130E !important;
     border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: 1rem;
     padding: 1.25rem;
@@ -419,12 +419,12 @@ export function LessonIframe({
   .bg-card { background-color: var(--color-card) !important; }
   .border-white\\/5 { border-color: rgba(255, 255, 255, 0.05) !important; }
   .border-white\\/10 { border-color: rgba(255, 255, 255, 0.1) !important; }
-  .border-brand\\/20 { border-color: rgba(0, 240, 255, 0.2) !important; }
+  .border-brand\\/20 { border-color: rgba(16, 185, 129, 0.2) !important; }
   .text-brand { color: var(--color-brand) !important; }
   .text-white { color: var(--color-ink) !important; }
   .text-slate-350 { color: var(--color-slate) !important; }
   .signature-gradient {
-    background: linear-gradient(120deg, #00F0FF 0%, #3A7BFF 35%, #16E6D8 60%, #00F0FF 100%) !important;
+    background: linear-gradient(120deg, #10B981 0%, #0D9488 35%, #34D399 60%, #10B981 100%) !important;
   }
   
   /* Scrollbar styles */

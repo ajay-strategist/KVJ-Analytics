@@ -121,7 +121,7 @@ function StudentAccountDashboard() {
     return (
       <div className="w-full min-h-screen bg-[#050505] flex items-center justify-center">
         <div className="text-center space-y-4">
-          <Loader2 className="w-8 h-8 animate-spin text-[#00F0FF] mx-auto" />
+          <Loader2 className="w-8 h-8 animate-spin text-[#10B981] mx-auto" />
           <p className="text-zinc-500 text-sm font-light">Loading student account...</p>
         </div>
       </div>
@@ -136,16 +136,16 @@ function StudentAccountDashboard() {
   return (
     <div className="w-full min-h-screen bg-[#050505] text-zinc-200 pt-32 pb-24 relative overflow-hidden">
       {/* Background neon glows */}
-      <div className="absolute top-[10%] left-[-10%] w-[500px] h-[500px] bg-[#00F0FF]/5 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute bottom-[20%] right-[-10%] w-[500px] h-[500px] bg-[#0072FF]/5 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute top-[10%] left-[-10%] w-[500px] h-[500px] bg-[#10B981]/5 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute bottom-[20%] right-[-10%] w-[500px] h-[500px] bg-[#0D9488]/5 rounded-full blur-[140px] pointer-events-none" />
 
       <Container>
         {/* Profile Card */}
         <div className="relative bg-[#0A0A0C]/55 border border-white/5 p-6 md:p-8 rounded-3xl backdrop-blur-xl mb-12 flex flex-col md:flex-row md:items-center justify-between gap-6 overflow-hidden">
-          <div className="absolute inset-0 bg-[#00F0FF]/2 opacity-[0.02] pointer-events-none" />
+          <div className="absolute inset-0 bg-[#10B981]/2 opacity-[0.02] pointer-events-none" />
           
           <div className="flex items-center space-x-5">
-            <div className="w-16 h-16 rounded-full bg-gradient-to-r from-[#00F0FF] to-[#0072FF] flex items-center justify-center text-black text-2xl font-bold font-display shadow-lg">
+            <div className="w-16 h-16 rounded-full bg-gradient-to-r from-[#10B981] to-[#0D9488] flex items-center justify-center text-black text-2xl font-bold font-display shadow-lg">
               {profile?.name?.charAt(0).toUpperCase() || "S"}
             </div>
             <div>
@@ -207,7 +207,7 @@ function StudentAccountDashboard() {
                   </p>
                   <Button
                     onClick={() => router.push("/training/online-courses")}
-                    className="bg-gradient-to-r from-[#00F0FF] to-[#0072FF] text-black font-bold text-xs"
+                    className="bg-gradient-to-r from-[#10B981] to-[#0D9488] text-black font-bold text-xs"
                   >
                     Browse Online Courses
                   </Button>
@@ -217,7 +217,7 @@ function StudentAccountDashboard() {
                   {enrolledCourses.map((course) => (
                     <div
                       key={course.id}
-                      className="bg-[#0A0A0C]/55 border border-white/5 p-6 rounded-3xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 hover:border-[#00F0FF]/25 transition-all duration-300 relative group overflow-hidden"
+                      className="bg-[#0A0A0C]/55 border border-white/5 p-6 rounded-3xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 hover:border-[#10B981]/25 transition-all duration-300 relative group overflow-hidden"
                     >
                       {/* Left: Banner + Titles */}
                       <div className="flex gap-4 items-center">
@@ -225,18 +225,18 @@ function StudentAccountDashboard() {
                           {course.banner_url ? (
                             <img src={course.banner_url} alt={course.title} className="w-full h-full object-cover" />
                           ) : (
-                            <div className="w-full h-full bg-zinc-850 flex items-center justify-center text-[#00F0FF]">
+                            <div className="w-full h-full bg-zinc-850 flex items-center justify-center text-[#10B981]">
                               <BookOpen className="w-6 h-6" />
                             </div>
                           )}
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <span className="text-[9px] font-mono tracking-widest text-[#00F0FF] uppercase bg-[#00F0FF]/10 px-2 py-0.5 rounded border border-[#00F0FF]/15">
+                            <span className="text-[9px] font-mono tracking-widest text-[#10B981] uppercase bg-[#10B981]/10 px-2 py-0.5 rounded border border-[#10B981]/15">
                               {course.duration || "Self-Paced"}
                             </span>
                           </div>
-                          <h4 className="text-md font-bold font-display text-white mt-1.5 group-hover:text-[#00F0FF] transition-colors">
+                          <h4 className="text-md font-bold font-display text-white mt-1.5 group-hover:text-[#10B981] transition-colors">
                             {course.title}
                           </h4>
                           <p className="text-zinc-500 text-xs mt-1 line-clamp-1 max-w-md font-light">
@@ -247,7 +247,7 @@ function StudentAccountDashboard() {
 
                       {/* Launch Button */}
                       <Link href={`/training/${course.slug}/learn`} className="w-full sm:w-auto shrink-0">
-                        <Button className="w-full sm:w-auto py-2.5 px-5 bg-zinc-800 hover:bg-[#0072FF] hover:text-black font-bold text-xs border-white/5 transition-all flex items-center justify-center gap-1">
+                        <Button className="w-full sm:w-auto py-2.5 px-5 bg-zinc-800 hover:bg-[#0D9488] hover:text-black font-bold text-xs border-white/5 transition-all flex items-center justify-center gap-1">
                           Launch Player <ChevronRight className="w-4 h-4" />
                         </Button>
                       </Link>
@@ -296,7 +296,7 @@ function StudentAccountDashboard() {
                             Applied: {date} • Duration: {internDur}
                           </p>
                         </div>
-                        <span className="text-[10px] font-bold font-mono uppercase tracking-widest text-[#00F0FF] px-2.5 py-1 bg-[#00F0FF]/10 rounded border border-[#00F0FF]/20">
+                        <span className="text-[10px] font-bold font-mono uppercase tracking-widest text-[#10B981] px-2.5 py-1 bg-[#10B981]/10 rounded border border-[#10B981]/20">
                           Applied
                         </span>
                       </div>
@@ -351,7 +351,7 @@ function StudentAccountDashboard() {
                           <span className="text-xs font-bold text-zinc-450 font-mono">
                             {hasOffer ? `₹${c.offer_price_inr} (demo)` : (c.fee_inr > 0 ? `₹${c.fee_inr} (demo)` : "Free")}
                           </span>
-                          <Link href={`/training/${c.slug}`} className="text-[10px] font-bold text-[#00F0FF] hover:underline flex items-center gap-1 font-mono uppercase tracking-wider">
+                          <Link href={`/training/${c.slug}`} className="text-[10px] font-bold text-[#10B981] hover:underline flex items-center gap-1 font-mono uppercase tracking-wider">
                             Unlock Program <ArrowRight className="w-3 h-3" />
                           </Link>
                         </div>
@@ -364,9 +364,9 @@ function StudentAccountDashboard() {
 
             {/* 4. Active Promo Deals Panel */}
             {activeOffers.length > 0 && (
-              <div className="bg-gradient-to-tr from-[#0072FF]/10 via-[#00F0FF]/5 to-[#0A0A0C] border border-[#00F0FF]/20 rounded-3xl p-6 relative overflow-hidden">
-                <div className="absolute top-[-20%] right-[-20%] w-32 h-32 bg-[#00F0FF]/10 rounded-full blur-2xl" />
-                <h4 className="text-sm font-bold text-[#00F0FF] font-display flex items-center gap-1.5 uppercase tracking-widest font-mono">
+              <div className="bg-gradient-to-tr from-[#0D9488]/10 via-[#10B981]/5 to-[#0A0A0C] border border-[#10B981]/20 rounded-3xl p-6 relative overflow-hidden">
+                <div className="absolute top-[-20%] right-[-20%] w-32 h-32 bg-[#10B981]/10 rounded-full blur-2xl" />
+                <h4 className="text-sm font-bold text-[#10B981] font-display flex items-center gap-1.5 uppercase tracking-widest font-mono">
                   <Gift className="w-4 h-4 animate-bounce" /> Active Discount Promo
                 </h4>
                 <p className="text-xs text-zinc-450 mt-2 font-light leading-relaxed">
@@ -380,7 +380,7 @@ function StudentAccountDashboard() {
                         <span className="text-xs font-bold text-white block leading-tight">{c.title}</span>
                         <span className="text-[10px] text-zinc-500 font-mono mt-1 block">Expires: {new Date(c.offer_expiry!).toLocaleDateString("en-IN")}</span>
                       </div>
-                      <Link href={`/training/${c.slug}`} className="py-1 px-3 rounded bg-[#00F0FF] hover:bg-[#00D8FF] text-black font-extrabold text-[9px] uppercase tracking-wider font-mono transition-colors">
+                      <Link href={`/training/${c.slug}`} className="py-1 px-3 rounded bg-[#10B981] hover:bg-[#00D8FF] text-black font-extrabold text-[9px] uppercase tracking-wider font-mono transition-colors">
                         Claim
                       </Link>
                     </div>
@@ -451,7 +451,7 @@ export default function StudentAccountPage() {
     <Suspense
       fallback={
         <div className="w-full min-h-screen bg-[#050505] flex items-center justify-center">
-          <Loader2 className="w-8 h-8 animate-spin text-[#00F0FF]" />
+          <Loader2 className="w-8 h-8 animate-spin text-[#10B981]" />
         </div>
       }
     >

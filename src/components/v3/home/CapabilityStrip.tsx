@@ -101,7 +101,7 @@ export function CapabilityStrip({ items }: { items: string[] }) {
 }
 
 function BarsMini({ on, idx }: { on: boolean; idx: number }) {
-  const colors = ["#43F5FF", "#3A7BFF", "#16E6D8", "#43F5FF"];
+  const colors = ["#10B981", "#0D9488", "#34D399", "#10B981"];
   const hs = [[40,70,50,90,60],[60,40,80,55,75],[50,80,45,70,90],[70,50,85,60,40]];
   const h = hs[idx % hs.length];
   return (

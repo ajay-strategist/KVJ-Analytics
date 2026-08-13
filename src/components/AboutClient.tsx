@@ -62,7 +62,7 @@ const ScrollRevealParagraph = ({ children }: { children: React.ReactNode }) => {
       ref={ref}
       className="transition-all duration-700 ease-out py-6 border-l-4 pl-6 cursor-default text-left"
       style={{
-        borderColor: isActive ? "#43F5FF" : "rgba(60, 255, 255, 0.15)",
+        borderColor: isActive ? "#10B981" : "rgba(60, 255, 255, 0.15)",
         opacity: isActive ? 1 : 0.35,
         transform: isActive ? "translateX(10px) scale(1.01)" : "translateX(0) scale(1)",
       }}
@@ -70,7 +70,7 @@ const ScrollRevealParagraph = ({ children }: { children: React.ReactNode }) => {
       <div 
         className="font-display font-medium text-lg sm:text-xl md:text-2xl transition-all duration-500 text-zinc-100"
         style={{
-          textShadow: isActive ? "0 0 15px rgba(67, 245, 255, 0.2)" : "none"
+          textShadow: isActive ? "0 0 15px rgba(16, 185, 129, 0.2)" : "none"
         }}
       >
         {children}
@@ -84,26 +84,26 @@ function VisionCompass() {
   return (
     <div className="relative w-12 h-12 mx-auto flex items-center justify-center">
       <svg viewBox="0 0 100 100" className="w-full h-full overflow-visible">
-        <circle cx="50" cy="50" r="38" fill="none" stroke="rgba(67, 245, 255, 0.18)" strokeWidth="1.5" />
-        <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(58, 123, 255, 0.12)" strokeWidth="1" strokeDasharray="3, 5" />
+        <circle cx="50" cy="50" r="38" fill="none" stroke="rgba(16, 185, 129, 0.18)" strokeWidth="1.5" />
+        <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(13, 148, 136, 0.12)" strokeWidth="1" strokeDasharray="3, 5" />
         
         {/* Tick marks */}
-        <line x1="50" y1="10" x2="50" y2="15" stroke="#43F5FF" strokeWidth="2" />
-        <line x1="50" y1="85" x2="50" y2="90" stroke="rgba(67, 245, 255, 0.5)" strokeWidth="1.5" />
-        <line x1="10" y1="50" x2="15" y2="50" stroke="rgba(67, 245, 255, 0.5)" strokeWidth="1.5" />
-        <line x1="85" y1="50" x2="90" y2="50" stroke="rgba(67, 245, 255, 0.5)" strokeWidth="1.5" />
+        <line x1="50" y1="10" x2="50" y2="15" stroke="#10B981" strokeWidth="2" />
+        <line x1="50" y1="85" x2="50" y2="90" stroke="rgba(16, 185, 129, 0.5)" strokeWidth="1.5" />
+        <line x1="10" y1="50" x2="15" y2="50" stroke="rgba(16, 185, 129, 0.5)" strokeWidth="1.5" />
+        <line x1="85" y1="50" x2="90" y2="50" stroke="rgba(16, 185, 129, 0.5)" strokeWidth="1.5" />
         
         {/* Swirling data points around the north needle */}
         <g className="animate-[spin_7s_linear_infinite]" style={{ transformOrigin: "50px 50px" }}>
-          <circle cx="50" cy="22" r="3" fill="#43F5FF" className="animate-pulse" />
-          <circle cx="68" cy="32" r="2" fill="#43F5FF" />
-          <circle cx="32" cy="32" r="1.5" fill="#3A7BFF" />
+          <circle cx="50" cy="22" r="3" fill="#10B981" className="animate-pulse" />
+          <circle cx="68" cy="32" r="2" fill="#10B981" />
+          <circle cx="32" cy="32" r="1.5" fill="#0D9488" />
         </g>
 
         {/* Compass needle */}
         <g className="animate-[float-slow_4s_ease-in-out_infinite]" style={{ transformOrigin: "50px 50px" }}>
-          <polygon points="50,15 55,50 45,50" fill="#43F5FF" filter="drop-shadow(0 0 4px rgba(67, 245, 255, 0.6))" />
-          <polygon points="50,85 55,50 45,50" fill="#3A7BFF" />
+          <polygon points="50,15 55,50 45,50" fill="#10B981" filter="drop-shadow(0 0 4px rgba(16, 185, 129, 0.6))" />
+          <polygon points="50,85 55,50 45,50" fill="#0D9488" />
           <circle cx="50" cy="50" r="4.5" fill="#050608" stroke="#FFFFFF" strokeWidth="1" />
         </g>
       </svg>
@@ -146,7 +146,7 @@ export function AboutClientContent({ pageData }: AboutClientProps) {
     : FALLBACK_ABOUT.specializations;
 
   return (
-    <div className="w-full bg-base text-zinc-200 relative min-h-screen">
+    <div className="w-full hero-emerald text-zinc-200 relative min-h-screen">
       {/* 1. HERO SECTION — Asymmetric 60/40 Split Screen */}
       <section className="relative min-h-[90vh] flex items-center pt-28 pb-16 overflow-hidden border-b border-line">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:4rem_4rem] pointer-events-none" />
@@ -160,7 +160,7 @@ export function AboutClientContent({ pageData }: AboutClientProps) {
             
             {/* Left Column (60% width): Plain label, heading, intro block, single pill */}
             <div className="lg:col-span-7 flex flex-col justify-center space-y-8 text-left">
-              <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-[#43F5FF] px-3.5 py-1.5 bg-brand/10 rounded-full w-fit border border-[#43F5FF]/20 animate-pulse">
+              <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-[#10B981] px-3.5 py-1.5 bg-brand/10 rounded-full w-fit border border-[#10B981]/20 animate-pulse">
                 About
               </span>
               
@@ -177,7 +177,7 @@ export function AboutClientContent({ pageData }: AboutClientProps) {
 
               {/* Single experience pill */}
               <Reveal delay={200}>
-                <div className="rounded-full border border-line bg-[#0E1117]/75 backdrop-blur-xl px-7 py-3.5 shadow-soft hover:border-[#43F5FF] transition-all duration-300 flex items-center gap-4 w-fit group">
+                <div className="rounded-full border border-line bg-[#0B2A22]/75 backdrop-blur-xl px-7 py-3.5 shadow-soft hover:border-[#10B981] transition-all duration-300 flex items-center gap-4 w-fit group">
                   <div className="text-3xl md:text-4xl font-extrabold font-display leading-none text-transparent bg-clip-text bg-gradient-to-r from-brand to-corporate">
                     <CountUp value={expStat.num} suffix={expStat.suffix} />
                   </div>
@@ -198,8 +198,8 @@ export function AboutClientContent({ pageData }: AboutClientProps) {
       </section>
 
       {/* 2. WE SPECIALIZE IN SECTION — Full-width Band */}
-      <section className="py-20 relative bg-[#0A0D13]/40 border-b border-line overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(67,245,255,0.03),transparent)] pointer-events-none" />
+      <section className="py-20 relative bg-[#07130E]/40 border-b border-line overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(16,185,129,0.03),transparent)] pointer-events-none" />
         <Container>
           <div className="text-center max-w-2xl mx-auto mb-16">
             <h2 className="font-display font-bold text-3xl md:text-5xl text-white tracking-tight">
@@ -212,9 +212,9 @@ export function AboutClientContent({ pageData }: AboutClientProps) {
               const label = getSpecializationLabel(spec) || FALLBACK_ABOUT.specializations[idx] || "";
               return (
                 <Reveal key={idx} delay={idx * 50} variant="up">
-                  <div className="bg-[#0E1117]/65 border border-line hover:border-brand/40 px-6 py-5 rounded-2xl flex items-center gap-4 hover:-translate-y-1 hover:shadow-[0_4px_20px_rgba(67,245,255,0.05)] transition-all duration-300 group relative overflow-hidden">
+                  <div className="bg-[#0B2A22]/65 border border-line hover:border-brand/40 px-6 py-5 rounded-2xl flex items-center gap-4 hover:-translate-y-1 hover:shadow-[0_4px_20px_rgba(16,185,129,0.05)] transition-all duration-300 group relative overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-tr from-brand/5 to-transparent pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#43F5FF] shadow-[0_0_8px_#43F5FF] animate-pulse" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#10B981] shadow-[0_0_8px_#10B981] animate-pulse" />
                     <span className="text-zinc-100 text-[16px] md:text-[17px] font-medium tracking-wide leading-snug text-left">{label}</span>
                   </div>
                 </Reveal>
@@ -239,7 +239,7 @@ export function AboutClientContent({ pageData }: AboutClientProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto items-stretch">
             {parsedStats.map((stat, idx) => (
               <Reveal key={idx} delay={idx * 80} variant="scale" className="h-full">
-                <div className="bg-[#0E1117]/55 border border-line rounded-3xl p-6 backdrop-blur-xl flex flex-col justify-between h-full hover:border-[#43F5FF]/40 transition-all duration-300 relative group overflow-hidden shadow-soft text-left">
+                <div className="bg-[#0B2A22]/55 border border-line rounded-3xl p-6 backdrop-blur-xl flex flex-col justify-between h-full hover:border-[#10B981]/40 transition-all duration-300 relative group overflow-hidden shadow-soft text-left">
                   <div className="absolute inset-0 bg-gradient-to-tr from-brand/5 to-transparent pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   
                   {stat.isStat ? (
@@ -255,9 +255,9 @@ export function AboutClientContent({ pageData }: AboutClientProps) {
                     <div className="flex flex-col justify-between h-full">
                       <div className="w-10 h-10 rounded-xl bg-brand/10 border border-brand/20 flex items-center justify-center text-brand mb-6">
                         {stat.label.toLowerCase().includes("learning") || stat.label.toLowerCase().includes("ecosystem") ? (
-                          <GraduationCap className="w-5 h-5 text-[#43F5FF]" />
+                          <GraduationCap className="w-5 h-5 text-[#10B981]" />
                         ) : (
-                          <Cpu className="w-5 h-5 text-[#43F5FF]" />
+                          <Cpu className="w-5 h-5 text-[#10B981]" />
                         )}
                       </div>
                       <p className="text-sm font-semibold text-zinc-200 leading-normal mt-auto">
@@ -273,21 +273,21 @@ export function AboutClientContent({ pageData }: AboutClientProps) {
       </section>
 
       {/* 4. OUR VISION SECTION — Centered Statement Band */}
-      <section className="py-24 relative bg-[#0A0D13]/40 border-b border-line overflow-hidden">
+      <section className="py-24 relative bg-[#07130E]/40 border-b border-line overflow-hidden">
         {/* Glow */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[250px] bg-brand/5 rounded-full blur-[100px] pointer-events-none" />
 
         <Container className="relative z-10">
           <Reveal variant="scale">
-            <div className="max-w-4xl mx-auto bg-[#0E1117]/75 border border-[#43F5FF]/20 rounded-[32px] p-8 md:p-12 backdrop-blur-xl hover:border-[#43F5FF]/40 transition-all duration-300 relative overflow-hidden group shadow-[0_12px_40px_rgba(67,245,255,0.05)] text-center">
-              <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(67,245,255,0.01)_1px,transparent_1px)] bg-[size:3rem_3rem] pointer-events-none" />
+            <div className="max-w-4xl mx-auto bg-[#0B2A22]/75 border border-[#10B981]/20 rounded-[32px] p-8 md:p-12 backdrop-blur-xl hover:border-[#10B981]/40 transition-all duration-300 relative overflow-hidden group shadow-[0_12px_40px_rgba(16,185,129,0.05)] text-center">
+              <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(16,185,129,0.01)_1px,transparent_1px)] bg-[size:3rem_3rem] pointer-events-none" />
               
               <div className="flex flex-col items-center justify-center relative z-10 space-y-6">
                 <div className="w-14 h-14 rounded-2xl bg-white/5 border border-line flex items-center justify-center text-brand">
                   <VisionCompass />
                 </div>
                 
-                <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-[#43F5FF] animate-pulse">
+                <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-[#10B981] animate-pulse">
                   Our Vision
                 </span>
                 

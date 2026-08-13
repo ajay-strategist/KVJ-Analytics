@@ -56,7 +56,7 @@ export function TransformationTimeline({
               return (
                 <div key={i} data-idx={i} ref={(el) => { refs.current[i] = el; }} className="relative">
                   <span className={`absolute -left-16 md:-left-24 top-0 grid h-14 w-14 md:h-[68px] md:w-[68px] place-items-center rounded-2xl border transition-all duration-500 ${
-                    on ? "border-brand/50 bg-brand/12 text-brand shadow-[0_0_28px_-6px_rgba(67,245,255,0.7)] scale-100"
+                    on ? "border-brand/50 bg-brand/12 text-brand shadow-[0_0_28px_-6px_rgba(16,185,129,0.7)] scale-100"
                        : "border-line bg-base text-muted scale-90"}`}>
                     <Icon className="h-6 w-6 md:h-7 md:w-7" />
                   </span>

@@ -239,8 +239,8 @@ export function HeroCommandCenter({
     const d = parseFloat(el.dataset.depth || "0.5");
     // Apply extra tilt on hover
     el.style.transform = `translate3d(${x * d * 12}px, ${y * d * 12}px, ${d * 40}px) perspective(700px) rotateY(${x * 9}deg) rotateX(${-y * 7}deg) scale(1.03)`;
-    el.style.borderColor = "rgba(67, 245, 255, 0.4)";
-    el.style.boxShadow = "0 20px 40px rgba(0, 0, 0, 0.5), 0 0 20px rgba(67, 245, 255, 0.15)";
+    el.style.borderColor = "rgba(16, 185, 129, 0.4)";
+    el.style.boxShadow = "0 20px 40px rgba(0, 0, 0, 0.5), 0 0 20px rgba(16, 185, 129, 0.15)";
   };
 
   const onCardLeave = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -289,7 +289,7 @@ export function HeroCommandCenter({
               <Magnetic strength={0.5}>
                 <Link
                   href={primaryCta.href}
-                  className="group relative inline-flex items-center gap-2 overflow-hidden rounded-full px-7 py-3.5 text-[15px] font-semibold text-[#04121a] gradient-move shadow-[0_10px_40px_-8px_rgba(67,245,255,0.6)]"
+                  className="group relative inline-flex items-center gap-2 overflow-hidden rounded-full px-7 py-3.5 text-[15px] font-semibold text-[#04121a] gradient-move shadow-[0_10px_40px_-8px_rgba(16,185,129,0.6)]"
                 >
                   <span className="light-sweep absolute inset-0 rounded-full" />
                   <span className="relative">{primaryCta.label}</span>
@@ -299,7 +299,7 @@ export function HeroCommandCenter({
               <Magnetic strength={0.4}>
                 <Link
                   href={secondaryCta.href}
-                  className="group inline-flex items-center gap-2 rounded-full border border-line bg-white/[0.03] px-7 py-3.5 text-[15px] font-medium text-ink backdrop-blur-md hover:border-brand/40 hover:bg-white/[0.06] transition-colors"
+                  className="group inline-flex items-center gap-2 rounded-full border border-line bg-slate-50 px-7 py-3.5 text-[15px] font-medium text-ink backdrop-blur-md hover:border-brand/40 hover:bg-slate-100 transition-colors"
                 >
                   {secondaryCta.label}
                   <ArrowUpRight className="h-4 w-4 text-brand transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
@@ -320,9 +320,9 @@ export function HeroCommandCenter({
                 className="absolute inset-0 rounded-[40px] opacity-35"
                 style={{
                   backgroundImage: `
-                    radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.16) 0%, transparent 65%),
-                    linear-gradient(rgba(16, 185, 129, 0.05) 1.5px, transparent 1.5px),
-                    linear-gradient(90deg, rgba(16, 185, 129, 0.05) 1.5px, transparent 1.5px)
+                    radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.1) 0%, transparent 65%),
+                    linear-gradient(rgba(16, 185, 129, 0.03) 1.5px, transparent 1.5px),
+                    linear-gradient(90deg, rgba(16, 185, 129, 0.03) 1.5px, transparent 1.5px)
                   `,
                   backgroundSize: "100% 100%, 32px 32px, 32px 32px",
                   transform: "translateZ(-80px)",
@@ -332,7 +332,7 @@ export function HeroCommandCenter({
               {/* Central Subject: Professional Working on Laptop */}
               <div
                 data-depth={0.2}
-                className="absolute bottom-2 h-[420px] w-[420px] rounded-full border border-emerald-500/10 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] overflow-hidden bg-black/45"
+                className="absolute bottom-2 h-[420px] w-[420px] rounded-full border border-emerald-500/10 shadow-[0_20px_50px_rgba(15,23,42,0.12)] overflow-hidden bg-white/45"
                 style={{ transformStyle: "preserve-3d" }}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -349,14 +349,14 @@ export function HeroCommandCenter({
                 data-depth={0.8}
                 onMouseMove={onCardMove}
                 onMouseLeave={onCardLeave}
-                className="absolute left-[-20px] top-[40px] w-[210px] rounded-xl border border-white/8 bg-[#0B0D13]/85 p-4 backdrop-blur-md shadow-2xl transition-all duration-300 ease-out select-none"
+                className="absolute left-[-20px] top-[40px] w-[210px] rounded-xl border border-line bg-glass-card p-4 backdrop-blur-md shadow-lg transition-all duration-300 ease-out select-none"
                 style={{ transformStyle: "preserve-3d" }}
               >
                 <div className="flex items-center gap-2 mb-2" style={{ transform: "translateZ(10px)" }}>
-                  <div className="flex h-6 w-6 items-center justify-center rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                  <div className="flex h-6 w-6 items-center justify-center rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-600">
                     <span className="font-mono text-xs font-bold">X</span>
                   </div>
-                  <span className="text-[12px] font-bold text-white">Microsoft Excel</span>
+                  <span className="text-[12px] font-bold text-ink">Microsoft Excel</span>
                 </div>
                 {/* Mini chart visual */}
                 <div className="h-16 w-full flex items-end gap-1 px-1" style={{ transform: "translateZ(15px)" }}>
@@ -371,14 +371,14 @@ export function HeroCommandCenter({
                 data-depth={1.1}
                 onMouseMove={onCardMove}
                 onMouseLeave={onCardLeave}
-                className="absolute left-[-50px] top-[200px] w-[220px] rounded-xl border border-white/8 bg-[#0B0D13]/85 p-4 backdrop-blur-md shadow-2xl transition-all duration-300 ease-out select-none"
+                className="absolute left-[-50px] top-[200px] w-[220px] rounded-xl border border-line bg-glass-card p-4 backdrop-blur-md shadow-lg transition-all duration-300 ease-out select-none"
                 style={{ transformStyle: "preserve-3d" }}
               >
                 <div className="flex items-center gap-2 mb-2" style={{ transform: "translateZ(10px)" }}>
-                  <div className="flex h-6 w-6 items-center justify-center rounded bg-yellow-500/10 border border-yellow-500/20 text-yellow-400">
+                  <div className="flex h-6 w-6 items-center justify-center rounded bg-yellow-500/10 border border-yellow-500/20 text-yellow-600">
                     <span className="font-mono text-[9px] font-black">PBI</span>
                   </div>
-                  <span className="text-[12px] font-bold text-white">Microsoft Power BI</span>
+                  <span className="text-[12px] font-bold text-ink">Microsoft Power BI</span>
                 </div>
                 <div className="flex gap-2 items-center" style={{ transform: "translateZ(15px)" }}>
                   {/* Pie chart SVG */}
@@ -389,8 +389,8 @@ export function HeroCommandCenter({
                     </g>
                   </svg>
                   <div className="flex-1 space-y-1">
-                    <div data-count="45231" data-prefix="$" className="text-[14px] font-bold text-white tabular-nums">$45,231</div>
-                    <div className="text-[9px] text-emerald-400 font-medium">+20.5% vs last month</div>
+                    <div data-count="45231" data-prefix="$" className="text-[14px] font-bold text-ink tabular-nums">$45,231</div>
+                    <div className="text-[9px] text-emerald-600 font-medium">+20.5% vs last month</div>
                   </div>
                 </div>
               </div>
@@ -400,24 +400,24 @@ export function HeroCommandCenter({
                 data-depth={0.9}
                 onMouseMove={onCardMove}
                 onMouseLeave={onCardLeave}
-                className="absolute left-[-20px] bottom-[30px] w-[240px] rounded-xl border border-white/8 bg-[#0B0D13]/85 p-4 backdrop-blur-md shadow-2xl transition-all duration-300 ease-out select-none"
+                className="absolute left-[-20px] bottom-[30px] w-[240px] rounded-xl border border-line bg-glass-card p-4 backdrop-blur-md shadow-lg transition-all duration-300 ease-out select-none"
                 style={{ transformStyle: "preserve-3d" }}
               >
-                <span className="block text-[11px] font-mono text-brand/80 font-bold uppercase tracking-wider mb-2" style={{ transform: "translateZ(10px)" }}>
+                <span className="block text-[11px] font-mono text-brand/90 font-bold uppercase tracking-wider mb-2" style={{ transform: "translateZ(10px)" }}>
                   Microsoft Power Platform
                 </span>
                 <div className="grid grid-cols-4 gap-2 text-center" style={{ transform: "translateZ(15px)" }}>
                   {[
-                    { n: "Apps", c: "bg-purple-500/20 text-purple-400" },
-                    { n: "Automate", c: "bg-blue-500/20 text-blue-400" },
-                    { n: "Pages", c: "bg-teal-500/20 text-teal-400" },
-                    { n: "Data", c: "bg-emerald-500/20 text-emerald-400" }
+                    { n: "Apps", c: "bg-purple-500/20 text-purple-600" },
+                    { n: "Automate", c: "bg-blue-500/20 text-blue-600" },
+                    { n: "Pages", c: "bg-teal-500/20 text-teal-600" },
+                    { n: "Data", c: "bg-emerald-500/20 text-emerald-600" }
                   ].map((item, i) => (
                     <div key={i} className="flex flex-col items-center">
                       <div className={`w-8 h-8 rounded-lg flex items-center justify-center mb-1 text-[10px] font-bold ${item.c}`}>
                         {item.n[0]}
                       </div>
-                      <span className="text-[8px] text-slate/80 font-medium leading-none">{item.n}</span>
+                      <span className="text-[8px] text-slate font-medium leading-none">{item.n}</span>
                     </div>
                   ))}
                 </div>
@@ -428,23 +428,23 @@ export function HeroCommandCenter({
                 data-depth={1.0}
                 onMouseMove={onCardMove}
                 onMouseLeave={onCardLeave}
-                className="absolute right-[-20px] top-[40px] w-[210px] rounded-xl border border-white/8 bg-[#0B0D13]/85 p-4 backdrop-blur-md shadow-2xl transition-all duration-300 ease-out select-none"
+                className="absolute right-[-20px] top-[40px] w-[210px] rounded-xl border border-line bg-glass-card p-4 backdrop-blur-md shadow-lg transition-all duration-300 ease-out select-none"
                 style={{ transformStyle: "preserve-3d" }}
               >
-                <span className="block text-[12px] font-bold text-white mb-3" style={{ transform: "translateZ(10px)" }}>
+                <span className="block text-[12px] font-bold text-ink mb-3" style={{ transform: "translateZ(10px)" }}>
                   Performance
                 </span>
                 <div className="flex gap-3 items-center" style={{ transform: "translateZ(15px)" }}>
                   <div className="relative w-12 h-12 flex items-center justify-center shrink-0">
                     <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
-                      <circle cx="18" cy="18" r="15.9" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="3.5" />
-                      <circle data-ring="75" cx="18" cy="18" r="15.9" fill="none" stroke="#00F0FF" strokeWidth="3.5" strokeDasharray="75 100" strokeLinecap="round" />
+                      <circle cx="18" cy="18" r="15.9" fill="none" stroke="rgba(15,23,42,0.06)" strokeWidth="3.5" />
+                      <circle data-ring="75" cx="18" cy="18" r="15.9" fill="none" stroke="var(--color-brand)" strokeWidth="3.5" strokeDasharray="75 100" strokeLinecap="round" />
                     </svg>
-                    <span className="absolute text-[11px] font-black text-white font-mono">75%</span>
+                    <span className="absolute text-[11px] font-black text-ink font-mono">75%</span>
                   </div>
                   <div className="flex-1 space-y-1.5">
-                    <div className="h-1.5 w-full rounded-full bg-white/5"><div className="h-full w-[75%] rounded-full bg-cyan-400" /></div>
-                    <div className="h-1.5 w-full rounded-full bg-white/5"><div className="h-full w-[55%] rounded-full bg-brand" /></div>
+                    <div className="h-1.5 w-full rounded-full bg-slate-100"><div className="h-full w-[75%] rounded-full bg-cyan-500" /></div>
+                    <div className="h-1.5 w-full rounded-full bg-slate-100"><div className="h-full w-[55%] rounded-full bg-brand" /></div>
                   </div>
                 </div>
               </div>
@@ -454,7 +454,7 @@ export function HeroCommandCenter({
                 data-depth={0.8}
                 onMouseMove={onCardMove}
                 onMouseLeave={onCardLeave}
-                className="absolute right-[-30px] bottom-[110px] w-[220px] rounded-xl border border-white/8 bg-[#0B0D13]/85 p-4 backdrop-blur-md shadow-2xl transition-all duration-300 ease-out select-none"
+                className="absolute right-[-30px] bottom-[110px] w-[220px] rounded-xl border border-line bg-glass-card p-4 backdrop-blur-md shadow-lg transition-all duration-300 ease-out select-none"
                 style={{ transformStyle: "preserve-3d" }}
               >
                 <div className="flex items-center justify-between mb-2.5" style={{ transform: "translateZ(10px)" }}>

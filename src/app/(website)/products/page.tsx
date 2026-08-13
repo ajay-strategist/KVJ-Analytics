@@ -24,7 +24,7 @@ export default async function ProductsPage() {
   const products = page.products && page.products.length > 0 ? page.products : FALLBACK_PRODUCTS_PAGE.products;
 
   return (
-    <div className="w-full bg-base text-white relative min-h-screen overflow-hidden">
+    <div className="w-full hero-emerald text-white relative min-h-screen overflow-hidden">
       {/* 3D scrolling grid style keyframe */}
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes grid-move {
@@ -41,8 +41,8 @@ export default async function ProductsPage() {
         }
         .grid-plane {
           background-image: 
-            linear-gradient(rgba(67, 245, 255, 0.04) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(67, 245, 255, 0.04) 1px, transparent 1px);
+            linear-gradient(rgba(16, 185, 129, 0.04) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(16, 185, 129, 0.04) 1px, transparent 1px);
           background-size: 60px 60px;
           transform: rotateX(75deg);
           transform-origin: top center;
@@ -63,9 +63,9 @@ export default async function ProductsPage() {
       {/* Data streams overlay */}
       <div className="absolute inset-0 z-0 pointer-events-none opacity-20">
         <svg className="w-full h-full" viewBox="0 0 1000 1000">
-          <line x1="200" y1="0" x2="200" y2="1000" stroke="rgba(67, 245, 255, 0.05)" strokeWidth="1" strokeDasharray="10, 20" />
-          <line x1="500" y1="0" x2="500" y2="1000" stroke="rgba(58, 123, 255, 0.04)" strokeWidth="1" strokeDasharray="5, 15" />
-          <line x1="800" y1="0" x2="800" y2="1000" stroke="rgba(67, 245, 255, 0.05)" strokeWidth="1" strokeDasharray="15, 25" />
+          <line x1="200" y1="0" x2="200" y2="1000" stroke="rgba(16, 185, 129, 0.05)" strokeWidth="1" strokeDasharray="10, 20" />
+          <line x1="500" y1="0" x2="500" y2="1000" stroke="rgba(13, 148, 136, 0.04)" strokeWidth="1" strokeDasharray="5, 15" />
+          <line x1="800" y1="0" x2="800" y2="1000" stroke="rgba(16, 185, 129, 0.05)" strokeWidth="1" strokeDasharray="15, 25" />
         </svg>
       </div>
 
@@ -76,7 +76,7 @@ export default async function ProductsPage() {
         
         <Container className="relative z-10 text-center">
           <Reveal>
-            <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-[#43F5FF] px-3.5 py-1.5 bg-brand/10 rounded-full w-fit border border-[#43F5FF]/20 mx-auto block mb-6 animate-pulse">
+            <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-[#10B981] px-3.5 py-1.5 bg-brand/10 rounded-full w-fit border border-[#10B981]/20 mx-auto block mb-6 animate-pulse">
               Proprietary Software Solutions
             </span>
           </Reveal>

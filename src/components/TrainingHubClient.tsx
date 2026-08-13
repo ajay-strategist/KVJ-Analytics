@@ -136,8 +136,8 @@ function BentoCard({ category, className = "", icon: Icon, delay = 0, variant = 
       onMouseMove={handleMouseMove}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={handleMouseLeave}
-      className={`perspective-container relative rounded-[32px] overflow-hidden border border-line bg-[#0E1117]/85 backdrop-blur-xl transition-all duration-[600ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${
-        hovered ? "border-brand/40 shadow-[0_24px_60px_rgba(67,245,255,0.06)]" : "shadow-soft"
+      className={`perspective-container relative rounded-[32px] overflow-hidden border border-line bg-[#0B2A22]/85 backdrop-blur-xl transition-all duration-[600ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${
+        hovered ? "border-brand/40 shadow-[0_24px_60px_rgba(16,185,129,0.06)]" : "shadow-soft"
       } ${className}`}
       style={{
         transform: `rotateX(${rotate.x}deg) rotateY(${rotate.y}deg) scale(${hovered ? 1.012 : 1})`,
@@ -159,7 +159,7 @@ function BentoCard({ category, className = "", icon: Icon, delay = 0, variant = 
       <div
         className="absolute inset-0 pointer-events-none transition-opacity duration-500 z-15"
         style={{
-          background: `radial-gradient(350px circle at ${mousePos.x}px ${mousePos.y}px, rgba(67, 245, 255, 0.065), transparent 80%)`,
+          background: `radial-gradient(350px circle at ${mousePos.x}px ${mousePos.y}px, rgba(16, 185, 129, 0.065), transparent 80%)`,
           opacity: hovered ? 1 : 0,
         }}
       />
@@ -168,7 +168,7 @@ function BentoCard({ category, className = "", icon: Icon, delay = 0, variant = 
       <div 
         className="absolute inset-[-1px] rounded-[32px] border border-transparent z-25 pointer-events-none transition-colors duration-500" 
         style={{
-          borderColor: hovered ? "rgba(67, 245, 255, 0.25)" : "transparent"
+          borderColor: hovered ? "rgba(16, 185, 129, 0.25)" : "transparent"
         }}
       />
  
@@ -182,18 +182,18 @@ function BentoCard({ category, className = "", icon: Icon, delay = 0, variant = 
           {/* Badge & Icon header */}
           <div className="flex items-center gap-3">
             <div className={`w-10 h-10 rounded-xl flex items-center justify-center border transition-all duration-300 ${
-              hovered ? "bg-brand border-brand text-black scale-110" : "bg-[#43F5FF]/10 border-[#43F5FF]/20 text-[#43F5FF]"
+              hovered ? "bg-brand border-brand text-black scale-110" : "bg-[#10B981]/10 border-[#10B981]/20 text-[#10B981]"
             }`}>
               <Icon className={`w-5 h-5 ${hovered ? "rotate-12 duration-300" : ""}`} />
             </div>
-            <span className="text-[10px] font-bold font-mono tracking-widest text-[#43F5FF] uppercase px-2.5 py-1 rounded-full bg-[#43F5FF]/10 border border-[#43F5FF]/15">
+            <span className="text-[10px] font-bold font-mono tracking-widest text-[#10B981] uppercase px-2.5 py-1 rounded-full bg-[#10B981]/10 border border-[#10B981]/15">
               {category.type === "inquiry" ? "B2B / Program" : "Self-Serve"}
             </span>
           </div>
  
           {/* Text content */}
           <div className="space-y-2">
-            <h3 className="text-2xl md:text-3xl font-bold font-display text-white group-hover:text-[#43F5FF] transition-colors flex items-center gap-2">
+            <h3 className="text-2xl md:text-3xl font-bold font-display text-white group-hover:text-[#10B981] transition-colors flex items-center gap-2">
               {category.name}
               <ArrowRight className={`w-5 h-5 transition-all duration-300 text-brand ${
                 hovered ? "opacity-100 translate-x-1" : "opacity-0 -translate-x-1"
@@ -217,10 +217,10 @@ function BentoCard({ category, className = "", icon: Icon, delay = 0, variant = 
 function FloatingFeatureCard({ icon: Icon, label, desc, delay = 0, floatClass = "float-a" }: any) {
   return (
     <Reveal delay={delay} variant="scale" className="h-full">
-      <div className={`bg-[#0E1117]/65 border border-line hover:border-[#43F5FF]/30 p-6 rounded-2xl flex items-start gap-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-soft text-left group h-full relative overflow-hidden ${floatClass}`}>
+      <div className={`bg-[#0B2A22]/65 border border-line hover:border-[#10B981]/30 p-6 rounded-2xl flex items-start gap-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-soft text-left group h-full relative overflow-hidden ${floatClass}`}>
         <div className="absolute inset-0 bg-gradient-to-tr from-brand/5 to-transparent pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         <div className="w-10 h-10 rounded-xl bg-brand/10 border border-brand/20 flex items-center justify-center text-brand shrink-0 group-hover:scale-110 transition-transform duration-300">
-          <Icon className="w-5 h-5 text-[#43F5FF] group-hover:rotate-12 duration-300" />
+          <Icon className="w-5 h-5 text-[#10B981] group-hover:rotate-12 duration-300" />
         </div>
         <div className="space-y-1">
           <h4 className="text-white text-base font-semibold tracking-wide font-display group-hover:text-brand transition-colors">{label}</h4>
@@ -279,7 +279,7 @@ export function TrainingHubClient({ categories, hub }: TrainingHubClientProps) {
  
  
   return (
-    <div className="w-full bg-base text-zinc-200 relative min-h-screen pt-28 overflow-hidden">
+    <div className="w-full hero-emerald text-zinc-200 relative min-h-screen pt-28 overflow-hidden">
       {/* Custom keyframes for dashboard connections */}
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes dash {
@@ -292,15 +292,15 @@ export function TrainingHubClient({ categories, hub }: TrainingHubClientProps) {
       {/* 1. HERO SECTION — editorial, professional, text-forward (no mock UI) */}
       <section className="relative flex items-center py-24 md:py-32 overflow-hidden border-b border-line">
         {/* Restrained ambient field: one soft aurora, a masked hairline grid */}
-        <div className="absolute -top-[12%] left-1/2 -translate-x-1/2 w-[900px] h-[520px] bg-[#00F0FF]/[0.05] rounded-full blur-[170px] pointer-events-none" />
+        <div className="absolute -top-[12%] left-1/2 -translate-x-1/2 w-[900px] h-[520px] bg-[#10B981]/[0.05] rounded-full blur-[170px] pointer-events-none" />
         <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.012)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.012)_1px,transparent_1px)] bg-[size:5rem_5rem] [mask-image:radial-gradient(ellipse_60%_55%_at_50%_35%,black,transparent)] pointer-events-none" />
 
         <Container className="relative z-10 w-full">
           <div className="max-w-4xl">
             {/* Calm eyebrow */}
             <div className="flex items-center gap-3 animate-[fade-up_1s_cubic-bezier(0.16,1,0.3,1)]">
-              <span className="h-px w-10 bg-gradient-to-r from-transparent to-[#43F5FF]/70" />
-              <span className="text-[11px] font-mono font-bold uppercase tracking-[0.3em] text-[#43F5FF]">
+              <span className="h-px w-10 bg-gradient-to-r from-transparent to-[#10B981]/70" />
+              <span className="text-[11px] font-mono font-bold uppercase tracking-[0.3em] text-[#10B981]">
                 {hub.eyebrow}
               </span>
             </div>
@@ -309,7 +309,7 @@ export function TrainingHubClient({ categories, hub }: TrainingHubClientProps) {
               <span className="block animate-[fade-up_1.1s_cubic-bezier(0.16,1,0.3,1)_80ms_both]">
                 {hub.headingLead || "Training"}
               </span>
-              <span className="block pb-1 text-transparent bg-clip-text bg-gradient-to-r from-[#43F5FF] via-[#3A7BFF] to-[#16E6D8] animate-[fade-up_1.1s_cubic-bezier(0.16,1,0.3,1)_180ms_both]">
+              <span className="block pb-1 text-transparent bg-clip-text bg-gradient-to-r from-[#10B981] via-[#0D9488] to-[#34D399] animate-[fade-up_1.1s_cubic-bezier(0.16,1,0.3,1)_180ms_both]">
                 {hub.headingAccent || "Programs"}
               </span>
             </h1>
@@ -323,7 +323,7 @@ export function TrainingHubClient({ categories, hub }: TrainingHubClientProps) {
               <Button
                 variant="accent"
                 onClick={() => router.push("/training/online-courses")}
-                className="py-3.5 px-8 text-[15px] flex items-center justify-center gap-2 rounded-full shadow-[0_8px_28px_rgba(67,245,255,0.28)] w-full sm:w-auto hover:scale-[1.03] active:scale-95 transition-transform duration-300 font-semibold group/explore"
+                className="py-3.5 px-8 text-[15px] flex items-center justify-center gap-2 rounded-full shadow-[0_8px_28px_rgba(16,185,129,0.28)] w-full sm:w-auto hover:scale-[1.03] active:scale-95 transition-transform duration-300 font-semibold group/explore"
               >
                 <span>Explore Courses</span>
                 <ArrowRight className="w-4 h-4 group-hover/explore:translate-x-0.5 transition-transform duration-300" />
@@ -359,12 +359,12 @@ export function TrainingHubClient({ categories, hub }: TrainingHubClientProps) {
       </section>
  
       {/* 2. PROGRAM SHOWCASE (BENTO GRID) */}
-      <section className="py-24 relative bg-[#0A0D13]/40 border-b border-line overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(67,245,255,0.035),transparent)] pointer-events-none" />
+      <section className="py-24 relative bg-[#07130E]/40 border-b border-line overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(16,185,129,0.035),transparent)] pointer-events-none" />
         
         <Container>
           <div className="text-center max-w-2xl mx-auto mb-16">
-            <span className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#43F5FF]">Showcase</span>
+            <span className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#10B981]">Showcase</span>
             <h2 className="font-display font-bold text-3xl md:text-5xl text-white mt-3 tracking-tight leading-tight">
               Learning Pathways
             </h2>
@@ -430,11 +430,11 @@ export function TrainingHubClient({ categories, hub }: TrainingHubClientProps) {
  
       {/* 3. LEARNING JOURNEY (SCROLL-ANIMATED STORYTELLING TIMELINE) */}
       <section ref={journeySectionRef} className="py-24 md:py-32 relative bg-base overflow-hidden border-b border-line">
-        <div className="beam absolute top-[30%] left-[-4%] h-[30rem] w-[22rem] bg-[#00F0FF]/8 rounded-full blur-[100px] pointer-events-none" />
+        <div className="beam absolute top-[30%] left-[-4%] h-[30rem] w-[22rem] bg-[#10B981]/8 rounded-full blur-[100px] pointer-events-none" />
         
         <Container className="relative z-10 max-w-[960px]">
           <div className="max-w-2xl mb-20 text-left">
-            <span className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#43F5FF]">{hub?.journey?.eyebrow || "Curriculum Flow"}</span>
+            <span className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#10B981]">{hub?.journey?.eyebrow || "Curriculum Flow"}</span>
             <h2 className="font-display font-bold text-3xl md:text-5xl text-white mt-3 leading-tight tracking-tight">
               {hub?.journey?.heading || "The Learning Journey"}
             </h2>
@@ -449,7 +449,7 @@ export function TrainingHubClient({ categories, hub }: TrainingHubClientProps) {
             <div className="absolute left-[23px] sm:left-[27px] top-6 bottom-6 w-[2px] bg-slate-850/60" />
             {/* Growing indicator track tied to scroll progress */}
             <div 
-              className="absolute left-[23px] sm:left-[27px] top-6 w-[2px] bg-gradient-to-b from-[#00F0FF] via-cyan-500 to-[#3A7BFF] transition-all duration-300 ease-out"
+              className="absolute left-[23px] sm:left-[27px] top-6 w-[2px] bg-gradient-to-b from-[#10B981] via-cyan-500 to-[#0D9488] transition-all duration-300 ease-out"
               style={{ height: `${Math.min(journeyProgress * 100, 94)}%` }}
             />
  
@@ -466,19 +466,19 @@ export function TrainingHubClient({ categories, hub }: TrainingHubClientProps) {
                     <div 
                       className={`absolute left-0 top-0.5 flex h-12 w-12 sm:h-[56px] sm:w-[56px] items-center justify-center rounded-full border-2 transition-all duration-500 z-10 ${
                         active 
-                          ? "border-[#00F0FF] bg-[#0E1117]/95 text-[#00F0FF] shadow-[0_0_20px_rgba(0,240,255,0.35)] scale-100" 
-                          : "border-slate-800 bg-[#0A0D13] text-slate-700 scale-90"
+                          ? "border-[#10B981] bg-[#0B2A22]/95 text-[#10B981] shadow-[0_0_20px_rgba(16,185,129,0.35)] scale-100" 
+                          : "border-slate-800 bg-[#07130E] text-slate-700 scale-90"
                       }`}
                     >
                       <div className={`absolute -inset-1.5 rounded-full border border-dashed transition-all duration-500 ${
-                        active ? "border-[#00F0FF]/30 scale-100" : "border-transparent scale-90"
+                        active ? "border-[#10B981]/30 scale-100" : "border-transparent scale-90"
                       }`} />
                       <Icon className="h-5 w-5 sm:h-6 sm:w-6 transition-transform duration-500" />
                     </div>
  
                     <div className="flex flex-col justify-center select-none pt-1">
                       <span className={`text-[10px] sm:text-[11px] font-mono font-bold tracking-[0.2em] uppercase transition-colors duration-500 ${
-                        active ? "text-[#00F0FF]" : "text-slate-600"
+                        active ? "text-[#10B981]" : "text-slate-600"
                       }`}>
                         Stage {item.step}
                       </span>
@@ -502,12 +502,12 @@ export function TrainingHubClient({ categories, hub }: TrainingHubClientProps) {
       </section>
  
       {/* 4. PLATFORM FEATURES SECTION */}
-      <section className="py-24 relative bg-[#0A0D13]/40 border-b border-line overflow-hidden">
+      <section className="py-24 relative bg-[#07130E]/40 border-b border-line overflow-hidden">
         <div className="absolute top-[10%] right-[-15%] w-[450px] h-[450px] bg-corporate/5 rounded-full blur-[120px] pointer-events-none" />
  
         <Container>
           <div className="text-center max-w-2xl mx-auto mb-16">
-            <span className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#43F5FF]">{hub?.tools?.eyebrow || "Ecosystem"}</span>
+            <span className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#10B981]">{hub?.tools?.eyebrow || "Ecosystem"}</span>
             <h2 className="font-display font-bold text-3xl md:text-5xl text-white mt-3 tracking-tight leading-tight">
               {hub?.tools?.heading || "Integrated Learning Tools"}
             </h2>

@@ -12,7 +12,7 @@ import {
  * tilt + glow intensification.
  */
 // All industry cards unified to brand cyan for a cohesive premium look
-const TINT = "67,245,255";
+const TINT = "16,185,129";
 const MAP: { test: RegExp; Icon: React.ComponentType<{ className?: string }> }[] = [
   { test: /health/i, Icon: HeartPulse },
   { test: /educat/i, Icon: GraduationCap },
@@ -138,7 +138,7 @@ export function IndustryGrid({ eyebrow, heading, items }: { eyebrow?: string; he
               >
                 {/* Icon badge */}
                 <span
-                  className="grid h-12 w-12 place-items-center rounded-xl border transition-all duration-500 group-hover:scale-110 group-hover:shadow-[0_0_18px_rgba(67,245,255,0.35)]"
+                  className="grid h-12 w-12 place-items-center rounded-xl border transition-all duration-500 group-hover:scale-110 group-hover:shadow-[0_0_18px_rgba(16,185,129,0.35)]"
                   style={{ backgroundColor: `rgba(${tint},0.10)`, borderColor: `rgba(${tint},0.30)`, color: `rgb(${tint})`, transform: "translateZ(25px)" }}
                 >
                   <Icon className="h-6 w-6" />

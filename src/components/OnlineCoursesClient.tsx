@@ -35,22 +35,22 @@ export function OnlineCoursesClient({ courses, header }: OnlineCoursesClientProp
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
 
   return (
-    <div className="w-full bg-base text-zinc-200 min-h-screen pt-28 pb-24 text-left">
+    <div className="w-full hero-emerald text-zinc-200 min-h-screen pt-28 pb-24 text-left">
       {/* Backlight spotlights */}
-      <div className="absolute top-[20%] right-[-10%] w-[500px] h-[500px] bg-[#3A7BFF]/5 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute bottom-[20%] left-[-10%] w-[500px] h-[500px] bg-[#43F5FF]/5 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute top-[20%] right-[-10%] w-[500px] h-[500px] bg-[#0D9488]/5 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute bottom-[20%] left-[-10%] w-[500px] h-[500px] bg-[#10B981]/5 rounded-full blur-[140px] pointer-events-none" />
 
       <Container>
         {/* Breadcrumb & Title */}
         <div className="max-w-3xl mb-16 text-left">
           <div className="flex items-center gap-2 text-sm text-zinc-400 font-light mb-4">
-            <Link href="/training" className="hover:text-[#43F5FF] transition-colors">Training Hub</Link>
+            <Link href="/training" className="hover:text-[#10B981] transition-colors">Training Hub</Link>
             <span>/</span>
-            <span className="text-[#43F5FF] font-semibold">Online Courses</span>
+            <span className="text-[#10B981] font-semibold">Online Courses</span>
           </div>
 
           <h1 className="font-display font-bold text-4xl sm:text-5xl text-white tracking-tight leading-none">
-            {h.headingLead} <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#43F5FF] via-[#3A7BFF] to-[#43F5FF] bg-[size:200%_auto]">{h.headingAccent}</span>
+            {h.headingLead} <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#10B981] via-[#0D9488] to-[#10B981] bg-[size:200%_auto]">{h.headingAccent}</span>
           </h1>
           <p className="text-slate font-light text-lg leading-relaxed mt-4">
             {h.intro}
@@ -59,7 +59,7 @@ export function OnlineCoursesClient({ courses, header }: OnlineCoursesClientProp
 
         {/* Catalog Grid */}
         {courses.length === 0 ? (
-          <div className="border border-line bg-[#0E1117]/55 rounded-3xl p-16 text-center max-w-2xl mx-auto backdrop-blur-xl">
+          <div className="border border-line bg-[#0B2A22]/55 rounded-3xl p-16 text-center max-w-2xl mx-auto backdrop-blur-xl">
             <Laptop className="w-12 h-12 text-zinc-500 mx-auto mb-4" />
             <h3 className="text-xl font-bold text-white mb-2">No Courses Available</h3>
             <p className="text-slate font-light">Our syllabus catalog is being updated. Please check back shortly or request a custom program.</p>
@@ -72,7 +72,7 @@ export function OnlineCoursesClient({ courses, header }: OnlineCoursesClientProp
 
               return (
                 <Reveal key={course.id} delay={idx * 85} variant="up">
-                  <div className="bg-[#0E1117]/72 border border-line hover:border-[#43F5FF]/30 rounded-3xl p-6 flex flex-col h-full hover:shadow-soft hover:-translate-y-1 transition-all duration-300 relative group overflow-hidden">
+                  <div className="bg-[#0B2A22]/72 border border-line hover:border-[#10B981]/30 rounded-3xl p-6 flex flex-col h-full hover:shadow-soft hover:-translate-y-1 transition-all duration-300 relative group overflow-hidden">
 
                     {/* Course Banner */}
                     <div className="relative w-full h-44 rounded-2xl overflow-hidden bg-zinc-900 border border-line mb-5 shrink-0">
@@ -83,15 +83,15 @@ export function OnlineCoursesClient({ courses, header }: OnlineCoursesClientProp
                           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-103"
                         />
                       ) : (
-                        <div className="w-full h-full bg-gradient-to-tr from-[#3A7BFF]/10 via-[#43F5FF]/5 to-[#0A0D13] flex items-center justify-center">
+                        <div className="w-full h-full bg-gradient-to-tr from-[#0D9488]/10 via-[#10B981]/5 to-[#07130E] flex items-center justify-center">
                           <Laptop className="w-10 h-10 text-brand/30" />
                         </div>
                       )}
 
                       {/* Floating locked badge */}
                       {course.is_locked && (
-                        <div className="absolute top-3 left-3 bg-[#050608]/85 border border-[#43F5FF]/35 px-2.5 py-1 rounded-lg flex items-center gap-1.5 backdrop-blur-md shadow-md">
-                          <Lock className="w-3 h-3 text-[#43F5FF]" />
+                        <div className="absolute top-3 left-3 bg-[#050608]/85 border border-[#10B981]/35 px-2.5 py-1 rounded-lg flex items-center gap-1.5 backdrop-blur-md shadow-md">
+                          <Lock className="w-3 h-3 text-[#10B981]" />
                           <span className="text-[10px] font-bold text-white uppercase tracking-wider">Locked</span>
                         </div>
                       )}
@@ -107,7 +107,7 @@ export function OnlineCoursesClient({ courses, header }: OnlineCoursesClientProp
                     {/* Title & description */}
                     <div className="flex-1 flex flex-col justify-between">
                       <div>
-                        <h3 className="text-xl font-bold font-display text-white group-hover:text-[#43F5FF] transition-colors leading-snug">
+                        <h3 className="text-xl font-bold font-display text-white group-hover:text-[#10B981] transition-colors leading-snug">
                           {course.title}
                         </h3>
                         <p className="text-slate text-sm font-light leading-relaxed mt-2.5 line-clamp-3">
@@ -119,19 +119,19 @@ export function OnlineCoursesClient({ courses, header }: OnlineCoursesClientProp
                       <div className="border-t border-line pt-4 mt-5 space-y-2.5">
                         <div className="flex items-center justify-between text-sm">
                           <span className="text-slate flex items-center gap-1.5 font-light">
-                            <Calendar className="w-4 h-4 text-[#3A7BFF]" /> Duration
+                            <Calendar className="w-4 h-4 text-[#0D9488]" /> Duration
                           </span>
                           <span className="text-zinc-200 font-medium">{course.duration || "Self-Paced"}</span>
                         </div>
                         <div className="flex items-center justify-between text-sm">
                           <span className="text-slate flex items-center gap-1.5 font-light">
-                            <DollarSign className="w-4 h-4 text-[#43F5FF]" /> Price
+                            <DollarSign className="w-4 h-4 text-[#10B981]" /> Price
                           </span>
                           <div className="text-right">
                             {hasOffer ? (
                               <div className="flex items-center gap-2">
                                 <span className="text-slate line-through text-xs">₹{course.fee_inr}</span>
-                                <span className="text-[#43F5FF] font-bold">₹{displayPrice}</span>
+                                <span className="text-[#10B981] font-bold">₹{displayPrice}</span>
                               </div>
                             ) : (
                               <span className="text-zinc-200 font-bold">
@@ -146,13 +146,13 @@ export function OnlineCoursesClient({ courses, header }: OnlineCoursesClientProp
                     {/* Action buttons */}
                     <div className="grid grid-cols-2 gap-4 border-t border-line pt-5 mt-5">
                       <Link href={`/training/${course.slug}`} className="w-full">
-                        <Button variant="secondary" className="w-full text-xs py-2 bg-[#0A0D13]/50 hover:bg-zinc-900 border-line text-white">
+                        <Button variant="secondary" className="w-full text-xs py-2 bg-[#07130E]/50 hover:bg-zinc-900 border-line text-white">
                           Details
                         </Button>
                       </Link>
                       <Button
                         onClick={() => setSelectedCourse(course)}
-                        className="w-full text-xs py-2 bg-gradient-to-r from-[#43F5FF] to-[#3A7BFF] text-black font-bold hover:brightness-110 border-none flex items-center justify-center gap-1"
+                        className="w-full text-xs py-2 bg-gradient-to-r from-[#10B981] to-[#0D9488] text-black font-bold hover:brightness-110 border-none flex items-center justify-center gap-1"
                       >
                         Buy Now <ArrowRight className="w-3.5 h-3.5" />
                       </Button>

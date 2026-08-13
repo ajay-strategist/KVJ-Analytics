@@ -147,13 +147,13 @@ export function BlogListClient({ posts, header }: BlogListClientProps) {
     }
     
     return (
-      <div className="absolute inset-0 bg-[#0E1117] transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.02] flex flex-col justify-between p-6 overflow-hidden">
+      <div className="absolute inset-0 bg-[#0B2A22] transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.02] flex flex-col justify-between p-6 overflow-hidden">
         <div className="absolute -top-12 -right-12 w-48 h-48 bg-brand/5 rounded-full blur-2xl group-hover:bg-brand/10 transition-colors duration-500" />
         <div className="absolute -bottom-16 -left-16 w-56 h-56 bg-corporate/5 rounded-full blur-3xl group-hover:bg-corporate/10 transition-colors duration-500" />
         <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
         
         <div className="relative z-10">
-          <span className="text-[10px] font-mono font-bold tracking-widest text-[#43F5FF]/85 uppercase px-2 py-0.5 rounded bg-[#43F5FF]/10 border border-[#43F5FF]/15">
+          <span className="text-[10px] font-mono font-bold tracking-widest text-[#10B981]/85 uppercase px-2 py-0.5 rounded bg-[#10B981]/10 border border-[#10B981]/15">
             {post.category_title}
           </span>
         </div>
@@ -180,13 +180,13 @@ export function BlogListClient({ posts, header }: BlogListClientProps) {
             
             {/* Left Column: Text Content */}
             <div className="lg:col-span-7 flex flex-col justify-center space-y-6 text-left">
-              <span className="text-[10px] font-bold font-mono uppercase tracking-[0.25em] text-[#43F5FF] px-3.5 py-1.5 bg-[#43F5FF]/10 rounded-full w-fit border border-[#43F5FF]/20 animate-pulse">
+              <span className="text-[10px] font-bold font-mono uppercase tracking-[0.25em] text-[#10B981] px-3.5 py-1.5 bg-[#10B981]/10 rounded-full w-fit border border-[#10B981]/20 animate-pulse">
                 INSIGHTS / KNOWLEDGE
               </span>
               
               <h1 className="font-display font-bold text-4xl sm:text-5xl lg:text-6xl leading-[1.1] tracking-tight text-white max-w-3xl">
                 Data Analytics, Excel <br/>
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand via-[#3A7BFF] to-brand animate-[signature-flow_6s_linear_infinite] bg-[size:200%_auto]">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand via-[#0D9488] to-brand animate-[signature-flow_6s_linear_infinite] bg-[size:200%_auto]">
                   & Power BI Insights
                 </span>
               </h1>
@@ -214,7 +214,7 @@ export function BlogListClient({ posts, header }: BlogListClientProps) {
                 {/* Floating Widget 1 */}
                 <div className="absolute top-4 left-0 w-64 glass-panel rounded-2xl p-4 shadow-lg border border-line z-20 float-a">
                   <div className="flex items-center justify-between mb-3">
-                    <span className="text-[9px] font-mono font-bold tracking-widest text-[#43F5FF] uppercase">Insights Telemetry</span>
+                    <span className="text-[9px] font-mono font-bold tracking-widest text-[#10B981] uppercase">Insights Telemetry</span>
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                   </div>
                   <div className="flex items-center gap-3">
@@ -231,7 +231,7 @@ export function BlogListClient({ posts, header }: BlogListClientProps) {
                 {/* Floating Widget 2 */}
                 <div className="absolute bottom-6 right-0 w-52 glass-panel rounded-2xl p-4 shadow-lg border border-line z-20 float-b">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-[#3A7BFF]/10 flex items-center justify-center text-[#3A7BFF]">
+                    <div className="w-8 h-8 rounded-lg bg-[#0D9488]/10 flex items-center justify-center text-[#0D9488]">
                       <Database className="w-4.5 h-4.5 text-brand" />
                     </div>
                     <div className="text-left">
@@ -252,7 +252,7 @@ export function BlogListClient({ posts, header }: BlogListClientProps) {
                   </div>
                 </div>
 
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 border border-[#43F5FF]/5 rounded-full pointer-events-none z-0 animate-spin-slow" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 border border-[#10B981]/5 rounded-full pointer-events-none z-0 animate-spin-slow" />
               </div>
             </div>
 
@@ -267,9 +267,9 @@ export function BlogListClient({ posts, header }: BlogListClientProps) {
             
             {/* Elegant Search Bar */}
             <div className="relative group max-w-2xl mx-auto">
-              <div className="absolute -inset-0.5 bg-gradient-to-r from-brand/10 to-[#3A7BFF]/10 rounded-2xl blur-md opacity-70 group-hover:opacity-100 transition-opacity" />
-              <div className="relative flex items-center bg-[#0E1117]/85 border border-white/5 rounded-2xl px-4 py-3.5 shadow-lg focus-within:border-brand/40 focus-within:shadow-[0_0_20px_rgba(67,245,255,0.06)] transition-all">
-                <Search className="w-4 h-4 text-[#43F5FF] shrink-0 mr-3" />
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-brand/10 to-[#0D9488]/10 rounded-2xl blur-md opacity-70 group-hover:opacity-100 transition-opacity" />
+              <div className="relative flex items-center bg-[#0B2A22]/85 border border-white/5 rounded-2xl px-4 py-3.5 shadow-lg focus-within:border-brand/40 focus-within:shadow-[0_0_20px_rgba(16,185,129,0.06)] transition-all">
+                <Search className="w-4 h-4 text-[#10B981] shrink-0 mr-3" />
                 <input
                   type="text"
                   value={searchQuery}
@@ -280,7 +280,7 @@ export function BlogListClient({ posts, header }: BlogListClientProps) {
                 {searchQuery && (
                   <button 
                     onClick={() => setSearchQuery("")} 
-                    className="text-xs font-bold text-[#43F5FF] hover:text-white cursor-pointer"
+                    className="text-xs font-bold text-[#10B981] hover:text-white cursor-pointer"
                   >
                     Clear
                   </button>
@@ -299,8 +299,8 @@ export function BlogListClient({ posts, header }: BlogListClientProps) {
                   }}
                   className={`px-5 py-2.5 text-[11px] font-bold uppercase tracking-wider rounded-full border transition-all duration-300 shrink-0 cursor-pointer ${
                     activeCategory === cat
-                      ? "bg-brand text-[#050608] border-transparent shadow-[0_4px_16px_rgba(67,245,255,0.25)] font-extrabold"
-                      : "bg-[#0E1117]/50 text-slate border-white/5 hover:text-white hover:border-white/20"
+                      ? "bg-brand text-[#050608] border-transparent shadow-[0_4px_16px_rgba(16,185,129,0.25)] font-extrabold"
+                      : "bg-[#0B2A22]/50 text-slate border-white/5 hover:text-white hover:border-white/20"
                   }`}
                 >
                   {cat === "all" ? "All Insights" : cat}
@@ -351,17 +351,17 @@ export function BlogListClient({ posts, header }: BlogListClientProps) {
             <div className="lg:col-span-8">
               {activeCategory === "all" && activeTag === "all" && searchQuery === "" && featuredPost && (
                 <div className="space-y-4 text-left">
-                  <span className="text-[10px] font-bold font-mono uppercase tracking-[0.2em] text-[#43F5FF]">
+                  <span className="text-[10px] font-bold font-mono uppercase tracking-[0.2em] text-[#10B981]">
                     Featured Insight
                   </span>
                   
-                  <div className="bg-[#0E1117]/60 border border-white/5 rounded-3xl overflow-hidden shadow-2xl hover:border-brand/20 transition-all duration-500 relative group">
+                  <div className="bg-[#0B2A22]/60 border border-white/5 rounded-3xl overflow-hidden shadow-2xl hover:border-brand/20 transition-all duration-500 relative group">
                     <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-0">
                       
                       {/* Image frame */}
                       <div className="md:col-span-7 overflow-hidden aspect-[16/10] relative bg-brand/5 border-b md:border-b-0 md:border-r border-white/5">
                         {renderCoverImage(featuredPost)}
-                        <span className="absolute top-4 left-4 px-2.5 py-1 rounded bg-[#0A0D13]/90 text-brand font-mono font-bold text-[9px] uppercase tracking-wider border border-white/5 z-10">
+                        <span className="absolute top-4 left-4 px-2.5 py-1 rounded bg-[#07130E]/90 text-brand font-mono font-bold text-[9px] uppercase tracking-wider border border-white/5 z-10">
                           {featuredPost.category_title}
                         </span>
                       </div>
@@ -369,7 +369,7 @@ export function BlogListClient({ posts, header }: BlogListClientProps) {
                       {/* Content panel */}
                       <div className="md:col-span-5 p-6 md:p-8 flex flex-col justify-between">
                         <div className="space-y-4">
-                          <span className="text-[9px] font-mono font-bold text-[#43F5FF] uppercase tracking-wider block">
+                          <span className="text-[9px] font-mono font-bold text-[#10B981] uppercase tracking-wider block">
                             {featuredPost.category_title}
                           </span>
                           <h3 className="text-xl md:text-2xl font-bold font-display text-white group-hover:text-brand transition-colors leading-snug">
@@ -407,11 +407,11 @@ export function BlogListClient({ posts, header }: BlogListClientProps) {
             <div className="lg:col-span-4 h-full">
               {trendingPosts.length > 0 && (
                 <div className="space-y-4 text-left h-full">
-                  <span className="text-[10px] font-bold font-mono uppercase tracking-[0.2em] text-[#43F5FF]">
+                  <span className="text-[10px] font-bold font-mono uppercase tracking-[0.2em] text-[#10B981]">
                     Editor&apos;s Picks
                   </span>
                   
-                  <div className="bg-[#0E1117]/60 border border-white/5 p-6 md:p-8 rounded-3xl flex flex-col justify-between h-[calc(100%-24px)]">
+                  <div className="bg-[#0B2A22]/60 border border-white/5 p-6 md:p-8 rounded-3xl flex flex-col justify-between h-[calc(100%-24px)]">
                     <div className="space-y-6">
                       {trendingPosts.map((post, index) => (
                         <div key={post.slug} className="group flex gap-4 items-start border-b border-white/5 pb-6 last:border-0 last:pb-0">
@@ -419,7 +419,7 @@ export function BlogListClient({ posts, header }: BlogListClientProps) {
                             0{index + 1}
                           </span>
                           <div className="space-y-1">
-                            <span className="text-[9px] font-mono font-bold text-[#43F5FF]/80 uppercase tracking-widest block">
+                            <span className="text-[9px] font-mono font-bold text-[#10B981]/80 uppercase tracking-widest block">
                               {post.category_title}
                             </span>
                             <h5 className="text-sm font-bold text-white group-hover:text-brand transition-colors leading-snug group-hover:translate-x-0.5 duration-300">
@@ -459,13 +459,13 @@ export function BlogListClient({ posts, header }: BlogListClientProps) {
                   .map(post => (
                     <div
                       key={post.id}
-                      className="bg-[#0E1117]/60 border border-white/5 hover:border-brand/20 p-5 rounded-3xl flex flex-col justify-between shadow-lg hover:-translate-y-1 transition-all duration-500 relative group overflow-hidden"
+                      className="bg-[#0B2A22]/60 border border-white/5 hover:border-brand/20 p-5 rounded-3xl flex flex-col justify-between shadow-lg hover:-translate-y-1 transition-all duration-500 relative group overflow-hidden"
                     >
                       <div className="space-y-4">
                         {/* Image Frame */}
                         <div className="overflow-hidden rounded-2xl aspect-[16/10] relative bg-brand/5 border border-white/5">
                           {renderCoverImage(post)}
-                          <span className="absolute top-3 left-3 px-2 py-0.5 rounded bg-[#0A0D13]/90 text-brand font-mono font-bold text-[8px] uppercase tracking-wider border border-white/5">
+                          <span className="absolute top-3 left-3 px-2 py-0.5 rounded bg-[#07130E]/90 text-brand font-mono font-bold text-[8px] uppercase tracking-wider border border-white/5">
                             {post.category_title}
                           </span>
                         </div>
@@ -503,11 +503,11 @@ export function BlogListClient({ posts, header }: BlogListClientProps) {
       {/* 5. PREMIUM SUBSCRIBE CTA */}
       <section className="py-8">
         <Container>
-          <div className="relative bg-gradient-to-br from-[#0E1117] to-[#050608] border border-white/5 p-8 md:p-14 rounded-[32px] overflow-hidden shadow-2xl flex flex-col md:flex-row items-center justify-between gap-8 text-left max-w-5xl mx-auto">
+          <div className="relative bg-gradient-to-br from-[#0B2A22] to-[#050608] border border-white/5 p-8 md:p-14 rounded-[32px] overflow-hidden shadow-2xl flex flex-col md:flex-row items-center justify-between gap-8 text-left max-w-5xl mx-auto">
             <div className="absolute top-[-30%] right-[-10%] w-[350px] h-[350px] bg-brand/5 rounded-full blur-[100px] pointer-events-none" />
             
             <div className="max-w-xl space-y-3">
-              <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-[#43F5FF]">Newsletter</span>
+              <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-[#10B981]">Newsletter</span>
               <h3 className="text-2xl md:text-3xl font-extrabold text-white font-display leading-tight">Stay Ahead of What&apos;s Next</h3>
               <p className="text-xs md:text-sm text-slate-350 leading-relaxed font-light">
                 Practical perspectives on analytics, technology and business transformation. Join data leaders receiving weekly guides directly.
@@ -520,11 +520,11 @@ export function BlogListClient({ posts, header }: BlogListClientProps) {
                 name="email"
                 placeholder="you@company.com" 
                 required 
-                className="px-4 py-3 text-xs bg-[#050608] border border-white/10 rounded-xl text-white focus:outline-none focus:border-[#43F5FF]/30 placeholder-zinc-500 w-full sm:w-64 font-medium" 
+                className="px-4 py-3 text-xs bg-[#050608] border border-white/10 rounded-xl text-white focus:outline-none focus:border-[#10B981]/30 placeholder-zinc-500 w-full sm:w-64 font-medium" 
               />
               <button 
                 type="submit" 
-                className="px-6 py-3 bg-brand hover:bg-[#16E6D8] text-black text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-md shrink-0 border-0 cursor-pointer"
+                className="px-6 py-3 bg-brand hover:bg-[#34D399] text-black text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-md shrink-0 border-0 cursor-pointer"
               >
                 Subscribe →
               </button>

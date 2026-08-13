@@ -191,9 +191,9 @@ export function HeroDashboardCanvas() {
             <div className="flex justify-between items-center px-5 pt-4 pb-2 border-b border-line">
               <span className="text-[11px] font-bold tracking-tight text-white">Data Dashboard</span>
               <div className="flex items-center gap-1.5 text-[8px] font-semibold text-slate">
-                <span className="flex items-center gap-0.5"><span className="w-1.5 h-1.5 rounded-full bg-[#43F5FF]" />Data</span>
+                <span className="flex items-center gap-0.5"><span className="w-1.5 h-1.5 rounded-full bg-[#10B981]" />Data</span>
                 <span className="flex items-center gap-0.5"><span className="w-1.5 h-1.5 rounded-full bg-[#28E79E]" />Data</span>
-                <span className="flex items-center gap-0.5"><span className="w-1.5 h-1.5 rounded-full bg-[#3A7BFF]" />Data</span>
+                <span className="flex items-center gap-0.5"><span className="w-1.5 h-1.5 rounded-full bg-[#0D9488]" />Data</span>
               </div>
             </div>
 
@@ -225,7 +225,7 @@ export function HeroDashboardCanvas() {
                 <path 
                   d={makePathD(bluePoints)} 
                   fill="none" 
-                  stroke="#3A7BFF" 
+                  stroke="#0D9488" 
                   strokeWidth="2.5" 
                   strokeLinecap="round" 
                   opacity="0.8"
@@ -234,7 +234,7 @@ export function HeroDashboardCanvas() {
                 <path 
                   d={makePathD(purplePoints)} 
                   fill="none" 
-                  stroke="#43F5FF" 
+                  stroke="#10B981" 
                   strokeWidth="3.2" 
                   strokeLinecap="round" 
                 />
@@ -243,7 +243,7 @@ export function HeroDashboardCanvas() {
                 {purplePoints.map((p, idx) => {
                   if (idx === 5) return null; // Peak alert rendered separately with glow
                   return (
-                    <circle key={`p-${idx}`} cx={p.x} cy={p.y} r="2.5" fill="#43F5FF" />
+                    <circle key={`p-${idx}`} cx={p.x} cy={p.y} r="2.5" fill="#10B981" />
                   );
                 })}
               </svg>
@@ -265,11 +265,11 @@ export function HeroDashboardCanvas() {
                 }}
               >
                 {/* Outer flashing glow ring */}
-                <span className="absolute w-6 h-6 rounded-full bg-[#43F5FF]/30 animate-ping" />
+                <span className="absolute w-6 h-6 rounded-full bg-[#10B981]/30 animate-ping" />
                 {/* Inner pulsing ring */}
-                <span className="absolute w-4 h-4 rounded-full bg-[#43F5FF]/40 border border-[#43F5FF] animate-[pulse_1s_infinite]" />
+                <span className="absolute w-4 h-4 rounded-full bg-[#10B981]/40 border border-[#10B981] animate-[pulse_1s_infinite]" />
                 {/* Core alert dot */}
-                <span className="relative w-2.5 h-2.5 rounded-full bg-[#43F5FF] shadow-[0_0_10px_#43F5FF]" />
+                <span className="relative w-2.5 h-2.5 rounded-full bg-[#10B981] shadow-[0_0_10px_#10B981]" />
               </div>
 
             </div>
@@ -284,7 +284,7 @@ export function HeroDashboardCanvas() {
             return (
               <div
                 key={idx}
-                className="absolute pointer-events-none rounded-full bg-gradient-to-r from-[#43F5FF] to-[#3A7BFF] shadow-[0_0_8px_rgba(67,245,255,0.6)]"
+                className="absolute pointer-events-none rounded-full bg-gradient-to-r from-[#10B981] to-[#0D9488] shadow-[0_0_8px_rgba(16,185,129,0.6)]"
                 style={{
                   left: `${pt.x}px`,
                   top: `${pt.y}px`,
@@ -314,8 +314,8 @@ export function HeroDashboardCanvas() {
               />
               <defs>
                 <linearGradient id="trailGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#43F5FF" stopOpacity="0.1" />
-                  <stop offset="100%" stopColor="#3A7BFF" stopOpacity="0.8" />
+                  <stop offset="0%" stopColor="#10B981" stopOpacity="0.1" />
+                  <stop offset="100%" stopColor="#0D9488" stopOpacity="0.8" />
                 </linearGradient>
               </defs>
             </svg>
@@ -324,7 +324,7 @@ export function HeroDashboardCanvas() {
           {/* The Flying Envelope (Cyan border glass card) */}
           {progress > 0 && progress < 1 && (
             <div
-              className="absolute w-8 h-[22px] -translate-x-1/2 -translate-y-1/2 rounded-sm bg-[#0E1117] border-1.5 border-[#43F5FF] flex flex-col justify-between shadow-[0_4px_16px_rgba(67,245,255,0.4)] overflow-hidden"
+              className="absolute w-8 h-[22px] -translate-x-1/2 -translate-y-1/2 rounded-sm bg-[#0B2A22] border-1.5 border-[#10B981] flex flex-col justify-between shadow-[0_4px_16px_rgba(16,185,129,0.4)] overflow-hidden"
               style={{
                 left: `${envelopeX}px`,
                 top: `${envelopeY}px`,
@@ -335,9 +335,9 @@ export function HeroDashboardCanvas() {
               {/* Back Flap representation */}
               <div className="w-full h-full relative">
                 <svg className="absolute inset-0 w-full h-full" viewBox="0 0 32 22">
-                  <path d="M 0 0 L 16 11 L 32 0" fill="none" stroke="#43F5FF" strokeWidth="1" />
-                  <path d="M 0 22 L 12 11" fill="none" stroke="#43F5FF" strokeWidth="0.8" opacity="0.7" />
-                  <path d="M 32 22 L 20 11" fill="none" stroke="#43F5FF" strokeWidth="0.8" opacity="0.7" />
+                  <path d="M 0 0 L 16 11 L 32 0" fill="none" stroke="#10B981" strokeWidth="1" />
+                  <path d="M 0 22 L 12 11" fill="none" stroke="#10B981" strokeWidth="0.8" opacity="0.7" />
+                  <path d="M 32 22 L 20 11" fill="none" stroke="#10B981" strokeWidth="0.8" opacity="0.7" />
                 </svg>
               </div>
             </div>
@@ -357,7 +357,7 @@ export function HeroDashboardCanvas() {
               className="absolute -top-12 left-1/2 -translate-x-1/2 text-center animate-[float-slow_6s_ease-in-out_infinite]"
               style={{ transform: "translateZ(15px)" }}
             >
-              <h4 className="text-[22px] font-bold font-display text-[#43F5FF] tracking-wider drop-shadow-[0_0_12px_rgba(67,245,255,0.45)] uppercase leading-none">
+              <h4 className="text-[22px] font-bold font-display text-[#10B981] tracking-wider drop-shadow-[0_0_12px_rgba(16,185,129,0.45)] uppercase leading-none">
                 Inbox
               </h4>
             </div>
@@ -370,29 +370,29 @@ export function HeroDashboardCanvas() {
               
               {/* BACK PANEL OF FOLDER (Slightly larger, darker background) */}
               <div 
-                className="absolute inset-0 rounded-2xl bg-[#0A0D13]/60 border border-line shadow-inner"
+                className="absolute inset-0 rounded-2xl bg-[#07130E]/60 border border-line shadow-inner"
                 style={{ transform: "translateZ(-8px)" }}
               >
                 {/* Folder Top Tab */}
-                <div className="absolute -top-3 left-4 w-14 h-4 bg-[#0A0D13]/60 border-t border-x border-line rounded-t-lg" />
+                <div className="absolute -top-3 left-4 w-14 h-4 bg-[#07130E]/60 border-t border-x border-line rounded-t-lg" />
               </div>
 
               {/* DOCS INSIDE FOLDER SLOT (Slides behind front cover) */}
               <div 
-                className="absolute left-3 right-3 top-2 h-[125px] rounded-lg bg-[#0E1117] border border-line shadow-md p-3 flex flex-col justify-between"
+                className="absolute left-3 right-3 top-2 h-[125px] rounded-lg bg-[#0B2A22] border border-line shadow-md p-3 flex flex-col justify-between"
                 style={{ 
                   transform: `translateZ(-2px) translateY(${isImpacted ? "10px" : "0px"})`,
                   transition: "transform 0.25s ease",
                 }}
               >
                 <div className="space-y-1.5 text-left">
-                  <div className="w-8 h-1.5 bg-[#43F5FF]/30 rounded-full" />
+                  <div className="w-8 h-1.5 bg-[#10B981]/30 rounded-full" />
                   <div className="w-16 h-1 bg-slate/30 rounded-full" />
                   <div className="w-12 h-1 bg-slate/30 rounded-full" />
                 </div>
                 <div className="flex justify-between items-center">
                   <div className="w-5 h-5 rounded-full bg-white/5 border border-line flex items-center justify-center text-[7px] font-bold text-white">K</div>
-                  <div className="w-8 h-1 bg-[#3A7BFF]/55 rounded-full" />
+                  <div className="w-8 h-1 bg-[#0D9488]/55 rounded-full" />
                 </div>
               </div>
 
@@ -408,7 +408,7 @@ export function HeroDashboardCanvas() {
                 {/* Envelope Outline on Folder Flap */}
                 <div className="w-12 h-8 rounded border border-line flex items-center justify-center shadow-inner relative overflow-hidden bg-white/5">
                   <svg className="w-full h-full" viewBox="0 0 24 16">
-                    <path d="M 2 2 L 12 9 L 22 2" fill="none" stroke="rgba(67,245,255,0.7)" strokeWidth="2" strokeLinecap="round" />
+                    <path d="M 2 2 L 12 9 L 22 2" fill="none" stroke="rgba(16,185,129,0.7)" strokeWidth="2" strokeLinecap="round" />
                   </svg>
                 </div>
               </div>

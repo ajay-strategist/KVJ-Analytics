@@ -106,7 +106,7 @@ function SignInForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="name@company.com or 9876543210"
-              className="w-full pl-12 pr-4 py-3 rounded-xl border border-white/5 text-sm bg-[#0E0E12] text-white placeholder-zinc-500 focus:outline-none focus:border-[#00F0FF]/40"
+              className="w-full pl-12 pr-4 py-3 rounded-xl border border-white/5 text-sm bg-[#0E0E12] text-white placeholder-zinc-500 focus:outline-none focus:border-[#10B981]/40"
             />
           </div>
         </div>
@@ -123,7 +123,7 @@ function SignInForm() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full pl-12 pr-4 py-3 rounded-xl border border-white/5 text-sm bg-[#0E0E12] text-white placeholder-zinc-500 focus:outline-none focus:border-[#00F0FF]/40"
+              className="w-full pl-12 pr-4 py-3 rounded-xl border border-white/5 text-sm bg-[#0E0E12] text-white placeholder-zinc-500 focus:outline-none focus:border-[#10B981]/40"
             />
           </div>
         </div>
@@ -131,7 +131,7 @@ function SignInForm() {
         <Button
           type="submit"
           disabled={loading}
-          className="w-full py-3.5 mt-2 bg-gradient-to-r from-[#00F0FF] to-[#0072FF] text-black font-bold flex items-center justify-center gap-1.5 border-none"
+          className="w-full py-3.5 mt-2 bg-gradient-to-r from-[#10B981] to-[#0D9488] text-black font-bold flex items-center justify-center gap-1.5 border-none"
         >
           {loading ? (
             <Loader2 className="w-4 h-4 animate-spin" />
@@ -148,7 +148,7 @@ function SignInForm() {
         Don&apos;t have an account?{" "}
         <Link
           href={redirect ? `/signup?redirect=${encodeURIComponent(redirect)}` : "/signup"}
-          className="text-[#00F0FF] font-bold hover:underline"
+          className="text-[#10B981] font-bold hover:underline"
         >
           Register Here
         </Link>
@@ -161,13 +161,13 @@ export default function SignInPage() {
   return (
     <div className="w-full min-h-screen bg-[#050505] text-zinc-200 pt-36 pb-24 relative overflow-hidden flex items-center">
       {/* Background radial highlights */}
-      <div className="absolute top-[20%] right-[-10%] w-[500px] h-[500px] bg-[#0072FF]/5 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute bottom-[20%] left-[-10%] w-[500px] h-[500px] bg-[#00F0FF]/5 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute top-[20%] right-[-10%] w-[500px] h-[500px] bg-[#0D9488]/5 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute bottom-[20%] left-[-10%] w-[500px] h-[500px] bg-[#10B981]/5 rounded-full blur-[140px] pointer-events-none" />
 
       <Container>
         <Suspense fallback={
           <div className="py-24 flex items-center justify-center">
-            <Loader2 className="w-8 h-8 animate-spin text-[#00F0FF]" />
+            <Loader2 className="w-8 h-8 animate-spin text-[#10B981]" />
           </div>
         }>
           <SignInForm />

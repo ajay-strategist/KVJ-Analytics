@@ -91,31 +91,31 @@ function OfferCountdown({ expiryDate, pulse = false }: { expiryDate: string; pul
   return (
     <div
       id="offer-countdown"
-      className={`bg-[#43F5FF]/5 border border-[#43F5FF]/25 rounded-2xl p-4 flex flex-col items-center justify-center space-y-2.5 shadow-[0_0_15px_rgba(67,245,255,0.05)] w-full transition-all duration-500 ${
-        pulse ? "ring-2 ring-[#43F5FF] scale-105 shadow-[0_0_25px_rgba(67,245,255,0.25)] bg-[#43F5FF]/15" : ""
+      className={`bg-[#10B981]/5 border border-[#10B981]/25 rounded-2xl p-4 flex flex-col items-center justify-center space-y-2.5 shadow-[0_0_15px_rgba(16,185,129,0.05)] w-full transition-all duration-500 ${
+        pulse ? "ring-2 ring-[#10B981] scale-105 shadow-[0_0_25px_rgba(16,185,129,0.25)] bg-[#10B981]/15" : ""
       }`}
     >
-      <span className="text-[10px] font-bold uppercase tracking-widest text-[#43F5FF] flex items-center gap-1.5 font-mono">
+      <span className="text-[10px] font-bold uppercase tracking-widest text-[#10B981] flex items-center gap-1.5 font-mono">
         <Clock className="w-3.5 h-3.5 animate-pulse" /> Offer Ends In
       </span>
       <div className="flex gap-4 text-white font-mono text-xl font-bold">
         <div className="flex flex-col items-center">
-          <span className="text-[#43F5FF]">{String(timeLeft.days).padStart(2, "0")}</span>
+          <span className="text-[#10B981]">{String(timeLeft.days).padStart(2, "0")}</span>
           <span className="text-[8px] text-zinc-500 font-sans uppercase font-bold tracking-wider mt-1">Days</span>
         </div>
-        <span className="text-[#43F5FF]/30">:</span>
+        <span className="text-[#10B981]/30">:</span>
         <div className="flex flex-col items-center">
-          <span className="text-[#43F5FF]">{String(timeLeft.hours).padStart(2, "0")}</span>
+          <span className="text-[#10B981]">{String(timeLeft.hours).padStart(2, "0")}</span>
           <span className="text-[8px] text-zinc-500 font-sans uppercase font-bold tracking-wider mt-1">Hours</span>
         </div>
-        <span className="text-[#43F5FF]/30">:</span>
+        <span className="text-[#10B981]/30">:</span>
         <div className="flex flex-col items-center">
-          <span className="text-[#43F5FF]">{String(timeLeft.minutes).padStart(2, "0")}</span>
+          <span className="text-[#10B981]">{String(timeLeft.minutes).padStart(2, "0")}</span>
           <span className="text-[8px] text-zinc-500 font-sans uppercase font-bold tracking-wider mt-1">Mins</span>
         </div>
-        <span className="text-[#43F5FF]/30">:</span>
+        <span className="text-[#10B981]/30">:</span>
         <div className="flex flex-col items-center">
-          <span className="text-[#43F5FF]">{String(timeLeft.seconds).padStart(2, "0")}</span>
+          <span className="text-[#10B981]">{String(timeLeft.seconds).padStart(2, "0")}</span>
           <span className="text-[8px] text-zinc-500 font-sans uppercase font-bold tracking-wider mt-1">Secs</span>
         </div>
       </div>
@@ -125,6 +125,12 @@ function OfferCountdown({ expiryDate, pulse = false }: { expiryDate: string; pul
 
 export function CourseClientWrapper({ course, modules }: CourseClientWrapperProps) {
   const router = useRouter();
+  
+  const segmentLower = course.segment?.toLowerCase() || "";
+  const isOneToOne = segmentLower === "one-to-one";
+  const isCollegeOrCompany = segmentLower === "colleges" || segmentLower === "corporate";
+  const isOnline = segmentLower === "online-courses" || segmentLower === "online" || (!isOneToOne && !isCollegeOrCompany);
+
   const [user, setUser] = useState<any>(null);
   const [enrolled, setEnrolled] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -307,7 +313,7 @@ export function CourseClientWrapper({ course, modules }: CourseClientWrapperProp
           email: user.email,
         },
         theme: {
-          color: "#3A7BFF",
+          color: "#0D9488",
         },
       };
 
@@ -352,7 +358,7 @@ export function CourseClientWrapper({ course, modules }: CourseClientWrapperProp
   if (loading) {
     return (
       <div className="py-24 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-[#43F5FF]" />
+        <Loader2 className="w-8 h-8 animate-spin text-[#10B981]" />
       </div>
     );
   }
@@ -375,7 +381,7 @@ export function CourseClientWrapper({ course, modules }: CourseClientWrapperProp
         {/* 1. Header Info */}
         <div className="space-y-4">
           <div className="flex items-center">
-            <span className="text-[10px] font-bold font-mono tracking-widest text-[#43F5FF] uppercase px-3 py-1 rounded-full bg-[#43F5FF]/10 border border-[#43F5FF]/20 animate-pulse">
+            <span className="text-[10px] font-bold font-mono tracking-widest text-[#10B981] uppercase px-3 py-1 rounded-full bg-[#10B981]/10 border border-[#10B981]/20 animate-pulse">
               {course.segment} program
             </span>
           </div>
@@ -388,7 +394,7 @@ export function CourseClientWrapper({ course, modules }: CourseClientWrapperProp
         </div>
 
         {/* 2. Banner Image */}
-        <div className="relative w-full aspect-video rounded-3xl overflow-hidden border border-line bg-[#0A0D13]">
+        <div className="relative w-full aspect-video rounded-3xl overflow-hidden border border-line bg-[#07130E]">
           {course.banner_url && (
             <img
               src={course.banner_url}
@@ -420,8 +426,8 @@ export function CourseClientWrapper({ course, modules }: CourseClientWrapperProp
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {syllabusList.map((item: string, index: number) => (
-                <div key={index} className="flex items-start gap-3.5 p-4 rounded-xl border border-line bg-[#0E1117]/35 backdrop-blur-xl">
-                  <CheckCircle2 className="w-5 h-5 text-[#43F5FF] shrink-0 mt-0.5" />
+                <div key={index} className="flex items-start gap-3.5 p-4 rounded-xl border border-line bg-[#0B2A22]/35 backdrop-blur-xl">
+                  <CheckCircle2 className="w-5 h-5 text-[#10B981] shrink-0 mt-0.5" />
                   <span className="text-zinc-350 text-sm leading-relaxed font-light">{item}</span>
                 </div>
               ))}
@@ -452,14 +458,14 @@ export function CourseClientWrapper({ course, modules }: CourseClientWrapperProp
             </p>
             <Button
               onClick={() => router.push(`/training/${course.slug}/learn`)}
-              className="w-full py-4 bg-gradient-to-r from-[#43F5FF] to-[#3A7BFF] text-black font-bold flex items-center justify-center gap-1.5 shadow-[0_4px_20px_rgba(67,245,255,0.15)] rounded-full text-center whitespace-nowrap"
+              className="w-full py-4 bg-gradient-to-r from-[#10B981] to-[#0D9488] text-black font-bold flex items-center justify-center gap-1.5 shadow-[0_4px_20px_rgba(16,185,129,0.15)] rounded-full text-center whitespace-nowrap"
             >
               <ShieldCheck className="w-4 h-4" />
               <span>Launch Course Player</span>
             </Button>
           </Card>
         ) : (
-          <Card hoverLift={false} className="border border-line bg-[#0E1117]/55 backdrop-blur-xl p-8 rounded-3xl w-full flex flex-col space-y-6">
+          <Card hoverLift={false} className="border border-line bg-[#0B2A22]/55 backdrop-blur-xl p-8 rounded-3xl w-full flex flex-col space-y-6">
             {/* Title / Header */}
             <div>
               <h4 className="text-xl font-bold font-display text-white">
@@ -473,7 +479,7 @@ export function CourseClientWrapper({ course, modules }: CourseClientWrapperProp
                 Course Duration
               </span>
               <div className="flex items-center gap-2 mt-1.5 text-white font-semibold">
-                <Clock className="w-4 h-4 text-[#43F5FF] shrink-0" />
+                <Clock className="w-4 h-4 text-[#10B981] shrink-0" />
                 <span>{course.duration || "Self-Paced"}</span>
               </div>
             </div>
@@ -497,7 +503,7 @@ export function CourseClientWrapper({ course, modules }: CourseClientWrapperProp
                       )}
                     </div>
                     {isDiscounted && course.offer_label && (
-                      <span className="text-xs font-bold text-[#43F5FF] mt-1 block">
+                      <span className="text-xs font-bold text-[#10B981] mt-1 block">
                         ★ {course.offer_label}
                       </span>
                     )}
@@ -625,7 +631,7 @@ export function CourseClientWrapper({ course, modules }: CourseClientWrapperProp
                     value={unlockCode}
                     onChange={(e) => setUnlockCode(e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, ""))}
                     placeholder={isOneToOne ? "ENTER VOUCHER CODE" : "ENTER BATCH PASSCODE"}
-                    className="w-full px-4 py-2.5 rounded-xl border border-line text-sm bg-[#0A0D13] text-white placeholder-zinc-500 focus:outline-none focus:border-[#43F5FF]/40 text-center font-mono tracking-wider font-bold"
+                    className="w-full px-4 py-2.5 rounded-xl border border-line text-sm bg-[#07130E] text-white placeholder-zinc-500 focus:outline-none focus:border-[#10B981]/40 text-center font-mono tracking-wider font-bold"
                   />
                   <Button
                     type="submit"
@@ -644,7 +650,7 @@ export function CourseClientWrapper({ course, modules }: CourseClientWrapperProp
                   Already enrolled?{" "}
                   <button
                     onClick={() => router.push(`/signin?redirect=/training/${course.slug}`)}
-                    className="text-[#43F5FF] font-bold hover:underline cursor-pointer bg-transparent border-0 font-sans"
+                    className="text-[#10B981] font-bold hover:underline cursor-pointer bg-transparent border-0 font-sans"
                   >
                     Log In Here
                   </button>

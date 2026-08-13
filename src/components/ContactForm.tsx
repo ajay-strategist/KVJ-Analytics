@@ -94,8 +94,8 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
 
   if (success) {
     return (
-      <div className="bg-[#3A7BFF]/5 border border-[#3A7BFF]/30 rounded-[24px] p-8 text-center flex flex-col items-center w-full shadow-sm animate-fade-up">
-        <CheckCircle2 className="w-16 h-16 text-[#43F5FF] mb-6 animate-pulse" />
+      <div className="bg-[#0D9488]/5 border border-[#0D9488]/30 rounded-[24px] p-8 text-center flex flex-col items-center w-full shadow-sm animate-fade-up">
+        <CheckCircle2 className="w-16 h-16 text-[#10B981] mb-6 animate-pulse" />
         <h3 className="text-2xl font-bold font-display text-white mb-3">
           Message Sent Successfully!
         </h3>
@@ -109,7 +109,7 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
     );
   }
 
-  const inputClasses = "peer w-full px-0 pt-6 pb-2 rounded-none border-0 border-b border-white/10 bg-transparent focus:border-b-[#43F5FF] text-white text-sm transition-all outline-none";
+  const inputClasses = "peer w-full px-0 pt-6 pb-2 rounded-none border-0 border-b border-white/10 bg-transparent focus:border-b-[#10B981] text-white text-sm transition-all outline-none";
 
   return (
     <form onSubmit={handleSubmit} className="w-full space-y-8 relative">
@@ -117,12 +117,12 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes blue-breath {
           0%, 100% {
-            box-shadow: 0 0 12px rgba(58, 123, 255, 0.45), 0 0 5px rgba(67, 245, 255, 0.25);
-            border-color: rgba(67, 245, 255, 0.4);
+            box-shadow: 0 0 12px rgba(13, 148, 136, 0.45), 0 0 5px rgba(16, 185, 129, 0.25);
+            border-color: rgba(16, 185, 129, 0.4);
           }
           50% {
-            box-shadow: 0 0 28px rgba(58, 123, 255, 0.85), 0 0 15px rgba(67, 245, 255, 0.5);
-            border-color: #43F5FF;
+            box-shadow: 0 0 28px rgba(13, 148, 136, 0.85), 0 0 15px rgba(16, 185, 129, 0.5);
+            border-color: #10B981;
           }
         }
         .btn-breathing-neon-blue {
@@ -155,7 +155,7 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
             htmlFor="name"
             className={`absolute left-0 top-4 text-xs font-bold uppercase tracking-wider transition-all pointer-events-none origin-left ${
               focusedField === "name" || formData.name
-                ? "transform -translate-y-2.5 scale-75 text-[#43F5FF]"
+                ? "transform -translate-y-2.5 scale-75 text-[#10B981]"
                 : "transform translate-y-0 scale-100 text-slate-500"
             }`}
           >
@@ -180,7 +180,7 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
             htmlFor="organization"
             className={`absolute left-0 top-4 text-xs font-bold uppercase tracking-wider transition-all pointer-events-none origin-left ${
               focusedField === "organization" || formData.organization
-                ? "transform -translate-y-2.5 scale-75 text-[#43F5FF]"
+                ? "transform -translate-y-2.5 scale-75 text-[#10B981]"
                 : "transform translate-y-0 scale-100 text-slate-500"
             }`}
           >
@@ -207,7 +207,7 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
             htmlFor="email"
             className={`absolute left-0 top-4 text-xs font-bold uppercase tracking-wider transition-all pointer-events-none origin-left ${
               focusedField === "email" || formData.email
-                ? "transform -translate-y-2.5 scale-75 text-[#43F5FF]"
+                ? "transform -translate-y-2.5 scale-75 text-[#10B981]"
                 : "transform translate-y-0 scale-100 text-slate-500"
             }`}
           >
@@ -232,7 +232,7 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
             htmlFor="phone"
             className={`absolute left-0 top-4 text-xs font-bold uppercase tracking-wider transition-all pointer-events-none origin-left ${
               focusedField === "phone" || formData.phone
-                ? "transform -translate-y-2.5 scale-75 text-[#43F5FF]"
+                ? "transform -translate-y-2.5 scale-75 text-[#10B981]"
                 : "transform translate-y-0 scale-100 text-slate-500"
             }`}
           >
@@ -251,23 +251,23 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
           onChange={handleChange}
           onFocus={() => setFocusedField("serviceInterest")}
           onBlur={() => setFocusedField("")}
-          className="peer w-full px-0 pt-6 pb-2 rounded-none border-0 border-b border-white/10 bg-transparent focus:border-b-[#43F5FF] text-white text-sm transition-all outline-none appearance-none cursor-pointer"
+          className="peer w-full px-0 pt-6 pb-2 rounded-none border-0 border-b border-white/10 bg-transparent focus:border-b-[#10B981] text-white text-sm transition-all outline-none appearance-none cursor-pointer"
         >
-          <option value="" className="bg-[#0A0D13] text-slate-500">-- Select Interest Category --</option>
+          <option value="" className="bg-[#07130E] text-slate-500">-- Select Interest Category --</option>
           {inquiryAreas.map((area, idx) => (
-            <option key={idx} value={area} className="bg-[#0A0D13] text-white">
+            <option key={idx} value={area} className="bg-[#07130E] text-white">
               {area}
             </option>
           ))}
           {formData.serviceInterest && !inquiryAreas.includes(formData.serviceInterest) && (
-            <option value={formData.serviceInterest} className="bg-[#0A0D13] text-white">{formData.serviceInterest}</option>
+            <option value={formData.serviceInterest} className="bg-[#07130E] text-white">{formData.serviceInterest}</option>
           )}
         </select>
         <label
           htmlFor="serviceInterest"
           className={`absolute left-0 top-1.5 text-xs font-bold uppercase tracking-wider transition-all pointer-events-none origin-left transform -translate-y-2.5 scale-75 ${
             focusedField === "serviceInterest"
-              ? "text-[#43F5FF]"
+              ? "text-[#10B981]"
               : "text-slate-500"
           }`}
         >
@@ -291,13 +291,13 @@ function ContactFormInner({ inquiryAreas }: ContactFormProps) {
           onChange={handleChange}
           onFocus={() => setFocusedField("message")}
           onBlur={() => setFocusedField("")}
-          className="peer w-full px-0 pt-6 pb-2 rounded-none border-0 border-b border-white/10 bg-transparent focus:border-b-[#43F5FF] text-white text-sm transition-all outline-none resize-none"
+          className="peer w-full px-0 pt-6 pb-2 rounded-none border-0 border-b border-white/10 bg-transparent focus:border-b-[#10B981] text-white text-sm transition-all outline-none resize-none"
         />
         <label
           htmlFor="message"
           className={`absolute left-0 top-4 text-xs font-bold uppercase tracking-wider transition-all pointer-events-none origin-left ${
             focusedField === "message" || formData.message
-              ? "transform -translate-y-2.5 scale-75 text-[#43F5FF]"
+              ? "transform -translate-y-2.5 scale-75 text-[#10B981]"
               : "transform translate-y-0 scale-100 text-slate-500"
             }`}
         >
@@ -334,7 +334,7 @@ export function ContactForm({ inquiryAreas }: ContactFormProps) {
   return (
     <Suspense fallback={
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="w-8 h-8 animate-spin text-[#43F5FF]" />
+        <Loader2 className="w-8 h-8 animate-spin text-[#10B981]" />
       </div>
     }>
       <ContactFormInner inquiryAreas={inquiryAreas} />

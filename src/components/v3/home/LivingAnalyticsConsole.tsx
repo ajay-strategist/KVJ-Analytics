@@ -62,7 +62,7 @@ export function LivingAnalyticsConsole() {
             const done = i < pipe, on = i === pipe;
             return (
               <React.Fragment key={i}>
-                <div className={`flex flex-1 flex-col items-center gap-1 rounded-lg border p-2 transition-all duration-500 ${on ? "border-brand/60 bg-brand/10 shadow-[0_0_16px_-6px_rgba(67,245,255,0.7)]" : "border-line bg-white/[0.02]"}`}>
+                <div className={`flex flex-1 flex-col items-center gap-1 rounded-lg border p-2 transition-all duration-500 ${on ? "border-brand/60 bg-brand/10 shadow-[0_0_16px_-6px_rgba(16,185,129,0.7)]" : "border-line bg-white/[0.02]"}`}>
                   <span className={`grid h-6 w-6 place-items-center rounded-md ${on || done ? "bg-brand/15 text-brand" : "bg-white/[0.03] text-slate"}`}>
                     {p.name === "Validate" && (on || done) ? <CheckCircle2 className="h-3.5 w-3.5" /> : <p.Icon className="h-3.5 w-3.5" />}
                   </span>
@@ -156,8 +156,8 @@ function Bars({ vals }: { vals: number[] }) {
   return <div className="flex h-10 items-end gap-0.5">{vals.map((h, i) => <div key={i} className="flex-1 rounded-t bg-gradient-to-t from-corporate/40 to-brand/80 transition-[height] duration-700" style={{ height: `${h}%` }} />)}</div>;
 }
 function Line() {
-  return <svg viewBox="0 0 100 40" className="h-10 w-full" preserveAspectRatio="none"><defs><linearGradient id="lac-l" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#43F5FF" stopOpacity="0.4" /><stop offset="100%" stopColor="#43F5FF" stopOpacity="0" /></linearGradient></defs><path d="M0 32 C14 28 20 12 32 16 S56 4 70 10 S92 5 100 7 L100 40 L0 40 Z" fill="url(#lac-l)" /><path d="M0 32 C14 28 20 12 32 16 S56 4 70 10 S92 5 100 7" fill="none" stroke="#43F5FF" strokeWidth="2" /></svg>;
+  return <svg viewBox="0 0 100 40" className="h-10 w-full" preserveAspectRatio="none"><defs><linearGradient id="lac-l" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#10B981" stopOpacity="0.4" /><stop offset="100%" stopColor="#10B981" stopOpacity="0" /></linearGradient></defs><path d="M0 32 C14 28 20 12 32 16 S56 4 70 10 S92 5 100 7 L100 40 L0 40 Z" fill="url(#lac-l)" /><path d="M0 32 C14 28 20 12 32 16 S56 4 70 10 S92 5 100 7" fill="none" stroke="#10B981" strokeWidth="2" /></svg>;
 }
 function Donut() {
-  return <div className="grid place-items-center"><svg viewBox="0 0 42 42" className="h-10 w-10 -rotate-90"><circle cx="21" cy="21" r="15.9" fill="none" stroke="rgba(167,177,196,0.15)" strokeWidth="6" /><circle cx="21" cy="21" r="15.9" fill="none" stroke="#43F5FF" strokeWidth="6" strokeDasharray="66 100" strokeLinecap="round" /></svg></div>;
+  return <div className="grid place-items-center"><svg viewBox="0 0 42 42" className="h-10 w-10 -rotate-90"><circle cx="21" cy="21" r="15.9" fill="none" stroke="rgba(167,177,196,0.15)" strokeWidth="6" /><circle cx="21" cy="21" r="15.9" fill="none" stroke="#10B981" strokeWidth="6" strokeDasharray="66 100" strokeLinecap="round" /></svg></div>;
 }

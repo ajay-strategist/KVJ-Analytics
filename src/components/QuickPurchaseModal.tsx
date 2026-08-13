@@ -51,7 +51,7 @@ function MiniCountdown() {
   }, []);
 
   return (
-    <div className="flex items-center gap-1.5 font-mono text-sm font-bold text-[#00F0FF]">
+    <div className="flex items-center gap-1.5 font-mono text-sm font-bold text-[#10B981]">
       <Clock className="w-3.5 h-3.5 animate-pulse shrink-0" />
       <span>
         {String(timeLeft.hours).padStart(2, "0")}:
@@ -191,7 +191,7 @@ export function QuickPurchaseModal({ course, onClose }: QuickPurchaseModalProps)
           }
         },
         prefill: { email: user.email },
-        theme: { color: "#0072FF" },
+        theme: { color: "#0D9488" },
         modal: { ondismiss: () => setCheckoutLoading(false) },
       };
 
@@ -210,7 +210,7 @@ export function QuickPurchaseModal({ course, onClose }: QuickPurchaseModalProps)
     >
       <div className="absolute inset-0 bg-[#050505]/80 backdrop-blur-md" />
 
-      <div className="relative z-10 w-full max-w-md bg-[#0A0A0C] border border-white/8 rounded-3xl shadow-[0_0_80px_rgba(0,240,255,0.06)] overflow-hidden">
+      <div className="relative z-10 w-full max-w-md bg-[#0A0A0C] border border-white/8 rounded-3xl shadow-[0_0_80px_rgba(16,185,129,0.06)] overflow-hidden">
 
         {course.banner_url && (
           <div className="relative w-full h-36 overflow-hidden bg-zinc-950">
@@ -240,7 +240,7 @@ export function QuickPurchaseModal({ course, onClose }: QuickPurchaseModalProps)
               </div>
               <Button
                 onClick={() => { router.push(`/training/${course.slug}/learn`); onClose(); }}
-                className="w-full py-3.5 bg-gradient-to-r from-[#00F0FF] to-[#0072FF] text-black font-bold rounded-full flex items-center justify-center gap-2"
+                className="w-full py-3.5 bg-gradient-to-r from-[#10B981] to-[#0D9488] text-black font-bold rounded-full flex items-center justify-center gap-2"
               >
                 <ShieldCheck className="w-4 h-4" />
                 Launch Course Player
@@ -253,7 +253,7 @@ export function QuickPurchaseModal({ course, onClose }: QuickPurchaseModalProps)
             <>
               <div>
                 <div className="flex items-center gap-2 mb-2 flex-wrap">
-                  <span className="text-[10px] font-bold font-mono tracking-widest text-[#00F0FF] uppercase px-2.5 py-1 rounded-full bg-[#00F0FF]/10 border border-[#00F0FF]/20">
+                  <span className="text-[10px] font-bold font-mono tracking-widest text-[#10B981] uppercase px-2.5 py-1 rounded-full bg-[#10B981]/10 border border-[#10B981]/20">
                     Online Course
                   </span>
                   {hasOffer && (
@@ -279,7 +279,7 @@ export function QuickPurchaseModal({ course, onClose }: QuickPurchaseModalProps)
                 <div className="bg-[#111116] border border-white/5 rounded-2xl p-3.5">
                   <span className="text-[10px] text-zinc-500 font-mono uppercase tracking-wider block mb-1.5">Duration</span>
                   <div className="flex items-center gap-1.5 text-white font-semibold text-sm">
-                    <Clock className="w-4 h-4 text-[#0072FF] shrink-0" />
+                    <Clock className="w-4 h-4 text-[#0D9488] shrink-0" />
                     {course.duration || "Self-Paced"}
                   </div>
                 </div>
@@ -287,7 +287,7 @@ export function QuickPurchaseModal({ course, onClose }: QuickPurchaseModalProps)
                   <span className="text-[10px] text-zinc-500 font-mono uppercase tracking-wider block mb-1.5">Investment</span>
                   {hasOffer ? (
                     <div>
-                      <span className="text-[#00F0FF] font-bold text-lg font-display">₹{finalPrice}</span>
+                      <span className="text-[#10B981] font-bold text-lg font-display">₹{finalPrice}</span>
                       <span className="text-zinc-500 line-through text-xs ml-2">₹{course.fee_inr}</span>
                     </div>
                   ) : (
@@ -301,7 +301,7 @@ export function QuickPurchaseModal({ course, onClose }: QuickPurchaseModalProps)
               <div className="space-y-2">
                 {["Full curriculum access", "Self-paced video lessons", "Certificate on completion"].map((item) => (
                   <div key={item} className="flex items-center gap-2.5 text-sm text-zinc-300">
-                    <CheckCircle2 className="w-4 h-4 text-[#00F0FF] shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-[#10B981] shrink-0" />
                     {item}
                   </div>
                 ))}
@@ -316,7 +316,7 @@ export function QuickPurchaseModal({ course, onClose }: QuickPurchaseModalProps)
 
               {authLoading ? (
                 <div className="flex items-center justify-center py-4">
-                  <Loader2 className="w-6 h-6 animate-spin text-[#00F0FF]" />
+                  <Loader2 className="w-6 h-6 animate-spin text-[#10B981]" />
                 </div>
               ) : enrolled ? (
                 <Button
@@ -331,7 +331,7 @@ export function QuickPurchaseModal({ course, onClose }: QuickPurchaseModalProps)
                   <Button
                     onClick={handleBuy}
                     disabled={checkoutLoading}
-                    className="w-full py-4 bg-gradient-to-r from-[#00F0FF] to-[#0072FF] text-black font-bold rounded-full text-[15px] flex items-center justify-center gap-2 shadow-[0_4px_24px_rgba(0,240,255,0.18)] hover:brightness-110 transition-all"
+                    className="w-full py-4 bg-gradient-to-r from-[#10B981] to-[#0D9488] text-black font-bold rounded-full text-[15px] flex items-center justify-center gap-2 shadow-[0_4px_24px_rgba(16,185,129,0.18)] hover:brightness-110 transition-all"
                   >
                     {checkoutLoading ? (
                       <><Loader2 className="w-4 h-4 animate-spin" /> Initializing...</>

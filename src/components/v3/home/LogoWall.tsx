@@ -10,16 +10,16 @@ function ClientLogoBadge({ name }: { name: string }) {
 
   return (
     <div className="flex items-center gap-3">
-      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-brand/20 via-corporate/15 to-transparent border border-brand/35 group-hover:border-brand group-hover:from-brand/30 transition-all duration-500 shadow-[0_0_12px_rgba(67,245,255,0.15)] shrink-0">
-        <span className="font-mono text-xs font-black tracking-tight text-brand group-hover:text-white transition-colors">
+      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-brand/20 via-corporate/15 to-transparent border border-brand/35 group-hover:border-brand group-hover:from-brand/30 transition-all duration-500 shadow-[0_0_12px_rgba(14,165,233,0.1)] shrink-0">
+        <span className="font-mono text-xs font-black tracking-tight text-brand">
           {initials}
         </span>
       </div>
       <div className="flex flex-col text-left">
-        <span className="whitespace-nowrap font-display text-sm font-bold tracking-tight text-ink/90 group-hover:text-white transition-colors duration-500">
+        <span className="whitespace-nowrap font-display text-sm font-bold tracking-tight text-ink/90 group-hover:text-brand transition-colors duration-500">
           {name}
         </span>
-        <span className="text-[9px] font-mono font-semibold uppercase tracking-wider text-brand/70 group-hover:text-brand transition-colors">
+        <span className="text-[9px] font-mono font-semibold uppercase tracking-wider text-brand/70">
           Partner Institution
         </span>
       </div>
@@ -81,11 +81,11 @@ export function LogoWall({ heading, logos }: { heading: string; logos: string[] 
       <div
         onMouseMove={onMove}
         onMouseLeave={onLeave}
-        className="light-sweep flex h-16 min-w-[210px] items-center justify-center rounded-2xl border border-line bg-white/[0.04] px-5 backdrop-blur-md hover:border-brand/50 hover:bg-white/[0.08] hover:shadow-[0_0_25px_rgba(0,240,255,0.15)]"
+        className="light-sweep flex h-16 min-w-[210px] items-center justify-center rounded-2xl border border-line bg-base-2/80 px-5 backdrop-blur-md hover:border-brand/40 hover:bg-white hover:shadow-[0_8px_30px_rgba(15,23,42,0.06)]"
         style={{ transition: "transform 0.4s cubic-bezier(0.03,0.98,0.52,0.99), border-color 0.5s, background 0.5s, box-shadow 0.5s", transformStyle: "preserve-3d" }}
       >
         {isUrl(item) ? (
-          <div className="flex h-10 w-full items-center justify-center rounded-xl bg-white/90 px-4 py-1.5 transition-all duration-300 group-hover:bg-white group-hover:shadow-[0_0_20px_rgba(255,255,255,0.4)] group-hover:scale-105" style={{ transform: "translateZ(15px)" }}>
+          <div className="flex h-10 w-full items-center justify-center rounded-xl bg-white border border-slate-100 px-4 py-1.5 transition-all duration-300 group-hover:shadow-[0_4px_12px_rgba(15,23,42,0.04)] group-hover:scale-105" style={{ transform: "translateZ(15px)" }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={item}

@@ -153,7 +153,7 @@ export function TestTakingWidget({
         line: "border-white/5",
         ink: "text-zinc-100",
         slate: "text-zinc-400",
-        active: "bg-brand/10 border-brand text-[#00F0FF]",
+        active: "bg-brand/10 border-brand text-[#10B981]",
         hover: "hover:border-white/10 hover:bg-[#16161a]",
         btnSecondary: "bg-[#18181b] border-white/5 text-zinc-300 hover:bg-[#27272a] hover:text-white",
       }

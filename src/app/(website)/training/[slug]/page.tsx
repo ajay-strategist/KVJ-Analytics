@@ -169,14 +169,14 @@ export default async function CourseDetailPage({
   return (
     <div className="w-full bg-[#050505] text-zinc-200 min-h-screen pt-28 pb-24 relative overflow-hidden">
       {/* Background gradients */}
-      <div className="absolute top-[10%] left-[-10%] w-[500px] h-[500px] bg-[#00F0FF]/5 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute top-[40%] right-[-10%] w-[600px] h-[600px] bg-[#0072FF]/5 rounded-full blur-[160px] pointer-events-none" />
+      <div className="absolute top-[10%] left-[-10%] w-[500px] h-[500px] bg-[#10B981]/5 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute top-[40%] right-[-10%] w-[600px] h-[600px] bg-[#0D9488]/5 rounded-full blur-[160px] pointer-events-none" />
 
       <Container className="relative z-10">
         {/* Back Link */}
         <Link
           href="/training/online-courses"
-          className="inline-flex items-center text-sm font-semibold text-zinc-400 hover:text-[#00F0FF] mb-12 group transition-colors"
+          className="inline-flex items-center text-sm font-semibold text-zinc-400 hover:text-[#10B981] mb-12 group transition-colors"
         >
           <ArrowLeft className="w-4 h-4 mr-2 transition-transform duration-200 group-hover:-translate-x-1" />
           <span>Back to Courses</span>

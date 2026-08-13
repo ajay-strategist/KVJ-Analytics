@@ -112,7 +112,7 @@ export function JobApplyForm({ jobId, jobTitle }: JobApplyFormProps) {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="e.g. Samuel Mathew"
-            className="w-full px-4 py-3 rounded-xl border border-white/5 text-sm bg-[#0E0E12] text-white placeholder-zinc-500 focus:outline-none focus:border-[#00F0FF]/40"
+            className="w-full px-4 py-3 rounded-xl border border-white/5 text-sm bg-[#0E0E12] text-white placeholder-zinc-500 focus:outline-none focus:border-[#10B981]/40"
           />
         </div>
 
@@ -127,7 +127,7 @@ export function JobApplyForm({ jobId, jobTitle }: JobApplyFormProps) {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="e.g. sam@example.com"
-              className="w-full px-4 py-3 rounded-xl border border-white/5 text-sm bg-[#0E0E12] text-white placeholder-zinc-500 focus:outline-none focus:border-[#00F0FF]/40"
+              className="w-full px-4 py-3 rounded-xl border border-white/5 text-sm bg-[#0E0E12] text-white placeholder-zinc-500 focus:outline-none focus:border-[#10B981]/40"
             />
           </div>
           <div>
@@ -140,7 +140,7 @@ export function JobApplyForm({ jobId, jobTitle }: JobApplyFormProps) {
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="e.g. 98450 12345"
-              className="w-full px-4 py-3 rounded-xl border border-white/5 text-sm bg-[#0E0E12] text-white placeholder-zinc-500 focus:outline-none focus:border-[#00F0FF]/40"
+              className="w-full px-4 py-3 rounded-xl border border-white/5 text-sm bg-[#0E0E12] text-white placeholder-zinc-500 focus:outline-none focus:border-[#10B981]/40"
             />
           </div>
         </div>
@@ -155,7 +155,7 @@ export function JobApplyForm({ jobId, jobTitle }: JobApplyFormProps) {
             value={resumeUrl}
             onChange={(e) => setResumeUrl(e.target.value)}
             placeholder="https://drive.google.com/file/d/..."
-            className="w-full px-4 py-3 rounded-xl border border-white/5 text-sm bg-[#0E0E12] text-white placeholder-zinc-500 focus:outline-none focus:border-[#00F0FF]/40 font-mono"
+            className="w-full px-4 py-3 rounded-xl border border-white/5 text-sm bg-[#0E0E12] text-white placeholder-zinc-500 focus:outline-none focus:border-[#10B981]/40 font-mono"
           />
         </div>
 
@@ -168,14 +168,14 @@ export function JobApplyForm({ jobId, jobTitle }: JobApplyFormProps) {
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             placeholder="Describe your background and fit for the role..."
-            className="w-full px-4 py-3 rounded-xl border border-white/5 text-sm bg-[#0E0E12] text-white placeholder-zinc-500 focus:outline-none focus:border-[#00F0FF]/40"
+            className="w-full px-4 py-3 rounded-xl border border-white/5 text-sm bg-[#0E0E12] text-white placeholder-zinc-500 focus:outline-none focus:border-[#10B981]/40"
           />
         </div>
 
         <Button
           type="submit"
           disabled={loading}
-          className="w-full py-3.5 bg-gradient-to-r from-[#00F0FF] to-[#0072FF] text-black font-bold flex items-center justify-center gap-1.5 border-none"
+          className="w-full py-3.5 bg-gradient-to-r from-[#10B981] to-[#0D9488] text-black font-bold flex items-center justify-center gap-1.5 border-none"
         >
           {loading ? (
             <Loader2 className="w-4 h-4 animate-spin" />

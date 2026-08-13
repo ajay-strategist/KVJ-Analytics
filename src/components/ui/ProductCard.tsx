@@ -118,10 +118,10 @@ export function ProductCard({
         .btn-liquid-glow-sweep {
           position: relative;
           overflow: hidden;
-          background: #0E1117 !important;
-          border: 1px solid rgba(67, 245, 255, 0.25) !important;
+          background: #0B2A22 !important;
+          border: 1px solid rgba(16, 185, 129, 0.25) !important;
           color: #FFFFFF !important;
-          box-shadow: 0 0 15px rgba(67, 245, 255, 0.1) !important;
+          box-shadow: 0 0 15px rgba(16, 185, 129, 0.1) !important;
           transition: all 0.3s ease !important;
         }
         .btn-liquid-glow-sweep::before {
@@ -129,7 +129,7 @@ export function ProductCard({
           position: absolute;
           top: -50%; left: -50%;
           width: 200%; height: 200%;
-          background: conic-gradient(from 0deg, transparent 40%, #43F5FF 50%, transparent 60%);
+          background: conic-gradient(from 0deg, transparent 40%, #10B981 50%, transparent 60%);
           animation: rotate-sweep 4s linear infinite;
           pointer-events: none;
           z-index: 0;
@@ -137,8 +137,8 @@ export function ProductCard({
           transition: opacity 0.3s ease;
         }
         .btn-liquid-glow-sweep:hover {
-          border-color: #43F5FF !important;
-          box-shadow: 0 0 25px rgba(67, 245, 255, 0.3) !important;
+          border-color: #10B981 !important;
+          box-shadow: 0 0 25px rgba(16, 185, 129, 0.3) !important;
         }
         .btn-liquid-glow-sweep:hover::before {
           opacity: 1;
@@ -160,24 +160,24 @@ export function ProductCard({
           className="relative h-full flex flex-col overflow-hidden p-8 md:p-9 rounded-[24px] bg-glass-card backdrop-blur-[18px] border border-line transition-all duration-500 shadow-soft"
           style={{
             borderColor: isHovered
-              ? isGradeScope ? "rgba(67, 245, 255, 0.55)" : "rgba(58, 123, 255, 0.55)"
+              ? isGradeScope ? "rgba(16, 185, 129, 0.55)" : "rgba(13, 148, 136, 0.55)"
               : "rgba(60, 255, 255, 0.15)",
             boxShadow: isHovered
               ? isGradeScope 
-                ? "0 24px 60px rgba(67, 245, 255, 0.22)" 
-                : "0 24px 60px rgba(58, 123, 255, 0.22)"
+                ? "0 24px 60px rgba(16, 185, 129, 0.22)" 
+                : "0 24px 60px rgba(13, 148, 136, 0.22)"
               : "none",
           }}
         >
           {/* Top accent line */}
-          <div className={`absolute inset-x-0 top-0 h-[3px] ${isGradeScope ? "bg-[#43F5FF]" : "bg-[#3A7BFF]"}`} />
+          <div className={`absolute inset-x-0 top-0 h-[3px] ${isGradeScope ? "bg-[#10B981]" : "bg-[#0D9488]"}`} />
 
           {/* Cursor following glow */}
           {isHovered && (
             <div
               className="absolute inset-0 pointer-events-none transition-opacity duration-300"
               style={{
-                background: `radial-gradient(350px circle at ${mousePos.x}px ${mousePos.y}px, rgba(67, 245, 255, 0.05), transparent 80%)`,
+                background: `radial-gradient(350px circle at ${mousePos.x}px ${mousePos.y}px, rgba(16, 185, 129, 0.05), transparent 80%)`,
               }}
             />
           )}
@@ -198,7 +198,7 @@ export function ProductCard({
               <h3 
                 className="text-2xl font-bold leading-tight transition-colors duration-300"
                 style={{
-                  color: isHovered ? (isGradeScope ? "#43F5FF" : "#3A7BFF") : "#FFFFFF",
+                  color: isHovered ? (isGradeScope ? "#10B981" : "#0D9488") : "#FFFFFF",
                 }}
               >
                 {name}
@@ -214,7 +214,7 @@ export function ProductCard({
             <div className="relative grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-8">
               {keyFeatures.map((feat: string, fIdx: number) => (
                 <div key={fIdx} className="flex items-start gap-2.5 rounded-xl border border-line bg-white/5 px-3.5 py-3 transition-colors duration-250 hover:bg-white/10">
-                  <Check className={`mt-0.5 h-4 w-4 shrink-0 ${isGradeScope ? "text-[#43F5FF]" : "text-[#3A7BFF]"}`} />
+                  <Check className={`mt-0.5 h-4 w-4 shrink-0 ${isGradeScope ? "text-[#10B981]" : "text-[#0D9488]"}`} />
                   <span className="text-[12.5px] font-medium text-white leading-snug">{feat}</span>
                 </div>
               ))}

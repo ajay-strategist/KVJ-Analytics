@@ -52,7 +52,7 @@ export function HeroCanvas({ theme = "dark" }: HeroCanvasProps) {
         const y = Math.random() * height;
         // Random colors based on theme
         const isCyan = Math.random() > 0.45;
-        let color = isCyan ? "rgba(0, 240, 255, 0.85)" : "rgba(0, 114, 255, 0.75)";
+        let color = isCyan ? "rgba(16, 185, 129, 0.85)" : "rgba(13, 148, 136, 0.75)";
         if (isLight) {
           color = isCyan ? "rgba(0, 180, 216, 0.75)" : "rgba(212, 175, 55, 0.65)";
         }
@@ -162,8 +162,8 @@ export function HeroCanvas({ theme = "dark" }: HeroCanvasProps) {
                 : `rgba(212, 175, 55, ${alpha})`;
             } else {
               ctx.strokeStyle = n1.color.includes("240") 
-                ? `rgba(0, 240, 255, ${alpha})`
-                : `rgba(0, 114, 255, ${alpha})`;
+                ? `rgba(16, 185, 129, ${alpha})`
+                : `rgba(13, 148, 136, ${alpha})`;
             }
 
             ctx.lineWidth = 0.5;
@@ -183,7 +183,7 @@ export function HeroCanvas({ theme = "dark" }: HeroCanvasProps) {
             ctx.lineTo(mouse.x, mouse.y);
             ctx.strokeStyle = isLight 
               ? `rgba(0, 180, 216, ${alpha})` 
-              : `rgba(0, 240, 255, ${alpha})`;
+              : `rgba(16, 185, 129, ${alpha})`;
             ctx.lineWidth = 0.85;
             ctx.stroke();
           }
@@ -205,8 +205,8 @@ export function HeroCanvas({ theme = "dark" }: HeroCanvasProps) {
               : "rgba(212, 175, 55, 0.05)";
           } else {
             ctx.fillStyle = n1.color.includes("240")
-              ? "rgba(0, 240, 255, 0.06)"
-              : "rgba(0, 114, 255, 0.05)";
+              ? "rgba(16, 185, 129, 0.06)"
+              : "rgba(13, 148, 136, 0.05)";
           }
           ctx.fill();
         }

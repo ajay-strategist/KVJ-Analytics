@@ -39,8 +39,8 @@ export function ScrollProgress() {
       className="fixed top-0 left-0 right-0 z-[9999] h-[3px] origin-left"
       style={{
         transform: "scaleX(0)",
-        background: "linear-gradient(90deg, #43F5FF 0%, #16E6D8 50%, #3A7BFF 100%)",
-        boxShadow: "0 1px 8px rgba(67,245,255,0.4)",
+        background: "linear-gradient(90deg, #10B981 0%, #34D399 50%, #0D9488 100%)",
+        boxShadow: "0 1px 8px rgba(16,185,129,0.4)",
       }}
       ref={ref}
     />

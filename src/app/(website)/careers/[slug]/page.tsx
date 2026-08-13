@@ -82,14 +82,14 @@ export default async function JobDetailPage({
   return (
     <div className="w-full bg-[#050505] text-zinc-200 min-h-screen pt-28 pb-24 relative overflow-hidden">
       {/* Background spotlights */}
-      <div className="absolute top-[10%] left-[-10%] w-[500px] h-[500px] bg-[#00F0FF]/5 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute top-[40%] right-[-10%] w-[600px] h-[600px] bg-[#0072FF]/5 rounded-full blur-[160px] pointer-events-none" />
+      <div className="absolute top-[10%] left-[-10%] w-[500px] h-[500px] bg-[#10B981]/5 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute top-[40%] right-[-10%] w-[600px] h-[600px] bg-[#0D9488]/5 rounded-full blur-[160px] pointer-events-none" />
 
       <Container>
         {/* Back Link */}
         <Link
           href="/careers"
-          className="inline-flex items-center text-sm font-semibold text-zinc-400 hover:text-[#00F0FF] mb-12 group transition-colors"
+          className="inline-flex items-center text-sm font-semibold text-zinc-400 hover:text-[#10B981] mb-12 group transition-colors"
         >
           <ArrowLeft className="w-4 h-4 mr-2 transition-transform duration-200 group-hover:-translate-x-1" />
           <span>Back to Careers Board</span>
@@ -102,7 +102,7 @@ export default async function JobDetailPage({
           <div className="lg:col-span-7 space-y-6">
             <div>
               <div className="flex flex-wrap items-center gap-3">
-                <span className="text-[9px] font-bold font-mono tracking-widest text-[#00F0FF] uppercase bg-[#00F0FF]/10 px-3 py-1 rounded-full border border-[#00F0FF]/15">
+                <span className="text-[9px] font-bold font-mono tracking-widest text-[#10B981] uppercase bg-[#10B981]/10 px-3 py-1 rounded-full border border-[#10B981]/15">
                   {job.department}
                 </span>
                 <span className="text-zinc-650 text-xs font-light">•</span>
@@ -120,14 +120,14 @@ export default async function JobDetailPage({
               <div>
                 <span className="text-[10px] uppercase tracking-wider text-zinc-500 font-bold block font-mono">Location</span>
                 <span className="text-white font-medium text-sm md:text-base mt-1.5 flex items-center gap-1.5 font-mono">
-                  <MapPin className="w-4 h-4 text-[#0072FF] shrink-0" />
+                  <MapPin className="w-4 h-4 text-[#0D9488] shrink-0" />
                   {job.location}
                 </span>
               </div>
               <div className="border-l border-white/5 pl-6">
                 <span className="text-[10px] uppercase tracking-wider text-zinc-500 font-bold block font-mono">Job Classification</span>
                 <span className="text-white font-medium text-sm md:text-base mt-1.5 flex items-center gap-1.5 font-mono">
-                  <Briefcase className="w-4 h-4 text-[#00F0FF] shrink-0" />
+                  <Briefcase className="w-4 h-4 text-[#10B981] shrink-0" />
                   {job.type.replace("_", " ")}
                 </span>
               </div>

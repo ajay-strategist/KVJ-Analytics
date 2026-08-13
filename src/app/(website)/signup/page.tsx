@@ -111,7 +111,7 @@ function SignUpForm() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Rahul Kumar"
-              className="w-full pl-12 pr-4 py-3 rounded-xl border border-white/5 text-sm bg-[#0E0E12] text-white placeholder-zinc-500 focus:outline-none focus:border-[#00F0FF]/40"
+              className="w-full pl-12 pr-4 py-3 rounded-xl border border-white/5 text-sm bg-[#0E0E12] text-white placeholder-zinc-500 focus:outline-none focus:border-[#10B981]/40"
             />
           </div>
         </div>
@@ -128,7 +128,7 @@ function SignUpForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="name@example.com"
-              className="w-full pl-12 pr-4 py-3 rounded-xl border border-white/5 text-sm bg-[#0E0E12] text-white placeholder-zinc-500 focus:outline-none focus:border-[#00F0FF]/40"
+              className="w-full pl-12 pr-4 py-3 rounded-xl border border-white/5 text-sm bg-[#0E0E12] text-white placeholder-zinc-500 focus:outline-none focus:border-[#10B981]/40"
             />
           </div>
         </div>
@@ -145,7 +145,7 @@ function SignUpForm() {
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="+91 98765 43210"
-              className="w-full pl-12 pr-4 py-3 rounded-xl border border-white/5 text-sm bg-[#0E0E12] text-white placeholder-zinc-500 focus:outline-none focus:border-[#00F0FF]/40"
+              className="w-full pl-12 pr-4 py-3 rounded-xl border border-white/5 text-sm bg-[#0E0E12] text-white placeholder-zinc-500 focus:outline-none focus:border-[#10B981]/40"
             />
           </div>
         </div>
@@ -159,7 +159,7 @@ function SignUpForm() {
             <select
               value={profession}
               onChange={(e) => setProfession(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 rounded-xl border border-white/5 text-sm bg-[#0E0E12] text-white focus:outline-none focus:border-[#00F0FF]/40 appearance-none cursor-pointer"
+              className="w-full pl-12 pr-4 py-3 rounded-xl border border-white/5 text-sm bg-[#0E0E12] text-white focus:outline-none focus:border-[#10B981]/40 appearance-none cursor-pointer"
             >
               <option value="student" className="bg-[#050505] text-white">Student</option>
               <option value="teacher" className="bg-[#050505] text-white">Teacher / Academician</option>
@@ -181,7 +181,7 @@ function SignUpForm() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full pl-12 pr-4 py-3 rounded-xl border border-white/5 text-sm bg-[#0E0E12] text-white placeholder-zinc-500 focus:outline-none focus:border-[#00F0FF]/40"
+              className="w-full pl-12 pr-4 py-3 rounded-xl border border-white/5 text-sm bg-[#0E0E12] text-white placeholder-zinc-500 focus:outline-none focus:border-[#10B981]/40"
             />
           </div>
         </div>
@@ -189,7 +189,7 @@ function SignUpForm() {
         <Button
           type="submit"
           disabled={loading}
-          className="w-full py-3.5 mt-2 bg-gradient-to-r from-[#00F0FF] to-[#0072FF] text-black font-bold flex items-center justify-center gap-1.5 border-none"
+          className="w-full py-3.5 mt-2 bg-gradient-to-r from-[#10B981] to-[#0D9488] text-black font-bold flex items-center justify-center gap-1.5 border-none"
         >
           {loading ? (
             <Loader2 className="w-4 h-4 animate-spin" />
@@ -206,7 +206,7 @@ function SignUpForm() {
         Already have an account?{" "}
         <Link
           href={redirect ? `/signin?redirect=${encodeURIComponent(redirect)}` : "/signin"}
-          className="text-[#00F0FF] font-bold hover:underline"
+          className="text-[#10B981] font-bold hover:underline"
         >
           Log In Here
         </Link>
@@ -219,13 +219,13 @@ export default function SignUpPage() {
   return (
     <div className="w-full min-h-screen bg-[#050505] text-zinc-200 pt-36 pb-24 relative overflow-hidden flex items-center">
       {/* Background spotlights */}
-      <div className="absolute top-[20%] right-[-10%] w-[500px] h-[500px] bg-[#0072FF]/5 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute bottom-[20%] left-[-10%] w-[500px] h-[500px] bg-[#00F0FF]/5 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute top-[20%] right-[-10%] w-[500px] h-[500px] bg-[#0D9488]/5 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute bottom-[20%] left-[-10%] w-[500px] h-[500px] bg-[#10B981]/5 rounded-full blur-[140px] pointer-events-none" />
 
       <Container>
         <Suspense fallback={
           <div className="py-24 flex items-center justify-center">
-            <Loader2 className="w-8 h-8 animate-spin text-[#00F0FF]" />
+            <Loader2 className="w-8 h-8 animate-spin text-[#10B981]" />
           </div>
         }>
           <SignUpForm />

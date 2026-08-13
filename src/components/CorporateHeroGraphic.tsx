@@ -14,8 +14,8 @@ export default function CorporateHeroGraphic() {
           to { stroke-dashoffset: -100; }
         }
         @keyframes pulseGlow {
-          0%, 100% { filter: drop-shadow(0 0 8px rgba(67, 245, 255, 0.4)); }
-          50% { filter: drop-shadow(0 0 20px rgba(67, 245, 255, 0.7)); }
+          0%, 100% { filter: drop-shadow(0 0 8px rgba(16, 185, 129, 0.4)); }
+          50% { filter: drop-shadow(0 0 20px rgba(16, 185, 129, 0.7)); }
         }
       `}</style>
       
@@ -29,12 +29,12 @@ export default function CorporateHeroGraphic() {
         }}
       >
         {/* Layer 1: Base Grid Layer */}
-        <div className="absolute inset-0 bg-[#0E1117]/50 backdrop-blur-md rounded-[20px] border border-cyan-500/20 shadow-[0_0_50px_rgba(67,245,255,0.05)] overflow-hidden"
+        <div className="absolute inset-0 bg-[#0B2A22]/50 backdrop-blur-md rounded-[20px] border border-cyan-500/20 shadow-[0_0_50px_rgba(16,185,129,0.05)] overflow-hidden"
           style={{ transform: "translateZ(0px)" }}>
           {/* Internal Grid Lines */}
           <div className="w-full h-full opacity-20"
             style={{
-              backgroundImage: "linear-gradient(to right, #43F5FF 1px, transparent 1px), linear-gradient(to bottom, #43F5FF 1px, transparent 1px)",
+              backgroundImage: "linear-gradient(to right, #10B981 1px, transparent 1px), linear-gradient(to bottom, #10B981 1px, transparent 1px)",
               backgroundSize: "25px 25px"
             }}
           />
@@ -52,12 +52,12 @@ export default function CorporateHeroGraphic() {
         >
           <defs>
             <linearGradient id="heroBlueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#3A7BFF" stopOpacity="0.8" />
-              <stop offset="100%" stopColor="#43F5FF" stopOpacity="0.15" />
+              <stop offset="0%" stopColor="#0D9488" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#10B981" stopOpacity="0.15" />
             </linearGradient>
             <linearGradient id="heroCyanGrad" x1="0%" y1="100%" x2="0%" y2="0%">
-              <stop offset="0%" stopColor="#3A7BFF" stopOpacity="0.15" />
-              <stop offset="100%" stopColor="#43F5FF" stopOpacity="0.75" />
+              <stop offset="0%" stopColor="#0D9488" stopOpacity="0.15" />
+              <stop offset="100%" stopColor="#10B981" stopOpacity="0.75" />
             </linearGradient>
           </defs>
 
@@ -65,7 +65,7 @@ export default function CorporateHeroGraphic() {
           <path
             d="M 50 200 Q 120 120, 180 180 T 320 100 T 450 150"
             fill="none"
-            stroke="#43F5FF"
+            stroke="#10B981"
             strokeWidth="4"
             strokeLinecap="round"
             style={{
@@ -82,7 +82,7 @@ export default function CorporateHeroGraphic() {
           <path
             d="M 60 80 L 220 80 L 220 220 L 380 220 L 440 160"
             fill="none"
-            stroke="#3A7BFF"
+            stroke="#0D9488"
             strokeWidth="2.5"
             strokeDasharray="10 15"
             style={{
@@ -93,7 +93,7 @@ export default function CorporateHeroGraphic() {
           <path
             d="M 80 260 L 280 260 L 350 180"
             fill="none"
-            stroke="#43F5FF"
+            stroke="#10B981"
             strokeWidth="2"
             strokeDasharray="8 12"
             style={{
@@ -105,33 +105,33 @@ export default function CorporateHeroGraphic() {
           <g transform="translate(300, 180)">
             {/* Bar 1 */}
             <g className="animate-[pulse_2.5s_infinite]">
-              <rect x="10" y="-40" width="16" height="40" fill="url(#heroCyanGrad)" stroke="#43F5FF" strokeWidth="1" />
+              <rect x="10" y="-40" width="16" height="40" fill="url(#heroCyanGrad)" stroke="#10B981" strokeWidth="1" />
               <polygon points="10,-40 18,-45 26,-40 18,-35" fill="#69FFFF" />
             </g>
             {/* Bar 2 */}
             <g transform="translate(25, -20)" className="animate-[pulse_3s_infinite_0.5s]">
-              <rect x="10" y="-55" width="16" height="55" fill="url(#heroCyanGrad)" stroke="#43F5FF" strokeWidth="1" />
+              <rect x="10" y="-55" width="16" height="55" fill="url(#heroCyanGrad)" stroke="#10B981" strokeWidth="1" />
               <polygon points="10,-55 18,-60 26,-55 18,-50" fill="#69FFFF" />
             </g>
             {/* Bar 3 */}
             <g transform="translate(50, -10)" className="animate-[pulse_2s_infinite_1s]">
-              <rect x="10" y="-30" width="16" height="30" fill="url(#heroCyanGrad)" stroke="#43F5FF" strokeWidth="1" />
+              <rect x="10" y="-30" width="16" height="30" fill="url(#heroCyanGrad)" stroke="#10B981" strokeWidth="1" />
               <polygon points="10,-30 18,-35 26,-30 18,-25" fill="#69FFFF" />
             </g>
           </g>
 
           {/* Interconnected data nodes */}
           <g transform="translate(100, 100)">
-            <circle cx="0" cy="0" r="8" fill="#050608" stroke="#43F5FF" strokeWidth="2" />
-            <circle cx="0" cy="0" r="3.5" fill="#43F5FF" className="animate-ping" />
+            <circle cx="0" cy="0" r="8" fill="#050608" stroke="#10B981" strokeWidth="2" />
+            <circle cx="0" cy="0" r="3.5" fill="#10B981" className="animate-ping" />
           </g>
           <g transform="translate(220, 150)">
-            <circle cx="0" cy="0" r="8" fill="#050608" stroke="#3A7BFF" strokeWidth="2" />
-            <circle cx="0" cy="0" r="3.5" fill="#3A7BFF" className="animate-ping" />
+            <circle cx="0" cy="0" r="8" fill="#050608" stroke="#0D9488" strokeWidth="2" />
+            <circle cx="0" cy="0" r="3.5" fill="#0D9488" className="animate-ping" />
           </g>
           <g transform="translate(380, 110)">
-            <circle cx="0" cy="0" r="8" fill="#050608" stroke="#43F5FF" strokeWidth="2" />
-            <circle cx="0" cy="0" r="3.5" fill="#43F5FF" className="animate-ping" />
+            <circle cx="0" cy="0" r="8" fill="#050608" stroke="#10B981" strokeWidth="2" />
+            <circle cx="0" cy="0" r="3.5" fill="#10B981" className="animate-ping" />
           </g>
         </svg>
 
@@ -146,7 +146,7 @@ export default function CorporateHeroGraphic() {
               cy="75"
               r="60"
               fill="none"
-              stroke="rgba(67, 245, 255, 0.4)"
+              stroke="rgba(16, 185, 129, 0.4)"
               strokeWidth="2"
               strokeDasharray="40 20 10 30"
               className="origin-center animate-[spin_20s_linear_infinite]"
@@ -156,12 +156,12 @@ export default function CorporateHeroGraphic() {
               cy="75"
               r="48"
               fill="none"
-              stroke="rgba(58, 123, 255, 0.5)"
+              stroke="rgba(13, 148, 136, 0.5)"
               strokeWidth="1.5"
               strokeDasharray="20 15 40 10"
               className="origin-center animate-[spin_12s_linear_infinite_reverse]"
             />
-            <circle cx="75" cy="75" r="10" fill="rgba(67, 245, 255, 0.2)" stroke="#43F5FF" strokeWidth="2" className="animate-pulse" />
+            <circle cx="75" cy="75" r="10" fill="rgba(16, 185, 129, 0.2)" stroke="#10B981" strokeWidth="2" className="animate-pulse" />
           </svg>
         </div>
       </div>

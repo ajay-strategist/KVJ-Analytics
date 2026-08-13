@@ -130,7 +130,7 @@ export default async function CategoryFilterPage({
             {posts.map((post: any, idx: number) => (
               <div 
                 key={idx} 
-                className="bg-[#0E1117]/60 border border-white/5 hover:border-brand/20 p-6 rounded-3xl flex flex-col justify-between hover:-translate-y-1 transition-all duration-500 relative group overflow-hidden"
+                className="bg-[#0B2A22]/60 border border-white/5 hover:border-brand/20 p-6 rounded-3xl flex flex-col justify-between hover:-translate-y-1 transition-all duration-500 relative group overflow-hidden"
               >
                 <div>
                   <span className="text-[9px] font-mono font-bold text-brand uppercase tracking-wider block mb-3">

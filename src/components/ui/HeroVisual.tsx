@@ -124,7 +124,7 @@ export function HeroVisual() {
   const prevActiveVal = chartVals[lastIdx - 1] || activeVal;
   const isUpTrend = activeVal >= prevActiveVal;
 
-  const themeColor = isUpTrend ? "#43F5FF" : "#3A7BFF";
+  const themeColor = isUpTrend ? "#10B981" : "#0D9488";
   const strokeGradId = `chartDynamicStrokeGrad-${isUpTrend ? "up" : "down"}`;
   const fillGradId = `chartDynamicFillGrad-${isUpTrend ? "up" : "down"}`;
   
@@ -148,7 +148,7 @@ export function HeroVisual() {
       />
 
       {/* Main Glass Dashboard Shell */}
-      <div className="relative w-full p-5 rounded-[24px] bg-[#0E1117]/72 backdrop-blur-[24px] border border-line shadow-soft flex flex-col gap-5 overflow-hidden">
+      <div className="relative w-full p-5 rounded-[24px] bg-[#0B2A22]/72 backdrop-blur-[24px] border border-line shadow-soft flex flex-col gap-5 overflow-hidden">
         
         {/* Sleek Futuristic Header Status Bar */}
         <div className="flex items-center justify-between border-b border-line pb-3">
@@ -344,7 +344,7 @@ export function HeroVisual() {
                     }}
                   />
                   {/* Inner technical ring */}
-                  <circle cx="30" cy="30" r={16} fill="none" stroke="rgba(67, 245, 255, 0.08)" strokeWidth="1" strokeDasharray="4 2" className="animate-[spin_20s_linear_infinite]" />
+                  <circle cx="30" cy="30" r={16} fill="none" stroke="rgba(16, 185, 129, 0.08)" strokeWidth="1" strokeDasharray="4 2" className="animate-[spin_20s_linear_infinite]" />
                 </svg>
                 <div className="absolute flex flex-col items-center justify-center">
                   <span className="text-sm font-mono font-bold text-white leading-none">
@@ -365,7 +365,7 @@ export function HeroVisual() {
               <div className="flex justify-between items-end h-[64px] px-2 pt-2">
                 {barValues.map((val, idx) => {
                   const labels = ["US", "EU", "IN", "AE"];
-                  const colors = ["#43F5FF", "#3A7BFF", "#43F5FF", "#3A7BFF"];
+                  const colors = ["#10B981", "#0D9488", "#10B981", "#0D9488"];
                   return (
                     <div key={idx} className="flex flex-col items-center flex-1">
                       <div className="relative w-2 h-11 bg-white/5 rounded-full overflow-hidden">
@@ -409,7 +409,7 @@ export function HeroVisual() {
       </div>
 
       {/* Floating Badges overlapping the edges */}
-      <div className="absolute top-[2%] right-[-15px] rounded-2xl border border-brand/35 bg-[#0E1117]/95 p-3.5 shadow-soft max-w-[145px] z-10 transition-transform duration-300 hover:scale-105 backdrop-blur-xl">
+      <div className="absolute top-[2%] right-[-15px] rounded-2xl border border-brand/35 bg-[#0B2A22]/95 p-3.5 shadow-soft max-w-[145px] z-10 transition-transform duration-300 hover:scale-105 backdrop-blur-xl">
         <div className="flex items-center gap-1.5 mb-1.5">
           <TrendingUp className="w-3.5 h-3.5 text-brand" />
           <span className="text-[8px] font-bold text-white uppercase tracking-wider">Growth rate</span>

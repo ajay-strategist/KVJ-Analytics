@@ -24,20 +24,20 @@ export function SegmentCard({
 
   const colors = {
     corporate: {
-      border: "border-[#3A7BFF]",
-      text: "text-[#3A7BFF]",
-      bgHover: "hover:border-[#3A7BFF]/55",
-      accent: "bg-[#3A7BFF]/10 text-[#3A7BFF]",
-      btn: "text-[#3A7BFF] group-hover:translate-x-1.5",
-      shadowHover: "hover:shadow-[0_12px_32px_rgba(58,123,255,0.22)]",
+      border: "border-[#0D9488]",
+      text: "text-[#0D9488]",
+      bgHover: "hover:border-[#0D9488]/55",
+      accent: "bg-[#0D9488]/10 text-[#0D9488]",
+      btn: "text-[#0D9488] group-hover:translate-x-1.5",
+      shadowHover: "hover:shadow-[0_12px_32px_rgba(13,148,136,0.22)]",
     },
     education: {
-      border: "border-[#43F5FF]",
-      text: "text-[#43F5FF]",
-      bgHover: "hover:border-[#43F5FF]/55",
-      accent: "bg-[#43F5FF]/10 text-[#43F5FF]",
-      btn: "text-[#43F5FF] group-hover:translate-x-1.5",
-      shadowHover: "hover:shadow-[0_12px_32px_rgba(67,245,255,0.22)]",
+      border: "border-[#10B981]",
+      text: "text-[#10B981]",
+      bgHover: "hover:border-[#10B981]/55",
+      accent: "bg-[#10B981]/10 text-[#10B981]",
+      btn: "text-[#10B981] group-hover:translate-x-1.5",
+      shadowHover: "hover:shadow-[0_12px_32px_rgba(16,185,129,0.22)]",
     },
   };
 

@@ -226,11 +226,11 @@ export function BlogClientFurniture({
               name="email"
               placeholder="you@company.com" 
               required 
-              className="px-4 py-2.5 text-xs bg-[#050608]/85 border border-white/10 rounded-xl text-white focus:outline-none focus:border-[#43F5FF]/30 placeholder-zinc-500 w-full sm:w-64 font-medium" 
+              className="px-4 py-2.5 text-xs bg-[#050608]/85 border border-white/10 rounded-xl text-white focus:outline-none focus:border-[#10B981]/30 placeholder-zinc-500 w-full sm:w-64 font-medium" 
             />
             <button 
               type="submit" 
-              className="px-5 py-2.5 bg-brand hover:bg-[#16E6D8] text-black text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-md shrink-0 border-0 cursor-pointer"
+              className="px-5 py-2.5 bg-brand hover:bg-[#34D399] text-black text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-md shrink-0 border-0 cursor-pointer"
             >
               {leadBtn} →
             </button>
@@ -245,7 +245,7 @@ export function BlogClientFurniture({
       {/* Sticky top reading progress bar with subtle gradient & glow */}
       <div className="fixed top-0 left-0 w-full h-[3px] bg-white/5 z-50">
         <div 
-          className="h-full bg-gradient-to-r from-[#00F0FF] via-[#3A7BFF] to-[#16E6D8] transition-all duration-75 shadow-[0_0_8px_rgba(0,240,255,0.6)]"
+          className="h-full bg-gradient-to-r from-[#10B981] via-[#0D9488] to-[#34D399] transition-all duration-75 shadow-[0_0_8px_rgba(16,185,129,0.6)]"
           style={{ width: `${scrollProgress}%` }}
           role="progressbar"
           aria-valuenow={scrollProgress}
@@ -253,7 +253,7 @@ export function BlogClientFurniture({
           aria-valuemax={100}
         />
         {/* Floating percentage bubble at top-right */}
-        <div className="absolute right-4 top-2 bg-[#0A0D13]/80 backdrop-blur-md border border-white/5 px-2 py-0.5 rounded text-[10px] font-mono font-bold text-[#00F0FF] select-none">
+        <div className="absolute right-4 top-2 bg-[#07130E]/80 backdrop-blur-md border border-white/5 px-2 py-0.5 rounded text-[10px] font-mono font-bold text-[#10B981] select-none">
           {Math.round(scrollProgress)}% read
         </div>
       </div>
@@ -263,10 +263,10 @@ export function BlogClientFurniture({
         
         {/* LEFT COLUMN: Sticky Table of Contents */}
         <aside className="lg:col-span-3 hidden lg:block sticky top-28 self-start">
-          <div className="bg-[#0A0D13]/40 backdrop-blur-md border border-white/5 p-6 rounded-2xl space-y-6">
+          <div className="bg-[#07130E]/40 backdrop-blur-md border border-white/5 p-6 rounded-2xl space-y-6">
             <div>
               <h5 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 pb-2 border-b border-white/5 flex items-center gap-1.5">
-                <BookOpen className="w-3.5 h-3.5 text-[#00F0FF]" /> Outline
+                <BookOpen className="w-3.5 h-3.5 text-[#10B981]" /> Outline
               </h5>
               
               {headings.length > 0 ? (
@@ -279,7 +279,7 @@ export function BlogClientFurniture({
                         h.level === 3 ? "pl-3 border-l border-white/5 text-[11px]" : ""
                       } ${
                         activeHeading === h.id 
-                          ? "text-[#00F0FF] font-bold pl-1 border-l-2 border-[#00F0FF]" 
+                          ? "text-[#10B981] font-bold pl-1 border-l-2 border-[#10B981]" 
                           : "text-slate-400 hover:text-white"
                       }`}
                     >
@@ -314,7 +314,7 @@ export function BlogClientFurniture({
 
         {/* RIGHT COLUMN: Floating Share Panel */}
         <aside className="lg:col-span-3 hidden lg:block sticky top-28 self-start space-y-6">
-          <div className="bg-[#0A0D13]/40 backdrop-blur-md border border-white/5 p-6 rounded-2xl space-y-6">
+          <div className="bg-[#07130E]/40 backdrop-blur-md border border-white/5 p-6 rounded-2xl space-y-6">
             
             {/* Share Panel Action Items */}
             <div>
@@ -328,7 +328,7 @@ export function BlogClientFurniture({
                   onClick={toggleBookmark}
                   className={`flex-1 py-2 px-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                     isBookmarked 
-                      ? "bg-[#00F0FF]/10 border-[#00F0FF]/30 text-[#00F0FF]" 
+                      ? "bg-[#10B981]/10 border-[#10B981]/30 text-[#10B981]" 
                       : "bg-white/5 border-white/10 text-slate-300 hover:bg-white/10 hover:text-white"
                   }`}
                 >
@@ -406,7 +406,7 @@ export function BlogClientFurniture({
                 </div>
                 <div className="flex justify-between items-center">
                   <span>Finish ETA:</span>
-                  <span className="font-bold text-[#00F0FF] flex items-center gap-1">
+                  <span className="font-bold text-[#10B981] flex items-center gap-1">
                     <Clock className="w-3.5 h-3.5" /> {eta}
                   </span>
                 </div>
@@ -422,7 +422,7 @@ export function BlogClientFurniture({
         {/* Mobile menu trigger */}
         <button
           onClick={() => setMobileDrawerOpen(true)}
-          className="lg:hidden flex h-11 w-11 items-center justify-center rounded-full bg-[#0E1117] border border-white/10 text-white shadow-xl hover:bg-slate-900 transition-all cursor-pointer"
+          className="lg:hidden flex h-11 w-11 items-center justify-center rounded-full bg-[#0B2A22] border border-white/10 text-white shadow-xl hover:bg-slate-900 transition-all cursor-pointer"
           aria-label="Toggle Outline"
         >
           <Menu className="w-5 h-5" />
@@ -432,7 +432,7 @@ export function BlogClientFurniture({
         {showBackToTop && (
           <button
             onClick={handleBackToTop}
-            className="flex h-11 w-11 items-center justify-center rounded-full bg-[#0E1117]/90 backdrop-blur-md border border-white/10 text-[#00F0FF] shadow-xl hover:bg-[#0E1117] transition-all hover:scale-105 cursor-pointer"
+            className="flex h-11 w-11 items-center justify-center rounded-full bg-[#0B2A22]/90 backdrop-blur-md border border-white/10 text-[#10B981] shadow-xl hover:bg-[#0B2A22] transition-all hover:scale-105 cursor-pointer"
             title="Back to Top"
           >
             <ArrowUp className="w-5 h-5" />
@@ -443,7 +443,7 @@ export function BlogClientFurniture({
       {/* Mobile Drawer (Table of Contents + Share list) */}
       {mobileDrawerOpen && (
         <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm lg:hidden flex items-end justify-center">
-          <div className="bg-[#0E1117] border-t border-white/10 rounded-t-3xl w-full p-6 space-y-6 max-h-[75vh] overflow-y-auto relative animate-slide-up">
+          <div className="bg-[#0B2A22] border-t border-white/10 rounded-t-3xl w-full p-6 space-y-6 max-h-[75vh] overflow-y-auto relative animate-slide-up">
             <button
               onClick={() => setMobileDrawerOpen(false)}
               className="absolute top-4 right-4 text-slate-400 hover:text-white font-bold border-0 bg-transparent text-lg cursor-pointer"
@@ -453,7 +453,7 @@ export function BlogClientFurniture({
 
             <div>
               <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
-                <BookOpen className="w-4 h-4 text-[#00F0FF]" /> Article Outline
+                <BookOpen className="w-4 h-4 text-[#10B981]" /> Article Outline
               </h4>
               
               {headings.length > 0 ? (
@@ -465,7 +465,7 @@ export function BlogClientFurniture({
                       className={`block text-left text-xs font-semibold leading-relaxed transition-all w-full ${
                         h.level === 3 ? "pl-4 text-[11px] text-slate-400" : "text-white"
                       } ${
-                        activeHeading === h.id ? "text-[#00F0FF] font-bold" : "hover:text-[#00F0FF]"
+                        activeHeading === h.id ? "text-[#10B981] font-bold" : "hover:text-[#10B981]"
                       }`}
                     >
                       {h.text}
@@ -503,7 +503,7 @@ export function BlogClientFurniture({
               onClick={toggleBookmark}
               className={`w-full py-2.5 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                 isBookmarked 
-                  ? "bg-[#00F0FF]/10 border-[#00F0FF]/30 text-[#00F0FF]" 
+                  ? "bg-[#10B981]/10 border-[#10B981]/30 text-[#10B981]" 
                   : "bg-white/5 border-white/10 text-slate-300"
               }`}
             >
@@ -517,7 +517,7 @@ export function BlogClientFurniture({
 
       {/* Floating toast notification for link copying */}
       {copiedLink && (
-        <div className="fixed bottom-6 right-6 bg-[#0E1117] border border-[#00F0FF]/30 text-white px-4 py-2.5 rounded-xl shadow-lg flex items-center gap-2 text-xs font-semibold animate-fade-in z-50">
+        <div className="fixed bottom-6 right-6 bg-[#0B2A22] border border-[#10B981]/30 text-white px-4 py-2.5 rounded-xl shadow-lg flex items-center gap-2 text-xs font-semibold animate-fade-in z-50">
           <Check className="w-4 h-4 text-emerald-400" />
           <span>Anchor link copied to clipboard</span>
         </div>

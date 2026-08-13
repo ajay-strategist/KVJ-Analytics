@@ -73,7 +73,7 @@ function ViewerToggle({ active, onClick, title, children }: ViewerToggleProps) {
       title={title}
       className={`p-1.5 rounded-lg border text-xs transition-all flex items-center gap-1.5 ${
         active
-          ? "bg-[#00F0FF]/10 border-[#00F0FF]/40 text-[#00F0FF]"
+          ? "bg-[#10B981]/10 border-[#10B981]/40 text-[#10B981]"
           : "bg-zinc-900 border-white/5 text-zinc-400 hover:text-zinc-200 hover:border-white/15"
       }`}
     >
@@ -363,7 +363,7 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
     return (
       <div className="w-full min-h-screen bg-[#050505] flex items-center justify-center">
         <div className="text-center space-y-4">
-          <Loader2 className="w-8 h-8 animate-spin text-[#00F0FF] mx-auto" />
+          <Loader2 className="w-8 h-8 animate-spin text-[#10B981] mx-auto" />
           <p className="text-zinc-500 text-sm font-light">Loading training portal...</p>
         </div>
       </div>
@@ -455,7 +455,7 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
         {/* Sidebar Header */}
         <div className="p-6 border-b border-white/5 flex items-center justify-between">
           <div>
-            <Link href={`/training/${course.slug}`} className="text-xs text-zinc-500 hover:text-[#00F0FF] flex items-center gap-1">
+            <Link href={`/training/${course.slug}`} className="text-xs text-zinc-500 hover:text-[#10B981] flex items-center gap-1">
               <ChevronLeft className="w-3.5 h-3.5" /> Back to detail
             </Link>
             <h2 className="text-md font-bold text-white font-display mt-2 line-clamp-1">
@@ -474,11 +474,11 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
         <div className="p-6 border-b border-white/5 bg-[#08080A]/40 shrink-0">
           <div className="flex items-center justify-between text-xs font-mono font-bold text-zinc-400 mb-2">
             <span>Progress</span>
-            <span className="text-[#00F0FF]">{percentComplete}% ({completedLessonsCount}/{totalLessons})</span>
+            <span className="text-[#10B981]">{percentComplete}% ({completedLessonsCount}/{totalLessons})</span>
           </div>
           <div className="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-[#00F0FF] to-[#0072FF] transition-all duration-550"
+              className="h-full bg-gradient-to-r from-[#10B981] to-[#0D9488] transition-all duration-550"
               style={{ width: `${percentComplete}%` }}
             />
           </div>
@@ -502,7 +502,7 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
                       onClick={() => handleLessonSelect(les)}
                       className={`w-full text-left p-3 rounded-xl flex items-center justify-between gap-3 text-xs transition-all ${
                         isActive
-                          ? "bg-[#00F0FF]/10 text-white font-semibold border border-[#00F0FF]/30"
+                          ? "bg-[#10B981]/10 text-white font-semibold border border-[#10B981]/30"
                           : "hover:bg-zinc-900 border border-transparent text-zinc-400"
                       }`}
                     >
@@ -515,7 +515,7 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
                         <span className="truncate">{les.title}</span>
                       </div>
                       {les.video_url && (
-                        <PlayCircle className={`w-3.5 h-3.5 shrink-0 ${isActive ? "text-[#00F0FF]" : "text-zinc-600"}`} />
+                        <PlayCircle className={`w-3.5 h-3.5 shrink-0 ${isActive ? "text-[#10B981]" : "text-zinc-600"}`} />
                       )}
                     </button>
                   );
@@ -559,7 +559,7 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
                   title={darkMode ? "Dark mode active (click for Light mode)" : "Light mode active (click for Dark mode)"}
                 >
                   {darkMode
-                    ? <Moon className="w-3.5 h-3.5 text-[#00F0FF]" />
+                    ? <Moon className="w-3.5 h-3.5 text-[#10B981]" />
                     : <Sun className="w-3.5 h-3.5" />}
                   <span className="hidden sm:inline text-[10px] font-semibold leading-none">
                     {darkMode ? "Dark" : "Light"}
@@ -647,7 +647,7 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
                     className={`py-2 px-5 font-bold text-xs flex items-center gap-2 ${
                       completedLessonIds.has(activeLesson.id)
                         ? "bg-emerald-500/10 text-emerald-450 hover:bg-emerald-500/15 border border-emerald-500/25"
-                        : "bg-[#00F0FF] text-black hover:bg-[#00D8FF] border-none shadow-[0_0_15px_rgba(0,240,255,0.1)]"
+                        : "bg-[#10B981] text-black hover:bg-[#00D8FF] border-none shadow-[0_0_15px_rgba(16,185,129,0.1)]"
                     }`}
                   >
                     {actionLoading ? (
@@ -808,7 +808,7 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
                 {nextLesson ? (
                   <Button
                     onClick={() => activeLesson && handleLessonSelect(nextLesson!)}
-                    className="py-2 px-5 bg-[#00F0FF] text-black hover:bg-[#00D8FF] text-sm font-semibold flex items-center gap-1.5 rounded-xl border-none shadow-[0_0_15px_rgba(0,240,255,0.15)]"
+                    className="py-2 px-5 bg-[#10B981] text-black hover:bg-[#00D8FF] text-sm font-semibold flex items-center gap-1.5 rounded-xl border-none shadow-[0_0_15px_rgba(16,185,129,0.15)]"
                   >
                     Next Lesson <ChevronRight className="w-4 h-4" />
                   </Button>

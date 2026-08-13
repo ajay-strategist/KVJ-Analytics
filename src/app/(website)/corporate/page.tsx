@@ -45,14 +45,14 @@ export default async function CorporateSolutionsPage() {
       `}} />
 
       {/* ───── HERO (premium dark theme) ───── */}
-      <section className="relative overflow-hidden bg-base text-white border-b border-line">
+      <section className="relative overflow-hidden hero-emerald text-white border-b border-line">
         {/* Subtle, slow-moving glowing data grid lines */}
         <div 
           className="absolute inset-0 pointer-events-none z-0"
           style={{
             backgroundImage: `
-              linear-gradient(to right, rgba(67, 245, 255, 0.04) 1px, transparent 1px),
-              linear-gradient(to bottom, rgba(67, 245, 255, 0.04) 1px, transparent 1px)
+              linear-gradient(to right, rgba(16, 185, 129, 0.04) 1px, transparent 1px),
+              linear-gradient(to bottom, rgba(16, 185, 129, 0.04) 1px, transparent 1px)
             `,
             backgroundSize: "60px 60px",
             maskImage: "radial-gradient(ellipse at center, black, transparent 80%)",
@@ -70,7 +70,7 @@ export default async function CorporateSolutionsPage() {
 
         <Container className="relative z-10 py-24 md:py-32 text-center">
           <Reveal>
-            <p className="text-[13px] uppercase tracking-[0.2em] text-[#43F5FF] mb-5 font-bold animate-pulse">
+            <p className="text-[13px] uppercase tracking-[0.2em] text-[#10B981] mb-5 font-bold animate-pulse">
               For Businesses &amp; Corporates
             </p>
           </Reveal>
@@ -81,7 +81,7 @@ export default async function CorporateSolutionsPage() {
             {page.heading}
           </SplitHeading>
           <Reveal delay={150}>
-            <p className="text-xl md:text-2xl text-[#3A7BFF] font-medium mb-6">{page.strapline}</p>
+            <p className="text-xl md:text-2xl text-[#0D9488] font-medium mb-6">{page.strapline}</p>
             <p className="text-lg text-slate font-light leading-relaxed max-w-2xl mx-auto">{page.intro}</p>
           </Reveal>
         </Container>
@@ -94,8 +94,8 @@ export default async function CorporateSolutionsPage() {
           className="absolute inset-0 pointer-events-none opacity-20"
           style={{
             backgroundImage: `
-              linear-gradient(to right, rgba(67, 245, 255, 0.02) 1px, transparent 1px),
-              linear-gradient(to bottom, rgba(67, 245, 255, 0.02) 1px, transparent 1px)
+              linear-gradient(to right, rgba(16, 185, 129, 0.02) 1px, transparent 1px),
+              linear-gradient(to bottom, rgba(16, 185, 129, 0.02) 1px, transparent 1px)
             `,
             backgroundSize: "80px 80px",
             maskImage: "radial-gradient(ellipse at center, black, transparent 90%)",
@@ -124,10 +124,10 @@ export default async function CorporateSolutionsPage() {
 
           {/* Closing CTA card - Sleek Wide Glassmorphic Banner */}
           <Reveal className="mt-20 md:mt-24 max-w-3xl mx-auto">
-            <div className="relative overflow-hidden p-10 md:p-12 text-center rounded-[32px] bg-[#0E1117]/72 border border-line backdrop-blur-[18px] shadow-soft">
+            <div className="relative overflow-hidden p-10 md:p-12 text-center rounded-[32px] bg-[#0B2A22]/72 border border-line backdrop-blur-[18px] shadow-soft">
               {/* Breathing background glow */}
               <div 
-                className="absolute -inset-10 bg-gradient-to-r from-[#43F5FF]/5 via-[#3A7BFF]/5 to-transparent rounded-[40px] blur-[80px] pointer-events-none"
+                className="absolute -inset-10 bg-gradient-to-r from-[#10B981]/5 via-[#0D9488]/5 to-transparent rounded-[40px] blur-[80px] pointer-events-none"
                 style={{
                   animation: "breathingGlow 8s ease-in-out infinite alternate",
                 }}
@@ -142,13 +142,13 @@ export default async function CorporateSolutionsPage() {
 
               <div className="relative z-10 inline-block overflow-visible mt-2">
                 {/* Ripple rings */}
-                <span className="absolute -inset-2 rounded-full border border-[#43F5FF]/20 animate-[ripple_3s_ease-out_infinite] pointer-events-none z-0" />
-                <span className="absolute -inset-4 rounded-full border border-[#3A7BFF]/10 animate-[ripple_3s_ease-out_infinite_1.5s] pointer-events-none z-0" />
+                <span className="absolute -inset-2 rounded-full border border-[#10B981]/20 animate-[ripple_3s_ease-out_infinite] pointer-events-none z-0" />
+                <span className="absolute -inset-4 rounded-full border border-[#0D9488]/10 animate-[ripple_3s_ease-out_infinite_1.5s] pointer-events-none z-0" />
 
                 <Button
                   href={cta.primaryHref || "/contact"}
                   variant="primary"
-                  className="relative z-10 shadow-[0_0_20px_rgba(67,245,255,0.15)] hover:shadow-[0_0_35px_rgba(67,245,255,0.35)]"
+                  className="relative z-10 shadow-[0_0_20px_rgba(16,185,129,0.15)] hover:shadow-[0_0_35px_rgba(16,185,129,0.35)]"
                 >
                   {cta.primaryText}
                 </Button>

@@ -124,7 +124,7 @@ export function FinalCTAExperience({
             <Magnetic strength={0.5}>
               <Link
                 href={primaryCta.href}
-                className="group relative inline-flex items-center gap-2 overflow-hidden rounded-full px-8 py-4 text-[15px] font-semibold text-[#04121a] gradient-move shadow-[0_10px_44px_-8px_rgba(67,245,255,0.65)]"
+                className="group relative inline-flex items-center gap-2 overflow-hidden rounded-full px-8 py-4 text-[15px] font-semibold text-[#04121a] gradient-move shadow-[0_10px_44px_-8px_rgba(16,185,129,0.65)]"
               >
                 <span className="light-sweep absolute inset-0 rounded-full" />
                 <span className="relative">{primaryCta.label}</span>

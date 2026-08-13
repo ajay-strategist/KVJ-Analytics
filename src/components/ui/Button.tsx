@@ -39,11 +39,11 @@ export function Button({
   const variantClasses = {
     // Primary: Cyan -> Blue gradient pill with strong neon glow, hover scale 1.04, glow expand
     primary:
-      "bg-gradient-to-r from-brand to-corporate text-white rounded-full px-7 py-3.5 shadow-[0_4px_20px_rgba(67,245,255,0.3)] hover:shadow-[0_12px_36px_rgba(67,245,255,0.55)] hover:scale-[1.04] border border-brand/20 active:scale-[0.98]",
+      "bg-gradient-to-r from-brand to-corporate text-white rounded-full px-7 py-3.5 shadow-[0_4px_20px_rgba(16,185,129,0.3)] hover:shadow-[0_12px_36px_rgba(16,185,129,0.55)] hover:scale-[1.04] border border-brand/20 active:scale-[0.98]",
     
     // Secondary: Glass button with glowing border and outline reveal sweep animation
     secondary:
-      "border border-brand/20 bg-glass-card backdrop-blur-md text-white rounded-full px-7 py-3.5 hover:border-brand hover:scale-[1.02] shadow-[0_2px_10px_rgba(0,0,0,0.3)] hover:shadow-[0_0_18px_rgba(67,245,255,0.25)] hover:text-[#43F5FF] active:scale-[0.98] btn-sweeping-border",
+      "border border-brand/20 bg-glass-card backdrop-blur-md text-white rounded-full px-7 py-3.5 hover:border-brand hover:scale-[1.02] shadow-[0_2px_10px_rgba(0,0,0,0.3)] hover:shadow-[0_0_18px_rgba(16,185,129,0.25)] hover:text-[#10B981] active:scale-[0.98] btn-sweeping-border",
     
     // Ghost text link with hover neon highlight
     ghost:
@@ -51,19 +51,19 @@ export function Button({
     
     // Translucent dark glass pill
     light:
-      "bg-[#0E1117]/60 backdrop-blur-md text-slate hover:text-white border border-white/5 rounded-full px-7 py-3.5 shadow-md hover:border-brand/35 hover:scale-[1.02] transition-all duration-300",
+      "bg-[#0B2A22]/60 backdrop-blur-md text-slate hover:text-white border border-white/5 rounded-full px-7 py-3.5 shadow-md hover:border-brand/35 hover:scale-[1.02] transition-all duration-300",
     
     // Accent (Continuous glowing accent)
     accent:
-      "animate-liquid-glow bg-gradient-to-r from-brand to-corporate text-white rounded-full px-7 py-3.5 shadow-[0_8px_25px_rgba(67,245,255,0.35)] hover:shadow-[0_16px_36px_rgba(67,245,255,0.55)] hover:scale-[1.04] transition-all duration-300 border border-brand/30",
+      "animate-liquid-glow bg-gradient-to-r from-brand to-corporate text-white rounded-full px-7 py-3.5 shadow-[0_8px_25px_rgba(16,185,129,0.35)] hover:shadow-[0_16px_36px_rgba(16,185,129,0.55)] hover:scale-[1.04] transition-all duration-300 border border-brand/30",
     
     // Corporate solution button
     corporate:
-      "bg-corporate text-white rounded-full px-7 py-3.5 shadow-[0_4px_15px_rgba(58,123,255,0.25)] hover:shadow-[0_12px_28px_rgba(58,123,255,0.45)] hover:scale-[1.04] border border-corporate/30 hover:border-brand/45 active:scale-[0.98]",
+      "bg-corporate text-white rounded-full px-7 py-3.5 shadow-[0_4px_15px_rgba(13,148,136,0.25)] hover:shadow-[0_12px_28px_rgba(13,148,136,0.45)] hover:scale-[1.04] border border-corporate/30 hover:border-brand/45 active:scale-[0.98]",
     
     // Education solution button
     education:
-      "bg-[#16E6D8] text-[#050608] rounded-full px-7 py-3.5 shadow-[0_4px_15px_rgba(22,230,216,0.25)] hover:shadow-[0_12px_28px_rgba(22,230,216,0.45)] hover:scale-[1.04] border border-[#16E6D8] hover:border-[#43F5FF] active:scale-[0.98] font-bold",
+      "bg-[#34D399] text-[#050608] rounded-full px-7 py-3.5 shadow-[0_4px_15px_rgba(22,230,216,0.25)] hover:shadow-[0_12px_28px_rgba(22,230,216,0.45)] hover:scale-[1.04] border border-[#34D399] hover:border-[#10B981] active:scale-[0.98] font-bold",
   };
 
   // Combine magnetic translate transform

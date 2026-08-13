@@ -39,8 +39,8 @@ export function CTASection({
           />
           <defs>
             <linearGradient id="waveGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#43F5FF" />
-              <stop offset="100%" stopColor="#3A7BFF" />
+              <stop offset="0%" stopColor="#10B981" />
+              <stop offset="100%" stopColor="#0D9488" />
             </linearGradient>
           </defs>
         </svg>
@@ -48,7 +48,7 @@ export function CTASection({
           <path 
             d="M0 120 C360 200, 720 80, 1080 120 C1440 200, 1800 80, 2160 120 C2520 200, 2880 80, 3240 120" 
             fill="none" 
-            stroke="#43F5FF" 
+            stroke="#10B981" 
             strokeWidth="2.5" 
           />
         </svg>
@@ -58,7 +58,7 @@ export function CTASection({
       <div className="bg-radial-glow pointer-events-none absolute left-1/2 top-0 h-[34rem] w-[44rem] -translate-x-1/2 -translate-y-1/3 opacity-30" />
       <div className="bg-radial-glow-teal pointer-events-none absolute -bottom-32 right-[8%] h-[24rem] w-[24rem] opacity-30" />
       <Container className="relative z-10 flex flex-col items-center justify-center">
-        <div className="relative w-full max-w-5xl rounded-[2.5rem] border border-line bg-[#0E1117]/50 backdrop-blur-2xl px-6 py-16 md:px-16 md:py-24 text-center shadow-soft overflow-hidden group hover:border-brand/30 transition-colors duration-500">
+        <div className="relative w-full max-w-5xl rounded-[2.5rem] border border-line bg-[#0B2A22]/50 backdrop-blur-2xl px-6 py-16 md:px-16 md:py-24 text-center shadow-soft overflow-hidden group hover:border-brand/30 transition-colors duration-500">
           
           {/* Subtle inner animated gradient background */}
           <div className="absolute inset-0 bg-gradient-to-br from-brand/5 via-transparent to-corporate/5 opacity-40 group-hover:opacity-70 transition-opacity duration-700" />

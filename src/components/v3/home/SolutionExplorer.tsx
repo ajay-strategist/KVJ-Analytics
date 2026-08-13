@@ -124,7 +124,7 @@ export function SolutionExplorer({
                 onMouseLeave={onLeave}
                 className="solution-card group light-sweep glow-ring relative h-full overflow-hidden rounded-3xl border border-line bg-white/[0.025] p-7 md:p-8 transition-all duration-500 hover:border-brand/40"
                 style={{
-                  backgroundImage: "radial-gradient(340px circle at var(--sx,80%) var(--sy,0%), rgba(67,245,255,0.07), transparent 70%)",
+                  backgroundImage: "radial-gradient(340px circle at var(--sx,80%) var(--sy,0%), rgba(16,185,129,0.07), transparent 70%)",
                   transformStyle: "preserve-3d",
                   transition: "transform 0.4s cubic-bezier(0.03,0.98,0.52,0.99), border-color 0.5s ease",
                 }}
@@ -135,7 +135,7 @@ export function SolutionExplorer({
                 </span>
 
                 <div className="mb-4 flex items-center gap-3" style={{ transform: "translateZ(30px)" }}>
-                  <span className="grid h-12 w-12 place-items-center rounded-2xl bg-brand/10 border border-brand/20 text-brand transition-transform duration-500 group-hover:scale-110 group-hover:shadow-[0_0_20px_rgba(67,245,255,0.25)]">
+                  <span className="grid h-12 w-12 place-items-center rounded-2xl bg-brand/10 border border-brand/20 text-brand transition-transform duration-500 group-hover:scale-110 group-hover:shadow-[0_0_20px_rgba(16,185,129,0.25)]">
                     <Icon className="h-6 w-6" />
                   </span>
                   <h3 className="font-display text-xl md:text-2xl font-bold text-ink group-hover:text-brand transition-colors">{c.title}</h3>

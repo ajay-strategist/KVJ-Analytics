@@ -41,9 +41,9 @@ export function TrainingLoginCTA() {
         <Button
           variant="light"
           onClick={() => router.push("/account")}
-          className="py-2.5 px-6 text-sm flex items-center gap-2 rounded-full border border-white/10 hover:border-[#00F0FF]/30 transition-all duration-300 w-full sm:w-auto"
+          className="py-2.5 px-6 text-sm flex items-center gap-2 rounded-full border border-white/10 hover:border-[#10B981]/30 transition-all duration-300 w-full sm:w-auto"
         >
-          <User className="w-4 h-4 text-[#00F0FF]" />
+          <User className="w-4 h-4 text-[#10B981]" />
           <span>Student Dashboard</span>
         </Button>
         <span className="text-xs text-zinc-400 font-mono">
@@ -58,7 +58,7 @@ export function TrainingLoginCTA() {
       <Button
         variant="primary"
         onClick={() => router.push("/signin?redirect=/training")}
-        className="py-2.5 px-6 text-sm flex items-center gap-2 rounded-full w-full sm:w-auto text-[#00F0FF] border border-[#00F0FF]/40 hover:text-white"
+        className="py-2.5 px-6 text-sm flex items-center gap-2 rounded-full w-full sm:w-auto text-[#10B981] border border-[#10B981]/40 hover:text-white"
       >
         <LogIn className="w-4 h-4" />
         <span>Student Portal Login</span>

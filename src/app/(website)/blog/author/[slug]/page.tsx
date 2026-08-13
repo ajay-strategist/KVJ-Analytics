@@ -102,8 +102,8 @@ export default async function AuthorFilterPage({
         </Link>
 
         {/* Author bio header */}
-        <div className="max-w-4xl bg-[#0E1117]/60 border border-white/5 rounded-3xl p-8 flex flex-col sm:flex-row items-center sm:items-start gap-6 mb-16 shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-brand via-[#3A7BFF] to-brand" />
+        <div className="max-w-4xl bg-[#0B2A22]/60 border border-white/5 rounded-3xl p-8 flex flex-col sm:flex-row items-center sm:items-start gap-6 mb-16 shadow-2xl relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-brand via-[#0D9488] to-brand" />
           <div className="w-20 h-20 rounded-full bg-brand/10 border border-brand/20 text-brand flex items-center justify-center font-bold text-2xl font-display shrink-0 shadow-sm">
             {name[0]}
           </div>
@@ -149,7 +149,7 @@ export default async function AuthorFilterPage({
             {posts.map((post: any, idx: number) => (
               <div 
                 key={idx} 
-                className="bg-[#0E1117]/60 border border-white/5 hover:border-brand/20 p-6 rounded-3xl flex flex-col justify-between hover:-translate-y-1 transition-all duration-500 relative group overflow-hidden"
+                className="bg-[#0B2A22]/60 border border-white/5 hover:border-brand/20 p-6 rounded-3xl flex flex-col justify-between hover:-translate-y-1 transition-all duration-500 relative group overflow-hidden"
               >
                 <div>
                   <span className="text-[9px] font-mono font-bold text-brand uppercase tracking-wider block mb-3">

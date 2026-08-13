@@ -26,7 +26,7 @@ export function Footer({ siteSettings = FALLBACK_SITE_SETTINGS }: FooterProps) {
           <div className="lg:col-span-3 flex flex-col justify-start">
             <Link href="/" className="flex items-center mb-6 group">
               <img
-                src="/logo.png"
+                src="/logo-dark.png"
                 alt="KVJ Analytics"
                 className="h-8 md:h-9 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
               />
@@ -42,18 +42,18 @@ export function Footer({ siteSettings = FALLBACK_SITE_SETTINGS }: FooterProps) {
               {siteSettings.regionsServed.map((region, idx) => (
                 <span
                   key={idx}
-                  className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-white/5 text-slate border border-white/10 hover:bg-brand/5 hover:text-brand hover:border-brand/30 transition-all duration-200 cursor-default"
+                  className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-50 text-slate border border-slate-200/60 hover:bg-brand/5 hover:text-brand hover:border-brand/30 transition-all duration-200 cursor-default"
                 >
                   {region}
                 </span>
               ))}
             </div>
           </div>
-
+ 
           {/* Dynamic Link Columns */}
           {columns.map((column, idx) => (
             <div key={idx} className="lg:col-span-3">
-              <h4 className="text-xs font-bold uppercase tracking-widest text-white mb-6 border-b border-line pb-2.5 font-display">
+              <h4 className="text-xs font-bold uppercase tracking-widest text-ink mb-6 border-b border-line pb-2.5 font-display">
                 {column.heading}
               </h4>
               <ul className="space-y-3">
@@ -70,10 +70,10 @@ export function Footer({ siteSettings = FALLBACK_SITE_SETTINGS }: FooterProps) {
               </ul>
             </div>
           ))}
-
+ 
           {/* Contact Details Column */}
           <div className="lg:col-span-3">
-            <h4 className="text-xs font-bold uppercase tracking-widest text-white mb-6 border-b border-line pb-2.5 font-display">
+            <h4 className="text-xs font-bold uppercase tracking-widest text-ink mb-6 border-b border-line pb-2.5 font-display">
               Contact Us
             </h4>
             <ul className="space-y-4">
@@ -114,7 +114,7 @@ export function Footer({ siteSettings = FALLBACK_SITE_SETTINGS }: FooterProps) {
         <div className="border-t border-line pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-6 text-xs text-slate">
             <span>&copy; {new Date().getFullYear()} KVJ Analytics. All Rights Reserved.</span>
-            <span className="bg-white/5 border border-white/10 px-2.5 py-1 rounded text-[10px] font-mono font-bold tracking-tight text-slate">
+            <span className="bg-slate-50 border border-slate-200 px-2.5 py-1 rounded text-[10px] font-mono font-bold tracking-tight text-slate">
               GSTIN: {contact.gstNumber}
             </span>
           </div>
