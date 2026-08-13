@@ -171,7 +171,7 @@ export function CategoryPageClient({ categorySlug, categoryName, categoryDesc, c
   };
 
   return (
-    <div className="w-full hero-emerald text-zinc-200 min-h-screen pt-28 pb-24 relative overflow-hidden text-left">
+    <div className="w-full bg-base text-slate min-h-screen pt-28 pb-24 relative overflow-hidden text-left">
       {/* Background spotlights */}
       <div className="absolute top-[20%] left-[-10%] w-[500px] h-[500px] bg-[#10B981]/5 rounded-full blur-[140px] pointer-events-none" />
       <div className="absolute bottom-[20%] right-[-10%] w-[600px] h-[600px] bg-[#0D9488]/5 rounded-full blur-[160px] pointer-events-none" />
@@ -179,13 +179,13 @@ export function CategoryPageClient({ categorySlug, categoryName, categoryDesc, c
       <Container>
         {/* Breadcrumbs & Header */}
         <div className="max-w-4xl mb-16 text-left">
-          <div className="flex items-center gap-2 text-sm text-zinc-400 font-light mb-4">
+          <div className="flex items-center gap-2 text-sm text-slate font-light mb-4">
             <Link href="/training" className="hover:text-[#10B981] transition-colors">Training Hub</Link>
             <span>/</span>
             <span className="text-[#10B981] font-semibold">{categoryName}</span>
           </div>
 
-          <h1 className="font-display font-bold text-4xl sm:text-5xl text-white tracking-tight leading-none">
+          <h1 className="font-display font-bold text-4xl sm:text-5xl text-ink tracking-tight leading-none">
             {categoryName} <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#10B981] via-[#0D9488] to-[#10B981] bg-[size:200%_auto]">Training</span>
           </h1>
           <p className="text-slate font-light text-lg leading-relaxed mt-4">
@@ -201,10 +201,10 @@ export function CategoryPageClient({ categorySlug, categoryName, categoryDesc, c
             
             {/* Enter unlock code */}
             <Card hoverLift={false} className="border border-[#10B981]/25 bg-[#10B981]/5 p-6 rounded-2xl relative overflow-hidden">
-              <h3 className="text-md font-bold text-white flex items-center gap-2 font-display">
+              <h3 className="text-md font-bold text-ink flex items-center gap-2 font-display">
                 <Unlock className="w-5 h-5 text-[#10B981]" /> Redeem Batch Access Code
               </h3>
-              <p className="text-xs text-zinc-450 mt-2 font-light leading-relaxed">
+              <p className="text-xs text-slate mt-2 font-light leading-relaxed">
                 If you have been provided a valid unlock code by your college coordinator or corporate account admin, enter it below to gain instant access to your syllabus.
               </p>
 
@@ -230,7 +230,7 @@ export function CategoryPageClient({ categorySlug, categoryName, categoryDesc, c
                   value={unlockCode}
                   onChange={(e) => setUnlockCode(e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, ""))}
                   placeholder="Enter access code"
-                  className="flex-1 px-4 py-2.5 rounded-xl border border-line text-sm bg-[#07130E] text-white placeholder-zinc-500 focus:outline-none focus:border-[#10B981]/40 text-center font-mono tracking-wider font-bold"
+                  className="flex-1 px-4 py-2.5 rounded-xl border border-line text-sm bg-surface text-ink placeholder-muted focus:outline-none focus:border-[#10B981]/40 text-center font-mono tracking-wider font-bold"
                 />
                 <Button
                   type="submit"
@@ -242,7 +242,7 @@ export function CategoryPageClient({ categorySlug, categoryName, categoryDesc, c
               </form>
 
               {!user && (
-                <p className="text-[10px] text-zinc-500 mt-2 text-center">
+                <p className="text-[10px] text-muted mt-2 text-center">
                   * You must be signed in to student account to redeem.{" "}
                   <Link href={`/signin?redirect=/training/${categorySlug}`} className="text-[#10B981] font-bold underline">Log In</Link>
                 </p>
@@ -251,10 +251,10 @@ export function CategoryPageClient({ categorySlug, categoryName, categoryDesc, c
 
             {/* Course catalog under this track */}
             <div className="space-y-4">
-              <h3 className="text-xl font-bold font-display text-white border-b border-line pb-2">Program Curriculum Catalog</h3>
+              <h3 className="text-xl font-bold font-display text-ink border-b border-line pb-2">Program Curriculum Catalog</h3>
               
               {courses.length === 0 ? (
-                <p className="text-zinc-500 italic text-sm">No curriculum syllabus listed for this track yet.</p>
+                <p className="text-muted italic text-sm">No curriculum syllabus listed for this track yet.</p>
               ) : (
                 <div className="space-y-4">
                   {courses.map((course) => {
@@ -263,10 +263,10 @@ export function CategoryPageClient({ categorySlug, categoryName, categoryDesc, c
                     return (
                       <div
                         key={course.id}
-                        className="bg-[#0B2A22]/72 border border-line p-5 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-6 hover:border-[#0D9488]/30 transition-all duration-300 relative group overflow-hidden"
+                        className="card-tone-emerald border border-line p-5 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-6 hover:border-[#0D9488]/30 transition-all duration-300 relative group overflow-hidden"
                       >
                         <div className="flex gap-4 items-center">
-                          <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0 border border-line bg-[#07130E] hidden sm:block">
+                          <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0 border border-line bg-surface hidden sm:block">
                             {course.banner_url ? (
                               <img src={course.banner_url} alt={course.title} className="w-full h-full object-cover" />
                             ) : (
@@ -276,7 +276,7 @@ export function CategoryPageClient({ categorySlug, categoryName, categoryDesc, c
                             )}
                           </div>
                           <div>
-                            <h4 className="text-md font-bold text-white group-hover:text-[#10B981] transition-colors leading-tight">
+                            <h4 className="text-md font-bold text-ink group-hover:text-[#10B981] transition-colors leading-tight">
                               {course.title}
                             </h4>
                             <p className="text-slate text-xs mt-1.5 line-clamp-1 max-w-sm font-light">
@@ -295,8 +295,8 @@ export function CategoryPageClient({ categorySlug, categoryName, categoryDesc, c
                             </Link>
                           ) : (
                             <Link href={`/training/${course.slug}`}>
-                              <Button variant="secondary" className="py-2 px-4 bg-[#07130E]/50 border-line text-zinc-300 text-xs flex items-center gap-1.5">
-                                <Lock className="w-3.5 h-3.5 text-zinc-500" /> Details &amp; Unlock
+                              <Button variant="secondary" className="py-2 px-4 bg-surface border-line text-slate text-xs flex items-center gap-1.5">
+                                <Lock className="w-3.5 h-3.5 text-muted" /> Details &amp; Unlock
                               </Button>
                             </Link>
                           )}
@@ -317,15 +317,15 @@ export function CategoryPageClient({ categorySlug, categoryName, categoryDesc, c
                   <div className="w-12 h-12 rounded-full bg-emerald-500/10 text-emerald-450 border border-emerald-500/20 flex items-center justify-center mx-auto mb-4 font-bold">
                     ✓
                   </div>
-                  <h3 className="text-xl font-bold font-display text-white mb-2">Request Submitted!</h3>
-                  <p className="text-sm text-zinc-400 font-light leading-relaxed">
+                  <h3 className="text-xl font-bold font-display text-ink mb-2">Request Submitted!</h3>
+                  <p className="text-sm text-slate font-light leading-relaxed">
                     Thank you. We have received your training inquiry details. A program analyst will review your requirements and reach out to discuss team alignment.
                   </p>
                 </Card>
               ) : (
-                <Card hoverLift={false} className="bg-[#0B2A22]/72 border border-line p-8 rounded-3xl backdrop-blur-xl">
-                  <h3 className="text-xl font-bold font-display text-white mb-2">Request a Programme</h3>
-                  <p className="text-xs text-zinc-500 font-light mb-6">Discuss customized cohorts, curriculum models, or team license pricing.</p>
+                <Card hoverLift={false} className="card-tone-emerald border border-line p-8 rounded-3xl backdrop-blur-xl">
+                  <h3 className="text-xl font-bold font-display text-ink mb-2">Request a Programme</h3>
+                  <p className="text-xs text-muted font-light mb-6">Discuss customized cohorts, curriculum models, or team license pricing.</p>
 
                   {inquiryError && (
                     <div className="bg-rose-500/5 border border-rose-500/15 p-3 rounded-xl flex items-start space-x-2 text-rose-455 mb-4">
@@ -336,75 +336,75 @@ export function CategoryPageClient({ categorySlug, categoryName, categoryDesc, c
 
                   <form onSubmit={handleInquirySubmit} className="space-y-4">
                     <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-2 font-mono">
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate mb-2 font-mono">
                         Contact Name
                       </label>
                       <div className="relative">
-                        <User className="absolute left-4 top-3.5 w-4.5 h-4.5 text-zinc-500" />
+                        <User className="absolute left-4 top-3.5 w-4.5 h-4.5 text-muted" />
                         <input
                           type="text"
                           required
                           value={inquiryName}
                           onChange={(e) => setInquiryName(e.target.value)}
                           placeholder="e.g. Samuel Mathew"
-                          className="w-full pl-12 pr-4 py-3 rounded-xl border border-line text-sm bg-[#07130E] text-white placeholder-zinc-500 focus:outline-none focus:border-[#10B981]/40"
+                          className="w-full pl-12 pr-4 py-3 rounded-xl border border-line text-sm bg-surface text-ink placeholder-muted focus:outline-none focus:border-[#10B981]/40"
                         />
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-2 font-mono">
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate mb-2 font-mono">
                         Email Address
                       </label>
                       <div className="relative">
-                        <Mail className="absolute left-4 top-3.5 w-4.5 h-4.5 text-zinc-500" />
+                        <Mail className="absolute left-4 top-3.5 w-4.5 h-4.5 text-muted" />
                         <input
                           type="email"
                           required
                           value={inquiryEmail}
                           onChange={(e) => setInquiryEmail(e.target.value)}
                           placeholder="e.g. sam@company.com"
-                          className="w-full pl-12 pr-4 py-3 rounded-xl border border-line text-sm bg-[#07130E] text-white placeholder-zinc-500 focus:outline-none focus:border-[#10B981]/40"
+                          className="w-full pl-12 pr-4 py-3 rounded-xl border border-line text-sm bg-surface text-ink placeholder-muted focus:outline-none focus:border-[#10B981]/40"
                         />
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-2 font-mono">
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate mb-2 font-mono">
                         Phone Number
                       </label>
                       <div className="relative">
-                        <Phone className="absolute left-4 top-3.5 w-4.5 h-4.5 text-zinc-500" />
+                        <Phone className="absolute left-4 top-3.5 w-4.5 h-4.5 text-muted" />
                         <input
                           type="tel"
                           required
                           value={inquiryPhone}
                           onChange={(e) => setInquiryPhone(e.target.value)}
                           placeholder="e.g. 98450 12345"
-                          className="w-full pl-12 pr-4 py-3 rounded-xl border border-line text-sm bg-[#07130E] text-white placeholder-zinc-500 focus:outline-none focus:border-[#10B981]/40"
+                          className="w-full pl-12 pr-4 py-3 rounded-xl border border-line text-sm bg-surface text-ink placeholder-muted focus:outline-none focus:border-[#10B981]/40"
                         />
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-2 font-mono">
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate mb-2 font-mono">
                         College / Corporation Name
                       </label>
                       <div className="relative">
-                        <Building className="absolute left-4 top-3.5 w-4.5 h-4.5 text-zinc-500" />
+                        <Building className="absolute left-4 top-3.5 w-4.5 h-4.5 text-muted" />
                         <input
                           type="text"
                           required
                           value={inquiryOrg}
                           onChange={(e) => setInquiryOrg(e.target.value)}
                           placeholder="e.g. Cochin University"
-                          className="w-full pl-12 pr-4 py-3 rounded-xl border border-line text-sm bg-[#07130E] text-white placeholder-zinc-500 focus:outline-none focus:border-[#10B981]/40"
+                          className="w-full pl-12 pr-4 py-3 rounded-xl border border-line text-sm bg-surface text-ink placeholder-muted focus:outline-none focus:border-[#10B981]/40"
                         />
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-2 font-mono">
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate mb-2 font-mono">
                         Program Requirements / Comments
                       </label>
                       <textarea
@@ -413,7 +413,7 @@ export function CategoryPageClient({ categorySlug, categoryName, categoryDesc, c
                         value={inquiryMessage}
                         onChange={(e) => setInquiryMessage(e.target.value)}
                         placeholder="Detail expected team size, target topics, timeline..."
-                        className="w-full px-4 py-3 rounded-xl border border-line text-sm bg-[#07130E] text-white placeholder-zinc-500 focus:outline-none focus:border-[#10B981]/40"
+                        className="w-full px-4 py-3 rounded-xl border border-line text-sm bg-surface text-ink placeholder-muted focus:outline-none focus:border-[#10B981]/40"
                       />
                     </div>
 
