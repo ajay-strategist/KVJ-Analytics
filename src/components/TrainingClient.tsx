@@ -408,11 +408,11 @@ function CourseCard({ course }: { course: Course }) {
       <h3 className="text-xl font-bold text-white mb-2 leading-snug group-hover:text-[#10B981] transition-colors duration-300">
         {course.title}
       </h3>
-      <p className="text-xs text-slate leading-relaxed font-light mb-6 flex-grow">{course.summary}</p>
+      <p className="text-xs text-zinc-300 leading-relaxed font-light mb-6 flex-grow">{course.summary}</p>
 
       <div className="border-t border-line pt-4 flex items-center justify-between mt-auto">
         <div>
-          <span className="text-[9px] font-mono text-slate uppercase tracking-[0.12em] block leading-none">
+          <span className="text-[9px] font-mono text-zinc-400 uppercase tracking-[0.12em] block leading-none">
             {course.isPaid ? "Investment" : "Program Code"}
           </span>
           <span className="text-base font-bold text-white font-mono mt-1.5 block">

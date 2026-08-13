@@ -65,12 +65,12 @@ export function CTASection({
           
           <div className="relative z-10 flex flex-col items-center">
             <BoldStatement variant="h2" className="mb-6 max-w-3xl">
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand to-corporate">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-emerald-200 to-[#34D399]">
                 {title}
               </span>
             </BoldStatement>
             
-            <p className="text-[17px] md:text-[19px] font-light text-slate max-w-2xl leading-relaxed mb-10">
+            <p className="text-[17px] md:text-[19px] font-light text-[#E2EFE9] max-w-2xl leading-relaxed mb-10">
               {description}
             </p>
             

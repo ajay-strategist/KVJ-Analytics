@@ -27,15 +27,15 @@ export default async function PrivacyPage() {
             <BoldStatement variant="h1" className="mb-4 text-white leading-tight tracking-tight">
               {page.heading}
             </BoldStatement>
-            <p className="text-sm text-slate mb-8 border-b border-line pb-4 font-medium">{page.lastUpdated}</p>
+            <p className="text-sm text-[#A7F3D0] mb-8 border-b border-line pb-4 font-medium">{page.lastUpdated}</p>
 
             {page.bodyHtml ? (
               <div
-                className="prose prose-invert max-w-none text-slate leading-relaxed text-base font-medium space-y-6"
+                className="prose prose-invert max-w-none text-zinc-200 leading-relaxed text-base font-medium space-y-6"
                 dangerouslySetInnerHTML={{ __html: page.bodyHtml }}
               />
             ) : (
-            <div className="space-y-6 text-slate leading-relaxed text-base font-medium">
+            <div className="space-y-6 text-zinc-200 leading-relaxed text-base font-medium">
               <p>
                 At KVJ Analytics, we respect your privacy and are committed to protecting the personal data we hold. This Privacy Policy details how we collect, use, and safeguard student and organization information when you use our website, enroll in certification programs, or use our platforms Grade Scope and Protrix.
               </p>

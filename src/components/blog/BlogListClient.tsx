@@ -300,7 +300,7 @@ export function BlogListClient({ posts, header }: BlogListClientProps) {
                   className={`px-5 py-2.5 text-[11px] font-bold uppercase tracking-wider rounded-full border transition-all duration-300 shrink-0 cursor-pointer ${
                     activeCategory === cat
                       ? "bg-brand text-[#050608] border-transparent shadow-[0_4px_16px_rgba(16,185,129,0.25)] font-extrabold"
-                      : "bg-[#0B2A22]/50 text-slate border-white/5 hover:text-white hover:border-white/20"
+                      : "bg-[#0B2A22]/50 text-zinc-400 border-white/5 hover:text-white hover:border-white/20"
                   }`}
                 >
                   {cat === "all" ? "All Insights" : cat}
@@ -375,7 +375,7 @@ export function BlogListClient({ posts, header }: BlogListClientProps) {
                           <h3 className="text-xl md:text-2xl font-bold font-display text-white group-hover:text-brand transition-colors leading-snug">
                             <Link href={`/blog/${featuredPost.slug}`}>{featuredPost.title}</Link>
                           </h3>
-                          <p className="text-slate text-xs md:text-sm leading-relaxed line-clamp-4 font-light">
+                          <p className="text-zinc-300 text-xs md:text-sm leading-relaxed line-clamp-4 font-light">
                             {featuredPost.description}
                           </p>
                         </div>
@@ -474,7 +474,7 @@ export function BlogListClient({ posts, header }: BlogListClientProps) {
                           <h4 className="text-base md:text-[17px] font-bold text-white group-hover:text-brand transition-colors leading-snug">
                             <Link href={`/blog/${post.slug}`}>{highlightText(post.title, searchQuery)}</Link>
                           </h4>
-                          <p className="text-xs text-slate leading-relaxed line-clamp-3 font-light">
+                          <p className="text-xs text-zinc-300 leading-relaxed line-clamp-3 font-light">
                             {highlightText(post.description, searchQuery)}
                           </p>
                         </div>
@@ -509,7 +509,7 @@ export function BlogListClient({ posts, header }: BlogListClientProps) {
             <div className="max-w-xl space-y-3">
               <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-[#10B981]">Newsletter</span>
               <h3 className="text-2xl md:text-3xl font-extrabold text-white font-display leading-tight">Stay Ahead of What&apos;s Next</h3>
-              <p className="text-xs md:text-sm text-slate-350 leading-relaxed font-light">
+              <p className="text-xs md:text-sm text-zinc-300 leading-relaxed font-light">
                 Practical perspectives on analytics, technology and business transformation. Join data leaders receiving weekly guides directly.
               </p>
             </div>

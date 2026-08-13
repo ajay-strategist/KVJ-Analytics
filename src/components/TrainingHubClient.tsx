@@ -199,7 +199,7 @@ function BentoCard({ category, className = "", icon: Icon, delay = 0, variant = 
                 hovered ? "opacity-100 translate-x-1" : "opacity-0 -translate-x-1"
               }`} />
             </h3>
-            <p className={`text-slate text-sm font-light leading-relaxed max-w-md transition-colors duration-300 ${
+            <p className={`text-sm font-light leading-relaxed max-w-md transition-colors duration-300 ${
               hovered ? "text-zinc-200" : "text-zinc-400"
             }`}>
               {category.description}

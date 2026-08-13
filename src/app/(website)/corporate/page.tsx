@@ -136,7 +136,7 @@ export default async function CorporateSolutionsPage() {
               <h4 className="relative z-10 text-2xl md:text-3xl font-medium text-white mb-4">
                 {cta.title}
               </h4>
-              <p className="relative z-10 text-base text-slate font-light mb-8 max-w-lg mx-auto leading-relaxed">
+              <p className="relative z-10 text-base text-[#E2EFE9] font-light mb-8 max-w-lg mx-auto leading-relaxed">
                 {cta.description}
               </p>
 

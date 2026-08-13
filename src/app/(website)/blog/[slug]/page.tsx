@@ -471,7 +471,7 @@ export default async function BlogPostDetailPage({
               <div className="max-w-xl space-y-3">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-[#10B981]">Stay Informed</span>
                 <h3 className="text-2xl font-extrabold text-white">Subscribe to Analytics Insights</h3>
-                <p className="text-xs md:text-sm text-slate-350 leading-relaxed font-light">
+                <p className="text-xs md:text-sm text-zinc-300 leading-relaxed font-light">
                   Join 2,000+ data leaders receiving weekly spreadsheet automations, dashboard layouts, and direct SQL workflows directly in their inbox.
                 </p>
               </div>
@@ -516,7 +516,7 @@ export default async function BlogPostDetailPage({
                         </div>
                         <div className="flex-1 flex flex-col justify-between h-full pt-1">
                           <div>
-                            <div className="flex items-center gap-2 text-[9px] font-bold text-slate-500 uppercase tracking-wider">
+                            <div className="flex items-center gap-2 text-[9px] font-bold text-zinc-400 uppercase tracking-wider">
                               <span>{formatDate(rel.published_at)}</span>
                               <span>•</span>
                               <span>{relReadingTime} min read</span>

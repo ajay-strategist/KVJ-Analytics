@@ -15,8 +15,6 @@ import {
   PlayCircle,
   Award,
   CheckCircle2,
-  Moon,
-  Sun,
   PanelLeftClose,
   PanelLeftOpen,
   Trophy,
@@ -74,7 +72,7 @@ function ViewerToggle({ active, onClick, title, children }: ViewerToggleProps) {
       className={`p-1.5 rounded-lg border text-xs transition-all flex items-center gap-1.5 ${
         active
           ? "bg-[#10B981]/10 border-[#10B981]/40 text-[#10B981]"
-          : "bg-zinc-900 border-white/5 text-zinc-400 hover:text-zinc-200 hover:border-white/15"
+          : "bg-zinc-100 border-zinc-200 text-zinc-650 hover:text-zinc-800 hover:bg-zinc-200/50"
       }`}
     >
       {children}
@@ -133,40 +131,34 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
   // event.source in the postMessage handler so we ignore rogue messages.
   const lessonFrameWindowRef = useRef<Window | null>(null);
 
-  // Viewer controls — persisted in localStorage per course slug.
-  // Default to Dark Mode.
-  const [darkMode, setDarkModeRaw] = useState<boolean>(true);
+  // Viewer controls — hide-sidebar persisted in localStorage per course slug.
+  // Dark mode is permanently OFF — player always uses the light theme.
+  const darkMode = false;
   const [hideSidebar, setHideSidebarRaw] = useState<boolean>(false);
   // Track whether we've initialised from localStorage yet
   const [viewerReady, setViewerReady] = useState(false);
 
-  // Keys for localStorage
-  const lsDarkKey = `kvj-player-dark-${course.slug}`;
+  // Key for localStorage (hide-sidebar only)
   const lsHideKey = `kvj-player-hide-${course.slug}`;
 
-  // Initialise viewer toggles from localStorage on mount
+  // Initialise hide-sidebar toggle from localStorage on mount
   useEffect(() => {
-    const storedDark = lsGet(lsDarkKey);
     const storedHide = lsGet(lsHideKey);
-    if (storedDark !== null) setDarkModeRaw(storedDark);
     if (storedHide !== null) setHideSidebarRaw(storedHide);
     setViewerReady(true);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [course.slug]);
 
-  const setDarkMode = (v: boolean) => { setDarkModeRaw(v); lsSet(lsDarkKey, v); };
   const setHideSidebar = (v: boolean) => { setHideSidebarRaw(v); lsSet(lsHideKey, v); };
 
   /**
-   * Called by LessonIframe once per load.
-   * Default to dark mode unless user explicitly selected light mode in localStorage.
+   * Called by LessonIframe once per load — no-op now that dark mode is removed.
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleLightDetected = useCallback((_isLight: boolean) => {
-    if (lsGet(lsDarkKey) === null) {
-      setDarkMode(true);
-    }
+    // Light theme is always active — nothing to do.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lsDarkKey]);
+  }, []);
 
   // Keep refs in sync so the message handler is always up-to-date.
   useEffect(() => { activeLessonRef.current = activeLesson; }, [activeLesson]);
@@ -436,7 +428,9 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
   const percentComplete = totalLessons > 0 ? Math.round((completedLessonsCount / totalLessons) * 100) : 0;
 
   return (
-    <div className="w-full h-screen bg-[#050505] text-zinc-200 flex relative overflow-hidden">
+    <div className={`w-full h-screen flex relative overflow-hidden transition-colors duration-300 ${
+      darkMode ? "bg-[#050505] text-zinc-200" : "bg-[#F5FCF8] text-zinc-800"
+    }`}>
 
       {/* Admin preview banner */}
       {adminPreview && (
@@ -448,35 +442,37 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
 
       {/* 1. Collapsible Sidebar */}
       <div
-        className={`fixed inset-y-0 left-0 z-40 lg:relative w-[320px] bg-[#0A0A0C] border-r border-white/5 flex flex-col transition-transform duration-300 transform ${
+        className={`fixed inset-y-0 left-0 z-40 lg:relative w-[320px] flex flex-col transition-all duration-300 transform ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full lg:-ml-[320px]"
+        } ${
+          darkMode ? "bg-[#0A0A0C] border-r border-white/5" : "bg-white border-r border-line"
         }`}
       >
         {/* Sidebar Header */}
-        <div className="p-6 border-b border-white/5 flex items-center justify-between">
+        <div className={`p-6 border-b flex items-center justify-between ${darkMode ? "border-white/5" : "border-line"}`}>
           <div>
-            <Link href={`/training/${course.slug}`} className="text-xs text-zinc-500 hover:text-[#10B981] flex items-center gap-1">
+            <Link href={`/training/${course.slug}`} className={`text-xs flex items-center gap-1 hover:text-[#10B981] ${darkMode ? "text-zinc-500" : "text-zinc-400"}`}>
               <ChevronLeft className="w-3.5 h-3.5" /> Back to detail
             </Link>
-            <h2 className="text-md font-bold text-white font-display mt-2 line-clamp-1">
+            <h2 className={`text-md font-bold font-display mt-2 line-clamp-1 ${darkMode ? "text-white" : "text-ink"}`}>
               {course.title}
             </h2>
           </div>
           <button
             onClick={() => setSidebarOpen(false)}
-            className="lg:hidden p-1.5 rounded-lg hover:bg-zinc-800 text-zinc-400"
+            className={`lg:hidden p-1.5 rounded-lg text-zinc-400 ${darkMode ? "hover:bg-zinc-80" : "hover:bg-zinc-100"}`}
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Progress Tracker */}
-        <div className="p-6 border-b border-white/5 bg-[#08080A]/40 shrink-0">
-          <div className="flex items-center justify-between text-xs font-mono font-bold text-zinc-400 mb-2">
+        <div className={`p-6 border-b shrink-0 ${darkMode ? "border-white/5 bg-[#08080A]/40" : "border-line bg-surface/30"}`}>
+          <div className={`flex items-center justify-between text-xs font-mono font-bold mb-2 ${darkMode ? "text-zinc-400" : "text-slate"}`}>
             <span>Progress</span>
             <span className="text-[#10B981]">{percentComplete}% ({completedLessonsCount}/{totalLessons})</span>
           </div>
-          <div className="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+          <div className={`w-full h-1.5 rounded-full overflow-hidden ${darkMode ? "bg-zinc-800" : "bg-zinc-200"}`}>
             <div
               className="h-full bg-gradient-to-r from-[#10B981] to-[#0D9488] transition-all duration-550"
               style={{ width: `${percentComplete}%` }}
@@ -488,7 +484,7 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {modules.map((mod: any, modIdx: number) => (
             <div key={mod.id} className="space-y-2">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-500 font-mono">
+              <h3 className={`text-xs font-bold uppercase tracking-wider font-mono ${darkMode ? "text-zinc-500" : "text-slate/60"}`}>
                 Module {modIdx + 1}: {mod.title}
               </h3>
               <div className="space-y-1">
@@ -500,22 +496,26 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
                     <button
                       key={les.id}
                       onClick={() => handleLessonSelect(les)}
-                      className={`w-full text-left p-3 rounded-xl flex items-center justify-between gap-3 text-xs transition-all ${
+                      className={`w-full text-left p-3 rounded-xl flex items-center justify-between gap-3 text-xs transition-all border ${
                         isActive
-                          ? "bg-[#10B981]/10 text-white font-semibold border border-[#10B981]/30"
-                          : "hover:bg-zinc-900 border border-transparent text-zinc-400"
+                          ? darkMode
+                            ? "bg-[#10B981]/10 text-white font-semibold border-[#10B981]/30"
+                            : "bg-[#10B981]/10 text-brand font-semibold border-[#10B981]/30"
+                          : darkMode
+                            ? "hover:bg-zinc-900 border-transparent text-zinc-400"
+                            : "hover:bg-zinc-100 border-transparent text-zinc-650"
                       }`}
                     >
                       <div className="flex items-center gap-2.5 overflow-hidden">
                         {isCompleted ? (
                           <CheckCircle className="w-4 h-4 text-emerald-450 shrink-0" />
                         ) : (
-                          <Circle className="w-4 h-4 text-zinc-650 shrink-0" />
+                          <Circle className={`w-4 h-4 shrink-0 ${darkMode ? "text-zinc-600" : "text-zinc-350"}`} />
                         )}
                         <span className="truncate">{les.title}</span>
                       </div>
                       {les.video_url && (
-                        <PlayCircle className={`w-3.5 h-3.5 shrink-0 ${isActive ? "text-[#10B981]" : "text-zinc-600"}`} />
+                        <PlayCircle className={`w-3.5 h-3.5 shrink-0 ${isActive ? "text-[#10B981]" : darkMode ? "text-zinc-600" : "text-zinc-400"}`} />
                       )}
                     </button>
                   );
@@ -530,18 +530,20 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
       <div className="flex-1 flex flex-col h-full overflow-hidden relative">
 
         {/* Player Header */}
-        <header className="h-16 border-b border-white/5 px-4 md:px-6 flex items-center justify-between shrink-0 bg-[#0A0A0C]/55 backdrop-blur-md relative z-30">
+        <header className={`h-16 border-b px-4 md:px-6 flex items-center justify-between shrink-0 backdrop-blur-md relative z-30 transition-colors duration-300 ${
+          darkMode ? "border-white/5 bg-[#0A0A0C]/55" : "border-line bg-white/75"
+        }`}>
           <div className="flex items-center gap-3 min-w-0">
             {!sidebarOpen && (
               <button
                 onClick={() => setSidebarOpen(true)}
-                className="p-2 rounded-lg bg-zinc-900 border border-white/5 text-zinc-400 hover:text-white shrink-0"
+                className={`p-2 rounded-lg border shrink-0 transition-colors ${darkMode ? "bg-zinc-900 border-white/5 text-zinc-400 hover:text-white" : "bg-white border-zinc-200 text-zinc-650 hover:text-zinc-800"}`}
               >
                 <Menu className="w-5 h-5" />
               </button>
             )}
             {activeLesson && (
-              <span className="text-xs font-mono font-bold text-zinc-500 uppercase truncate">
+              <span className={`text-xs font-mono font-bold uppercase truncate ${darkMode ? "text-zinc-500" : "text-slate/60"}`}>
                 {activeLesson.kind === "activity" ? "Lesson Activity" : "Study Material"}
               </span>
             )}
@@ -552,20 +554,6 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
             {/* ── Viewer controls (only shown when lesson has HTML content) ── */}
             {activeLesson?.content_html && viewerReady && (
               <>
-                {/* Dark mode toggle */}
-                <ViewerToggle
-                  active={darkMode}
-                  onClick={() => setDarkMode(!darkMode)}
-                  title={darkMode ? "Dark mode active (click for Light mode)" : "Light mode active (click for Dark mode)"}
-                >
-                  {darkMode
-                    ? <Moon className="w-3.5 h-3.5 text-[#10B981]" />
-                    : <Sun className="w-3.5 h-3.5" />}
-                  <span className="hidden sm:inline text-[10px] font-semibold leading-none">
-                    {darkMode ? "Dark" : "Light"}
-                  </span>
-                </ViewerToggle>
-
                 {/* Hide embedded sidebar toggle */}
                 <ViewerToggle
                   active={hideSidebar}
@@ -581,37 +569,48 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
                 </ViewerToggle>
 
                 {/* Separator */}
-                <span className="w-px h-5 bg-white/10 hidden sm:block" />
+                <span className="w-px h-5 bg-zinc-200 hidden sm:block" />
               </>
             )}
 
-            {/* Prev / Next navigation */}
-            <div className="flex items-center gap-1.5 md:gap-2 mr-1">
-              <span className="text-[11px] text-zinc-500 font-mono select-none">
-                {activeIndex + 1} / {totalLessons}
-              </span>
-            </div>
-            <Button
-              disabled={!prevLesson}
-              onClick={() => activeLesson && handleLessonSelect(prevLesson!)}
-              className="py-1.5 px-3 bg-zinc-900 hover:bg-zinc-800 text-zinc-350 disabled:opacity-30 disabled:hover:bg-zinc-900 text-xs border border-white/5 flex items-center gap-1"
-            >
-              <ChevronLeft className="w-3.5 h-3.5" /> Prev
-            </Button>
-            {nextLesson ? (
-              <Button
-                onClick={() => activeLesson && handleLessonSelect(nextLesson!)}
-                className="py-1.5 px-3 bg-zinc-900 hover:bg-zinc-800 text-zinc-350 text-xs border border-white/5 flex items-center gap-1"
-              >
-                Next <ChevronRight className="w-3.5 h-3.5" />
-              </Button>
-            ) : (
-              <Button
-                onClick={() => router.push(`/training/${course.slug}`)}
-                className="py-1.5 px-3 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 text-xs border border-emerald-500/30 flex items-center gap-1"
-              >
-                Finish <CheckCircle2 className="w-3.5 h-3.5" />
-              </Button>
+            {/* Prev / Next mini buttons in header */}
+            {activeLesson && (
+              <div className="flex items-center gap-2">
+                <Button
+                  disabled={!prevLesson}
+                  onClick={() => activeLesson && handleLessonSelect(prevLesson!)}
+                  className={`py-1.5 px-3 text-xs border flex items-center gap-1 rounded-lg ${
+                    darkMode
+                      ? "bg-zinc-900 hover:bg-zinc-800 text-zinc-350 border-white/5"
+                      : "bg-white hover:bg-zinc-50 text-zinc-700 border-zinc-200"
+                  }`}
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" /> Prev
+                </Button>
+                {nextLesson ? (
+                  <Button
+                    onClick={() => activeLesson && handleLessonSelect(nextLesson!)}
+                    className={`py-1.5 px-3 text-xs border flex items-center gap-1 rounded-lg ${
+                      darkMode
+                        ? "bg-zinc-900 hover:bg-zinc-800 text-zinc-350 border-white/5"
+                        : "bg-white hover:bg-zinc-50 text-zinc-700 border-zinc-200"
+                    }`}
+                  >
+                    Next <ChevronRight className="w-3.5 h-3.5" />
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={() => router.push(`/training/${course.slug}`)}
+                    className={`py-1.5 px-3 text-xs border flex items-center gap-1 rounded-lg ${
+                      darkMode
+                        ? "bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border-emerald-500/30"
+                        : "bg-emerald-50 hover:bg-emerald-100 text-brand border-brand/20"
+                    }`}
+                  >
+                    Finish <CheckCircle2 className="w-3.5 h-3.5" />
+                  </Button>
+                )}
+              </div>
             )}
           </div>
         </header>
@@ -622,21 +621,29 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
             <div className="max-w-4xl mx-auto space-y-8">
 
               {/* Lesson Title & Completion Toggle */}
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/5 pb-6">
+              <div className={`flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-6 ${darkMode ? "border-white/5" : "border-line"}`}>
                 <div>
-                  <h1 className="text-2xl md:text-3xl font-bold font-display text-white">
+                  <h1 className={`text-2xl md:text-3xl font-bold font-display ${darkMode ? "text-white" : "text-ink"}`}>
                     {activeLesson.title}
                   </h1>
                 </div>
 
                 {activeLesson.kind === "assessment" ? (
                   completedLessonIds.has(activeLesson.id) ? (
-                    <span className="py-2 px-5 font-bold text-xs flex items-center gap-2 bg-emerald-500/10 text-emerald-450 border border-emerald-500/25 rounded-lg">
+                    <span className={`py-2 px-5 font-bold text-xs flex items-center gap-2 border rounded-lg ${
+                      darkMode
+                        ? "bg-emerald-500/10 text-emerald-450 border-emerald-500/25"
+                        : "bg-emerald-50 text-brand border-brand/20"
+                    }`}>
                       <CheckCircle2 className="w-4 h-4" />
                       <span>Passed / Completed</span>
                     </span>
                   ) : (
-                    <span className="py-2 px-5 font-bold text-xs flex items-center gap-2 bg-zinc-500/10 text-zinc-400 border border-zinc-550 rounded-lg">
+                    <span className={`py-2 px-5 font-bold text-xs flex items-center gap-2 border rounded-lg ${
+                      darkMode
+                        ? "bg-zinc-500/10 text-zinc-400 border-zinc-700"
+                        : "bg-zinc-150/60 text-zinc-650 border-zinc-250/80"
+                    }`}>
                       <span>Must Pass to Complete</span>
                     </span>
                   )
@@ -644,9 +651,11 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
                   <Button
                     onClick={handleMarkComplete}
                     disabled={actionLoading}
-                    className={`py-2 px-5 font-bold text-xs flex items-center gap-2 ${
+                    className={`py-2 px-5 font-bold text-xs flex items-center gap-2 border ${
                       completedLessonIds.has(activeLesson.id)
-                        ? "bg-emerald-500/10 text-emerald-450 hover:bg-emerald-500/15 border border-emerald-500/25"
+                        ? darkMode
+                          ? "bg-emerald-500/10 text-emerald-450 hover:bg-emerald-500/15 border-emerald-500/25"
+                          : "bg-emerald-50 text-brand hover:bg-emerald-100/80 border-brand/20"
                         : "bg-[#10B981] text-black hover:bg-[#00D8FF] border-none shadow-[0_0_15px_rgba(16,185,129,0.1)]"
                     }`}
                   >
@@ -666,7 +675,7 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
 
               {/* Video Player Box */}
               {activeLesson.video_url && (
-                <div className="w-full aspect-video rounded-3xl overflow-hidden border border-white/5 bg-black shadow-2xl relative">
+                <div className={`w-full aspect-video rounded-3xl overflow-hidden border bg-black shadow-2xl relative ${darkMode ? "border-white/5" : "border-zinc-200"}`}>
                   <video
                     src={activeLesson.video_url}
                     controls
@@ -680,20 +689,24 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
                   Dismissed by clicking ×. In admin preview the score is shown
                   but not persisted. */}
               {activityResult && (
-                <div className="flex items-center justify-between gap-4 bg-emerald-500/10 border border-emerald-500/25 rounded-2xl px-5 py-4">
+                <div className={`flex items-center justify-between gap-4 border rounded-2xl px-5 py-4 ${
+                  darkMode 
+                    ? "bg-emerald-500/10 border-emerald-500/25 text-emerald-300"
+                    : "bg-emerald-50 border-brand/20 text-brand"
+                }`}>
                   <div className="flex items-center gap-3">
-                    <Trophy className="w-5 h-5 text-emerald-400 shrink-0" />
+                    <Trophy className={`w-5 h-5 shrink-0 ${darkMode ? "text-emerald-400" : "text-[#059669]"}`} />
                     <div>
-                      <p className="text-sm font-bold text-emerald-300">
+                      <p className={`text-sm font-bold ${darkMode ? "text-emerald-300" : "text-[#059669]"}`}>
                         Activity complete!
                         {adminPreview && (
-                          <span className="ml-2 text-[10px] font-normal text-emerald-500/70">(admin preview — not saved)</span>
+                          <span className="ml-2 text-[10px] font-normal opacity-70">(admin preview — not saved)</span>
                         )}
                       </p>
-                      <p className="text-xs text-emerald-400/80 font-mono mt-0.5">
+                      <p className={`text-xs font-mono mt-0.5 ${darkMode ? "text-emerald-400/80" : "text-brand/80"}`}>
                         Score: {activityResult.score} / {activityResult.maxScore}
                         {activityResult.maxScore > 0 && (
-                          <span className="ml-2 text-emerald-500">
+                          <span className="ml-2 opacity-80">
                             ({Math.round((activityResult.score / activityResult.maxScore) * 100)}%)
                           </span>
                         )}
@@ -703,7 +716,7 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
                   <button
                     type="button"
                     onClick={() => setActivityResult(null)}
-                    className="text-emerald-500/60 hover:text-emerald-300 shrink-0 transition-colors"
+                    className={`shrink-0 transition-colors ${darkMode ? "text-emerald-500/60 hover:text-emerald-300" : "text-brand/60 hover:text-brand"}`}
                     title="Dismiss"
                   >
                     <X className="w-4 h-4" />
@@ -718,22 +731,26 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
                     <Loader2 className="w-8 h-8 animate-spin text-brand" />
                   </div>
                 ) : !activeTest ? (
-                  <div className="text-center py-12 bg-[#0A0A0C]/55 border border-white/5 rounded-3xl p-8">
-                    <HelpCircle className="w-12 h-12 text-zinc-650 mx-auto mb-3" />
-                    <p className="text-sm font-semibold text-zinc-400">Assessment Under Construction</p>
-                    <p className="text-xs text-zinc-500 mt-1">This module assessment has not been configured yet.</p>
+                  <div className={`text-center py-12 rounded-3xl p-8 border ${darkMode ? "bg-[#0A0A0C]/55 border-white/5" : "bg-white border-line shadow-soft"}`}>
+                    <HelpCircle className="w-12 h-12 text-zinc-550 mx-auto mb-3" />
+                    <p className={`text-sm font-semibold ${darkMode ? "text-zinc-400" : "text-ink"}`}>Assessment Under Construction</p>
+                    <p className={`text-xs mt-1 ${darkMode ? "text-zinc-500" : "text-slate"}`}>This module assessment has not been configured yet.</p>
                   </div>
                 ) : activeTest.attempts_allowed > 0 && attemptsCount >= activeTest.attempts_allowed ? (
-                  <div className="text-center py-12 bg-[#0A0A0C]/55 border border-white/5 rounded-3xl p-8 space-y-4">
+                  <div className={`text-center py-12 rounded-3xl p-8 space-y-4 border ${darkMode ? "bg-[#0A0A0C]/55 border-white/5" : "bg-white border-line shadow-soft"}`}>
                     <AlertTriangle className="w-12 h-12 text-amber-500 mx-auto" />
-                    <h3 className="text-base font-bold text-white">Attempt Limit Reached</h3>
-                    <p className="text-xs text-zinc-400 leading-relaxed max-w-md mx-auto">
+                    <h3 className={`text-base font-bold ${darkMode ? "text-white" : "text-ink"}`}>Attempt Limit Reached</h3>
+                    <p className={`text-xs leading-relaxed max-w-md mx-auto ${darkMode ? "text-zinc-400" : "text-slate"}`}>
                       You have used all {activeTest.attempts_allowed} of your allowed attempts for this module assessment.
                     </p>
                     {highestAttempt && (
-                      <div className="bg-[#111114] border border-white/5 p-4 rounded-xl max-w-xs mx-auto text-xs">
-                        <span className="text-zinc-500 block uppercase tracking-wider font-bold text-[9px] mb-1">Your Best Score</span>
-                        <span className="text-sm font-bold text-white block">
+                      <div className={`border p-4 rounded-xl max-w-xs mx-auto text-xs ${
+                        darkMode 
+                          ? "bg-[#111114] border-white/5 text-zinc-400" 
+                          : "bg-zinc-50 border-zinc-200 text-zinc-650"
+                      }`}>
+                        <span className="block uppercase tracking-wider font-bold text-[9px] mb-1 opacity-70">Your Best Score</span>
+                        <span className={`text-sm font-bold block ${darkMode ? "text-white" : "text-ink"}`}>
                           {highestAttempt.score} / {highestAttempt.max_score} Marks
                         </span>
                         <span className={`inline-block mt-2 px-2 py-0.5 rounded text-[10px] font-bold ${
@@ -745,12 +762,12 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
                     )}
                   </div>
                 ) : (
-                  <div className="bg-[#0A0A0C]/55 border border-white/5 rounded-3xl overflow-hidden">
+                  <div className={`border rounded-3xl overflow-hidden ${darkMode ? "bg-[#0A0A0C]/55 border-white/5" : "bg-white border-line shadow-soft"}`}>
                     <TestTakingWidget
                       testId={activeTest.id}
                       courseSlug={course.slug}
                       adminPreview={adminPreview}
-                      darkMode={true}
+                      darkMode={darkMode}
                       onComplete={async (score, maxScore, passed) => {
                         if (passed && !adminPreview) {
                           try {
@@ -776,7 +793,7 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
                   </div>
                 )
               ) : (
-                <div className="bg-[#0A0A0C]/55 border border-white/5 rounded-3xl overflow-hidden">
+                <div className={`border rounded-3xl overflow-hidden ${darkMode ? "bg-[#0A0A0C]/55 border-white/5" : "bg-white border-line shadow-soft"}`}>
                   {activeLesson.content_html ? (
                     <LessonIframe
                       html={activeLesson.content_html}
@@ -786,22 +803,26 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
                       onContentWindow={(win) => { lessonFrameWindowRef.current = win; }}
                     />
                   ) : (
-                    <p className="text-zinc-550 italic text-sm p-8">No textbook or text reference uploaded for this lesson. Use worksheets.</p>
+                    <p className={`italic text-sm p-8 ${darkMode ? "text-zinc-550" : "text-zinc-400"}`}>No textbook or text reference uploaded for this lesson. Use worksheets.</p>
                   )}
                 </div>
               )}
 
               {/* Bottom Navigation */}
-              <div className="flex items-center justify-between border-t border-white/5 pt-6 mt-12">
+              <div className={`flex items-center justify-between border-t pt-6 mt-12 ${darkMode ? "border-white/5" : "border-line"}`}>
                 <Button
                   disabled={!prevLesson}
                   onClick={() => activeLesson && handleLessonSelect(prevLesson!)}
-                  className="py-2 px-5 bg-zinc-900 hover:bg-zinc-800 text-zinc-350 disabled:opacity-30 disabled:hover:bg-zinc-900 text-sm border border-white/5 flex items-center gap-1.5 rounded-xl"
+                  className={`py-2 px-5 text-sm border flex items-center gap-1.5 rounded-xl transition-all ${
+                    darkMode
+                      ? "bg-zinc-900 hover:bg-zinc-800 text-zinc-350 border-white/5 disabled:opacity-30 disabled:hover:bg-zinc-900"
+                      : "bg-white hover:bg-zinc-50 text-zinc-700 border-zinc-200 disabled:opacity-30 disabled:hover:bg-white"
+                  }`}
                 >
                   <ChevronLeft className="w-4 h-4" /> Prev Lesson
                 </Button>
 
-                <span className="text-sm text-zinc-500 font-mono">
+                <span className={`text-sm font-mono ${darkMode ? "text-zinc-500" : "text-zinc-400"}`}>
                   {activeIndex + 1} of {totalLessons}
                 </span>
 
@@ -828,8 +849,8 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
           <div className="flex-1 flex items-center justify-center p-6 text-center">
             <div>
               <BookOpen className="w-12 h-12 text-zinc-500 mx-auto mb-4" />
-              <h3 className="text-lg font-bold text-white mb-1">Select a Lesson</h3>
-              <p className="text-zinc-400 font-light text-sm">Select any curriculum syllabus item from the sidebar to launch.</p>
+              <h3 className={`text-lg font-bold mb-1 ${darkMode ? "text-white" : "text-ink"}`}>Select a Lesson</h3>
+              <p className={`font-light text-sm ${darkMode ? "text-zinc-400" : "text-slate"}`}>Select any curriculum syllabus item from the sidebar to launch.</p>
             </div>
           </div>
         )}
