@@ -39,7 +39,9 @@ export function SolutionExplorer({
       ctx = gsap.context(() => {
         // Heading split-text reveal
         if (heading) {
-          const text = heading.textContent || "";
+          // Cache original text so a re-run never re-splits the (space-less) DOM.
+          let text = heading.dataset.splitText;
+          if (text == null) { text = heading.textContent || ""; heading.dataset.splitText = text; }
           const words = text.split(/\s+/).filter(Boolean);
           heading.innerHTML = words
             .map(
@@ -122,7 +124,7 @@ export function SolutionExplorer({
                 key={i}
                 onMouseMove={onMove}
                 onMouseLeave={onLeave}
-                className="solution-card group light-sweep glow-ring relative h-full overflow-hidden rounded-3xl border border-line bg-white/[0.025] p-7 md:p-8 transition-all duration-500 hover:border-brand/40"
+                className="solution-card group light-sweep glow-ring relative h-full overflow-hidden rounded-3xl border card-tone-emerald p-7 md:p-8 transition-all duration-500 hover:border-brand/50"
                 style={{
                   backgroundImage: "radial-gradient(340px circle at var(--sx,80%) var(--sy,0%), rgba(16,185,129,0.07), transparent 70%)",
                   transformStyle: "preserve-3d",

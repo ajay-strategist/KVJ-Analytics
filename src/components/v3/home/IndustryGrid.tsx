@@ -128,7 +128,7 @@ export function IndustryGrid({ eyebrow, heading, items }: { eyebrow?: string; he
                 key={i}
                 onMouseMove={onMove}
                 onMouseLeave={onLeave}
-                className="industry-card group grid-fade relative h-52 overflow-hidden rounded-2xl border border-line bg-white/[0.04] p-5 hover:border-brand/50 hover:bg-white/[0.06]"
+                className="industry-card group grid-fade relative h-52 overflow-hidden rounded-2xl border card-tone-emerald p-5 hover:border-brand/60"
                 style={{
                   backgroundImage: `radial-gradient(220px circle at var(--sx,50%) var(--sy,0%), rgba(${tint},0.16), transparent 70%)`,
                   transformStyle: "preserve-3d",

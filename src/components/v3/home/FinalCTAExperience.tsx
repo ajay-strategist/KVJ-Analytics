@@ -48,7 +48,7 @@ export function FinalCTAExperience({
 
         // Title character reveal
         if (titleEl) {
-          const text = titleEl.textContent || "";
+          let text = titleEl.dataset.splitText; if (text == null) { text = titleEl.textContent || ""; titleEl.dataset.splitText = text; }
           const clean = text.replace(/\?$/, "");
           const words = clean.split(/\s+/).filter(Boolean);
           titleEl.innerHTML = words
