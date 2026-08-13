@@ -83,11 +83,11 @@ function SignUpForm() {
   };
 
   return (
-    <Card hoverLift={false} className="max-w-md w-full bg-[#0A0A0C]/55 border border-white/5 p-8 rounded-3xl backdrop-blur-xl shadow-[0_12px_40px_rgba(0,0,0,0.4)] mx-auto relative z-10">
-      <h2 className="text-3xl font-bold font-display text-white text-center mb-2">
+    <Card hoverLift={false} className="max-w-md w-full bg-card border border-line p-8 rounded-3xl backdrop-blur-xl shadow-[0_12px_40px_rgba(0,0,0,0.4)] mx-auto relative z-10">
+      <h2 className="text-3xl font-bold font-display text-ink text-center mb-2">
         Create Account
       </h2>
-      <p className="text-zinc-500 font-light text-center text-sm mb-8">
+      <p className="text-muted font-light text-center text-sm mb-8">
         Join KVJ Analytics to start automating workflows and taking mock tests.
       </p>
 
@@ -100,88 +100,88 @@ function SignUpForm() {
 
       <form onSubmit={handleSignUp} className="space-y-4">
         <div>
-          <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-2 font-mono">
+          <label className="block text-xs font-bold uppercase tracking-wider text-slate mb-2 font-mono">
             Full Name
           </label>
           <div className="relative">
-            <User className="absolute left-4 top-3.5 w-4.5 h-4.5 text-zinc-500" />
+            <User className="absolute left-4 top-3.5 w-4.5 h-4.5 text-muted" />
             <input
               type="text"
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Rahul Kumar"
-              className="w-full pl-12 pr-4 py-3 rounded-xl border border-white/5 text-sm bg-[#0E0E12] text-white placeholder-zinc-500 focus:outline-none focus:border-[#10B981]/40"
+              className="w-full pl-12 pr-4 py-3 rounded-xl border border-line text-sm bg-surface text-ink placeholder-muted focus:outline-none focus:border-[#10B981]/40"
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-2 font-mono">
+          <label className="block text-xs font-bold uppercase tracking-wider text-slate mb-2 font-mono">
             Email Address
           </label>
           <div className="relative">
-            <Mail className="absolute left-4 top-3.5 w-4.5 h-4.5 text-zinc-500" />
+            <Mail className="absolute left-4 top-3.5 w-4.5 h-4.5 text-muted" />
             <input
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="name@example.com"
-              className="w-full pl-12 pr-4 py-3 rounded-xl border border-white/5 text-sm bg-[#0E0E12] text-white placeholder-zinc-500 focus:outline-none focus:border-[#10B981]/40"
+              className="w-full pl-12 pr-4 py-3 rounded-xl border border-line text-sm bg-surface text-ink placeholder-muted focus:outline-none focus:border-[#10B981]/40"
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-2 font-mono">
+          <label className="block text-xs font-bold uppercase tracking-wider text-slate mb-2 font-mono">
             Phone Number
           </label>
           <div className="relative">
-            <Phone className="absolute left-4 top-3.5 w-4.5 h-4.5 text-zinc-500" />
+            <Phone className="absolute left-4 top-3.5 w-4.5 h-4.5 text-muted" />
             <input
               type="tel"
               required
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="+91 98765 43210"
-              className="w-full pl-12 pr-4 py-3 rounded-xl border border-white/5 text-sm bg-[#0E0E12] text-white placeholder-zinc-500 focus:outline-none focus:border-[#10B981]/40"
+              className="w-full pl-12 pr-4 py-3 rounded-xl border border-line text-sm bg-surface text-ink placeholder-muted focus:outline-none focus:border-[#10B981]/40"
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-2 font-mono">
+          <label className="block text-xs font-bold uppercase tracking-wider text-slate mb-2 font-mono">
             Profession
           </label>
           <div className="relative">
-            <Briefcase className="absolute left-4 top-3.5 w-4.5 h-4.5 text-zinc-500" />
+            <Briefcase className="absolute left-4 top-3.5 w-4.5 h-4.5 text-muted" />
             <select
               value={profession}
               onChange={(e) => setProfession(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 rounded-xl border border-white/5 text-sm bg-[#0E0E12] text-white focus:outline-none focus:border-[#10B981]/40 appearance-none cursor-pointer"
+              className="w-full pl-12 pr-4 py-3 rounded-xl border border-line text-sm bg-surface text-ink focus:outline-none focus:border-[#10B981]/40 appearance-none cursor-pointer"
             >
-              <option value="student" className="bg-[#050505] text-white">Student</option>
-              <option value="teacher" className="bg-[#050505] text-white">Teacher / Academician</option>
-              <option value="it" className="bg-[#050505] text-white">IT Professional</option>
-              <option value="non_it" className="bg-[#050505] text-white">Non-IT Professional</option>
+              <option value="student" className="bg-white text-ink">Student</option>
+              <option value="teacher" className="bg-white text-ink">Teacher / Academician</option>
+              <option value="it" className="bg-white text-ink">IT Professional</option>
+              <option value="non_it" className="bg-white text-ink">Non-IT Professional</option>
             </select>
           </div>
         </div>
 
         <div>
-          <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-2 font-mono">
+          <label className="block text-xs font-bold uppercase tracking-wider text-slate mb-2 font-mono">
             Password
           </label>
           <div className="relative">
-            <Lock className="absolute left-4 top-3.5 w-4.5 h-4.5 text-zinc-500" />
+            <Lock className="absolute left-4 top-3.5 w-4.5 h-4.5 text-muted" />
             <input
               type="password"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full pl-12 pr-4 py-3 rounded-xl border border-white/5 text-sm bg-[#0E0E12] text-white placeholder-zinc-500 focus:outline-none focus:border-[#10B981]/40"
+              className="w-full pl-12 pr-4 py-3 rounded-xl border border-line text-sm bg-surface text-ink placeholder-muted focus:outline-none focus:border-[#10B981]/40"
             />
           </div>
         </div>
@@ -202,7 +202,7 @@ function SignUpForm() {
         </Button>
       </form>
 
-      <div className="text-center mt-6 pt-4 border-t border-white/5 text-xs text-zinc-400 font-light">
+      <div className="text-center mt-6 pt-4 border-t border-line text-xs text-slate font-light">
         Already have an account?{" "}
         <Link
           href={redirect ? `/signin?redirect=${encodeURIComponent(redirect)}` : "/signin"}
@@ -217,7 +217,7 @@ function SignUpForm() {
 
 export default function SignUpPage() {
   return (
-    <div className="w-full min-h-screen bg-[#050505] text-zinc-200 pt-36 pb-24 relative overflow-hidden flex items-center">
+    <div className="w-full min-h-screen bg-base text-slate pt-36 pb-24 relative overflow-hidden flex items-center">
       {/* Background spotlights */}
       <div className="absolute top-[20%] right-[-10%] w-[500px] h-[500px] bg-[#0D9488]/5 rounded-full blur-[140px] pointer-events-none" />
       <div className="absolute bottom-[20%] left-[-10%] w-[500px] h-[500px] bg-[#10B981]/5 rounded-full blur-[140px] pointer-events-none" />
