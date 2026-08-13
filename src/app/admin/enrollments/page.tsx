@@ -85,7 +85,7 @@ export default function AdminEnrollmentsPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [addEmail, setAddEmail] = useState("");
   const [addCourseSlug, setAddCourseSlug] = useState("");
-  const [addMethod, setAddMethod] = useState("admin_manual");
+  const [addMethod, setAddMethod] = useState("college_code");
   const [addLoading, setAddLoading] = useState(false);
   const [addError, setAddError] = useState("");
   const [addSuccess, setAddSuccess] = useState("");
@@ -349,10 +349,8 @@ export default function AdminEnrollmentsPage() {
                     onChange={(e) => setAddMethod(e.target.value)}
                     className="w-full px-4 py-2.5 rounded-xl border border-line text-sm bg-surface text-ink focus:outline-none focus:border-brand/40"
                   >
-                    <option value="admin_manual">Admin Manual</option>
-                    <option value="college_code">College Code</option>
-                    <option value="paid">Paid</option>
-                    <option value="scholarship">Scholarship</option>
+                    <option value="college_code">College / Batch Access</option>
+                    <option value="paid">Paid Enrollment</option>
                   </select>
                 </div>
               </div>
@@ -378,7 +376,7 @@ export default function AdminEnrollmentsPage() {
                       const data = await res.json();
                       if (!res.ok) throw new Error(data.error || "Failed to enroll.");
                       setAddSuccess(data.message);
-                      setAddEmail(""); setAddCourseSlug(""); setAddMethod("admin_manual");
+                      setAddEmail(""); setAddCourseSlug(""); setAddMethod("college_code");
                       fetchData(); // refresh the list
                     } catch (err: any) {
                       setAddError(err.message);

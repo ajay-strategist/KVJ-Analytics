@@ -172,7 +172,7 @@ function StudentAccountDashboard() {
 
           <button
             onClick={handleSignOut}
-            className="flex items-center text-xs font-bold text-slate hover:text-rose-400 transition-colors bg-zinc-900 border border-line rounded-xl px-4 py-2.5 shadow-sm shrink-0 active:scale-95"
+            className="flex items-center text-xs font-semibold text-slate hover:text-rose-600 transition-colors bg-white border border-line rounded-xl px-4 py-2.5 shadow-sm shrink-0 active:scale-95 hover:border-rose-200 hover:bg-rose-50"
           >
             <LogOut className="w-4 h-4 mr-2" />
             Sign Out Account
@@ -197,7 +197,7 @@ function StudentAccountDashboard() {
               </div>
 
               {enrolledCourses.length === 0 ? (
-                <div className="p-12 border border-dashed border-zinc-800 rounded-3xl text-center card-tone-emerald backdrop-blur-sm">
+                <div className="p-12 border border-dashed border-line rounded-3xl text-center card-tone-emerald backdrop-blur-sm">
                   <BookOpen className="w-10 h-10 text-muted mx-auto mb-4" />
                   <h4 className="text-lg font-bold text-ink mb-1.5 font-display">
                     No Enrolled Programs
@@ -221,11 +221,11 @@ function StudentAccountDashboard() {
                     >
                       {/* Left: Banner + Titles */}
                       <div className="flex gap-4 items-center">
-                        <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 border border-line bg-zinc-900 hidden sm:block">
+                        <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 border border-line bg-[#ECFDF5] hidden sm:block">
                           {course.banner_url ? (
                             <img src={course.banner_url} alt={course.title} className="w-full h-full object-cover" />
                           ) : (
-                            <div className="w-full h-full bg-zinc-850 flex items-center justify-center text-[#10B981]">
+                            <div className="w-full h-full bg-[#ECFDF5] flex items-center justify-center text-[#10B981]">
                               <BookOpen className="w-6 h-6" />
                             </div>
                           )}
@@ -364,7 +364,7 @@ function StudentAccountDashboard() {
 
             {/* 4. Active Promo Deals Panel */}
             {activeOffers.length > 0 && (
-              <div className="bg-gradient-to-tr from-[#0D9488]/10 via-[#10B981]/5 to-[#0A0A0C] border border-[#10B981]/20 rounded-3xl p-6 relative overflow-hidden">
+              <div className="bg-gradient-to-tr from-[#ECFDF5] via-[#F0FFF4] to-white border border-[#10B981]/20 rounded-3xl p-6 relative overflow-hidden">
                 <div className="absolute top-[-20%] right-[-20%] w-32 h-32 bg-[#10B981]/10 rounded-full blur-2xl" />
                 <h4 className="text-sm font-bold text-[#10B981] font-display flex items-center gap-1.5 uppercase tracking-widest font-mono">
                   <Gift className="w-4 h-4 animate-bounce" /> Active Discount Promo
