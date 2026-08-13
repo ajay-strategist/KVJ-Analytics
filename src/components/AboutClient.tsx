@@ -146,9 +146,9 @@ export function AboutClientContent({ pageData }: AboutClientProps) {
     : FALLBACK_ABOUT.specializations;
 
   return (
-    <div className="w-full hero-emerald text-zinc-200 relative min-h-screen">
-      {/* 1. HERO SECTION — Asymmetric 60/40 Split Screen */}
-      <section className="relative min-h-[90vh] flex items-center pt-28 pb-16 overflow-hidden border-b border-line">
+    <div className="w-full bg-base text-slate relative min-h-screen">
+      {/* 1. HERO SECTION — Asymmetric 60/40 Split Screen (dark emerald band) */}
+      <section className="hero-emerald relative min-h-[90vh] flex items-center pt-28 pb-16 overflow-hidden border-b border-line">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:4rem_4rem] pointer-events-none" />
         
         {/* Glowing backdrop spotlights */}
@@ -198,11 +198,11 @@ export function AboutClientContent({ pageData }: AboutClientProps) {
       </section>
 
       {/* 2. WE SPECIALIZE IN SECTION — Full-width Band */}
-      <section className="py-20 relative bg-[#07130E]/40 border-b border-line overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(16,185,129,0.03),transparent)] pointer-events-none" />
+      <section className="py-20 relative bg-surface border-b border-line overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(16,185,129,0.05),transparent)] pointer-events-none" />
         <Container>
           <div className="text-center max-w-2xl mx-auto mb-16">
-            <h2 className="font-display font-bold text-3xl md:text-5xl text-white tracking-tight">
+            <h2 className="font-display font-bold text-3xl md:text-5xl text-ink tracking-tight">
               We Specialize In
             </h2>
           </div>
@@ -212,10 +212,9 @@ export function AboutClientContent({ pageData }: AboutClientProps) {
               const label = getSpecializationLabel(spec) || FALLBACK_ABOUT.specializations[idx] || "";
               return (
                 <Reveal key={idx} delay={idx * 50} variant="up">
-                  <div className="bg-[#0B2A22]/65 border border-line hover:border-brand/40 px-6 py-5 rounded-2xl flex items-center gap-4 hover:-translate-y-1 hover:shadow-[0_4px_20px_rgba(16,185,129,0.05)] transition-all duration-300 group relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-tr from-brand/5 to-transparent pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#10B981] shadow-[0_0_8px_#10B981] animate-pulse" />
-                    <span className="text-zinc-100 text-[16px] md:text-[17px] font-medium tracking-wide leading-snug text-left">{label}</span>
+                  <div className="card-tone-emerald border hover:border-brand/50 px-6 py-5 rounded-2xl flex items-center gap-4 hover:-translate-y-1 hover:shadow-[0_8px_24px_rgba(16,185,129,0.10)] transition-all duration-300 group relative overflow-hidden">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#10B981] shadow-[0_0_8px_#10B981] animate-pulse shrink-0" />
+                    <span className="text-ink text-[16px] md:text-[17px] font-medium tracking-wide leading-snug text-left">{label}</span>
                   </div>
                 </Reveal>
               );
@@ -228,10 +227,10 @@ export function AboutClientContent({ pageData }: AboutClientProps) {
       <section className="py-20 relative bg-base overflow-hidden border-b border-line">
         <Container className="relative z-10">
           <div className="text-center max-w-3xl mx-auto mb-16">
-            <h2 className="font-display font-bold text-3xl md:text-5xl text-white tracking-tight mb-6">
+            <h2 className="font-display font-bold text-3xl md:text-5xl text-ink tracking-tight mb-6">
               Our Impact
             </h2>
-            <p className="text-zinc-300 font-light text-lg md:text-xl leading-relaxed max-w-2xl mx-auto">
+            <p className="text-slate font-light text-lg md:text-xl leading-relaxed max-w-2xl mx-auto">
               {pageData.reachLine}
             </p>
           </div>
@@ -239,15 +238,14 @@ export function AboutClientContent({ pageData }: AboutClientProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto items-stretch">
             {parsedStats.map((stat, idx) => (
               <Reveal key={idx} delay={idx * 80} variant="scale" className="h-full">
-                <div className="bg-[#0B2A22]/55 border border-line rounded-3xl p-6 backdrop-blur-xl flex flex-col justify-between h-full hover:border-[#10B981]/40 transition-all duration-300 relative group overflow-hidden shadow-soft text-left">
-                  <div className="absolute inset-0 bg-gradient-to-tr from-brand/5 to-transparent pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="card-tone-emerald border rounded-3xl p-6 flex flex-col justify-between h-full hover:border-[#10B981]/50 hover:-translate-y-1 transition-all duration-300 relative group overflow-hidden shadow-soft text-left">
                   
                   {stat.isStat ? (
                     <div className="flex flex-col h-full justify-between">
                       <div className="text-3xl md:text-4xl font-extrabold font-display leading-none text-transparent bg-clip-text bg-gradient-to-r from-brand to-corporate mb-6">
                         <CountUp value={stat.num!} suffix={stat.suffix} />
                       </div>
-                      <p className="text-sm font-semibold text-zinc-200 leading-normal mt-auto">
+                      <p className="text-sm font-semibold text-slate leading-normal mt-auto">
                         {stat.label}
                       </p>
                     </div>
@@ -260,7 +258,7 @@ export function AboutClientContent({ pageData }: AboutClientProps) {
                           <Cpu className="w-5 h-5 text-[#10B981]" />
                         )}
                       </div>
-                      <p className="text-sm font-semibold text-zinc-200 leading-normal mt-auto">
+                      <p className="text-sm font-semibold text-slate leading-normal mt-auto">
                         {stat.label}
                       </p>
                     </div>
@@ -273,25 +271,25 @@ export function AboutClientContent({ pageData }: AboutClientProps) {
       </section>
 
       {/* 4. OUR VISION SECTION — Centered Statement Band */}
-      <section className="py-24 relative bg-[#07130E]/40 border-b border-line overflow-hidden">
+      <section className="py-24 relative bg-surface border-b border-line overflow-hidden">
         {/* Glow */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[250px] bg-brand/5 rounded-full blur-[100px] pointer-events-none" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[250px] bg-brand/8 rounded-full blur-[100px] pointer-events-none" />
 
         <Container className="relative z-10">
           <Reveal variant="scale">
-            <div className="max-w-4xl mx-auto bg-[#0B2A22]/75 border border-[#10B981]/20 rounded-[32px] p-8 md:p-12 backdrop-blur-xl hover:border-[#10B981]/40 transition-all duration-300 relative overflow-hidden group shadow-[0_12px_40px_rgba(16,185,129,0.05)] text-center">
+            <div className="max-w-4xl mx-auto card-tone-emerald border rounded-[32px] p-8 md:p-12 hover:border-[#10B981]/50 transition-all duration-300 relative overflow-hidden group shadow-soft text-center">
               <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(16,185,129,0.01)_1px,transparent_1px)] bg-[size:3rem_3rem] pointer-events-none" />
               
               <div className="flex flex-col items-center justify-center relative z-10 space-y-6">
-                <div className="w-14 h-14 rounded-2xl bg-white/5 border border-line flex items-center justify-center text-brand">
+                <div className="w-14 h-14 rounded-2xl card-chip-emerald border border-line flex items-center justify-center text-brand">
                   <VisionCompass />
                 </div>
-                
-                <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-[#10B981] animate-pulse">
+
+                <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-[#047857] animate-pulse">
                   Our Vision
                 </span>
-                
-                <p className="text-xl md:text-2xl font-light text-zinc-100 leading-relaxed max-w-2xl mx-auto">
+
+                <p className="text-xl md:text-2xl font-light text-ink leading-relaxed max-w-2xl mx-auto">
                   {pageData.vision?.body || "To build smarter organizations and industry-ready professionals through analytics, automation, and practical learning."}
                 </p>
               </div>
