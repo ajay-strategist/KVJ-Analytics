@@ -247,7 +247,7 @@ function StudentAccountDashboard() {
 
                       {/* Launch Button */}
                       <Link href={`/training/${course.slug}/learn`} className="w-full sm:w-auto shrink-0">
-                        <Button className="w-full sm:w-auto py-2.5 px-5 bg-zinc-800 hover:bg-[#0D9488] hover:text-black font-bold text-xs border-line transition-all flex items-center justify-center gap-1">
+                        <Button className="w-full sm:w-auto py-2.5 px-5 bg-brand hover:bg-brand-700 text-white font-bold text-xs border-line transition-all flex items-center justify-center gap-1">
                           Launch Player <ChevronRight className="w-4 h-4" />
                         </Button>
                       </Link>

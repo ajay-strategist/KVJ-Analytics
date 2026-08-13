@@ -238,7 +238,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
    Use via <Card tone="emerald"> etc. Background + border tint; pair the
    .card-accent-* color on the icon/eyebrow. */
 .card-tone-neutral { background: var(--color-card); border-color: var(--color-line); }
-.card-tone-emerald { background: #ECFDF5; border-color: #A7F3D0; }
+.card-tone-emerald { background: #DCFCE7; border-color: #86EFAC; }
 .card-tone-teal    { background: #F0FDFA; border-color: #99F6E4; }
 .card-tone-amber   { background: #FFFBEB; border-color: #FDE68A; }
 .card-tone-violet  { background: #F5F3FF; border-color: #DDD6FE; }
@@ -899,4 +899,15 @@ details[open] summary ~ * {
     radial-gradient(55% 75% at 18% 0%, rgba(16,185,129,0.16), transparent 62%),
     radial-gradient(50% 70% at 88% 100%, rgba(13,148,136,0.13), transparent 62%),
     linear-gradient(165deg, #07130E 0%, #0B2A22 52%, #06110C 100%);
+  color: rgba(255, 255, 255, 0.92); /* default light text on the dark band */
+}
+/* On a dark hero band, force common "dark" text tokens to readable light so
+   nothing goes invisible (headings that were flipped to ink, muted captions). */
+.hero-emerald .text-ink   { color: #ffffff !important; }
+.hero-emerald .text-slate { color: rgba(255,255,255,0.80) !important; }
+.hero-emerald .text-muted { color: rgba(255,255,255,0.60) !important; }
+/* Any gradient clip-text heading on the dark band was using dark-green stops
+   (from-brand) = invisible. Force a bright emerald gradient there. */
+.hero-emerald .bg-clip-text {
+  background-image: linear-gradient(90deg, #34D399, #6EE7B7 55%, #5EEAD4) !important;
 }

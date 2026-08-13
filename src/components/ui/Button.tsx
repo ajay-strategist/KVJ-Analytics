@@ -43,7 +43,7 @@ export function Button({
     
     // Secondary: Glass button with glowing border and outline reveal sweep animation
     secondary:
-      "border border-brand/20 bg-glass-card backdrop-blur-md text-white rounded-full px-7 py-3.5 hover:border-brand hover:scale-[1.02] shadow-[0_2px_10px_rgba(0,0,0,0.3)] hover:shadow-[0_0_18px_rgba(16,185,129,0.25)] hover:text-[#10B981] active:scale-[0.98] btn-sweeping-border",
+      "border border-brand/30 bg-white/70 backdrop-blur-md text-ink rounded-full px-7 py-3.5 hover:border-brand hover:scale-[1.02] shadow-sm hover:shadow-[0_0_18px_rgba(16,185,129,0.18)] hover:text-brand active:scale-[0.98] btn-sweeping-border",
     
     // Ghost text link with hover neon highlight
     ghost:
