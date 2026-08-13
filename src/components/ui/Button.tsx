@@ -51,7 +51,7 @@ export function Button({
     
     // Translucent dark glass pill
     light:
-      "bg-[#0B2A22]/60 backdrop-blur-md text-slate hover:text-white border border-white/5 rounded-full px-7 py-3.5 shadow-md hover:border-brand/35 hover:scale-[1.02] transition-all duration-300",
+      "bg-ink/85 backdrop-blur-md text-white hover:text-white border border-white/5 rounded-full px-7 py-3.5 shadow-md hover:border-brand/35 hover:scale-[1.02] transition-all duration-300",
     
     // Accent (Continuous glowing accent)
     accent:
