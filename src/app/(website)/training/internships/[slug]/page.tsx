@@ -70,7 +70,7 @@ export default async function InternshipDetailPage({
   }
 
   return (
-    <div className="w-full bg-[#050505] text-zinc-200 min-h-screen pt-28 pb-24 relative overflow-hidden">
+    <div className="w-full bg-base text-slate min-h-screen pt-28 pb-24 relative overflow-hidden">
       {/* Background gradients */}
       <div className="absolute top-[10%] left-[-10%] w-[500px] h-[500px] bg-[#10B981]/5 rounded-full blur-[140px] pointer-events-none" />
       <div className="absolute top-[40%] right-[-10%] w-[600px] h-[600px] bg-[#0D9488]/5 rounded-full blur-[160px] pointer-events-none" />
@@ -79,7 +79,7 @@ export default async function InternshipDetailPage({
         {/* Back Link */}
         <Link
           href="/training/internships"
-          className="inline-flex items-center text-sm font-semibold text-zinc-400 hover:text-[#10B981] mb-12 group transition-colors"
+          className="inline-flex items-center text-sm font-semibold text-slate hover:text-[#10B981] mb-12 group transition-colors"
         >
           <ArrowLeft className="w-4 h-4 mr-2 transition-transform duration-200 group-hover:-translate-x-1" />
           <span>Back to Internships</span>
@@ -94,29 +94,29 @@ export default async function InternshipDetailPage({
               <span className="text-[10px] font-bold font-mono tracking-widest text-[#10B981] uppercase px-3 py-1 rounded-full bg-[#10B981]/10 border border-[#10B981]/20">
                 Internship Program
               </span>
-              <h1 className="font-display font-bold text-3xl sm:text-4xl text-white mt-6 leading-tight tracking-tight">
+              <h1 className="font-display font-bold text-3xl sm:text-4xl text-ink mt-6 leading-tight tracking-tight">
                 {internship.title}
               </h1>
             </div>
 
             {/* Banner Image */}
-            <div className="relative w-full aspect-video rounded-3xl overflow-hidden border border-white/5 bg-zinc-950">
+            <div className="relative w-full aspect-video rounded-3xl overflow-hidden border border-line bg-zinc-950">
               <img src={internship.banner_url} alt={internship.title} className="w-full h-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-[#050505]/75 via-transparent to-transparent" />
             </div>
 
             {/* Specs */}
-            <div className="grid grid-cols-2 gap-4 p-5 rounded-2xl bg-[#0A0A0C]/55 border border-white/5 backdrop-blur-xl">
+            <div className="grid grid-cols-2 gap-4 p-5 rounded-2xl card-tone-emerald border border-line backdrop-blur-xl">
               <div>
-                <span className="text-[10px] uppercase tracking-wider text-zinc-500 font-bold block">Duration</span>
-                <span className="text-white font-medium text-sm md:text-base mt-1.5 flex items-center gap-1.5 font-mono">
+                <span className="text-[10px] uppercase tracking-wider text-muted font-bold block">Duration</span>
+                <span className="text-ink font-medium text-sm md:text-base mt-1.5 flex items-center gap-1.5 font-mono">
                   <Clock className="w-4 h-4 text-[#0D9488] shrink-0" />
                   {internship.duration}
                 </span>
               </div>
-              <div className="border-l border-white/5 pl-6">
-                <span className="text-[10px] uppercase tracking-wider text-zinc-500 font-bold block">Stipend / Comp</span>
-                <span className="text-white font-medium text-sm md:text-base mt-1.5 flex items-center gap-1.5 font-mono">
+              <div className="border-l border-line pl-6">
+                <span className="text-[10px] uppercase tracking-wider text-muted font-bold block">Stipend / Comp</span>
+                <span className="text-ink font-medium text-sm md:text-base mt-1.5 flex items-center gap-1.5 font-mono">
                   <DollarSign className="w-4 h-4 text-[#10B981] shrink-0" />
                   {internship.stipend}
                 </span>
@@ -125,8 +125,8 @@ export default async function InternshipDetailPage({
 
             {/* Description */}
             <div className="space-y-4">
-              <h2 className="text-xl font-bold font-display text-white border-b border-white/5 pb-2">Program Details</h2>
-              <p className="text-zinc-400 font-light leading-relaxed whitespace-pre-line">
+              <h2 className="text-xl font-bold font-display text-ink border-b border-line pb-2">Program Details</h2>
+              <p className="text-slate font-light leading-relaxed whitespace-pre-line">
                 {internship.description}
               </p>
             </div>

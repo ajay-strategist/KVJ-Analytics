@@ -80,7 +80,7 @@ export default async function JobDetailPage({
   }
 
   return (
-    <div className="w-full bg-[#050505] text-zinc-200 min-h-screen pt-28 pb-24 relative overflow-hidden">
+    <div className="w-full bg-base text-slate min-h-screen pt-28 pb-24 relative overflow-hidden">
       {/* Background spotlights */}
       <div className="absolute top-[10%] left-[-10%] w-[500px] h-[500px] bg-[#10B981]/5 rounded-full blur-[140px] pointer-events-none" />
       <div className="absolute top-[40%] right-[-10%] w-[600px] h-[600px] bg-[#0D9488]/5 rounded-full blur-[160px] pointer-events-none" />
@@ -89,7 +89,7 @@ export default async function JobDetailPage({
         {/* Back Link */}
         <Link
           href="/careers"
-          className="inline-flex items-center text-sm font-semibold text-zinc-400 hover:text-[#10B981] mb-12 group transition-colors"
+          className="inline-flex items-center text-sm font-semibold text-slate hover:text-[#10B981] mb-12 group transition-colors"
         >
           <ArrowLeft className="w-4 h-4 mr-2 transition-transform duration-200 group-hover:-translate-x-1" />
           <span>Back to Careers Board</span>
@@ -105,28 +105,28 @@ export default async function JobDetailPage({
                 <span className="text-[9px] font-bold font-mono tracking-widest text-[#10B981] uppercase bg-[#10B981]/10 px-3 py-1 rounded-full border border-[#10B981]/15">
                   {job.department}
                 </span>
-                <span className="text-zinc-650 text-xs font-light">•</span>
-                <span className="text-[9px] font-bold font-mono tracking-widest text-zinc-400 uppercase bg-zinc-900 px-3 py-1 rounded-full border border-white/5">
+                <span className="text-muted text-xs font-light">•</span>
+                <span className="text-[9px] font-bold font-mono tracking-widest text-slate uppercase bg-zinc-900 px-3 py-1 rounded-full border border-line">
                   {job.type.replace("_", " ")}
                 </span>
               </div>
-              <h1 className="font-display font-bold text-3xl sm:text-4xl text-white mt-6 leading-tight tracking-tight">
+              <h1 className="font-display font-bold text-3xl sm:text-4xl text-ink mt-6 leading-tight tracking-tight">
                 {job.title}
               </h1>
             </div>
 
             {/* Meta Specs */}
-            <div className="grid grid-cols-2 gap-4 p-5 rounded-2xl bg-[#0A0A0C]/55 border border-white/5 backdrop-blur-xl">
+            <div className="grid grid-cols-2 gap-4 p-5 rounded-2xl card-tone-emerald border border-line backdrop-blur-xl">
               <div>
-                <span className="text-[10px] uppercase tracking-wider text-zinc-500 font-bold block font-mono">Location</span>
-                <span className="text-white font-medium text-sm md:text-base mt-1.5 flex items-center gap-1.5 font-mono">
+                <span className="text-[10px] uppercase tracking-wider text-muted font-bold block font-mono">Location</span>
+                <span className="text-ink font-medium text-sm md:text-base mt-1.5 flex items-center gap-1.5 font-mono">
                   <MapPin className="w-4 h-4 text-[#0D9488] shrink-0" />
                   {job.location}
                 </span>
               </div>
-              <div className="border-l border-white/5 pl-6">
-                <span className="text-[10px] uppercase tracking-wider text-zinc-500 font-bold block font-mono">Job Classification</span>
-                <span className="text-white font-medium text-sm md:text-base mt-1.5 flex items-center gap-1.5 font-mono">
+              <div className="border-l border-line pl-6">
+                <span className="text-[10px] uppercase tracking-wider text-muted font-bold block font-mono">Job Classification</span>
+                <span className="text-ink font-medium text-sm md:text-base mt-1.5 flex items-center gap-1.5 font-mono">
                   <Briefcase className="w-4 h-4 text-[#10B981] shrink-0" />
                   {job.type.replace("_", " ")}
                 </span>
@@ -135,8 +135,8 @@ export default async function JobDetailPage({
 
             {/* Description */}
             <div className="space-y-4">
-              <h2 className="text-xl font-bold font-display text-white border-b border-white/5 pb-2">Role &amp; Requirements</h2>
-              <div className="text-zinc-400 font-light leading-relaxed whitespace-pre-line space-y-4 prose prose-invert max-w-none">
+              <h2 className="text-xl font-bold font-display text-ink border-b border-line pb-2">Role &amp; Requirements</h2>
+              <div className="text-slate font-light leading-relaxed whitespace-pre-line space-y-4 prose prose-invert max-w-none">
                 {job.description}
               </div>
             </div>
