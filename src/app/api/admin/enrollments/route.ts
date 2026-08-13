@@ -109,3 +109,121 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
+
+/** POST: Manually enroll a student by email into a course */
+export async function POST(req: NextRequest) {
+  if (!isAuthorized(req)) {
+    return NextResponse.json({ error: "Unauthorized access." }, { status: 401 });
+  }
+
+  const supabaseAdmin = getAdminClient();
+  if (!supabaseAdmin) {
+    return NextResponse.json({ error: "Supabase not configured." }, { status: 500 });
+  }
+
+  try {
+    const { user_email, course_slug, enrollment_method } = await req.json();
+
+    if (!user_email || !course_slug) {
+      return NextResponse.json(
+        { error: "Student email and course slug are required." },
+        { status: 400 }
+      );
+    }
+
+    // 1. Find user by email
+    const { data: usersPage, error: userErr } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
+    if (userErr) throw userErr;
+
+    const matchedUser = usersPage?.users?.find(
+      (u: any) => u.email?.toLowerCase() === user_email.toLowerCase().trim()
+    );
+
+    if (!matchedUser) {
+      return NextResponse.json(
+        { error: `No student account found with email: ${user_email}` },
+        { status: 404 }
+      );
+    }
+
+    // 2. Verify course exists
+    const { data: course, error: courseErr } = await supabaseAdmin
+      .from("courses")
+      .select("id, title, slug")
+      .eq("slug", course_slug.trim())
+      .maybeSingle();
+
+    if (courseErr || !course) {
+      return NextResponse.json(
+        { error: `Course "${course_slug}" not found.` },
+        { status: 404 }
+      );
+    }
+
+    // 3. Upsert enrollment
+    const { data: enrollment, error: enrollErr } = await supabaseAdmin
+      .from("enrollments")
+      .upsert(
+        {
+          user_id: matchedUser.id,
+          course_slug: course.slug,
+          enrollment_method: enrollment_method || "admin_manual",
+          status: "active",
+        },
+        { onConflict: "user_id,course_slug" }
+      )
+      .select("id")
+      .maybeSingle();
+
+    if (enrollErr) throw enrollErr;
+
+    // 4. Audit log
+    try {
+      await supabaseAdmin.from("audit_logs").insert([{
+        actor: "admin",
+        action: "manual_enroll",
+        entity_type: "enrollments",
+        entity_id: enrollment?.id,
+        meta: { user_email, course_slug, user_id: matchedUser.id },
+      }]);
+    } catch (_) { /* non-fatal */ }
+
+    return NextResponse.json({
+      success: true,
+      message: `${matchedUser.email} enrolled in "${course.title}" successfully.`,
+    });
+  } catch (error: any) {
+    console.error("Manual enrollment error:", error);
+    return NextResponse.json({ error: error.message || "Failed to create enrollment." }, { status: 500 });
+  }
+}
+
+/** DELETE: Remove an enrollment by id */
+export async function DELETE(req: NextRequest) {
+  if (!isAuthorized(req)) {
+    return NextResponse.json({ error: "Unauthorized access." }, { status: 401 });
+  }
+
+  const supabaseAdmin = getAdminClient();
+  if (!supabaseAdmin) {
+    return NextResponse.json({ error: "Supabase not configured." }, { status: 500 });
+  }
+
+  try {
+    const { enrollment_id } = await req.json();
+    if (!enrollment_id) {
+      return NextResponse.json({ error: "enrollment_id is required." }, { status: 400 });
+    }
+
+    const { error } = await supabaseAdmin
+      .from("enrollments")
+      .delete()
+      .eq("id", enrollment_id);
+
+    if (error) throw error;
+
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}

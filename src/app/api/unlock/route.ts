@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { verifyTOTP } from "@/lib/totp";
 
 function getAdminClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -40,6 +41,78 @@ export async function POST(req: NextRequest) {
       .maybeSingle();
 
     if (codeFetchError || !codeData) {
+      // ── Fallback: try as a TOTP rotating batch code ───────────────────────
+      const now = new Date();
+
+      // Fetch all active batches whose validity window includes today
+      const { data: batches } = await supabaseAdmin
+        .from("batches")
+        .select("id, college_name, course_slug, totp_secret, valid_from, valid_to, active")
+        .eq("active", true);
+
+      if (batches && batches.length > 0) {
+        // Find the first batch whose window is valid and whose TOTP matches
+        const matchedBatch = batches.find((b: any) => {
+          const fromOk = !b.valid_from || new Date(b.valid_from) <= now;
+          const toOk   = !b.valid_to   || new Date(b.valid_to)   >= now;
+          if (!fromOk || !toOk) return false;
+          return verifyTOTP(code, b.totp_secret, 1);
+        });
+
+        if (matchedBatch) {
+          // Fetch the course for this batch
+          const { data: batchCourse } = await supabaseAdmin
+            .from("courses")
+            .select("id, slug, title")
+            .eq("slug", matchedBatch.course_slug)
+            .maybeSingle();
+
+          if (batchCourse) {
+            // Check for duplicate enrollment
+            const { data: existingEnrollment } = await supabaseAdmin
+              .from("enrollments")
+              .select("id")
+              .eq("user_id", userId)
+              .eq("course_slug", batchCourse.slug)
+              .maybeSingle();
+
+            if (existingEnrollment) {
+              return NextResponse.json(
+                { error: "You have already unlocked this course.", courseSlug: batchCourse.slug },
+                { status: 400 }
+              );
+            }
+
+            // Create enrollment
+            const { error: batchEnrollErr } = await supabaseAdmin
+              .from("enrollments")
+              .upsert(
+                {
+                  user_id: userId,
+                  course_slug: batchCourse.slug,
+                  enrollment_method: "college_code",
+                  status: "active",
+                },
+                { onConflict: "user_id,course_slug" }
+              );
+
+            if (batchEnrollErr) {
+              return NextResponse.json(
+                { error: "Failed to create enrollment record." },
+                { status: 500 }
+              );
+            }
+
+            return NextResponse.json({
+              success: true,
+              message: `Successfully unlocked ${batchCourse.title}!`,
+              courseSlug: batchCourse.slug,
+            });
+          }
+        }
+      }
+      // ── End batch fallback ────────────────────────────────────────────────
+
       return NextResponse.json(
         { error: "Invalid unlock code. Please verify and try again." },
         { status: 404 }

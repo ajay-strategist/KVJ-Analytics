@@ -21,6 +21,9 @@ import {
   Building,
   Phone,
   Mail,
+  UserPlus,
+  X,
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 
@@ -78,9 +81,30 @@ export default function AdminEnrollmentsPage() {
   const [activeTab, setActiveTab] = useState<"enrollments" | "attempts" | "activity" | "orders">("enrollments");
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Add Enrollment modal state
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [addEmail, setAddEmail] = useState("");
+  const [addCourseSlug, setAddCourseSlug] = useState("");
+  const [addMethod, setAddMethod] = useState("admin_manual");
+  const [addLoading, setAddLoading] = useState(false);
+  const [addError, setAddError] = useState("");
+  const [addSuccess, setAddSuccess] = useState("");
+  const [availableCourses, setAvailableCourses] = useState<{ id: string; slug: string; title: string }[]>([]);
+
   useEffect(() => {
     fetchData();
+    fetchCourses();
   }, []);
+
+  const fetchCourses = async () => {
+    try {
+      const res = await fetch("/api/admin/courses");
+      if (res.ok) {
+        const data = await res.json();
+        setAvailableCourses(data.courses || []);
+      }
+    } catch (_) { /* silently ignore */ }
+  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -236,15 +260,141 @@ export default function AdminEnrollmentsPage() {
             <h2 className="text-lg font-bold text-slate-900">Enrollments &amp; Reporting</h2>
             <p className="text-sm text-slate-500">Student enrollments, test attempts, activity and orders.</p>
           </div>
-          <Button
-            onClick={handleExportCSV}
-            variant="secondary"
-            className="px-4 py-2 text-sm border-line text-slate hover:bg-surface flex items-center space-x-1.5 shadow-sm"
-          >
-            <Download className="w-4 h-4" />
-            <span>Export CSV</span>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={() => { setShowAddModal(true); setAddError(""); setAddSuccess(""); }}
+              className="px-4 py-2 text-sm bg-brand text-white flex items-center space-x-1.5 shadow-sm"
+            >
+              <UserPlus className="w-4 h-4" />
+              <span>Add Enrollment</span>
+            </Button>
+            <Button
+              onClick={handleExportCSV}
+              variant="secondary"
+              className="px-4 py-2 text-sm border-line text-slate hover:bg-surface flex items-center space-x-1.5 shadow-sm"
+            >
+              <Download className="w-4 h-4" />
+              <span>Export CSV</span>
+            </Button>
+          </div>
         </div>
+
+        {/* ── Add Enrollment Modal ── */}
+        {showAddModal && (
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 relative">
+              <button
+                onClick={() => setShowAddModal(false)}
+                className="absolute top-4 right-4 text-slate hover:text-ink"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              <h3 className="text-lg font-bold text-ink font-display flex items-center gap-2 mb-4">
+                <UserPlus className="w-5 h-5 text-brand" /> Manually Enroll Student
+              </h3>
+
+              {addError && (
+                <div className="bg-rose-50 border border-rose-200 rounded-xl p-3 text-rose-700 text-sm mb-3 flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                  {addError}
+                </div>
+              )}
+              {addSuccess && (
+                <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-emerald-700 text-sm mb-3 flex items-start gap-2">
+                  <CheckCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                  {addSuccess}
+                </div>
+              )}
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate mb-1">Student Email *</label>
+                  <input
+                    type="email"
+                    value={addEmail}
+                    onChange={(e) => setAddEmail(e.target.value)}
+                    placeholder="student@example.com"
+                    className="w-full px-4 py-2.5 rounded-xl border border-line text-sm bg-surface text-ink placeholder-muted focus:outline-none focus:border-brand/40"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate mb-1">Course *</label>
+                  {availableCourses.length > 0 ? (
+                    <select
+                      value={addCourseSlug}
+                      onChange={(e) => setAddCourseSlug(e.target.value)}
+                      className="w-full px-4 py-2.5 rounded-xl border border-line text-sm bg-surface text-ink focus:outline-none focus:border-brand/40"
+                    >
+                      <option value="">— Select a course —</option>
+                      {availableCourses.map((c) => (
+                        <option key={c.id} value={c.slug}>{c.title} ({c.slug})</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      value={addCourseSlug}
+                      onChange={(e) => setAddCourseSlug(e.target.value)}
+                      placeholder="e.g. data-analytics"
+                      className="w-full px-4 py-2.5 rounded-xl border border-line text-sm bg-surface text-ink placeholder-muted focus:outline-none focus:border-brand/40"
+                    />
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate mb-1">Enrollment Method</label>
+                  <select
+                    value={addMethod}
+                    onChange={(e) => setAddMethod(e.target.value)}
+                    className="w-full px-4 py-2.5 rounded-xl border border-line text-sm bg-surface text-ink focus:outline-none focus:border-brand/40"
+                  >
+                    <option value="admin_manual">Admin Manual</option>
+                    <option value="college_code">College Code</option>
+                    <option value="paid">Paid</option>
+                    <option value="scholarship">Scholarship</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex gap-2 mt-6">
+                <Button
+                  onClick={() => setShowAddModal(false)}
+                  variant="secondary"
+                  className="flex-1 py-2.5 text-sm border-line text-slate"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  disabled={addLoading || !addEmail || !addCourseSlug}
+                  onClick={async () => {
+                    setAddLoading(true); setAddError(""); setAddSuccess("");
+                    try {
+                      const res = await fetch("/api/admin/enrollments", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ user_email: addEmail, course_slug: addCourseSlug, enrollment_method: addMethod }),
+                      });
+                      const data = await res.json();
+                      if (!res.ok) throw new Error(data.error || "Failed to enroll.");
+                      setAddSuccess(data.message);
+                      setAddEmail(""); setAddCourseSlug(""); setAddMethod("admin_manual");
+                      fetchData(); // refresh the list
+                    } catch (err: any) {
+                      setAddError(err.message);
+                    } finally {
+                      setAddLoading(false);
+                    }
+                  }}
+                  className="flex-1 py-2.5 text-sm bg-brand text-white flex items-center justify-center gap-1.5"
+                >
+                  {addLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
+                  Enroll Student
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Sub Navigation Tabs inside Dashboard */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-white p-6 rounded-card border border-line shadow-soft">
