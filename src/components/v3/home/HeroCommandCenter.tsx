@@ -299,7 +299,7 @@ export function HeroCommandCenter({
               <Magnetic strength={0.4}>
                 <Link
                   href={secondaryCta.href}
-                  className="group inline-flex items-center gap-2 rounded-full border border-line bg-slate-50 px-7 py-3.5 text-[15px] font-medium text-ink backdrop-blur-md hover:border-brand/40 hover:bg-slate-100 transition-colors"
+                  className="group inline-flex items-center gap-2 rounded-full border border-line bg-surface px-7 py-3.5 text-[15px] font-medium text-ink backdrop-blur-md hover:border-brand/40 hover:bg-emerald-50 transition-colors"
                 >
                   {secondaryCta.label}
                   <ArrowUpRight className="h-4 w-4 text-brand transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
@@ -443,8 +443,8 @@ export function HeroCommandCenter({
                     <span className="absolute text-[11px] font-black text-ink font-mono">75%</span>
                   </div>
                   <div className="flex-1 space-y-1.5">
-                    <div className="h-1.5 w-full rounded-full bg-slate-100"><div className="h-full w-[75%] rounded-full bg-cyan-500" /></div>
-                    <div className="h-1.5 w-full rounded-full bg-slate-100"><div className="h-full w-[55%] rounded-full bg-brand" /></div>
+                    <div className="h-1.5 w-full rounded-full bg-base-2"><div className="h-full w-[75%] rounded-full bg-cyan-500" /></div>
+                    <div className="h-1.5 w-full rounded-full bg-base-2"><div className="h-full w-[55%] rounded-full bg-brand" /></div>
                   </div>
                 </div>
               </div>

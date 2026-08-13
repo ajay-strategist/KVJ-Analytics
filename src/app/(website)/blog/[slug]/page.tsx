@@ -485,7 +485,7 @@ export default async function BlogPostDetailPage({
                 />
                 <button 
                   type="submit" 
-                  className="px-5 py-2.5 bg-white hover:bg-slate-100 text-black text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-md shrink-0 border-0"
+                  className="px-5 py-2.5 bg-white hover:bg-emerald-50 text-black text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-md shrink-0 border-0"
                 >
                   Subscribe
                 </button>

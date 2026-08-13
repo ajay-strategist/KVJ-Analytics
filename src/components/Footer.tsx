@@ -42,7 +42,7 @@ export function Footer({ siteSettings = FALLBACK_SITE_SETTINGS }: FooterProps) {
               {siteSettings.regionsServed.map((region, idx) => (
                 <span
                   key={idx}
-                  className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-50 text-slate border border-slate-200/60 hover:bg-brand/5 hover:text-brand hover:border-brand/30 transition-all duration-200 cursor-default"
+                  className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-surface text-slate border border-line hover:bg-brand/5 hover:text-brand hover:border-brand/30 transition-all duration-200 cursor-default"
                 >
                   {region}
                 </span>
@@ -114,7 +114,7 @@ export function Footer({ siteSettings = FALLBACK_SITE_SETTINGS }: FooterProps) {
         <div className="border-t border-line pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-6 text-xs text-slate">
             <span>&copy; {new Date().getFullYear()} KVJ Analytics. All Rights Reserved.</span>
-            <span className="bg-slate-50 border border-slate-200 px-2.5 py-1 rounded text-[10px] font-mono font-bold tracking-tight text-slate">
+            <span className="bg-surface border border-line px-2.5 py-1 rounded text-[10px] font-mono font-bold tracking-tight text-slate">
               GSTIN: {contact.gstNumber}
             </span>
           </div>

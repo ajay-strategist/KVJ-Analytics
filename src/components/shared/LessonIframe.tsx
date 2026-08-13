@@ -57,12 +57,12 @@ blockquote p {
 [style*="background-color: rgb(255"], [style*="background-color: rgb(24"], [style*="background-color: rgb(25"],
 [style*="background: white"], [style*="background: #fff"], [style*="background: #ffffff"],
 .bg-white,
-.bg-slate-50, .bg-slate-100, .bg-slate-200,
+.bg-surface, .bg-base-2, .bg-slate-200,
 .bg-gray-50, .bg-gray-100, .bg-gray-200,
 .bg-zinc-50, .bg-zinc-100, .bg-zinc-200,
 .bg-neutral-50, .bg-neutral-100, .bg-neutral-200,
 [class*="bg-white"],
-[class*="bg-slate-50"], [class*="bg-slate-100"],
+[class*="bg-surface"], [class*="bg-base-2"],
 [class*="bg-gray-50"], [class*="bg-gray-100"],
 [class*="bg-zinc-50"], [class*="bg-zinc-100"] {
   background-color: transparent !important;
