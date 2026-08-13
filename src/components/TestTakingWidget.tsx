@@ -191,7 +191,7 @@ export function TestTakingWidget({
         setError("");
 
         // Fetch course and enrollments to double gate
-        const resTest = await fetch(`/api/tests/${testId}`);
+        const resTest = await fetch(`/api/tests/${testId}${adminPreview ? "?preview=1" : ""}`);
         const testData = await resTest.json();
 
         if (!resTest.ok) {
