@@ -141,20 +141,28 @@ export async function POST(req: NextRequest) {
       updated_at: new Date().toISOString(),
     };
 
+    // Use clean insert and attach course metadata explicitly
     const { data: inserted, error: insertErr } = await db
       .from("campaigns")
       .insert([payload])
-      .select("*, course:courses(id, slug, title)")
+      .select()
       .single();
 
     if (insertErr || !inserted) {
       console.error("Error inserting campaign:", insertErr);
-      return NextResponse.json({ error: "Failed to create campaign." }, { status: 500 });
+      const detailedErr = insertErr?.message || insertErr?.details || "Failed to create campaign. Ensure campaigns table exists in Supabase DB.";
+      return NextResponse.json({ error: detailedErr }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true, campaign: inserted });
+    // Attach course metadata for frontend list updating
+    const enrichedInserted = {
+      ...inserted,
+      course: courseRow ? { id: course_id, slug: courseRow.slug, title: courseRow.title } : null,
+    };
+
+    return NextResponse.json({ success: true, campaign: enrichedInserted });
   } catch (error: any) {
     console.error("POST /api/admin/campaigns error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ error: error.message || "Internal server error" }, { status: 500 });
   }
 }

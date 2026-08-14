@@ -59,17 +59,18 @@ export async function POST(req: NextRequest) {
     const { data: inserted, error } = await db
       .from("registration_forms")
       .insert([payload])
-      .select("*, course:courses(id, slug, title)")
+      .select()
       .single();
 
     if (error || !inserted) {
       console.error("Failed to insert registration form:", error);
-      return NextResponse.json({ error: "Failed to save registration form" }, { status: 500 });
+      const detailedErr = error?.message || error?.details || "Failed to save registration form";
+      return NextResponse.json({ error: detailedErr }, { status: 500 });
     }
 
     return NextResponse.json({ success: true, form: inserted });
   } catch (error: any) {
     console.error("POST /api/admin/registration-forms error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ error: error.message || "Internal server error" }, { status: 500 });
   }
 }
