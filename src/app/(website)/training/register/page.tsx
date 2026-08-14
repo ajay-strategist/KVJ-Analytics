@@ -113,9 +113,10 @@ export default async function RegisterPage({
     }
   }
 
-  // 4. Local static HTML file → server-side redirect (cleanest approach)
-  //    No iframe, no z-index, no comment-bleed issues.
-  if (!customFormHtml) {
+  // 4. Local static HTML file redirect — ONLY when no campaign is specified.
+  //    If a campaign is present (even with no HTML yet), skip this redirect so
+  //    the admin can build/assign the form dynamically via the Code Editor.
+  if (!customFormHtml && !campaignId) {
     const localKey = courseSlug ?? formId ?? "";
     const localPath = LOCAL_FORM_MAP[localKey];
     if (localPath) {

@@ -161,6 +161,95 @@ export default function AdminCampaignsPage() {
   const [copiedFormHtml, setCopiedFormHtml] = useState(false);
   const [iframeHeight, setIframeHeight] = useState(750);
 
+  // Generate a full starter HTML registration form for the active campaign
+  const generateStarterTemplate = () => {
+    if (!activeCampaignDetail) return;
+    const courseTitle = activeCampaignDetail.course?.title || "Our Course";
+    const cmpId = activeCampaignDetail.campaign_id || activeCampaignDetail.id;
+    const courseId = activeCampaignDetail.course_id || "";
+    const trainingMode = activeCampaignDetail.training_mode || "online";
+    const tpl = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${courseTitle} — Registration</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Poppins',sans-serif;background:linear-gradient(135deg,#0a0f23 0%,#111827 50%,#0d1b2a 100%);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.card{background:#fff;border-radius:24px;padding:40px 36px;max-width:580px;width:100%;box-shadow:0 25px 60px rgba(0,0,0,.35)}
+.badge{display:inline-block;background:linear-gradient(90deg,#10b981,#0d9488);color:#fff;font-size:11px;font-weight:700;letter-spacing:.06em;padding:5px 14px;border-radius:999px;margin-bottom:18px;text-transform:uppercase}
+h2{font-size:22px;font-weight:700;color:#0f172a;margin-bottom:6px;line-height:1.25}
+.subtitle{font-size:13px;color:#64748b;margin-bottom:28px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.field{margin-bottom:16px}
+label{display:block;font-size:11px;font-weight:600;color:#374151;margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em}
+input,select,textarea{width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-family:inherit;color:#0f172a;outline:none;transition:border .2s,box-shadow .2s;background:#f8fafc}
+input:focus,select:focus,textarea:focus{border-color:#10b981;box-shadow:0 0 0 3px rgba(16,185,129,.12);background:#fff}
+textarea{resize:vertical;min-height:90px}
+.submit{width:100%;margin-top:8px;padding:14px;background:linear-gradient(90deg,#10b981,#0d9488);color:#fff;font-size:14px;font-weight:700;border:none;border-radius:12px;cursor:pointer;letter-spacing:.03em;transition:opacity .2s,transform .1s}
+.submit:hover{opacity:.92;transform:translateY(-1px)}
+.submit:disabled{opacity:.6;cursor:not-allowed}
+.footer{margin-top:16px;text-align:center;font-size:10px;color:#94a3b8;line-height:1.6}
+@media(max-width:500px){.row{grid-template-columns:1fr}.card{padding:28px 20px}}
+</style>
+</head>
+<body>
+<div class="card">
+  <span class="badge">KVJ Analytics</span>
+  <h2>Register for ${courseTitle}</h2>
+  <p class="subtitle">Fill in your details and our team will reach out to you shortly.</p>
+  <form data-kvj-form="registration" data-kvj-endpoint="/api/register" data-kvj-course="${courseId}">
+    <input type="hidden" name="campaign_id" value="${cmpId}">
+    <input type="hidden" name="course_id" value="${courseId}">
+    <input type="hidden" name="training_mode" value="${trainingMode}">
+    <input type="hidden" name="status" value="new">
+    <input type="text" name="kvj_honeypot" style="display:none" tabindex="-1" autocomplete="off">
+    <div class="row">
+      <div class="field"><label for="name">Full Name *</label><input type="text" id="name" name="name" placeholder="Your full name" required></div>
+      <div class="field"><label for="phone">Phone Number *</label><input type="tel" id="phone" name="phone" placeholder="+91 98765 43210" required></div>
+    </div>
+    <div class="field"><label for="email">Email Address *</label><input type="email" id="email" name="email" placeholder="you@example.com" required></div>
+    <div class="row">
+      <div class="field"><label for="age">Age</label><input type="number" id="age" name="age" placeholder="e.g. 22" min="16" max="60"></div>
+      <div class="field"><label for="current_profession">Current Status</label><select id="current_profession" name="current_profession"><option value="">Select...</option><option>Student</option><option>Working Professional</option><option>Business Owner</option><option>Fresher</option><option>Other</option></select></div>
+    </div>
+    <div class="row">
+      <div class="field"><label for="location">City / District</label><input type="text" id="location" name="location" placeholder="e.g. Kochi"></div>
+      <div class="field"><label for="current_education">Qualification</label><input type="text" id="current_education" name="current_education" placeholder="e.g. B.Tech"></div>
+    </div>
+    <div class="field"><label for="message">Questions / Notes</label><textarea id="message" name="message" placeholder="Anything you'd like us to know..."></textarea></div>
+    <button type="submit" class="submit">Submit Registration \u2192</button>
+  </form>
+  <p class="footer">By submitting this form you agree to be contacted by KVJ Analytics regarding this program.</p>
+</div>
+<script>
+(function(){
+  var form=document.querySelector('[data-kvj-form="registration"]');
+  if(!form)return;
+  form.addEventListener('submit',async function(e){
+    e.preventDefault();
+    var btn=form.querySelector('.submit');btn.textContent='Submitting...';btn.disabled=true;
+    var data=Object.fromEntries(new FormData(form));
+    var gc=function(n){return(document.cookie.match('(^| )'+n+'=([^;]+)')||[])[2]||''};
+    data.utm_source=gc('utm_source');data.utm_medium=gc('utm_medium');data.utm_campaign=gc('utm_campaign');
+    data.landing_page=window.location.href;data.referrer=document.referrer;
+    try{
+      var res=await fetch('/api/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+      var json=await res.json();
+      if(res.ok){form.innerHTML='<div style="text-align:center;padding:48px 0"><div style="font-size:48px;margin-bottom:12px">\u2705</div><h3 style="color:#10b981;font-size:20px;font-weight:700;margin-bottom:8px">Registration Received!</h3><p style="color:#64748b;font-size:13px">Our team will contact you within 24 hours.</p></div>';}
+      else{alert('Error: '+(json.error||'Submission failed'));btn.textContent='Submit Registration \u2192';btn.disabled=false;}
+    }catch(err){alert('Network error. Try again.');btn.textContent='Submit Registration \u2192';btn.disabled=false;}
+  });
+})();
+</script>
+</body>
+</html>`;
+    setCustomFormHtml(tpl);
+    setPreviewTab("editor");
+  };
+
   // Helper for generating public shareable form URL
   const getShareableFormUrl = (campaign: any) => {
     if (!campaign) return "";
@@ -1097,6 +1186,16 @@ Generate a premium, modern, responsive registration form while preserving all in
                         Customize or preview the registration HTML form for this campaign.
                       </p>
                     </div>
+
+                    <button
+                      type="button"
+                      onClick={generateStarterTemplate}
+                      className="py-1.5 px-3 bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 hover:bg-emerald-500/20 text-[11px] font-bold rounded-xl flex items-center gap-1.5 cursor-pointer transition-all shrink-0"
+                      title="Generate a ready-to-use styled registration form for this campaign"
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      Generate Template
+                    </button>
 
                     <div className="flex items-center gap-2">
                       <div className="flex items-center bg-surface p-0.5 rounded-xl border border-line">
