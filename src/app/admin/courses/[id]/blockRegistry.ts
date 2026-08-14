@@ -448,10 +448,7 @@ ${qHtml}
     }
 
     case "borderedtext":
-      return `<div class="my-6 p-6 rounded-r-2xl text-left borderedtext-block">
-  ${b.title ? `<h4 class="font-bold text-sm mb-1.5 borderedtext-title">${escHtml(b.title)}</h4>` : ""}
-  <p class="text-sm leading-relaxed mb-0 borderedtext-content">${escHtml(b.text || "")}</p>
-</div>`;
+      return `<div class="my-6 p-6 rounded-r-2xl text-left borderedtext-block">${b.title ? `<h4 class="font-bold text-sm mb-1.5 borderedtext-title">${escHtml(b.title.trim())}</h4>` : ""}<p class="text-sm leading-relaxed mb-0 borderedtext-content">${escHtml((b.text || "").trim())}</p></div>`;
 
     default:
       return "";
