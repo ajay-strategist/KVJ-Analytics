@@ -181,7 +181,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               {!collapsed && (
                 <div className="flex items-center gap-2">
                   <img src="/logo-dark.png" alt="KVJ Analytics" className="h-6 w-auto object-contain" />
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-cyan-700 bg-cyan-50 px-1.5 py-0.5 rounded">Console</span>
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">Console</span>
                 </div>
               )}
               {collapsed && (
@@ -252,7 +252,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                 <ExternalLink className="h-3.5 w-3.5" />View site
               </Link>
               <button onClick={logout}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:from-cyan-500 hover:to-blue-500 transition-all shadow-sm shadow-cyan-600/20">
+                className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-[#0B2A22] to-[#10B981] px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90 transition-all shadow-sm shadow-[#0B2A22]/20">
                 <LogOut className="h-3.5 w-3.5" />Logout
               </button>
             </div>
@@ -311,17 +311,17 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                         key={item.href + "-" + idx}
                         onClick={() => handlePaletteSelect(item)}
                         className={`w-full flex items-center justify-between px-3 py-2 text-left rounded-xl transition-all ${
-                          isSelected ? "bg-cyan-50/60 text-cyan-900 font-semibold" : "hover:bg-slate-50 text-slate-700"
+                          isSelected ? "bg-emerald-50/60 text-emerald-950 font-semibold border-l-2 border-emerald-500" : "hover:bg-slate-50 text-slate-700"
                         }`}
                       >
                         <div className="flex items-center gap-3">
-                          <div className={`p-1.5 rounded-lg ${isSelected ? "bg-cyan-100 text-cyan-800" : "bg-slate-100 text-slate-500"}`}>
+                          <div className={`p-1.5 rounded-lg ${isSelected ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-500"}`}>
                             <Icon className="h-3.5 w-3.5 shrink-0" />
                           </div>
                           <span className="text-xs">{item.label}</span>
                         </div>
                         <span className={`text-[10px] font-mono tracking-wider px-2 py-0.5 rounded ${
-                          isSelected ? "bg-cyan-100 text-cyan-800" : "bg-slate-100 text-slate-450"
+                          isSelected ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-450"
                         }`}>
                           {item.category}
                         </span>
@@ -334,7 +334,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
             {/* Footer */}
             <div className="border-t border-slate-100 bg-slate-50 px-4 py-2 flex items-center justify-between text-[10px] font-mono text-slate-400 select-none">
-              <span className="flex items-center gap-1"><Sparkles className="h-3 w-3 text-cyan-600" /> KVJ Admin Helper</span>
+              <span className="flex items-center gap-1"><Sparkles className="h-3 w-3 text-emerald-600" /> KVJ Admin Helper</span>
               <div className="flex items-center gap-3">
                 <span>↑↓ navigate</span>
                 <span>↵ select</span>
@@ -365,7 +365,7 @@ function SidebarContent({ pathname, onNavigate, pinned, togglePin, collapsed }: 
       {/* 1. Logo Block in mobile / drawer (where shell lacks the default block) */}
       <div className="lg:hidden flex items-center gap-2 border-b border-slate-100 px-5 py-4 shrink-0">
         <img src="/logo-dark.png" alt="KVJ Analytics" className="h-7 w-auto object-contain" />
-        <span className="text-[10px] font-bold uppercase tracking-wider text-cyan-700 bg-cyan-50 px-1.5 py-0.5 rounded">Console</span>
+        <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">Console</span>
       </div>
 
       <div className="flex-1 overflow-y-auto py-3 px-3 space-y-4 scrollbar-thin">
@@ -384,11 +384,11 @@ function SidebarContent({ pathname, onNavigate, pinned, togglePin, collapsed }: 
                     aria-current={active ? "page" : undefined}
                     className={`flex items-center gap-2.5 rounded-lg border-l-[3px] border-transparent px-2.5 py-1.5 text-[12.5px] font-medium transition-all group ${
                       active
-                        ? "bg-gradient-to-r from-cyan-100/80 to-blue-50 !border-cyan-500 text-cyan-900 font-bold shadow-[0_1px_2px_rgba(8,145,178,0.08)]"
+                        ? "bg-gradient-to-r from-emerald-50 to-teal-50/30 !border-[#10B981] text-[#0F766E] font-bold shadow-[0_1px_2px_rgba(16,185,129,0.04)]"
                         : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                     }`}
                   >
-                    <item.icon className={`h-4 w-4 shrink-0 ${active ? "text-cyan-700" : "text-slate-400 group-hover:text-slate-700"}`} />
+                    <item.icon className={`h-4 w-4 shrink-0 ${active ? "text-[#0F766E]" : "text-slate-400 group-hover:text-slate-700"}`} />
                     {!collapsed && <span className="flex-1 truncate">{item.label}</span>}
                     {!collapsed && (
                       <button 
@@ -438,11 +438,11 @@ function SidebarContent({ pathname, onNavigate, pinned, togglePin, collapsed }: 
                       aria-current={active ? "page" : undefined}
                       className={`flex items-center gap-2.5 rounded-lg border-l-[3px] border-transparent px-2.5 py-1.5 text-[12.5px] font-medium transition-all group ${
                         active
-                          ? "bg-gradient-to-r from-cyan-100/80 to-blue-50 !border-cyan-500 text-cyan-900 font-bold shadow-[0_1px_2px_rgba(8,145,178,0.08)]"
+                          ? "bg-gradient-to-r from-emerald-50 to-teal-50/30 !border-[#10B981] text-[#0F766E] font-bold shadow-[0_1px_2px_rgba(16,185,129,0.04)]"
                           : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                       }`}
                     >
-                      <item.icon className={`h-4 w-4 shrink-0 transition-transform group-hover:scale-105 ${active ? "text-cyan-700 font-bold" : "text-slate-400 group-hover:text-slate-700"}`} />
+                      <item.icon className={`h-4 w-4 shrink-0 transition-transform group-hover:scale-105 ${active ? "text-[#0F766E] font-bold" : "text-slate-400 group-hover:text-slate-700"}`} />
                       {!collapsed && <span className="flex-1 truncate">{item.label}</span>}
                       {!collapsed && (
                         <button 
@@ -466,7 +466,7 @@ function SidebarContent({ pathname, onNavigate, pinned, togglePin, collapsed }: 
       {!collapsed && (
         <div className="border-t border-slate-100 p-3 bg-slate-50/50 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2 truncate">
-            <div className="h-7 w-7 rounded-full bg-cyan-700 text-white flex items-center justify-center font-bold text-xs uppercase shadow-sm">
+            <div className="h-7 w-7 rounded-full bg-[#0B2A22] text-white flex items-center justify-center font-bold text-xs uppercase shadow-sm">
               AD
             </div>
             <div className="truncate">

@@ -452,49 +452,73 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
           className={`fixed ${adminPreview ? "top-[33px]" : "top-0"} bottom-0 left-0 z-40 lg:relative lg:top-0 w-[320px] flex flex-col transition-all duration-300 transform ${
             sidebarOpen ? "translate-x-0" : "-translate-x-full lg:-ml-[320px]"
           } ${
-            darkMode ? "bg-[#0A0A0C] border-r border-white/5" : "bg-white border-r border-line"
+            darkMode 
+              ? "bg-[#070E0B] border-r border-white/5" 
+              : "bg-[#F8FAF9] border-r border-slate-200/60 shadow-[1px_0_10px_rgba(0,0,0,0.01)]"
           }`}
         >
         {/* Sidebar Header */}
-        <div className={`p-6 border-b flex items-center justify-between ${darkMode ? "border-white/5" : "border-line"}`}>
+        <div className={`p-6 border-b flex items-center justify-between ${darkMode ? "border-white/5" : "border-slate-200/60"}`}>
           <div>
-            <Link href={`/training/${course.slug}`} className={`text-xs flex items-center gap-1 hover:text-[#10B981] ${darkMode ? "text-zinc-500" : "text-zinc-400"}`}>
-              <ChevronLeft className="w-3.5 h-3.5" /> Back to detail
+            <Link 
+              href={`/training/${course.slug}`} 
+              className={`text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 transition-colors group ${
+                darkMode ? "text-zinc-500 hover:text-[#10B981]" : "text-zinc-400 hover:text-[#10B981]"
+              }`}
+            >
+              <ChevronLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-0.5" /> Back to detail
             </Link>
-            <h2 className={`text-md font-bold font-display mt-2 line-clamp-1 ${darkMode ? "text-white" : "text-ink"}`}>
+            <h2 className={`text-base font-extrabold font-display mt-2 line-clamp-1 tracking-tight ${darkMode ? "text-white" : "text-slate-900"}`}>
               {course.title}
             </h2>
           </div>
           <button
             onClick={() => setSidebarOpen(false)}
-            className={`lg:hidden p-1.5 rounded-lg text-zinc-400 ${darkMode ? "hover:bg-zinc-80" : "hover:bg-zinc-100"}`}
+            className={`lg:hidden p-2 rounded-xl transition-colors ${
+              darkMode ? "text-zinc-400 hover:bg-zinc-800" : "text-zinc-500 hover:bg-slate-100"
+            }`}
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Progress Tracker */}
-        <div className={`p-6 border-b shrink-0 ${darkMode ? "border-white/5 bg-[#08080A]/40" : "border-line bg-surface/30"}`}>
-          <div className={`flex items-center justify-between text-xs font-mono font-bold mb-2 ${darkMode ? "text-zinc-400" : "text-slate"}`}>
-            <span>Progress</span>
-            <span className="text-[#10B981]">{percentComplete}% ({completedLessonsCount}/{totalLessons})</span>
-          </div>
-          <div className={`w-full h-1.5 rounded-full overflow-hidden ${darkMode ? "bg-zinc-800" : "bg-zinc-200"}`}>
-            <div
-              className="h-full bg-gradient-to-r from-[#10B981] to-[#0D9488] transition-all duration-550"
-              style={{ width: `${percentComplete}%` }}
-            />
+        <div className={`p-6 border-b shrink-0 ${darkMode ? "border-white/5 bg-[#080E0B]/30" : "border-slate-200/60 bg-[#10B981]/[0.01]"}`}>
+          <div className={`p-4 rounded-2xl border ${
+            darkMode ? "bg-black/10 border-white/5" : "bg-white border-slate-200/40 shadow-[0_2px_8px_rgba(0,0,0,0.01)]"
+          }`}>
+            <div className={`flex items-center justify-between text-[10px] font-bold uppercase tracking-wider mb-2 ${
+              darkMode ? "text-zinc-400" : "text-slate-500"
+            }`}>
+              <span>Course Progress</span>
+              <span className="text-[#10B981] font-mono font-bold">{percentComplete}% ({completedLessonsCount}/{totalLessons})</span>
+            </div>
+            <div className={`w-full h-2 rounded-full overflow-hidden ${darkMode ? "bg-zinc-800" : "bg-slate-200/60"}`}>
+              <div
+                className="h-full bg-gradient-to-r from-[#10B981] to-[#0D9488] rounded-full transition-all duration-550 shadow-[0_0_8px_rgba(16,185,129,0.3)]"
+                style={{ width: `${percentComplete}%` }}
+              />
+            </div>
           </div>
         </div>
 
         {/* Curriculum list */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {modules.map((mod: any, modIdx: number) => (
-            <div key={mod.id} className="space-y-2">
-              <h3 className={`text-xs font-bold uppercase tracking-wider font-mono ${darkMode ? "text-zinc-500" : "text-slate/60"}`}>
-                Module {modIdx + 1}: {cleanModuleTitle(mod.title, modIdx)}
-              </h3>
-              <div className="space-y-1">
+            <div key={mod.id} className="space-y-3">
+              <div className="flex items-center gap-2">
+                <span className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded font-mono ${
+                  darkMode ? "bg-[#10B981]/15 text-[#10B981]" : "bg-[#10B981]/10 text-[#0F766E]"
+                }`}>
+                  Mod {modIdx + 1}
+                </span>
+                <h3 className={`text-[10px] font-bold uppercase tracking-wider font-display truncate ${
+                  darkMode ? "text-zinc-500" : "text-slate-500"
+                }`}>
+                  {cleanModuleTitle(mod.title, modIdx)}
+                </h3>
+              </div>
+              <div className="space-y-1.5">
                 {mod.lessons.map((les: any) => {
                   const isActive = activeLesson?.id === les.id;
                   const isCompleted = completedLessonIds.has(les.id);
@@ -503,26 +527,44 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
                     <button
                       key={les.id}
                       onClick={() => handleLessonSelect(les)}
-                      className={`w-full text-left p-3 rounded-xl flex items-center justify-between gap-3 text-xs transition-all border ${
+                      className={`w-full text-left p-3 rounded-xl flex items-center justify-between gap-3 text-xs transition-all duration-200 border transform hover:translate-x-0.5 group ${
                         isActive
                           ? darkMode
-                            ? "bg-[#10B981]/10 text-white font-semibold border-[#10B981]/30"
-                            : "bg-[#10B981]/10 text-brand font-semibold border-[#10B981]/30"
+                            ? "bg-[#10B981]/10 text-white font-bold border-[#10B981]/30 shadow-[0_2px_8px_rgba(16,185,129,0.05)]"
+                            : "bg-[#10B981]/8 text-[#0F766E] font-bold border-[#10B981]/20 shadow-[0_2px_8px_rgba(16,185,129,0.04)]"
                           : darkMode
-                            ? "hover:bg-zinc-900 border-transparent text-zinc-400"
-                            : "hover:bg-zinc-100 border-transparent text-zinc-650"
+                            ? "hover:bg-[#111814] border-transparent text-zinc-400 hover:text-zinc-200"
+                            : "hover:bg-slate-200/50 border-transparent text-slate-600 hover:text-slate-900"
                       }`}
                     >
-                      <div className="flex items-center gap-2.5 overflow-hidden">
+                      <div className="flex items-center gap-2.5 overflow-hidden min-w-0">
                         {isCompleted ? (
-                          <CheckCircle className="w-4 h-4 text-emerald-450 shrink-0" />
+                          <CheckCircle2 className="w-4 h-4 text-[#10B981] shrink-0" />
                         ) : (
-                          <Circle className={`w-4 h-4 shrink-0 ${darkMode ? "text-zinc-600" : "text-zinc-350"}`} />
+                          <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 transition-colors ${
+                            isActive
+                              ? "border-[#10B981]"
+                              : darkMode
+                                ? "border-zinc-700 group-hover:border-zinc-650"
+                                : "border-slate-300 group-hover:border-slate-450"
+                          }`}>
+                            <div className={`w-1.5 h-1.5 rounded-full transition-transform ${
+                              isActive
+                                ? "bg-[#10B981] scale-100"
+                                : "bg-transparent scale-0"
+                            }`} />
+                          </div>
                         )}
-                        <span className="truncate">{les.title}</span>
+                        <span className="truncate tracking-tight">{les.title}</span>
                       </div>
                       {les.video_url && (
-                        <PlayCircle className={`w-3.5 h-3.5 shrink-0 ${isActive ? "text-[#10B981]" : darkMode ? "text-zinc-600" : "text-zinc-400"}`} />
+                        <PlayCircle className={`w-3.5 h-3.5 shrink-0 ${
+                          isActive 
+                            ? "text-[#10B981]" 
+                            : darkMode 
+                              ? "text-zinc-600 group-hover:text-zinc-400" 
+                              : "text-zinc-400 group-hover:text-zinc-600"
+                        }`} />
                       )}
                     </button>
                   );

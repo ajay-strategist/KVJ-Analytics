@@ -180,6 +180,38 @@ td {
   border-left: 4px solid #14b8a6 !important;
   background-color: #f0fdfa !important;
 }
+[data-qidx] button {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+  color: #334155 !important;
+}
+[data-qidx] button:hover {
+  background-color: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+}
+[data-qidx] button.border-brand.bg-brand\/10 {
+  background-color: #f0fdf4 !important;
+  border-color: #10b981 !important;
+  color: #047857 !important;
+}
+[data-qidx] button[disabled] {
+  opacity: 1 !important;
+  cursor: not-allowed !important;
+}
+[data-qidx] button[disabled].border-green-500\/30,
+[data-qidx] button[disabled].text-green-400,
+[data-qidx] button[disabled].bg-green-500\/10 {
+  background-color: #d1fae5 !important;
+  border-color: #10b981 !important;
+  color: #065f46 !important;
+}
+[data-qidx] button[disabled].border-red-500\/30,
+[data-qidx] button[disabled].text-red-400,
+[data-qidx] button[disabled].bg-red-500\/10 {
+  background-color: #fee2e2 !important;
+  border-color: #ef4444 !important;
+  color: #991b1b !important;
+}
 `;
 
 export const HIDE_SIDEBAR_CSS = `
@@ -230,6 +262,7 @@ export function LessonIframe({
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <base target="_blank" />
 <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
 <style>
   *{box-sizing:border-box}
   :root {
@@ -244,37 +277,41 @@ export function LessonIframe({
     --color-slate: #CBD5E1;
   }
   html,body{
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-family: 'Lora', Georgia, serif;
     font-size:16px;
-    line-height:1.8;
+    line-height:1.85;
     color: var(--color-slate);
     background-color:transparent;
     margin:0;
     padding:0;
   }
   body{overflow:hidden}
+
+  button, select, input, textarea, .callout, table, code, pre {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  }
   
   /* Modern Editorial Typography */
   h1, h2, h3, h4, h5, h6 {
     color: var(--color-ink);
-    font-weight: 700;
-    line-height: 1.3;
+    font-weight: 800;
+    line-height: 1.35;
     margin-top: 2.5rem;
     margin-bottom: 1.25rem;
     letter-spacing: -0.02em;
-    font-family: system-ui, -apple-system, sans-serif;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   }
-  h1 { font-size: 2.25rem; font-weight: 800; }
+  h1 { font-size: 2.25rem; }
   h2 { font-size: 1.75rem; border-b: 1px solid var(--color-line); padding-bottom: 0.5rem; }
   h3 { font-size: 1.35rem; }
   h4 { font-size: 1.15rem; }
   
   p {
-    font-size: 1.05rem;
+    font-size: 1.1rem;
     margin-bottom: 1.75rem;
     color: #cbd5e1;
     font-weight: 400;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.005em;
   }
   
   /* Bold links */
@@ -481,6 +518,38 @@ export function LessonIframe({
   ::-webkit-scrollbar-thumb {
     background: rgba(255,255,255,0.15);
     border-radius: 4px;
+  }
+  [data-qidx] button {
+    background-color: rgba(255, 255, 255, 0.02) !important;
+    border-color: rgba(255, 255, 255, 0.05) !important;
+    color: #cbd5e1 !important;
+  }
+  [data-qidx] button:hover {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+  }
+  [data-qidx] button.border-brand.bg-brand\/10 {
+    background-color: rgba(16, 185, 129, 0.08) !important;
+    border-color: #10b981 !important;
+    color: #10b981 !important;
+  }
+  [data-qidx] button[disabled] {
+    opacity: 1 !important;
+    cursor: not-allowed !important;
+  }
+  [data-qidx] button[disabled].border-green-500\/30,
+  [data-qidx] button[disabled].text-green-400,
+  [data-qidx] button[disabled].bg-green-500\/10 {
+    background-color: rgba(16, 185, 129, 0.12) !important;
+    border-color: #10b981 !important;
+    color: #34d399 !important;
+  }
+  [data-qidx] button[disabled].border-red-500\/30,
+  [data-qidx] button[disabled].text-red-400,
+  [data-qidx] button[disabled].bg-red-500\/10 {
+    background-color: rgba(239, 68, 68, 0.12) !important;
+    border-color: #ef4444 !important;
+    color: #f87171 !important;
   }
 </style>
 </head>
