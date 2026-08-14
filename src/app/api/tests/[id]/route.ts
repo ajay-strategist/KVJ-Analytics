@@ -386,133 +386,175 @@ export async function POST(
 
     for (const q of questions) {
       const qId = q.id;
-      const qMarks = Number(q.marks) || 1;
-      totalPossibleMarks += qMarks;
-
-      const studentAns = answers[qId];
       const config = q.config || {};
+      const studentAns = answers[qId];
+
+      let qMarks = Number(q.marks) || 1;
+      let earned = 0;
       let isCorrect = false;
       let pending = false;
       let feedback = "";
       let codeResults: any = null;
 
-      if (studentAns === undefined || studentAns === null) {
-        isCorrect = false;
-        feedback = "Not answered.";
-      } else if (q.type === "single") {
-        isCorrect = typeof studentAns !== "boolean" && studentAns !== "" && Number(studentAns) === Number(config.correctIndex);
-      } else if (q.type === "multiple") {
-        if (!Array.isArray(studentAns) || !Array.isArray(config.correctIndexes)) {
-          isCorrect = false;
-        } else {
-          const studentSet = Array.from(new Set<number>(studentAns.map((x: any) => Number(x)))).sort((a: number, b: number) => a - b);
-          const correctSet = Array.from(new Set<number>(config.correctIndexes.map((x: any) => Number(x)))).sort((a: number, b: number) => a - b);
-          isCorrect = studentSet.length === correctSet.length && studentSet.every((val, idx) => val === correctSet[idx]);
-        }
-      } else if (q.type === "truefalse") {
-        isCorrect = String(studentAns).toLowerCase() === String(config.correct).toLowerCase();
-      } else if (q.type === "dragtable") {
+      if (q.type === "dragtable") {
         const correct = config.correct || {};
-        if (typeof studentAns !== "object" || studentAns === null) {
-          isCorrect = false;
-        } else {
-          isCorrect = Object.keys(correct).every((key) => {
-            return String(studentAns[key] || "").trim() === String(correct[key] || "").trim();
-          });
+        const slotKeys = Object.keys(correct);
+        const numSlots = slotKeys.length > 0 ? slotKeys.length : 1;
+        qMarks = numSlots; // 1 mark per slot
+
+        let correctSlotsCount = 0;
+        if (typeof studentAns === "object" && studentAns !== null) {
+          for (const key of slotKeys) {
+            const studentVal = String(studentAns[key] || "").trim();
+            const expectedVal = String(correct[key] || "").trim();
+            if (studentVal.length > 0 && studentVal === expectedVal) {
+              correctSlotsCount++;
+            }
+          }
         }
+        earned = correctSlotsCount; // 1 mark per correct option
+        isCorrect = slotKeys.length > 0 && correctSlotsCount === slotKeys.length;
+        feedback = isCorrect
+          ? "All table slots matched correctly."
+          : `${correctSlotsCount}/${numSlots} table slots correct (+${correctSlotsCount} marks).`;
       } else if (q.type === "dragdrop") {
         const correctPairs = config.correctPairs || [];
         const leftList = config.left || [];
         const rightList = config.right || [];
-        if (!Array.isArray(studentAns) || studentAns.length !== correctPairs.length) {
-          isCorrect = false;
-        } else {
-          isCorrect = studentAns.every((pair: any) => {
-            if (!Array.isArray(pair) || pair.length !== 2) return false;
+        const numPairs = correctPairs.length > 0 ? correctPairs.length : 1;
+        qMarks = numPairs; // 1 mark per pair
+
+        let correctPairsCount = 0;
+        if (Array.isArray(studentAns)) {
+          for (const pair of studentAns) {
+            if (!Array.isArray(pair) || pair.length !== 2) continue;
             const [l, r] = pair;
-            if (typeof l === "string" && typeof r === "string") {
-              return correctPairs.some((p: any) => {
+            const isPairCorrect = correctPairs.some((p: any) => {
+              if (typeof l === "string" && typeof r === "string") {
                 const correctLStr = leftList[p[0]];
                 const correctRStr = rightList[p[1]];
                 return String(l).trim() === String(correctLStr || "").trim() && String(r).trim() === String(correctRStr || "").trim();
-              });
-            }
-            return correctPairs.some((p: any) => Number(p[0]) === Number(l) && Number(p[1]) === Number(r));
-          });
+              }
+              return Number(p[0]) === Number(l) && Number(p[1]) === Number(r);
+            });
+            if (isPairCorrect) correctPairsCount++;
+          }
         }
-      } else if (q.type === "sequence") {
-        const correctOrder = config.correctOrder || [];
-        const items = config.items || [];
-        if (!Array.isArray(studentAns) || studentAns.length !== correctOrder.length) {
-          isCorrect = false;
-        } else {
-          isCorrect = studentAns.every((x: any, i: number) => {
-            if (typeof x === "string") {
-              const correctStr = items[correctOrder[i]];
-              return String(x).trim() === String(correctStr || "").trim();
-            }
-            return Number(x) === Number(correctOrder[i]);
-          });
-        }
+        earned = correctPairsCount;
+        isCorrect = numPairs > 0 && correctPairsCount === numPairs;
+        feedback = isCorrect
+          ? "All pairs matched correctly."
+          : `${correctPairsCount}/${numPairs} pairs matched correctly (+${correctPairsCount} marks).`;
       } else if (q.type === "fillblank") {
         const blanks = config.blanks || [];
-        if (!Array.isArray(studentAns) || studentAns.length !== blanks.length) {
-          isCorrect = false;
-        } else {
-          isCorrect = studentAns.every((ans: any, idx: number) => {
-            const accepted = blanks[idx]?.accepted || [];
-            const cleanAns = (ans || "").toString().trim().toLowerCase();
-            return accepted.map((a: string) => (a || "").toString().trim().toLowerCase()).includes(cleanAns);
+        const numBlanks = blanks.length > 0 ? blanks.length : 1;
+        qMarks = numBlanks; // 1 mark per blank
+
+        let correctBlanksCount = 0;
+        if (Array.isArray(studentAns)) {
+          blanks.forEach((b: any, idx: number) => {
+            const accepted = b?.accepted || [];
+            const cleanAns = (studentAns[idx] || "").toString().trim().toLowerCase();
+            if (accepted.map((a: string) => (a || "").toString().trim().toLowerCase()).includes(cleanAns)) {
+              correctBlanksCount++;
+            }
           });
         }
+        earned = correctBlanksCount;
+        isCorrect = numBlanks > 0 && correctBlanksCount === numBlanks;
+        feedback = isCorrect
+          ? "All blanks filled correctly."
+          : `${correctBlanksCount}/${numBlanks} blanks correct (+${correctBlanksCount} marks).`;
       } else if (q.type === "matrix") {
         const correctRows = config.correct || [];
-        if (!Array.isArray(studentAns) || studentAns.length !== correctRows.length) {
-          isCorrect = false;
-        } else {
-          isCorrect = correctRows.every((correctCols: number[], rowIdx: number) => {
+        const numRows = correctRows.length > 0 ? correctRows.length : 1;
+        qMarks = numRows; // 1 mark per row
+
+        let correctRowsCount = 0;
+        if (Array.isArray(studentAns)) {
+          correctRows.forEach((correctCols: number[], rowIdx: number) => {
             const pickedSet = Array.from(new Set<number>((Array.isArray(studentAns[rowIdx]) ? studentAns[rowIdx] : []).map((x: any) => Number(x)))).sort((a: number, b: number) => a - b);
             const wantSet = Array.from(new Set<number>((correctCols || []).map((x: any) => Number(x)))).sort((a: number, b: number) => a - b);
-            return pickedSet.length === wantSet.length && wantSet.every((c: number, i: number) => c === pickedSet[i]);
+            if (pickedSet.length === wantSet.length && wantSet.every((c: number, i: number) => c === pickedSet[i])) {
+              correctRowsCount++;
+            }
           });
         }
-      } else if (q.type === "code") {
-        if (!process.env.JUDGE0_URL) {
-          pending = true;
+        earned = correctRowsCount;
+        isCorrect = numRows > 0 && correctRowsCount === numRows;
+        feedback = isCorrect
+          ? "All matrix rows matched correctly."
+          : `${correctRowsCount}/${numRows} matrix rows correct (+${correctRowsCount} marks).`;
+      } else {
+        // Single, Multiple, True/False, Sequence, Code
+        if (studentAns === undefined || studentAns === null) {
           isCorrect = false;
-          feedback = "Pending manual grading (Code execution sandbox offline).";
-        } else {
-          let passedCases = 0;
-          const testCaseResults = [];
-          const testCases = config.testCases || [];
-
-          for (const tc of testCases) {
-            const run = await runCode(studentAns, config.language, tc.stdin);
-            if (run.err) {
-              testCaseResults.push({ passed: false, stdout: "", expected: tc.expectedOutput, error: run.err });
-            } else {
-              const cleanStdout = run.stdout.trim().replace(/\r/g, "");
-              const cleanExpected = tc.expectedOutput.trim().replace(/\r/g, "");
-              const isPass = cleanStdout === cleanExpected;
-              if (isPass) passedCases++;
-              testCaseResults.push({
-                passed: isPass,
-                stdout: run.stdout,
-                stderr: run.stderr,
-                expected: tc.expectedOutput
-              });
-            }
+          feedback = "Not answered.";
+        } else if (q.type === "single") {
+          isCorrect = typeof studentAns !== "boolean" && studentAns !== "" && Number(studentAns) === Number(config.correctIndex);
+        } else if (q.type === "multiple") {
+          if (!Array.isArray(studentAns) || !Array.isArray(config.correctIndexes)) {
+            isCorrect = false;
+          } else {
+            const studentSet = Array.from(new Set<number>(studentAns.map((x: any) => Number(x)))).sort((a: number, b: number) => a - b);
+            const correctSet = Array.from(new Set<number>(config.correctIndexes.map((x: any) => Number(x)))).sort((a: number, b: number) => a - b);
+            isCorrect = studentSet.length === correctSet.length && studentSet.every((val, idx) => val === correctSet[idx]);
           }
+        } else if (q.type === "truefalse") {
+          isCorrect = String(studentAns).toLowerCase() === String(config.correct).toLowerCase();
+        } else if (q.type === "sequence") {
+          const correctOrder = config.correctOrder || [];
+          const items = config.items || [];
+          if (!Array.isArray(studentAns) || studentAns.length !== correctOrder.length) {
+            isCorrect = false;
+          } else {
+            isCorrect = studentAns.every((x: any, i: number) => {
+              if (typeof x === "string") {
+                const correctStr = items[correctOrder[i]];
+                return String(x).trim() === String(correctStr || "").trim();
+              }
+              return Number(x) === Number(correctOrder[i]);
+            });
+          }
+        } else if (q.type === "code") {
+          if (!process.env.JUDGE0_URL) {
+            pending = true;
+            isCorrect = false;
+            feedback = "Pending manual grading (Code execution sandbox offline).";
+          } else {
+            let passedCases = 0;
+            const testCaseResults = [];
+            const testCases = config.testCases || [];
 
-          isCorrect = testCases.length > 0 && passedCases === testCases.length;
-          codeResults = testCaseResults;
-          feedback = isCorrect
-            ? "All test cases passed."
-            : `${passedCases}/${testCases.length} test cases passed.`;
+            for (const tc of testCases) {
+              const run = await runCode(studentAns, config.language, tc.stdin);
+              if (run.err) {
+                testCaseResults.push({ passed: false, stdout: "", expected: tc.expectedOutput, error: run.err });
+              } else {
+                const cleanStdout = run.stdout.trim().replace(/\r/g, "");
+                const cleanExpected = tc.expectedOutput.trim().replace(/\r/g, "");
+                const isPass = cleanStdout === cleanExpected;
+                if (isPass) passedCases++;
+                testCaseResults.push({
+                  passed: isPass,
+                  stdout: run.stdout,
+                  stderr: run.stderr,
+                  expected: tc.expectedOutput
+                });
+              }
+            }
+
+            isCorrect = testCases.length > 0 && passedCases === testCases.length;
+            codeResults = testCaseResults;
+            feedback = isCorrect
+              ? "All test cases passed."
+              : `${passedCases}/${testCases.length} test cases passed.`;
+          }
         }
+        earned = isCorrect ? qMarks : 0;
       }
 
-      const earned = isCorrect ? qMarks : 0;
+      totalPossibleMarks += qMarks;
       if (!pending) {
         earnedMarks += earned;
       }
