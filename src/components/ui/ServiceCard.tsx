@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
 // ==========================================
-// 1. CORPORATE SERVICE ICONS
+// 1. CORPORATE SERVICE ICONS (STATIC)
 // ==========================================
 
 // Report Automation: Document with gears and auto-generated lines
@@ -13,23 +13,23 @@ function CorpReportIcon() {
   return (
     <svg viewBox="0 0 100 100" className="w-12 h-12">
       {/* Document */}
-      <g className="animate-[pulse_3s_ease-in-out_infinite]">
+      <g>
         <rect x="22" y="12" width="44" height="58" rx="5" fill="rgba(5,5,5,0.8)" stroke="#10B981" strokeWidth="2" />
         <line x1="32" y1="28" x2="56" y2="28" stroke="#10B981" strokeWidth="2.5" strokeLinecap="round" opacity="0.9" />
         <line x1="32" y1="38" x2="50" y2="38" stroke="#10B981" strokeWidth="2.5" strokeLinecap="round" opacity="0.6" />
         <line x1="32" y1="48" x2="56" y2="48" stroke="#10B981" strokeWidth="2.5" strokeLinecap="round" opacity="0.9" />
         <line x1="32" y1="58" x2="46" y2="58" stroke="#10B981" strokeWidth="2.5" strokeLinecap="round" opacity="0.6" />
       </g>
-      {/* Spinning gear bottom-right */}
-      <g transform="translate(68, 70)" className="origin-center animate-[spin_8s_linear_infinite]">
+      {/* Static gear bottom-right */}
+      <g transform="translate(68, 70)" className="origin-center">
         <circle cx="0" cy="0" r="12" fill="none" stroke="#0D9488" strokeWidth="2" />
         {Array.from({ length: 8 }).map((_, i) => (
           <rect key={i} x="-2" y="-15" width="4" height="5" fill="#0D9488" transform={`rotate(${i * 45}, 0, 0)`} rx="1" />
         ))}
         <circle cx="0" cy="0" r="4" fill="#050505" stroke="#0D9488" strokeWidth="1.5" />
       </g>
-      {/* Small counter-gear */}
-      <g transform="translate(55, 80)" className="origin-center animate-[spin_8s_linear_infinite_reverse]">
+      {/* Static counter-gear */}
+      <g transform="translate(55, 80)" className="origin-center">
         <circle cx="0" cy="0" r="7" fill="none" stroke="#10B981" strokeWidth="1.5" />
         {Array.from({ length: 6 }).map((_, i) => (
           <rect key={i} x="-1.5" y="-9" width="3" height="4" fill="#10B981" transform={`rotate(${i * 60}, 0, 0)`} rx="0.5" />
@@ -48,18 +48,16 @@ function CorpVisIcon() {
       {[
         [14, 28], [18, 55], [12, 70], [20, 40], [16, 82],
       ].map(([cx, cy], i) => (
-        <circle key={i} cx={cx} cy={cy} r="2.5" fill="#0D9488" opacity="0.5"
-          className="animate-[pulse_2s_ease-in-out_infinite]"
-          style={{ animationDelay: `${i * 0.3}s` }} />
+        <circle key={i} cx={cx} cy={cy} r="2.5" fill="#0D9488" opacity="0.6" />
       ))}
       {/* Arrow / flow */}
       <path d="M 28 50 L 42 50" stroke="#10B981" strokeWidth="1.5" strokeDasharray="3 2" opacity="0.6" />
       <polygon points="42,47 47,50 42,53" fill="#10B981" opacity="0.7" />
       {/* Bar chart on right */}
       <g transform="translate(52, 82)">
-        <rect x="0" y="-44" width="8" height="44" rx="2" fill="rgba(13,148,136,0.7)" className="animate-[pulse_2s_ease-in-out_infinite]" />
-        <rect x="12" y="-60" width="8" height="60" rx="2" fill="rgba(16,185,129,0.85)" className="animate-[pulse_2.4s_ease-in-out_infinite_0.3s]" />
-        <rect x="24" y="-32" width="8" height="32" rx="2" fill="rgba(13,148,136,0.7)" className="animate-[pulse_2s_ease-in-out_infinite_0.6s]" />
+        <rect x="0" y="-44" width="8" height="44" rx="2" fill="rgba(13,148,136,0.7)" />
+        <rect x="12" y="-60" width="8" height="60" rx="2" fill="rgba(16,185,129,0.85)" />
+        <rect x="24" y="-32" width="8" height="32" rx="2" fill="rgba(13,148,136,0.7)" />
       </g>
       {/* Baseline */}
       <line x1="50" y1="83" x2="88" y2="83" stroke="rgba(16,185,129,0.3)" strokeWidth="1.5" />
@@ -83,8 +81,7 @@ function CorpSpreadsheetIcon() {
       <line x1="14" y1="56" x2="86" y2="56" stroke="rgba(13,148,136,0.3)" strokeWidth="1" />
       <line x1="14" y1="72" x2="86" y2="72" stroke="rgba(13,148,136,0.3)" strokeWidth="1" />
       {/* Active cell highlight */}
-      <rect x="38" y="56" width="24" height="16" fill="rgba(16,185,129,0.12)" stroke="#10B981" strokeWidth="1.2"
-        className="animate-[pulse_2s_ease-in-out_infinite]" />
+      <rect x="38" y="56" width="24" height="16" fill="rgba(16,185,129,0.12)" stroke="#10B981" strokeWidth="1.2" />
       {/* Formula hint */}
       <text x="22" y="18" fill="#10B981" fontSize="6" fontFamily="monospace" opacity="0.6">=SUM</text>
     </svg>
@@ -106,13 +103,12 @@ function CorpDashboardIcon() {
         <circle cx="0" cy="0" r="18" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="5" />
         <circle cx="0" cy="0" r="18" fill="none" stroke="#10B981" strokeWidth="5"
           strokeDasharray="113" strokeDashoffset="32" strokeLinecap="round"
-          transform="rotate(-90)" className="animate-[pulse_2.5s_ease-in-out_infinite]" />
+          transform="rotate(-90)" />
         <text x="-5" y="4" fill="#10B981" fontSize="8" fontWeight="bold">74%</text>
       </g>
       {/* Right sparkline */}
       <polyline points="58,72 64,62 70,68 76,54 82,58 88,48"
-        fill="none" stroke="#0D9488" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-        className="animate-[pulse_3s_ease-in-out_infinite]" />
+        fill="none" stroke="#0D9488" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
       <circle cx="88" cy="48" r="3" fill="#0D9488" />
     </svg>
   );
@@ -132,39 +128,32 @@ function CorpAppIcon() {
       {/* URL bar */}
       <rect x="50" y="19" width="34" height="10" rx="3" fill="rgba(255,255,255,0.06)" stroke="rgba(16,185,129,0.2)" strokeWidth="1" />
       {/* Code content */}
-      <text x="18" y="52" fill="#10B981" fontSize="9" fontFamily="monospace" className="animate-[pulse_2s_ease-in-out_infinite]">{"<App />"}</text>
+      <text x="18" y="52" fill="#10B981" fontSize="9" fontFamily="monospace">{"<App />"}</text>
       <text x="18" y="64" fill="#0D9488" fontSize="9" fontFamily="monospace" opacity="0.75">{"{ data }"}</text>
       <text x="18" y="76" fill="#22C55E" fontSize="9" fontFamily="monospace" opacity="0.6">{"=> render"}</text>
     </svg>
   );
 }
 
-// Process Automation: Workflow nodes connected by animated flowing lines
+// Process Automation: Workflow nodes connected by static lines
 function CorpProcessIcon() {
   return (
     <svg viewBox="0 0 100 100" className="w-12 h-12">
       {/* Flow path top */}
       <path d="M 15 35 L 40 35 L 40 50 L 60 50 L 60 35 L 85 35"
-        fill="none" stroke="rgba(16,185,129,0.2)" strokeWidth="2" strokeLinecap="round" />
+        fill="none" stroke="rgba(16,185,129,0.4)" strokeWidth="2" strokeLinecap="round" />
       {/* Flow path bottom */}
       <path d="M 15 65 L 85 65"
-        fill="none" stroke="rgba(13,148,136,0.2)" strokeWidth="2" strokeLinecap="round" />
-      {/* Animated dot top path */}
-      <circle r="3.5" fill="#10B981">
-        <animateMotion dur="3s" repeatCount="indefinite"
-          path="M 15 35 L 40 35 L 40 50 L 60 50 L 60 35 L 85 35" />
-      </circle>
-      {/* Animated dot bottom path */}
-      <circle r="3" fill="#0D9488">
-        <animateMotion dur="2.5s" begin="1s" repeatCount="indefinite"
-          path="M 15 65 L 85 65" />
-      </circle>
+        fill="none" stroke="rgba(13,148,136,0.4)" strokeWidth="2" strokeLinecap="round" />
+      {/* Static dots */}
+      <circle cx="50" cy="50" r="3.5" fill="#10B981" />
+      <circle cx="50" cy="65" r="3" fill="#0D9488" />
       {/* Nodes */}
-      <circle cx="15" cy="35" r="7" fill="#050505" stroke="#10B981" strokeWidth="2" className="animate-[pulse_1.8s_infinite]" />
-      <circle cx="50" cy="50" r="8" fill="#050505" stroke="#0D9488" strokeWidth="2" className="animate-[pulse_1.8s_infinite_0.5s]" />
-      <circle cx="85" cy="35" r="7" fill="#050505" stroke="#10B981" strokeWidth="2" className="animate-[pulse_1.8s_infinite_1s]" />
+      <circle cx="15" cy="35" r="7" fill="#050505" stroke="#10B981" strokeWidth="2" />
+      <circle cx="50" cy="50" r="8" fill="#050505" stroke="#0D9488" strokeWidth="2" />
+      <circle cx="85" cy="35" r="7" fill="#050505" stroke="#10B981" strokeWidth="2" />
       <circle cx="15" cy="65" r="6" fill="#050505" stroke="#0D9488" strokeWidth="1.5" />
-      <circle cx="85" cy="65" r="6" fill="#050505" stroke="#0D9488" strokeWidth="1.5" className="animate-[pulse_2s_infinite_0.8s]" />
+      <circle cx="85" cy="65" r="6" fill="#050505" stroke="#0D9488" strokeWidth="1.5" />
     </svg>
   );
 }
@@ -177,10 +166,10 @@ function CorpTrainingIcon() {
       <rect x="20" y="14" width="60" height="40" rx="4" fill="rgba(5,5,5,0.8)" stroke="#0D9488" strokeWidth="2" />
       {/* Chart on screen */}
       <g transform="translate(25, 46)">
-        <rect x="4" y="-20" width="7" height="20" rx="1" fill="rgba(16,185,129,0.7)" className="animate-[pulse_2s_infinite]" />
-        <rect x="16" y="-30" width="7" height="30" rx="1" fill="rgba(13,148,136,0.8)" className="animate-[pulse_2s_infinite_0.3s]" />
-        <rect x="28" y="-14" width="7" height="14" rx="1" fill="rgba(16,185,129,0.7)" className="animate-[pulse_2s_infinite_0.6s]" />
-        <rect x="40" y="-26" width="7" height="26" rx="1" fill="rgba(13,148,136,0.8)" className="animate-[pulse_2s_infinite_0.9s]" />
+        <rect x="4" y="-20" width="7" height="20" rx="1" fill="rgba(16,185,129,0.7)" />
+        <rect x="16" y="-30" width="7" height="30" rx="1" fill="rgba(13,148,136,0.8)" />
+        <rect x="28" y="-14" width="7" height="14" rx="1" fill="rgba(16,185,129,0.7)" />
+        <rect x="40" y="-26" width="7" height="26" rx="1" fill="rgba(13,148,136,0.8)" />
       </g>
       {/* Podium / stand */}
       <line x1="50" y1="54" x2="50" y2="68" stroke="rgba(255,255,255,0.3)" strokeWidth="2" />
@@ -195,7 +184,7 @@ function CorpTrainingIcon() {
 }
 
 // ==========================================
-// 2. EDUCATIONAL SERVICE ICONS
+// 2. EDUCATIONAL SERVICE ICONS (STATIC)
 // ==========================================
 
 // Training Programs: Dual monitors — Excel grid + Power BI bar chart
@@ -208,17 +197,17 @@ function EduTrainingIcon() {
       <line x1="6" y1="40" x2="44" y2="40" stroke="rgba(40,231,158,0.25)" strokeWidth="1" />
       <line x1="19" y1="24" x2="19" y2="52" stroke="rgba(40,231,158,0.25)" strokeWidth="1" />
       <line x1="31" y1="24" x2="31" y2="52" stroke="rgba(40,231,158,0.25)" strokeWidth="1" />
-      <rect x="19" y="33" width="12" height="7" fill="rgba(40,231,158,0.35)" className="animate-pulse" />
+      <rect x="19" y="33" width="12" height="7" fill="rgba(40,231,158,0.35)" />
       {/* Stand */}
       <line x1="25" y1="52" x2="25" y2="60" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" />
       <line x1="18" y1="60" x2="32" y2="60" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" />
       {/* Right monitor — bar chart */}
       <rect x="56" y="20" width="38" height="32" rx="3" fill="rgba(15,18,28,0.72)" stroke="#10B981" strokeWidth="1.8" />
       <g transform="translate(62, 50)">
-        <rect x="0" y="-20" width="5" height="20" rx="1" fill="#0D9488" className="animate-[pulse_1.5s_infinite]" />
-        <rect x="9" y="-28" width="5" height="28" rx="1" fill="#10B981" className="animate-[pulse_1.8s_infinite_0.3s]" />
-        <rect x="18" y="-12" width="5" height="12" rx="1" fill="#0D9488" className="animate-[pulse_1.3s_infinite_0.6s]" />
-        <rect x="27" y="-22" width="5" height="22" rx="1" fill="#10B981" className="animate-[pulse_1.5s_infinite_0.9s]" />
+        <rect x="0" y="-20" width="5" height="20" rx="1" fill="#0D9488" />
+        <rect x="9" y="-28" width="5" height="28" rx="1" fill="#10B981" />
+        <rect x="18" y="-12" width="5" height="12" rx="1" fill="#0D9488" />
+        <rect x="27" y="-22" width="5" height="22" rx="1" fill="#10B981" />
       </g>
       <line x1="56" y1="52" x2="94" y2="52" stroke="rgba(16,185,129,0.2)" strokeWidth="1" />
       {/* Stand */}
@@ -226,15 +215,13 @@ function EduTrainingIcon() {
       <line x1="68" y1="60" x2="82" y2="60" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" />
       {/* Students bar at bottom */}
       {[20, 40, 60, 80].map((x, i) => (
-        <circle key={i} cx={x} cy="80" r="5" fill="rgba(13,148,136,0.3)" stroke="#0D9488" strokeWidth="1.5"
-          className="animate-[pulse_2s_ease-in-out_infinite]"
-          style={{ animationDelay: `${i * 0.2}s` }} />
+        <circle key={i} cx={x} cy="80" r="5" fill="rgba(13,148,136,0.3)" stroke="#0D9488" strokeWidth="1.5" />
       ))}
     </svg>
   );
 }
 
-// Certification Programs: Glowing scroll / certificate ribbon
+// Certification Programs: Scroll / certificate ribbon
 function EduCertIcon() {
   return (
     <svg viewBox="0 0 100 100" className="w-12 h-12">
@@ -247,7 +234,7 @@ function EduCertIcon() {
       </defs>
       {/* Certificate scroll */}
       <rect x="16" y="20" width="68" height="50" rx="5" fill="rgba(15,18,28,0.72)"
-        stroke="url(#cyanBlueGrad2)" strokeWidth="2.2" className="animate-[pulse_3s_ease-in-out_infinite]" />
+        stroke="url(#cyanBlueGrad2)" strokeWidth="2.2" />
       {/* Scroll rolls at top & bottom */}
       <ellipse cx="50" cy="20" rx="34" ry="6" fill="rgba(15,18,28,0.85)" stroke="url(#cyanBlueGrad2)" strokeWidth="1.8" />
       <ellipse cx="50" cy="70" rx="34" ry="6" fill="rgba(15,18,28,0.85)" stroke="url(#cyanBlueGrad2)" strokeWidth="1.8" />
@@ -256,7 +243,7 @@ function EduCertIcon() {
       <line x1="34" y1="44" x2="66" y2="44" stroke="rgba(16,185,129,0.35)" strokeWidth="1" strokeLinecap="round" />
       {/* Star seal */}
       <polygon points="50,50 52.5,57 60,57 54,61.5 56,69 50,64.5 44,69 46,61.5 40,57 47.5,57"
-        fill="url(#cyanBlueGrad2)" className="animate-[pulse_2s_ease-in-out_infinite]" />
+        fill="url(#cyanBlueGrad2)" />
     </svg>
   );
 }
@@ -266,35 +253,28 @@ function EduCurriculumIcon() {
   return (
     <svg viewBox="0 0 100 100" className="w-12 h-12">
       {/* Root node */}
-      <circle cx="50" cy="20" r="8" fill="rgba(15,18,28,0.72)" stroke="#0D9488" strokeWidth="2.2"
-        className="animate-[pulse_2s_ease-in-out_infinite]" />
+      <circle cx="50" cy="20" r="8" fill="rgba(15,18,28,0.72)" stroke="#0D9488" strokeWidth="2.2" />
       <circle cx="50" cy="20" r="4" fill="#0D9488" />
       {/* Trunk */}
       <line x1="50" y1="28" x2="50" y2="45" stroke="#0D9488" strokeWidth="2" />
       {/* Left branch */}
       <line x1="50" y1="45" x2="28" y2="58" stroke="#0D9488" strokeWidth="1.8" />
-      <circle cx="28" cy="62" r="7" fill="rgba(15,18,28,0.72)" stroke="#10B981" strokeWidth="2"
-        className="animate-[pulse_2s_ease-in-out_infinite_0.4s]" />
+      <circle cx="28" cy="62" r="7" fill="rgba(15,18,28,0.72)" stroke="#10B981" strokeWidth="2" />
       <circle cx="28" cy="62" r="3.5" fill="#10B981" />
       {/* Left sub-branches */}
       <line x1="28" y1="69" x2="18" y2="80" stroke="rgba(16,185,129,0.5)" strokeWidth="1.5" />
-      <circle cx="18" cy="84" r="5" fill="rgba(15,18,28,0.72)" stroke="rgba(16,185,129,0.6)" strokeWidth="1.5"
-        className="animate-[pulse_2s_ease-in-out_infinite_0.6s]" />
+      <circle cx="18" cy="84" r="5" fill="rgba(15,18,28,0.72)" stroke="rgba(16,185,129,0.6)" strokeWidth="1.5" />
       <line x1="28" y1="69" x2="36" y2="80" stroke="rgba(16,185,129,0.5)" strokeWidth="1.5" />
-      <circle cx="36" cy="84" r="5" fill="rgba(15,18,28,0.72)" stroke="rgba(16,185,129,0.6)" strokeWidth="1.5"
-        className="animate-[pulse_2s_ease-in-out_infinite_0.8s]" />
+      <circle cx="36" cy="84" r="5" fill="rgba(15,18,28,0.72)" stroke="rgba(16,185,129,0.6)" strokeWidth="1.5" />
       {/* Right branch */}
       <line x1="50" y1="45" x2="72" y2="58" stroke="#0D9488" strokeWidth="1.8" />
-      <circle cx="72" cy="62" r="7" fill="rgba(15,18,28,0.72)" stroke="#10B981" strokeWidth="2"
-        className="animate-[pulse_2s_ease-in-out_infinite_0.6s]" />
+      <circle cx="72" cy="62" r="7" fill="rgba(15,18,28,0.72)" stroke="#10B981" strokeWidth="2" />
       <circle cx="72" cy="62" r="3.5" fill="#10B981" />
       {/* Right sub-branches */}
       <line x1="72" y1="69" x2="62" y2="80" stroke="rgba(16,185,129,0.5)" strokeWidth="1.5" />
-      <circle cx="62" cy="84" r="5" fill="rgba(15,18,28,0.72)" stroke="rgba(16,185,129,0.6)" strokeWidth="1.5"
-        className="animate-[pulse_2s_ease-in-out_infinite_1s]" />
+      <circle cx="62" cy="84" r="5" fill="rgba(15,18,28,0.72)" stroke="rgba(16,185,129,0.6)" strokeWidth="1.5" />
       <line x1="72" y1="69" x2="82" y2="80" stroke="rgba(16,185,129,0.5)" strokeWidth="1.5" />
-      <circle cx="82" cy="84" r="5" fill="rgba(15,18,28,0.72)" stroke="rgba(16,185,129,0.6)" strokeWidth="1.5"
-        className="animate-[pulse_2s_ease-in-out_infinite_1.2s]" />
+      <circle cx="82" cy="84" r="5" fill="rgba(15,18,28,0.72)" stroke="rgba(16,185,129,0.6)" strokeWidth="1.5" />
     </svg>
   );
 }
@@ -314,21 +294,21 @@ function EduAnalyticsIcon() {
         <circle cx="0" cy="0" r="16" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="5" />
         <circle cx="0" cy="0" r="16" fill="none" stroke="#10B981" strokeWidth="5"
           strokeDasharray="100" strokeDashoffset="28" strokeLinecap="round"
-          transform="rotate(-90)" className="animate-[pulse_2.5s_ease-in-out_infinite]" />
+          transform="rotate(-90)" />
         <text x="-6" y="4" fill="#10B981" fontSize="7" fontWeight="bold">A+</text>
       </g>
       {/* Attendance bars right side */}
       <g transform="translate(60, 80)">
-        <rect x="0" y="-36" width="6" height="36" rx="1" fill="rgba(13,148,136,0.7)" className="animate-[pulse_1.8s_infinite]" />
-        <rect x="10" y="-48" width="6" height="48" rx="1" fill="rgba(16,185,129,0.8)" className="animate-[pulse_2s_infinite_0.3s]" />
-        <rect x="20" y="-24" width="6" height="24" rx="1" fill="rgba(13,148,136,0.7)" className="animate-[pulse_1.6s_infinite_0.6s]" />
+        <rect x="0" y="-36" width="6" height="36" rx="1" fill="rgba(13,148,136,0.7)" />
+        <rect x="10" y="-48" width="6" height="48" rx="1" fill="rgba(16,185,129,0.8)" />
+        <rect x="20" y="-24" width="6" height="24" rx="1" fill="rgba(13,148,136,0.7)" />
       </g>
       <line x1="58" y1="81" x2="90" y2="81" stroke="rgba(16,185,129,0.2)" strokeWidth="1" />
     </svg>
   );
 }
 
-// Assessment Automation: Terminal/clipboard with auto-grading check animations
+// Assessment Automation: Terminal/clipboard with static check marks
 function EduAssessmentIcon() {
   return (
     <svg viewBox="0 0 100 100" className="w-12 h-12">
@@ -341,17 +321,17 @@ function EduAssessmentIcon() {
       <line x1="32" y1="42" x2="68" y2="42" stroke="rgba(13,148,136,0.4)" strokeWidth="1.5" strokeLinecap="round" />
       <line x1="32" y1="54" x2="68" y2="54" stroke="rgba(13,148,136,0.4)" strokeWidth="1.5" strokeLinecap="round" />
       <line x1="32" y1="66" x2="60" y2="66" stroke="rgba(13,148,136,0.4)" strokeWidth="1.5" strokeLinecap="round" />
-      {/* Animated check marks */}
+      {/* Static check marks */}
       <g transform="translate(26, 42)">
-        <circle cx="0" cy="0" r="5" fill="none" stroke="#28E79E" strokeWidth="1.5" className="animate-[pulse_1.5s_infinite]" />
+        <circle cx="0" cy="0" r="5" fill="none" stroke="#28E79E" strokeWidth="1.5" />
         <path d="M -2.5 0 L -0.5 2 L 3 -2" fill="none" stroke="#28E79E" strokeWidth="1.8" strokeLinecap="round" />
       </g>
       <g transform="translate(26, 54)">
-        <circle cx="0" cy="0" r="5" fill="none" stroke="#28E79E" strokeWidth="1.5" className="animate-[pulse_1.5s_infinite_0.4s]" />
+        <circle cx="0" cy="0" r="5" fill="none" stroke="#28E79E" strokeWidth="1.5" />
         <path d="M -2.5 0 L -0.5 2 L 3 -2" fill="none" stroke="#28E79E" strokeWidth="1.8" strokeLinecap="round" />
       </g>
-      {/* Spinning progress indicator bottom-right */}
-      <g transform="translate(72, 76)" className="origin-center animate-[spin_3s_linear_infinite]">
+      {/* Progress indicator bottom-right */}
+      <g transform="translate(72, 76)">
         <circle cx="0" cy="0" r="8" fill="none" stroke="rgba(16,185,129,0.15)" strokeWidth="2.5" />
         <circle cx="0" cy="0" r="8" fill="none" stroke="#10B981" strokeWidth="2.5"
           strokeDasharray="50" strokeDashoffset="15" strokeLinecap="round" />
@@ -398,6 +378,8 @@ interface ServiceCardProps {
   description: string;
   href: string;
   iconName: string;
+  /** Static icon image URL uploaded from admin panel / CMS */
+  iconUrl?: string | null;
   accentColor?: "cyan" | "blue";
   /** Soft category color for the card. */
   tone?: ServiceCardTone;
@@ -413,6 +395,7 @@ export function ServiceCard({
   description,
   href,
   iconName,
+  iconUrl,
   accentColor = "cyan",
   tone = "teal",
   tag,
@@ -452,7 +435,13 @@ export function ServiceCard({
     setMousePos({ x: -1000, y: -1000 });
   };
 
-  const IconComponent = ICONS[iconName] || CorpVisIcon;
+  const renderIcon = () => {
+    if (iconUrl && typeof iconUrl === "string" && iconUrl.trim().length > 0) {
+      return <img src={iconUrl} alt={title} className="w-9 h-9 object-contain" />;
+    }
+    const IconComponent = ICONS[iconName] || CorpVisIcon;
+    return <IconComponent />;
+  };
 
   return (
     <div
@@ -465,17 +454,6 @@ export function ServiceCard({
         perspective: "1000px",
       }}
     >
-      <style jsx global>{`
-        @keyframes float-slow {
-          0%, 100% { transform: translateY(0px) rotate(0deg); }
-          50% { transform: translateY(-5px) rotate(1deg); }
-        }
-        @keyframes dash {
-          to {
-            stroke-dashoffset: 0;
-          }
-        }
-      `}</style>
       <Link
         href={href}
         onClick={onLearnMore ? (e) => { e.preventDefault(); onLearnMore(); } : undefined}
@@ -519,7 +497,7 @@ export function ServiceCard({
               borderColor: isHovered ? accent : "var(--color-line)",
             }}
           >
-            <IconComponent />
+            {renderIcon()}
           </div>
 
           <div
@@ -565,3 +543,5 @@ export function ServiceCard({
     </div>
   );
 }
+
+
