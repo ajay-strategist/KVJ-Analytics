@@ -104,21 +104,40 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid phone number. Must be at least 10 digits." }, { status: 400 });
     }
 
-    // 4. Resolve Course Title from Database
+    // 4. Resolve Course UUID + Title from Database
     const db = getAdminClient();
     if (!db) {
       return NextResponse.json({ error: "Database connection could not be established." }, { status: 500 });
     }
 
     let courseTitle = "Dynamic Learning Program";
+    let resolvedCourseIdForDB: string | null = null;
+
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
     try {
-      const { data: courseRow } = await db
-        .from("courses")
-        .select("title")
-        .eq("id", resolved_course_id)
-        .maybeSingle();
-      if (courseRow?.title) {
-        courseTitle = courseRow.title;
+      if (uuidRegex.test(resolved_course_id)) {
+        // It's already a UUID — look up by ID
+        const { data: courseRow } = await db
+          .from("courses")
+          .select("id, title")
+          .eq("id", resolved_course_id)
+          .maybeSingle();
+        if (courseRow) {
+          courseTitle = courseRow.title;
+          resolvedCourseIdForDB = courseRow.id;
+        }
+      } else {
+        // It's a text slug like 'artificial-intelligence' — look up by slug column
+        const { data: courseRow } = await db
+          .from("courses")
+          .select("id, title")
+          .eq("slug", resolved_course_id)
+          .maybeSingle();
+        if (courseRow) {
+          courseTitle = courseRow.title;
+          resolvedCourseIdForDB = courseRow.id; // Store the resolved UUID
+        }
       }
     } catch (err) {
       console.warn("Failed to fetch course details, using default title:", err);
@@ -126,15 +145,6 @@ export async function POST(req: NextRequest) {
 
     // 5. Database Upsert / Insert
     let recordId = id;
-
-    // Determine course_id: try UUID parse first, fall back to text slug stored in service_interest
-    // The leads.course_id column is UUID — if a text slug is provided, we skip it
-    let resolvedCourseIdForDB: string | null = null;
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    if (uuidRegex.test(resolved_course_id)) {
-      resolvedCourseIdForDB = resolved_course_id;
-    }
-    // else: text slug — omit from payload to avoid FK error
 
     const payload: Record<string, unknown> = {
       name,
@@ -160,9 +170,10 @@ export async function POST(req: NextRequest) {
       status,
     };
 
-    // Only include course_id if it's a valid UUID (avoids FK constraint error on text slugs)
+    // Only include course_id if we resolved a valid UUID
     if (resolvedCourseIdForDB) {
       payload.course_id = resolvedCourseIdForDB;
+
     }
 
     if (recordId) {
