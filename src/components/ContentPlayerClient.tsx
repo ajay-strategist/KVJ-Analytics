@@ -33,6 +33,8 @@ interface Lesson {
   max_score: number | null;
   video_url?: string | null;
   content_html?: string | null;
+  moduleTitle?: string;
+  moduleIdx?: number;
 }
 
 interface Module {
@@ -109,6 +111,23 @@ function cleanModuleTitle(title: string, index: number): string {
 
 export function ContentPlayerClient({ course, modules, adminPreview = false }: ContentPlayerClientProps) {
   const router = useRouter();
+
+  const enrichedModules = React.useMemo(() => {
+    return modules.map((mod: any, modIdx: number) => {
+      const cleanTitle = cleanModuleTitle(mod.title, modIdx);
+      const modDisplayTitle = `Module ${modIdx + 1}: ${cleanTitle}`;
+      return {
+        ...mod,
+        title: cleanTitle,
+        displayTitle: modDisplayTitle,
+        lessons: (mod.lessons || []).map((l: any) => ({
+          ...l,
+          moduleTitle: modDisplayTitle,
+          moduleIdx: modIdx + 1
+        }))
+      };
+    });
+  }, [modules]);
 
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -309,7 +328,7 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
   }, [activeLesson?.id, activeLesson?.kind, user?.id, adminPreview]);
 
   // Flatten lessons for easy next/prev indexing
-  const allLessons: any[] = modules.flatMap((mod: any) => mod.lessons);
+  const allLessons: any[] = enrichedModules.flatMap((mod: any) => mod.lessons);
 
   useEffect(() => {
     const initPlayer = async () => {
@@ -513,7 +532,7 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
 
         {/* Curriculum list */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          {modules.map((mod: any, modIdx: number) => (
+          {enrichedModules.map((mod: any, modIdx: number) => (
             <div key={mod.id} className="space-y-3">
               <div className="flex items-center gap-2">
                 <span className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded font-mono ${
@@ -524,7 +543,7 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
                 <h3 className={`text-[10px] font-bold uppercase tracking-wider font-display truncate ${
                   darkMode ? "text-zinc-500" : "text-slate-500"
                 }`}>
-                  {cleanModuleTitle(mod.title, modIdx)}
+                  {mod.title}
                 </h3>
               </div>
               <div className="space-y-1.5">
@@ -685,7 +704,7 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
               <div className={`flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-6 ${darkMode ? "border-white/5" : "border-line"}`}>
                 <div>
                   <h1 className={`text-2xl md:text-3xl font-bold font-display ${darkMode ? "text-white" : "text-ink"}`}>
-                    {activeLesson.title}
+                    {activeLesson.moduleTitle || activeLesson.title}
                   </h1>
                 </div>
 
