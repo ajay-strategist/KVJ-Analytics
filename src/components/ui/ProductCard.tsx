@@ -157,7 +157,7 @@ export function ProductCard({
         }}
       >
         <div
-          className="relative h-full flex flex-col overflow-hidden p-8 md:p-9 rounded-[24px] card-tone-violet border transition-all duration-500 shadow-soft"
+          className="relative h-full flex flex-col overflow-hidden p-8 md:p-9 rounded-[24px] card-tone-emerald border transition-all duration-500 shadow-soft"
           style={{
             borderColor: isHovered
               ? isGradeScope ? "rgba(16, 185, 129, 0.55)" : "rgba(13, 148, 136, 0.55)"
@@ -198,7 +198,7 @@ export function ProductCard({
               <h3 
                 className="text-2xl font-bold leading-tight transition-colors duration-300"
                 style={{
-                  color: isHovered ? (isGradeScope ? "#047857" : "#0F766E") : "var(--color-ink)",
+                  color: isHovered ? (isGradeScope ? "#10B981" : "#14B8A6") : "var(--color-ink)",
                 }}
               >
                 {name}
@@ -213,9 +213,9 @@ export function ProductCard({
 
             <div className="relative grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-8">
               {keyFeatures.map((feat: string, fIdx: number) => (
-                <div key={fIdx} className="flex items-start gap-2.5 rounded-xl border border-line bg-white/70 px-3.5 py-3 transition-colors duration-250 hover:bg-white">
-                  <Check className={`mt-0.5 h-4 w-4 shrink-0 ${isGradeScope ? "text-[#047857]" : "text-[#0F766E]"}`} />
-                  <span className="text-[12.5px] font-medium text-ink leading-snug">{feat}</span>
+                <div key={fIdx} className="flex items-start gap-2.5 rounded-xl border border-[#10B981]/15 bg-white/[0.03] px-3.5 py-3 transition-colors duration-250 hover:bg-white/[0.06]">
+                  <Check className={`mt-0.5 h-4 w-4 shrink-0 ${isGradeScope ? "text-[#10B981]" : "text-[#14B8A6]"}`} />
+                  <span className="text-[12.5px] font-medium text-slate-100 leading-snug">{feat}</span>
                 </div>
               ))}
             </div>

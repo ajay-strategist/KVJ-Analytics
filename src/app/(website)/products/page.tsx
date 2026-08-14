@@ -24,7 +24,7 @@ export default async function ProductsPage() {
   const products = page.products && page.products.length > 0 ? page.products : FALLBACK_PRODUCTS_PAGE.products;
 
   return (
-    <div className="w-full hero-emerald text-white relative min-h-screen overflow-hidden">
+    <div className="w-full bg-white relative min-h-screen overflow-hidden">
       {/* 3D scrolling grid style keyframe */}
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes grid-move {
@@ -41,8 +41,8 @@ export default async function ProductsPage() {
         }
         .grid-plane {
           background-image: 
-            linear-gradient(rgba(16, 185, 129, 0.04) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(16, 185, 129, 0.04) 1px, transparent 1px);
+          linear-gradient(rgba(16, 185, 129, 0.04) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(16, 185, 129, 0.04) 1px, transparent 1px);
           background-size: 60px 60px;
           transform: rotateX(75deg);
           transform-origin: top center;
@@ -55,22 +55,22 @@ export default async function ProductsPage() {
         }
       `}} />
 
-      {/* 3D Perspective Grid Background layer (scroll parallax for depth) */}
-      <Parallax speed={0.28} className="absolute inset-0 z-0 pointer-events-none opacity-40 perspective-container">
-        <div className="absolute inset-x-0 -top-40 bottom-0 h-[200%] grid-plane" />
-      </Parallax>
-
-      {/* Data streams overlay */}
-      <div className="absolute inset-0 z-0 pointer-events-none opacity-20">
-        <svg className="w-full h-full" viewBox="0 0 1000 1000">
-          <line x1="200" y1="0" x2="200" y2="1000" stroke="rgba(16, 185, 129, 0.05)" strokeWidth="1" strokeDasharray="10, 20" />
-          <line x1="500" y1="0" x2="500" y2="1000" stroke="rgba(13, 148, 136, 0.04)" strokeWidth="1" strokeDasharray="5, 15" />
-          <line x1="800" y1="0" x2="800" y2="1000" stroke="rgba(16, 185, 129, 0.05)" strokeWidth="1" strokeDasharray="15, 25" />
-        </svg>
-      </div>
-
       {/* ───── HERO ───── */}
-      <section className="relative overflow-hidden pt-28 pb-16 border-b border-line">
+      <section className="relative overflow-hidden hero-emerald text-white pt-28 pb-16 border-b border-line">
+        {/* 3D Perspective Grid Background layer (scroll parallax for depth) */}
+        <Parallax speed={0.28} className="absolute inset-0 z-0 pointer-events-none opacity-40 perspective-container">
+          <div className="absolute inset-x-0 -top-40 bottom-0 h-[200%] grid-plane" />
+        </Parallax>
+
+        {/* Data streams overlay */}
+        <div className="absolute inset-0 z-0 pointer-events-none opacity-20">
+          <svg className="w-full h-full" viewBox="0 0 1000 1000">
+            <line x1="200" y1="0" x2="200" y2="1000" stroke="rgba(16, 185, 129, 0.05)" strokeWidth="1" strokeDasharray="10, 20" />
+            <line x1="500" y1="0" x2="500" y2="1000" stroke="rgba(13, 148, 136, 0.04)" strokeWidth="1" strokeDasharray="5, 15" />
+            <line x1="800" y1="0" x2="800" y2="1000" stroke="rgba(16, 185, 129, 0.05)" strokeWidth="1" strokeDasharray="15, 25" />
+          </svg>
+        </div>
+
         <div className="blob animate-blob absolute -top-24 right-[10%] w-[34rem] h-[34rem] bg-brand/5 pointer-events-none blur-[100px]" />
         <div className="blob animate-blob absolute bottom-[-10rem] left-[2%] w-[26rem] h-[26rem] bg-corporate/5 pointer-events-none blur-[90px]" style={{ animationDelay: "3s" }} />
         
@@ -95,7 +95,7 @@ export default async function ProductsPage() {
       </section>
 
       {/* ───── PRODUCT CARDS ───── */}
-      <section className="py-20 relative bg-transparent overflow-hidden">
+      <section className="py-20 relative bg-white overflow-hidden text-ink">
         <Container className="relative z-10">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
             {products.map((product: any, idx: number) => {

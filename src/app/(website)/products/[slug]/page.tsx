@@ -76,7 +76,7 @@ export default async function ProductDetailPage({
                 {features.map((item: string, idx: number) => (
                   <div
                     key={idx}
-                    className="flex items-start space-x-3.5 card-tone-violet border rounded-xl p-4 shadow-soft hover:shadow-hover-lift transition-all duration-300"
+                    className="flex items-start space-x-3.5 card-tone-emerald border rounded-xl p-4 shadow-soft hover:shadow-hover-lift transition-all duration-300"
                   >
                     <CheckCircle2 className={`w-5 h-5 shrink-0 mt-0.5 ${isGradeScope ? "text-[#10B981]" : "text-[#0D9488]"}`} />
                     <span className="text-base text-slate font-semibold leading-relaxed">
@@ -90,7 +90,7 @@ export default async function ProductDetailPage({
 
           {/* Sidebar Conversion Card */}
           <div className="lg:col-span-5 lg:sticky lg:top-28 w-full">
-            <div className={`relative overflow-hidden card-tone-violet rounded-[24px] border p-8 shadow-soft border-l-4 hover:shadow-hover-lift hover:-translate-y-1 transition-all duration-300 ${
+            <div className={`relative overflow-hidden card-tone-emerald rounded-[24px] border p-8 shadow-soft border-l-4 hover:shadow-hover-lift hover:-translate-y-1 transition-all duration-300 ${
               isGradeScope ? "border-l-[#10B981]" : "border-l-[#0D9488]"
             }`}>
               <div className={`absolute -top-12 -left-12 w-48 h-48 rounded-full blur-2xl pointer-events-none ${
