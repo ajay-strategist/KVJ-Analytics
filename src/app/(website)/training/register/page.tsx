@@ -27,6 +27,17 @@ function getAdminClient() {
   return createClient(url, key, { auth: { persistSession: false } });
 }
 
+/**
+ * Strip HTML block comments (<!-- ... -->) from the source.
+ * This prevents the integration-guide comment block in local HTML files
+ * from leaking as visible text inside the iframe (caused by </script>
+ * tags inside the comment breaking the comment boundary).
+ */
+function stripHtmlComments(html: string): string {
+  // Non-greedy match handles nested/multiple comment blocks
+  return html.replace(/<!--[\s\S]*?-->/g, "");
+}
+
 export default async function RegisterPage({
   searchParams,
 }: {
@@ -41,8 +52,8 @@ export default async function RegisterPage({
   let customFormHtml: string | null = null;
   const db = getAdminClient();
 
-  // Helper to load static HTML files from "Course Registration Forms" folder
-  const loadLocalHtmlForm = (fileName?: string) => {
+  // Helper: load static HTML files from "Course Registration Forms/" folder
+  const loadLocalHtmlForm = (fileName?: string): string | null => {
     try {
       const dir = path.join(process.cwd(), "Course Registration Forms");
       if (fileName && fs.existsSync(path.join(dir, fileName))) {
@@ -60,7 +71,7 @@ export default async function RegisterPage({
   
   if (db) {
     try {
-      // 1. If campaign parameter is provided, check campaigns table
+      // 1. Campaign param → campaigns table
       if (campaignId) {
         const { data: campaignData } = await db
           .from("campaigns")
@@ -82,7 +93,7 @@ export default async function RegisterPage({
         }
       }
 
-      // 2. If form parameter is provided, check registration_forms table
+      // 2. Form param → registration_forms table
       if (!customFormHtml && formId) {
         const { data: formData } = await db
           .from("registration_forms")
@@ -94,7 +105,7 @@ export default async function RegisterPage({
         }
       }
 
-      // 3. Fetch published courses
+      // 3. Fetch published courses (+ course-level custom form)
       const { data, error } = await db
         .from("courses")
         .select("id, slug, title, registration_form_html")
@@ -117,12 +128,16 @@ export default async function RegisterPage({
     }
   }
 
-  // 4. Fallback for static local HTML files
-  // If custom form HTML not found in DB but courseSlug matches AI / Data Analytics, read from disk
+  // 4. Local HTML file fallback for AI / Data Analytics slugs
   if (!customFormHtml) {
-    if (courseSlug === "ai" || courseSlug === "ai-and-data-analytics" || formId === "ai" || courseSlug === "data-analytics") {
+    if (courseSlug === "ai" || courseSlug === "ai-and-data-analytics" || courseSlug === "data-analytics" || formId === "ai") {
       customFormHtml = loadLocalHtmlForm("AI Course Registration.html");
     }
+  }
+
+  // Strip HTML comments BEFORE rendering to prevent integration-guide text leak
+  if (customFormHtml) {
+    customFormHtml = stripHtmlComments(customFormHtml);
   }
 
   // Fallback courses list if database is empty
@@ -134,6 +149,35 @@ export default async function RegisterPage({
     ];
   }
 
+  // ─── Custom HTML form: full-page iframe, no website chrome ───────────────
+  if (customFormHtml) {
+    return (
+      <div
+        style={{
+          position: "fixed",
+          inset: 0,
+          zIndex: 9999,
+          background: "#000",
+          width: "100vw",
+          height: "100dvh",
+        }}
+      >
+        <iframe
+          srcDoc={customFormHtml}
+          sandbox="allow-scripts allow-forms allow-same-origin allow-modals"
+          style={{
+            width: "100%",
+            height: "100%",
+            border: "none",
+            display: "block",
+          }}
+          title="Course Registration Form"
+        />
+      </div>
+    );
+  }
+
+  // ─── Generic dynamic form ─────────────────────────────────────────────────
   return (
     <div className="w-full bg-base text-slate min-h-screen pt-28 pb-24 relative overflow-hidden">
       {/* Visual background accents */}
@@ -142,39 +186,23 @@ export default async function RegisterPage({
       <div className="absolute bottom-[20%] right-[-10%] w-[600px] h-[600px] bg-[#0D9488]/4 rounded-full blur-[160px] pointer-events-none" />
 
       <Container className="relative z-10">
-        {/* Header Block — only shown for generic form */}
-        {!customFormHtml && (
-          <Reveal className="max-w-3xl mx-auto text-center mb-12">
-            <SplitHeading
-              as="h1"
-              className="text-[34px] lg:text-[48px] font-bold tracking-tight leading-[1.1] font-display text-ink mb-4"
-            >
-              Register Your Interest
-            </SplitHeading>
-            <p className="text-lg text-slate font-light leading-relaxed">
-              Fill in your details below to request program details, schedule, fee structures, and counselor guidance for the selected training track.
-            </p>
-          </Reveal>
-        )}
+        <Reveal className="max-w-3xl mx-auto text-center mb-12">
+          <SplitHeading
+            as="h1"
+            className="text-[34px] lg:text-[48px] font-bold tracking-tight leading-[1.1] font-display text-ink mb-4"
+          >
+            Register Your Interest
+          </SplitHeading>
+          <p className="text-lg text-slate font-light leading-relaxed">
+            Fill in your details below to request program details, schedule, fee structures, and
+            counselor guidance for the selected training track.
+          </p>
+        </Reveal>
 
-        {/* Custom course/campaign form rendered in sandboxed iframe */}
-        {customFormHtml ? (
-          <Reveal className="w-full max-w-5xl mx-auto">
-            <iframe
-              srcDoc={customFormHtml}
-              sandbox="allow-scripts allow-forms allow-same-origin allow-modals"
-              className="w-full border-0 rounded-2xl shadow-xl min-h-[780px] lg:min-h-[680px]"
-              title="Course Registration Form"
-            />
-          </Reveal>
-        ) : (
-          /* Generic dynamic form block */
-          <Reveal delay={100} className="w-full">
-            <DynamicRegisterForm courses={courses} initialCourseSlug={courseSlug} />
-          </Reveal>
-        )}
+        <Reveal delay={100} className="w-full">
+          <DynamicRegisterForm courses={courses} initialCourseSlug={courseSlug} />
+        </Reveal>
       </Container>
     </div>
   );
 }
-
