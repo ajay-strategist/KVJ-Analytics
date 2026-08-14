@@ -568,7 +568,13 @@ export async function POST(
         pending,
         feedback,
         studentAnswer: studentAns,
-        config: stripAnswers(q.type, config),
+        config: {
+          ...stripAnswers(q.type, config),
+          headers: config.headers,
+          rows: config.rows,
+          draggables: config.draggables,
+          correct: config.correct,
+        },
         correctAnswer: getCorrectAnswerLabel(q.type, config),
         codeResults,
       };

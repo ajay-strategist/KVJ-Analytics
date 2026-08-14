@@ -829,14 +829,14 @@ export function TestTakingWidget({
                       <div className="space-y-2">
                         <p className={`text-[10px] font-bold uppercase tracking-wider mb-1 ${darkMode ? "text-zinc-400" : "text-slate-400"}`}>Options</p>
                         {q.config.options.map((opt: string, oi: number) => {
-                          const correctKey = q.config.correct_option ?? q.config.correct_options;
+                          const correctKey = res.config?.correctIndex ?? res.config?.correctIndexes ?? q.config?.correctIndex ?? q.config?.correctIndexes ?? q.config?.correct_option ?? q.config?.correct_options;
                           const isCorrectOption = q.type === "single"
-                            ? correctKey === oi
-                            : Array.isArray(correctKey) && correctKey.includes(oi);
+                            ? Number(correctKey) === oi
+                            : Array.isArray(correctKey) && correctKey.map(Number).includes(oi);
                           const studentAns = res.studentAnswer;
                           const studentPicked = q.type === "single"
-                            ? studentAns === oi
-                            : Array.isArray(studentAns) && studentAns.includes(oi);
+                            ? Number(studentAns) === oi
+                            : Array.isArray(studentAns) && studentAns.map(Number).includes(oi);
 
                           let optStyle = darkMode
                             ? "border-zinc-700 bg-zinc-800 text-zinc-300"
@@ -878,8 +878,107 @@ export function TestTakingWidget({
                       </div>
                     )}
 
-                    {/* Response + Answer key for non-MCQ */}
-                    {q.type !== "single" && q.type !== "multiple" && (
+                    {/* DragTable Detailed Review in Table Format */}
+                    {q.type === "dragtable" && (
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {/* Student's Answer Table */}
+                          <div className={`p-4 rounded-2xl border ${darkMode ? "border-zinc-700 bg-zinc-800/80" : "border-slate-200 bg-white shadow-soft"}`}>
+                            <div className="flex items-center justify-between mb-2">
+                              <p className={`text-[10px] font-bold uppercase tracking-wider ${darkMode ? "text-zinc-400" : "text-slate-500"}`}>📝 Your Answer Table</p>
+                              <span className="text-[10px] font-bold text-slate-500">{res.earned}/{res.marks} pts</span>
+                            </div>
+                            <div className="overflow-x-auto border border-line rounded-xl">
+                              <table className="w-full text-left text-xs border-collapse">
+                                {(res.config?.headers || q.config?.headers) && (
+                                  <thead>
+                                    <tr className={darkMode ? "bg-zinc-900 text-zinc-400 border-b border-zinc-700" : "bg-slate-50 text-slate-500 border-b border-slate-200"}>
+                                      {(res.config?.headers || q.config?.headers || []).map((h: string, i: number) => (
+                                        <th key={i} className="p-2.5 font-bold text-[10px] uppercase tracking-wider">{h}</th>
+                                      ))}
+                                    </tr>
+                                  </thead>
+                                )}
+                                <tbody>
+                                  {(res.config?.rows || q.config?.rows || []).map((row: string[], rIdx: number) => (
+                                    <tr key={rIdx} className={darkMode ? "border-b border-zinc-800 last:border-0" : "border-b border-slate-100 last:border-0"}>
+                                      {row.map((cell: string, cIdx: number) => {
+                                        const isPlaceholder = cell.startsWith("{{") && cell.endsWith("}}");
+                                        if (isPlaceholder) {
+                                          const slotId = cell.replace("{{", "").replace("}}", "").trim();
+                                          const sVal = String((res.studentAnswer || {})[slotId] || "").trim();
+                                          const cVal = String((res.config?.correct || q.config?.correct || {})[slotId] || "").trim();
+                                          const isMatch = sVal.length > 0 && sVal.toLowerCase() === cVal.toLowerCase();
+
+                                          return (
+                                            <td key={cIdx} className="p-2 font-semibold">
+                                              {sVal ? (
+                                                <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg border text-xs font-bold ${
+                                                  isMatch
+                                                    ? darkMode ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-300" : "border-emerald-300 bg-emerald-50 text-emerald-700"
+                                                    : darkMode ? "border-red-500/40 bg-red-500/10 text-red-300" : "border-red-300 bg-red-50 text-red-700"
+                                                }`}>
+                                                  {isMatch ? "✅" : "❌"} {sVal}
+                                                </span>
+                                              ) : (
+                                                <span className="text-[10px] italic opacity-50 text-slate-400">(empty)</span>
+                                              )}
+                                            </td>
+                                          );
+                                        }
+                                        return <td key={cIdx} className={`p-2.5 font-semibold ${darkMode ? "text-zinc-300" : "text-slate-700"}`}>{cell}</td>;
+                                      })}
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+
+                          {/* Correct Answer Table */}
+                          <div className={`p-4 rounded-2xl border ${darkMode ? "border-emerald-500/30 bg-emerald-500/5" : "border-emerald-200 bg-emerald-50/60 shadow-soft"}`}>
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 mb-2">✅ Correct Answer Table</p>
+                            <div className="overflow-x-auto border border-emerald-200 rounded-xl bg-white">
+                              <table className="w-full text-left text-xs border-collapse">
+                                {(res.config?.headers || q.config?.headers) && (
+                                  <thead>
+                                    <tr className="bg-emerald-100/60 text-emerald-800 border-b border-emerald-200">
+                                      {(res.config?.headers || q.config?.headers || []).map((h: string, i: number) => (
+                                        <th key={i} className="p-2.5 font-bold text-[10px] uppercase tracking-wider">{h}</th>
+                                      ))}
+                                    </tr>
+                                  </thead>
+                                )}
+                                <tbody>
+                                  {(res.config?.rows || q.config?.rows || []).map((row: string[], rIdx: number) => (
+                                    <tr key={rIdx} className="border-b border-emerald-100 last:border-0">
+                                      {row.map((cell: string, cIdx: number) => {
+                                        const isPlaceholder = cell.startsWith("{{") && cell.endsWith("}}");
+                                        if (isPlaceholder) {
+                                          const slotId = cell.replace("{{", "").replace("}}", "").trim();
+                                          const cVal = String((res.config?.correct || q.config?.correct || {})[slotId] || "").trim();
+                                          return (
+                                            <td key={cIdx} className="p-2 font-semibold">
+                                              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg border border-emerald-400 bg-emerald-100 text-emerald-800 text-xs font-bold">
+                                                ✓ {cVal}
+                                              </span>
+                                            </td>
+                                          );
+                                        }
+                                        return <td key={cIdx} className="p-2.5 font-semibold text-slate-800">{cell}</td>;
+                                      })}
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Response + Answer key for non-MCQ non-DragTable */}
+                    {q.type !== "single" && q.type !== "multiple" && q.type !== "dragtable" && (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div className={`p-3 rounded-xl border ${darkMode ? "border-zinc-700 bg-zinc-800" : "border-slate-200 bg-white"}`}>
                           <p className={`text-[10px] font-bold uppercase tracking-wider mb-1.5 ${darkMode ? "text-zinc-400" : "text-slate-400"}`}>📝 Your Answer</p>
