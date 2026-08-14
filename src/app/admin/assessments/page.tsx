@@ -20,7 +20,7 @@ export default function AdminAssessmentsPage() {
     { key: "course_title", header: "Course", sortable: true, cell: (r) => r.course_title },
     { key: "question_count", header: "Questions", align: "center", cell: (r) => <StatusBadge label={String(r.question_count)} tone={r.question_count > 0 ? "cyan" : "amber"} /> },
     { key: "duration_mins", header: "Duration", cell: (r) => `${r.duration_mins ?? 0} min` },
-    { key: "pass_mark", header: "Pass mark", cell: (r) => r.pass_mark ?? 0 },
+    { key: "pass_mark", header: "Pass %", cell: (r) => `${r.pass_mark ?? 84}%` },
     { key: "created_at", header: "Created", sortable: true, cell: (r) => formatDate(r.created_at) },
   ];
 

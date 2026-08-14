@@ -734,25 +734,23 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
                 onExit={() => setIsAssessmentActive(false)}
                 onComplete={async (score, maxScore, passed) => {
                   setAttemptsTrigger((prev) => prev + 1);
-                  if (!adminPreview) {
-                    try {
-                      const res = await fetch("/api/activity-result", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                          lessonId: activeLesson.id,
-                          score,
-                          maxScore,
-                          courseSlug: course.slug,
-                          passed,
-                        }),
-                      });
-                      if (res.ok && passed) {
-                        setCompletedLessonIds((prev) => new Set([...prev, activeLesson.id]));
-                      }
-                    } catch (err) {
-                      console.error("Failed to save activity result:", err);
+                  try {
+                    const res = await fetch("/api/activity-result", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        lessonId: activeLesson.id,
+                        score,
+                        maxScore,
+                        courseSlug: course.slug,
+                        passed,
+                      }),
+                    });
+                    if (res.ok && passed) {
+                      setCompletedLessonIds((prev) => new Set([...prev, activeLesson.id]));
                     }
+                  } catch (err) {
+                    console.error("Failed to save activity result:", err);
                   }
                 }}
               />

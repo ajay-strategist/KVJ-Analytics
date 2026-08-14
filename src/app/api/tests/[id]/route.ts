@@ -539,7 +539,7 @@ export async function POST(
     let attemptId = "preview-id";
     let dbSaveError: string | null = null;
 
-    if (!isPreview && user?.id) {
+    if (user?.id) {
       // 6. Store attempt in Supabase test_attempts table
       const fullRecord = {
         user_id: user.id,

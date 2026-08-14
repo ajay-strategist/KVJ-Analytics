@@ -1929,15 +1929,18 @@ const LessonEditor = React.memo(function LessonEditor({
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate mb-1">Pass Mark (Marks) *</label>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate mb-1">Pass % *</label>
                 <input
                   type="number"
-                  min={0}
+                  min={1}
+                  max={100}
                   step="any"
-                  value={passMark}
+                  value={passMark ?? 84}
                   onChange={(e) => setPassMark(Number(e.target.value))}
                   className="w-full px-3 py-1.5 rounded border border-line bg-white text-xs"
+                  placeholder="84"
                 />
+                <span className="text-[9px] text-slate-400 font-medium block mt-0.5">Passing percentage required (Default: 84%)</span>
               </div>
               <div>
                 <label className="block text-[10px] font-bold uppercase tracking-wider text-slate mb-1">Attempts Allowed (0 = unlimited)</label>
