@@ -57,7 +57,7 @@ export default async function ProductsPage() {
 
       {/* ───── HERO ───── */}
       <section className="relative overflow-hidden hero-emerald text-white pt-28 pb-16 border-b border-line">
-        {/* 3D Perspective Grid Background layer (scroll parallax for depth) */}
+        {/* 3D Perspective Grid Background layer */}
         <Parallax speed={0.28} className="absolute inset-0 z-0 pointer-events-none opacity-40 perspective-container">
           <div className="absolute inset-x-0 -top-40 bottom-0 h-[200%] grid-plane" />
         </Parallax>
@@ -71,12 +71,12 @@ export default async function ProductsPage() {
           </svg>
         </div>
 
-        <div className="blob animate-blob absolute -top-24 right-[10%] w-[34rem] h-[34rem] bg-brand/5 pointer-events-none blur-[100px]" />
-        <div className="blob animate-blob absolute bottom-[-10rem] left-[2%] w-[26rem] h-[26rem] bg-corporate/5 pointer-events-none blur-[90px]" style={{ animationDelay: "3s" }} />
+        <div className="absolute -top-24 right-[10%] w-[34rem] h-[34rem] bg-brand/5 pointer-events-none blur-[100px]" />
+        <div className="absolute bottom-[-10rem] left-[2%] w-[26rem] h-[26rem] bg-corporate/5 pointer-events-none blur-[90px]" />
         
         <Container className="relative z-10 text-center">
           <Reveal>
-            <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-[#10B981] px-3.5 py-1.5 bg-brand/10 rounded-full w-fit border border-[#10B981]/20 mx-auto block mb-6 animate-pulse">
+            <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-[#10B981] px-3.5 py-1.5 bg-brand/10 rounded-full w-fit border border-[#10B981]/20 mx-auto block mb-6">
               Proprietary Software Solutions
             </span>
           </Reveal>
@@ -87,7 +87,7 @@ export default async function ProductsPage() {
             {page.heading}
           </SplitHeading>
           <Reveal delay={150}>
-            <p className="text-xl md:text-2xl font-medium text-transparent bg-clip-text bg-gradient-to-r from-brand via-corporate to-brand animate-[signature-flow_6s_linear_infinite] bg-[size:200%_auto] max-w-2xl mx-auto mb-4">
+            <p className="text-xl md:text-2xl font-medium text-emerald-300 max-w-2xl mx-auto mb-4">
               {page.intro}
             </p>
           </Reveal>

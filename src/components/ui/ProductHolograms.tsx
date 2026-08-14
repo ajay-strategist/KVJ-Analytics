@@ -2,7 +2,7 @@
 
 import React from "react";
 
-// 1. Grade Scope - 3D Bar Chart Dashboard
+// 1. Grade Scope - 3D Bar Chart Dashboard (STATIC)
 export function GradeScopeHologram() {
   return (
     <div className="relative w-full h-44 mb-6 flex items-center justify-center bg-white/5 rounded-2xl border border-line overflow-hidden group-hover:border-[#10B981]/40 transition-colors duration-500">
@@ -15,32 +15,32 @@ export function GradeScopeHologram() {
           <line x1="-60" y1="-20" x2="60" y2="-20" stroke="rgba(16, 185, 129, 0.08)" strokeWidth="1" />
           <line x1="-60" y1="0" x2="60" y2="0" stroke="rgba(16, 185, 129, 0.08)" strokeWidth="1" />
           <line x1="-60" y1="20" x2="60" y2="20" stroke="rgba(16, 185, 129, 0.08)" strokeWidth="1" />
-          <g className="animate-[bar-grow_3.5s_ease-in-out_infinite_0.2s]" style={{ transformOrigin: "-25px 0px" }}>
+          <g style={{ transformOrigin: "-25px 0px" }}>
             <polygon points="-30,0 -20,0 -20,-25 -30,-25" fill="#10B981" opacity="0.8" />
             <polygon points="-30,-25 -20,-25 -15,-28 -25,-28" fill="#69FFFF" />
             <polygon points="-20,0 -15,-3 -15,-28 -20,-25" fill="#34D399" />
           </g>
-          <g className="animate-[bar-grow_3.5s_ease-in-out_infinite_0.8s]" style={{ transformOrigin: "-5px 0px" }}>
+          <g style={{ transformOrigin: "-5px 0px" }}>
             <polygon points="-10,0 0,0 0,-40 -10,-40" fill="#0D9488" opacity="0.85" />
             <polygon points="-10,-40 0,-40 5,-43 -5,-43" fill="#69FFFF" />
             <polygon points="0,0 5,-3 5,-43 0,-40" fill="#0D9488" />
           </g>
-          <g className="animate-[bar-grow_3.5s_ease-in-out_infinite_1.4s]" style={{ transformOrigin: "15px 0px" }}>
+          <g style={{ transformOrigin: "15px 0px" }}>
             <polygon points="10,0 20,0 20,-30 10,-30" fill="#0D9488" opacity="0.8" />
             <polygon points="10,-30 20,-30 25,-33 15,-33" fill="#69FFFF" />
             <polygon points="20,0 25,-3 25,-33 20,-30" fill="#0D9488" />
           </g>
-          <g className="animate-[bar-grow_3.5s_ease-in-out_infinite_2s]" style={{ transformOrigin: "35px 0px" }}>
+          <g style={{ transformOrigin: "35px 0px" }}>
             <polygon points="30,0 40,0 40,-50 30,-50" fill="#10B981" opacity="0.85" />
             <polygon points="30,-50 40,-50 45,-53 35,-53" fill="#69FFFF" />
             <polygon points="40,0 45,-3 45,-53 40,-50" fill="#34D399" />
           </g>
-          <path d="M -45 -10 Q -15 -35 15 -15 T 45 -42" fill="none" stroke="#10B981" strokeWidth="1.5" className="animate-pulse" />
+          <path d="M -45 -10 Q -15 -35 15 -15 T 45 -42" fill="none" stroke="#10B981" strokeWidth="1.5" />
           <circle cx="15" cy="-15" r="2" fill="#10B981" />
         </g>
-        <g className="animate-[float-slow_5s_ease-in-out_infinite]">
+        <g>
           <rect x="25" y="15" width="150" height="20" rx="6" fill="rgba(15, 18, 28, 0.9)" stroke="rgba(16, 185, 129, 0.3)" strokeWidth="1.2" />
-          <circle cx="36" cy="25" r="3" fill="#10B981" className="animate-pulse" />
+          <circle cx="36" cy="25" r="3" fill="#10B981" />
           <text x="48" y="28" fill="#FFFFFF" fontSize="8" fontFamily="monospace" letterSpacing="0.1em">GRADESCOPE // ONLINE</text>
         </g>
       </svg>
@@ -48,7 +48,7 @@ export function GradeScopeHologram() {
   );
 }
 
-// 2. Protrix - Microchip
+// 2. Protrix - Microchip (STATIC)
 export function ProtrixHologram() {
   return (
     <div className="relative w-full h-44 mb-6 flex items-center justify-center bg-white/5 rounded-2xl border border-line overflow-hidden group-hover:border-[#10B981]/40 transition-colors duration-500">
@@ -57,7 +57,7 @@ export function ProtrixHologram() {
         <g transform="translate(100, 80) rotate(-20) skewX(25) scale(0.95)">
           <polygon points="-40,-40 40,-40 40,40 -40,40" fill="rgba(15, 18, 28, 0.85)" stroke="rgba(13, 148, 136, 0.25)" strokeWidth="2" />
           <polygon points="-32,-32 32,-32 32,32 -32,32" fill="none" stroke="#10B981" strokeWidth="1.2" />
-          <polygon points="-16,-16 16,-16 16,16 -16,16" fill="rgba(16, 185, 129, 0.15)" stroke="#10B981" strokeWidth="1.5" className="animate-pulse" />
+          <polygon points="-16,-16 16,-16 16,16 -16,16" fill="rgba(16, 185, 129, 0.15)" stroke="#10B981" strokeWidth="1.5" />
           {/* Pins */}
           <line x1="-40" y1="-20" x2="-48" y2="-20" stroke="rgba(16, 185, 129, 0.4)" strokeWidth="1.5" />
           <line x1="-40" y1="0" x2="-48" y2="0" stroke="rgba(16, 185, 129, 0.4)" strokeWidth="1.5" />
@@ -66,8 +66,8 @@ export function ProtrixHologram() {
           <line x1="40" y1="0" x2="48" y2="0" stroke="rgba(16, 185, 129, 0.4)" strokeWidth="1.5" />
           <line x1="40" y1="20" x2="48" y2="20" stroke="rgba(16, 185, 129, 0.4)" strokeWidth="1.5" />
         </g>
-        <g transform="translate(100, 50)" className="animate-[float-slow_6s_ease-in-out_infinite]">
-          <g className="animate-[spin_10s_linear_infinite]" style={{ transformOrigin: "0px 0px" }}>
+        <g transform="translate(100, 50)">
+          <g style={{ transformOrigin: "0px 0px" }}>
             <line x1="0" y1="0" x2="-35" y2="-20" stroke="#0D9488" strokeWidth="1.2" strokeDasharray="3, 2" />
             <line x1="0" y1="0" x2="35" y2="-15" stroke="#10B981" strokeWidth="1.2" strokeDasharray="3, 2" />
             <circle cx="-35" cy="-20" r="5" fill="rgba(15, 18, 28, 0.85)" stroke="#0D9488" strokeWidth="2" />
@@ -80,19 +80,19 @@ export function ProtrixHologram() {
   );
 }
 
-// 3. Globe Database
+// 3. Globe Database (STATIC)
 export function GlobeDatabaseHologram() {
   return (
     <div className="relative w-full h-44 mb-6 flex items-center justify-center bg-white/5 rounded-2xl border border-line overflow-hidden group-hover:border-[#10B981]/40 transition-colors duration-500">
       <div className="absolute inset-0 bg-gradient-to-t from-[#10B981]/5 via-transparent to-transparent opacity-60 pointer-events-none" />
       <svg viewBox="0 0 200 120" className="w-full h-full overflow-visible relative z-10">
-        <g transform="translate(100, 60)" className="animate-[float-slow_5s_ease-in-out_infinite]">
+        <g transform="translate(100, 60)">
           <circle cx="0" cy="0" r="36" fill="none" stroke="rgba(16, 185, 129, 0.15)" strokeWidth="1.2" />
-          <ellipse rx="36" ry="12" fill="none" stroke="rgba(16, 185, 129, 0.25)" strokeWidth="1" className="animate-[spin_12s_linear_infinite]" style={{ transformOrigin: "0px 0px" }} />
-          <ellipse rx="12" ry="36" fill="none" stroke="rgba(16, 185, 129, 0.2)" strokeWidth="1" className="animate-[spin_16s_linear_infinite]" style={{ transformOrigin: "0px 0px" }} />
-          <circle cx="0" cy="0" r="20" fill="rgba(16, 185, 129, 0.05)" stroke="#10B981" strokeWidth="1.5" className="animate-pulse" />
-          <g className="animate-[spin_8s_linear_infinite]" style={{ transformOrigin: "0px 0px" }}>
-            <circle cx="48" cy="0" r="3" fill="#10B981" className="animate-ping" />
+          <ellipse rx="36" ry="12" fill="none" stroke="rgba(16, 185, 129, 0.25)" strokeWidth="1" style={{ transformOrigin: "0px 0px" }} />
+          <ellipse rx="12" ry="36" fill="none" stroke="rgba(16, 185, 129, 0.2)" strokeWidth="1" style={{ transformOrigin: "0px 0px" }} />
+          <circle cx="0" cy="0" r="20" fill="rgba(16, 185, 129, 0.05)" stroke="#10B981" strokeWidth="1.5" />
+          <g style={{ transformOrigin: "0px 0px" }}>
+            <circle cx="48" cy="0" r="3" fill="#10B981" />
             <circle cx="48" cy="0" r="2" fill="#10B981" />
             <circle cx="-48" cy="0" r="2" fill="#0D9488" />
           </g>
@@ -102,19 +102,19 @@ export function GlobeDatabaseHologram() {
   );
 }
 
-// 4. Security Shield
+// 4. Security Shield (STATIC)
 export function SecurityShieldHologram() {
   return (
     <div className="relative w-full h-44 mb-6 flex items-center justify-center bg-white/5 rounded-2xl border border-line overflow-hidden group-hover:border-[#10B981]/40 transition-colors duration-500">
       <div className="absolute inset-0 bg-gradient-to-t from-[#10B981]/5 via-transparent to-transparent opacity-60 pointer-events-none" />
       <svg viewBox="0 0 200 120" className="w-full h-full overflow-visible relative z-10">
-        <g transform="translate(100, 60)" className="animate-[float-slow_4.5s_ease-in-out_infinite]">
+        <g transform="translate(100, 60)">
           <ellipse rx="50" ry="15" fill="none" stroke="rgba(16, 185, 129, 0.15)" strokeWidth="1" />
           <ellipse rx="35" ry="10" fill="none" stroke="rgba(16, 185, 129, 0.1)" strokeWidth="1" />
           <path d="M -15 -25 L 15 -25 C 15 -25 18 0 15 15 C 11 25 0 30 0 30 C 0 30 -11 25 -15 15 C -18 0 -15 -25 -15 -25 Z" 
-            fill="rgba(13, 148, 136, 0.1)" stroke="#10B981" strokeWidth="2.2" className="animate-pulse" />
+            fill="rgba(13, 148, 136, 0.1)" stroke="#10B981" strokeWidth="2.2" />
           <path d="M -6 0 L -2 4 L 6 -4" fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" />
-          <circle cx="28" cy="-18" r="2.5" fill="#10B981" className="animate-pulse" />
+          <circle cx="28" cy="-18" r="2.5" fill="#10B981" />
           <circle cx="-25" cy="12" r="1.5" fill="#0D9488" />
         </g>
       </svg>
@@ -122,7 +122,7 @@ export function SecurityShieldHologram() {
   );
 }
 
-// 5. Data Pipeline
+// 5. Data Pipeline (STATIC)
 export function DataPipelineHologram() {
   return (
     <div className="relative w-full h-44 mb-6 flex items-center justify-center bg-white/5 rounded-2xl border border-line overflow-hidden group-hover:border-[#10B981]/40 transition-colors duration-500">
@@ -133,37 +133,28 @@ export function DataPipelineHologram() {
           <circle cx="-40" cy="-20" r="5" fill="#07130E" stroke="#10B981" strokeWidth="2" />
           <circle cx="0" cy="0" r="6" fill="#07130E" stroke="#0D9488" strokeWidth="2.5" />
           <circle cx="40" cy="20" r="5" fill="#07130E" stroke="#10B981" strokeWidth="2" />
-          <circle cx="10" cy="-20" r="2.5" fill="#10B981" className="animate-[flow-x_3s_linear_infinite]" />
-          <circle cx="-25" cy="0" r="2.5" fill="#0D9488" className="animate-[flow-x_4s_linear_infinite_1s]" />
-          <circle cx="-10" cy="20" r="2.5" fill="#10B981" className="animate-[flow-x_2.5s_linear_infinite_0.5s]" />
+          <circle cx="10" cy="-20" r="2.5" fill="#10B981" />
+          <circle cx="-25" cy="0" r="2.5" fill="#0D9488" />
+          <circle cx="-10" cy="20" r="2.5" fill="#10B981" />
         </g>
       </svg>
-      <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes flow-x {
-          0% { transform: translateX(-60px); opacity: 0; }
-          10% { opacity: 1; }
-          90% { opacity: 1; }
-          100% { transform: translateX(60px); opacity: 0; }
-        }
-      `}} />
     </div>
   );
 }
 
-// 6. AI Brain Synapses
+// 6. AI Brain Synapses (STATIC)
 export function AIBrainHologram() {
   return (
     <div className="relative w-full h-44 mb-6 flex items-center justify-center bg-white/5 rounded-2xl border border-line overflow-hidden group-hover:border-[#10B981]/40 transition-colors duration-500">
       <div className="absolute inset-0 bg-gradient-to-t from-[#10B981]/5 via-transparent to-transparent opacity-60 pointer-events-none" />
       <svg viewBox="0 0 200 120" className="w-full h-full overflow-visible relative z-10">
-        <g transform="translate(100, 60)" className="animate-[float-slow_6s_ease-in-out_infinite]">
+        <g transform="translate(100, 60)">
           <path d="M -25 -15 L -10 -25 L 10 -25 L 25 -15 L 20 10 L 0 20 L -20 10 Z" fill="none" stroke="rgba(16, 185, 129, 0.15)" strokeWidth="1.2" />
           <line x1="-10" y1="-25" x2="0" y2="0" stroke="rgba(13, 148, 136, 0.3)" strokeWidth="1" />
           <line x1="10" y1="-25" x2="0" y2="0" stroke="rgba(13, 148, 136, 0.3)" strokeWidth="1" />
           <line x1="25" y1="-15" x2="0" y2="0" stroke="rgba(13, 148, 136, 0.3)" strokeWidth="1" />
           <line x1="-25" y1="-15" x2="0" y2="0" stroke="rgba(13, 148, 136, 0.3)" strokeWidth="1" />
           <line x1="0" y1="20" x2="0" y2="0" stroke="rgba(13, 148, 136, 0.3)" strokeWidth="1" />
-          <circle cx="0" cy="0" r="5" fill="#10B981" className="animate-ping" />
           <circle cx="0" cy="0" r="4.5" fill="#FFFFFF" stroke="#10B981" strokeWidth="2.2" />
           <circle cx="-25" cy="-15" r="3" fill="#0D9488" />
           <circle cx="25" cy="-15" r="3" fill="#0D9488" />
@@ -175,7 +166,7 @@ export function AIBrainHologram() {
   );
 }
 
-// 7. Executive Radar
+// 7. Executive Radar (STATIC)
 export function ExecutiveRadarHologram() {
   return (
     <div className="relative w-full h-44 mb-6 flex items-center justify-center bg-white/5 rounded-2xl border border-line overflow-hidden group-hover:border-[#10B981]/40 transition-colors duration-500">
@@ -186,10 +177,9 @@ export function ExecutiveRadarHologram() {
           <circle cx="0" cy="0" r="25" fill="none" stroke="rgba(16, 185, 129, 0.1)" strokeWidth="1" />
           <line x1="-45" y1="0" x2="45" y2="0" stroke="rgba(16, 185, 129, 0.12)" strokeWidth="1" />
           <line x1="0" y1="-45" x2="0" y2="45" stroke="rgba(16, 185, 129, 0.12)" strokeWidth="1" />
-          <g className="animate-[spin_4s_linear_infinite]" style={{ transformOrigin: "0px 0px" }}>
+          <g style={{ transformOrigin: "0px 0px" }}>
             <polygon points="0,0 35,-20 40,0" fill="url(#radarSweep)" opacity="0.4" />
           </g>
-          <circle cx="22" cy="-18" r="3" fill="#10B981" className="animate-ping" />
           <circle cx="22" cy="-18" r="2" fill="#10B981" />
           <circle cx="-20" cy="15" r="2" fill="#0D9488" />
         </g>
@@ -204,13 +194,13 @@ export function ExecutiveRadarHologram() {
   );
 }
 
-// 8. Financial Donut Chart
+// 8. Financial Donut Chart (STATIC)
 export function FinancialDonutHologram() {
   return (
     <div className="relative w-full h-44 mb-6 flex items-center justify-center bg-white/5 rounded-2xl border border-line overflow-hidden group-hover:border-[#10B981]/40 transition-colors duration-500">
       <div className="absolute inset-0 bg-gradient-to-t from-[#10B981]/5 via-transparent to-transparent opacity-60 pointer-events-none" />
       <svg viewBox="0 0 200 120" className="w-full h-full overflow-visible relative z-10">
-        <g transform="translate(100, 60)" className="animate-[float-slow_5s_ease-in-out_infinite]">
+        <g transform="translate(100, 60)">
           <circle cx="0" cy="0" r="30" fill="none" stroke="rgba(13, 148, 136, 0.2)" strokeWidth="8" />
           <circle cx="0" cy="0" r="30" fill="none" stroke="#10B981" strokeWidth="8" strokeDasharray="120 188" strokeLinecap="round" />
           <circle cx="0" cy="0" r="22" fill="#07130E" stroke="rgba(16, 185, 129, 0.1)" strokeWidth="1" />
@@ -221,32 +211,26 @@ export function FinancialDonutHologram() {
   );
 }
 
-// 9. Performance Gauge Dial
+// 9. Performance Gauge Dial (STATIC)
 export function PerformanceGaugeHologram() {
   return (
     <div className="relative w-full h-44 mb-6 flex items-center justify-center bg-white/5 rounded-2xl border border-line overflow-hidden group-hover:border-[#10B981]/40 transition-colors duration-500">
       <div className="absolute inset-0 bg-gradient-to-t from-[#10B981]/5 via-transparent to-transparent opacity-60 pointer-events-none" />
       <svg viewBox="0 0 200 120" className="w-full h-full overflow-visible relative z-10">
-        <g transform="translate(100, 68)" className="animate-[float-slow_5.5s_ease-in-out_infinite]">
+        <g transform="translate(100, 68)">
           <path d="M -40 0 A 40 40 0 0 1 40 0" fill="none" stroke="rgba(255, 255, 255, 0.08)" strokeWidth="6" strokeLinecap="round" />
           <path d="M -40 0 A 40 40 0 0 1 20 -34.6" fill="none" stroke="#10B981" strokeWidth="6" strokeLinecap="round" />
-          <g className="animate-[gauge-sweep_4s_ease-in-out_infinite]" style={{ transformOrigin: "0px 0px" }}>
+          <g style={{ transformOrigin: "0px 0px" }}>
             <line x1="0" y1="0" x2="15" y2="-26" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" />
           </g>
           <circle cx="0" cy="0" r="5" fill="#07130E" stroke="#10B981" strokeWidth="2" />
         </g>
       </svg>
-      <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes gauge-sweep {
-          0%, 100% { transform: rotate(-50deg); }
-          50% { transform: rotate(60deg); }
-        }
-      `}} />
     </div>
   );
 }
 
-// 10. Predictive Forecast Line
+// 10. Predictive Forecast Line (STATIC)
 export function PredictiveForecastHologram() {
   return (
     <div className="relative w-full h-44 mb-6 flex items-center justify-center bg-white/5 rounded-2xl border border-line overflow-hidden group-hover:border-[#10B981]/40 transition-colors duration-500">
@@ -257,7 +241,6 @@ export function PredictiveForecastHologram() {
           <path d="M -60 15 Q -30 -15 0 0 T 60 -30 L 60 -10 T 0 15 Q -30 5 -60 15 Z" fill="rgba(16, 185, 129, 0.08)" />
           <path d="M -60 15 Q -30 -5 0 5" fill="none" stroke="#0D9488" strokeWidth="2.2" />
           <path d="M 0 5 Q 30 15 60 -20" fill="none" stroke="#10B981" strokeWidth="2.2" strokeDasharray="4, 3" />
-          <circle cx="0" cy="5" r="4.5" fill="#10B981" className="animate-ping" />
           <circle cx="0" cy="5" r="3" fill="#FFFFFF" stroke="#10B981" strokeWidth="1.5" />
         </g>
       </svg>
@@ -265,14 +248,14 @@ export function PredictiveForecastHologram() {
   );
 }
 
-// 11. Tech Ecosystem Constellation
+// 11. Tech Ecosystem Constellation (STATIC)
 export function TechEcosystemHologram() {
   return (
     <div className="relative w-full h-44 mb-6 flex items-center justify-center bg-white/5 rounded-2xl border border-line overflow-hidden group-hover:border-[#10B981]/40 transition-colors duration-500">
       <div className="absolute inset-0 bg-gradient-to-t from-[#10B981]/5 via-transparent to-transparent opacity-60 pointer-events-none" />
       <svg viewBox="0 0 200 120" className="w-full h-full overflow-visible relative z-10">
-        <g transform="translate(100, 60)" className="animate-[float-slow_6s_ease-in-out_infinite]">
-          <g className="animate-[spin_20s_linear_infinite]" style={{ transformOrigin: "0px 0px" }}>
+        <g transform="translate(100, 60)">
+          <g style={{ transformOrigin: "0px 0px" }}>
             <line x1="-30" y1="-25" x2="30" y2="-25" stroke="rgba(16,185,129,0.2)" strokeWidth="1" />
             <line x1="30" y1="-25" x2="40" y2="15" stroke="rgba(16,185,129,0.2)" strokeWidth="1" />
             <line x1="40" y1="15" x2="-10" y2="30" stroke="rgba(16,185,129,0.2)" strokeWidth="1" />
@@ -290,19 +273,19 @@ export function TechEcosystemHologram() {
   );
 }
 
-// 12. Time Scheduler Clockwork
+// 12. Time Scheduler Clockwork (STATIC)
 export function TimeSchedulerHologram() {
   return (
     <div className="relative w-full h-44 mb-6 flex items-center justify-center bg-white/5 rounded-2xl border border-line overflow-hidden group-hover:border-[#10B981]/40 transition-colors duration-500">
       <div className="absolute inset-0 bg-gradient-to-t from-[#0D9488]/5 via-transparent to-transparent opacity-60 pointer-events-none" />
       <svg viewBox="0 0 200 120" className="w-full h-full overflow-visible relative z-10">
-        <g transform="translate(100, 60)" className="animate-[float-slow_5s_ease-in-out_infinite]">
+        <g transform="translate(100, 60)">
           <circle cx="0" cy="0" r="32" fill="none" stroke="rgba(16, 185, 129, 0.2)" strokeWidth="2" />
           <circle cx="0" cy="0" r="38" fill="none" stroke="rgba(13, 148, 136, 0.12)" strokeWidth="1.2" strokeDasharray="6, 6" />
-          <g className="animate-[spin_12s_linear_infinite]" style={{ transformOrigin: "0px 0px" }}>
+          <g style={{ transformOrigin: "0px 0px" }}>
             <line x1="0" y1="0" x2="0" y2="-28" stroke="#10B981" strokeWidth="2.2" strokeLinecap="round" />
           </g>
-          <g className="animate-[spin_40s_linear_infinite]" style={{ transformOrigin: "0px 0px" }}>
+          <g style={{ transformOrigin: "0px 0px" }}>
             <line x1="0" y1="0" x2="20" y2="12" stroke="#FFFFFF" strokeWidth="1.8" strokeLinecap="round" />
           </g>
           <circle cx="0" cy="0" r="5" fill="#07130E" stroke="#10B981" strokeWidth="2" />
@@ -337,3 +320,4 @@ export function renderHologram(style: string | undefined, isGradeScopeDefault: b
   }
   return isGradeScopeDefault ? <GradeScopeHologram /> : <ProtrixHologram />;
 }
+
