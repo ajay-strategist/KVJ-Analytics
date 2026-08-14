@@ -89,6 +89,15 @@ td {
 `;
 
 export const LIGHT_MODE_CSS = `
+:root {
+  --color-base: #ffffff !important;
+  --color-base-2: #f8fafc !important;
+  --color-surface: #f8fafc !important;
+  --color-card: #f1f5f9 !important;
+  --color-line: #e2e8f0 !important;
+  --color-ink: #0f172a !important;
+  --color-slate: #475569 !important;
+}
 html, body {
   background-color: #ffffff !important;
   color: #334155 !important;
@@ -139,6 +148,9 @@ th {
 td {
   border-bottom-color: #f1f5f9 !important;
   color: #334155 !important;
+}
+.text-slate-350 {
+  color: #475569 !important;
 }
 `;
 
@@ -420,6 +432,9 @@ export function LessonIframe({
   .border-white\\/5 { border-color: rgba(255, 255, 255, 0.05) !important; }
   .border-white\\/10 { border-color: rgba(255, 255, 255, 0.1) !important; }
   .border-brand\\/20 { border-color: rgba(16, 185, 129, 0.2) !important; }
+  .border-brand { border-color: var(--color-brand) !important; }
+  .bg-brand\\/5 { background-color: rgba(16, 185, 129, 0.05) !important; }
+  .bg-brand\\/10 { background-color: rgba(16, 185, 129, 0.1) !important; }
   .text-brand { color: var(--color-brand) !important; }
   .text-white { color: var(--color-ink) !important; }
   .text-slate-350 { color: var(--color-slate) !important; }

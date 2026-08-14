@@ -911,3 +911,32 @@ details[open] summary ~ * {
 .hero-emerald .bg-clip-text {
   background-image: linear-gradient(90deg, #34D399, #6EE7B7 55%, #5EEAD4) !important;
 }
+
+/* Restore readable dark text inside white/toned cards that live inside a dark hero-emerald section */
+.hero-emerald [class*="card-tone-"] .text-ink,
+.hero-emerald .bg-white .text-ink,
+.hero-emerald .bg-card .text-ink {
+  color: var(--color-ink) !important;
+}
+.hero-emerald [class*="card-tone-"] .text-slate,
+.hero-emerald .bg-white .text-slate,
+.hero-emerald .bg-card .text-slate {
+  color: var(--color-slate) !important;
+}
+.hero-emerald [class*="card-tone-"] .text-muted,
+.hero-emerald .bg-white .text-muted,
+.hero-emerald .bg-card .text-muted {
+  color: var(--color-muted) !important;
+}
+
+/* Disable transitions and animations inside the admin panel for snappy UX */
+.admin-light,
+.admin-light * {
+  transition: none !important;
+  transition-duration: 0s !important;
+  transition-delay: 0s !important;
+}
+
+.admin-light :not(.animate-spin):not(.animate-spin *) {
+  animation: none !important;
+}

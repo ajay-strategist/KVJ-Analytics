@@ -5,15 +5,51 @@ import { Container } from "@/components/ui/Container";
 import { CountUp } from "@/components/ui/CountUp";
 import { Reveal } from "@/components/ui/Reveal";
 import { ScaleIn } from "@/components/v3/ScrollFx";
-import { Cpu, GraduationCap, LineChart, Activity } from "lucide-react";
+import { 
+  Cpu, GraduationCap, LineChart, Activity, FileText, BarChart3, 
+  PieChart, Table, Laptop, Workflow, Settings, Database, Layers, Sliders 
+} from "lucide-react";
 import { AboutHeroVisual } from "@/components/ui/AboutHeroVisual";
 import { FALLBACK_ABOUT } from "@/lib/constants";
+
+const SPEC_ICONS: Record<string, React.ComponentType<any>> = {
+  report: FileText,
+  dashboard: BarChart3,
+  visualization: PieChart,
+  spreadsheet: Table,
+  process: Settings,
+  training: GraduationCap,
+  education: Laptop,
+  cpu: Cpu,
+  chart: LineChart,
+  activity: Activity,
+  workflow: Workflow,
+  database: Database,
+  layers: Layers,
+  sliders: Sliders,
+};
+
+function getSpecializationIcon(spec: any): string {
+  if (!spec) return "chart";
+  if (typeof spec === "string") {
+    const text = spec.toLowerCase();
+    if (text.includes("report")) return "report";
+    if (text.includes("dashboard")) return "dashboard";
+    if (text.includes("visual")) return "visualization";
+    if (text.includes("sheet") || text.includes("excel")) return "spreadsheet";
+    if (text.includes("process") || text.includes("automation")) return "process";
+    if (text.includes("train") || text.includes("consult")) return "training";
+    if (text.includes("edu") || text.includes("technology")) return "education";
+    return "chart";
+  }
+  return spec.icon || "chart";
+}
 
 interface AboutClientProps {
   pageData: {
     title: string;
     intro: string;
-    specializations?: string[];
+    specializations?: any[];
     impact?: string[];
     reachLine?: string;
     vision?: {
@@ -210,11 +246,15 @@ export function AboutClientContent({ pageData }: AboutClientProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
             {specializations.map((spec, idx) => {
               const label = getSpecializationLabel(spec) || FALLBACK_ABOUT.specializations[idx] || "";
+              const iconName = getSpecializationIcon(spec);
+              const IconComponent = SPEC_ICONS[iconName] || LineChart;
               return (
                 <Reveal key={idx} delay={idx * 50} variant="up">
-                  <div className="card-tone-emerald border hover:border-brand/50 px-6 py-5 rounded-2xl flex items-center gap-4 hover:-translate-y-1 hover:shadow-[0_8px_24px_rgba(16,185,129,0.10)] transition-all duration-300 group relative overflow-hidden">
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#10B981] shadow-[0_0_8px_#10B981] animate-pulse shrink-0" />
-                    <span className="text-ink text-[16px] md:text-[17px] font-medium tracking-wide leading-snug text-left">{label}</span>
+                  <div className="bg-[#0B2A22] border border-[#0D9488]/30 hover:border-[#10B981]/50 px-6 py-5 rounded-2xl flex items-center gap-4 hover:-translate-y-1 hover:shadow-[0_8px_24px_rgba(16,185,129,0.15)] transition-all duration-300 group relative overflow-hidden">
+                    <span className="w-8 h-8 rounded-lg bg-[#10B981]/10 border border-[#10B981]/20 flex items-center justify-center text-[#10B981] group-hover:scale-110 transition-transform duration-300 shrink-0">
+                      <IconComponent className="w-4.5 h-4.5" />
+                    </span>
+                    <span className="text-white text-[16px] md:text-[17px] font-medium tracking-wide leading-snug text-left">{label}</span>
                   </div>
                 </Reveal>
               );

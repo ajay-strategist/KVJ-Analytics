@@ -40,7 +40,7 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#050608] flex flex-col items-center justify-center p-4 relative overflow-hidden">
+    <div className="admin-light min-h-screen bg-[#050608] flex flex-col items-center justify-center p-4 relative overflow-hidden">
       {/* Premium Decorative Ambient Glows */}
       <div className="absolute top-0 left-0 w-[400px] md:w-[600px] h-[400px] md:h-[600px] bg-[#3A7BFF]/10 rounded-full blur-[120px] pointer-events-none -translate-x-1/2 -translate-y-1/2" />
       <div className="absolute bottom-0 right-0 w-[400px] md:w-[600px] h-[400px] md:h-[600px] bg-[#43F5FF]/10 rounded-full blur-[120px] pointer-events-none translate-x-1/2 translate-y-1/2" />

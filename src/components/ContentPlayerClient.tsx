@@ -99,6 +99,12 @@ function lsSet(key: string, value: boolean) {
   }
 }
 
+// Helper to strip "Module X:" or "MODULE X:" or "Module X -" or "MODULE X -" prefixes to avoid duplication in the curriculum list
+function cleanModuleTitle(title: string, index: number): string {
+  const prefixRegex = new RegExp(`^module\\s*${index + 1}\\s*[:\\-]?\\s*`, "i");
+  return title.replace(prefixRegex, "").trim();
+}
+
 // ─── Main Component ──────────────────────────────────────────────────────────
 
 export function ContentPlayerClient({ course, modules, adminPreview = false }: ContentPlayerClientProps) {
@@ -485,7 +491,7 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
           {modules.map((mod: any, modIdx: number) => (
             <div key={mod.id} className="space-y-2">
               <h3 className={`text-xs font-bold uppercase tracking-wider font-mono ${darkMode ? "text-zinc-500" : "text-slate/60"}`}>
-                Module {modIdx + 1}: {mod.title}
+                Module {modIdx + 1}: {cleanModuleTitle(mod.title, modIdx)}
               </h3>
               <div className="space-y-1">
                 {mod.lessons.map((les: any) => {
@@ -576,39 +582,42 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
             {/* Prev / Next mini buttons in header */}
             {activeLesson && (
               <div className="flex items-center gap-2">
-                <Button
+                <button
+                  type="button"
                   disabled={!prevLesson}
                   onClick={() => activeLesson && handleLessonSelect(prevLesson!)}
-                  className={`py-1.5 px-3 text-xs border flex items-center gap-1 rounded-lg ${
+                  className={`py-1.5 px-3 text-xs border flex items-center gap-1 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
                     darkMode
                       ? "bg-zinc-900 hover:bg-zinc-800 text-zinc-350 border-white/5"
                       : "bg-white hover:bg-zinc-50 text-zinc-700 border-zinc-200"
                   }`}
                 >
                   <ChevronLeft className="w-3.5 h-3.5" /> Prev
-                </Button>
+                </button>
                 {nextLesson ? (
-                  <Button
+                  <button
+                    type="button"
                     onClick={() => activeLesson && handleLessonSelect(nextLesson!)}
-                    className={`py-1.5 px-3 text-xs border flex items-center gap-1 rounded-lg ${
+                    className={`py-1.5 px-3 text-xs border flex items-center gap-1 rounded-lg transition-all ${
                       darkMode
                         ? "bg-zinc-900 hover:bg-zinc-800 text-zinc-350 border-white/5"
                         : "bg-white hover:bg-zinc-50 text-zinc-700 border-zinc-200"
                     }`}
                   >
                     Next <ChevronRight className="w-3.5 h-3.5" />
-                  </Button>
+                  </button>
                 ) : (
-                  <Button
+                  <button
+                    type="button"
                     onClick={() => router.push(`/training/${course.slug}`)}
-                    className={`py-1.5 px-3 text-xs border flex items-center gap-1 rounded-lg ${
+                    className={`py-1.5 px-3 text-xs border flex items-center gap-1 rounded-lg transition-all ${
                       darkMode
                         ? "bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border-emerald-500/30"
                         : "bg-emerald-50 hover:bg-emerald-100 text-brand border-brand/20"
                     }`}
                   >
                     Finish <CheckCircle2 className="w-3.5 h-3.5" />
-                  </Button>
+                  </button>
                 )}
               </div>
             )}
@@ -810,36 +819,39 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
 
               {/* Bottom Navigation */}
               <div className={`flex items-center justify-between border-t pt-6 mt-12 ${darkMode ? "border-white/5" : "border-line"}`}>
-                <Button
+                <button
+                  type="button"
                   disabled={!prevLesson}
                   onClick={() => activeLesson && handleLessonSelect(prevLesson!)}
-                  className={`py-2 px-5 text-sm border flex items-center gap-1.5 rounded-xl transition-all ${
+                  className={`py-2 px-5 text-sm border flex items-center gap-1.5 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
                     darkMode
-                      ? "bg-zinc-900 hover:bg-zinc-800 text-zinc-350 border-white/5 disabled:opacity-30 disabled:hover:bg-zinc-900"
-                      : "bg-white hover:bg-zinc-50 text-zinc-700 border-zinc-200 disabled:opacity-30 disabled:hover:bg-white"
+                      ? "bg-zinc-900 hover:bg-zinc-800 text-zinc-350 border-white/5"
+                      : "bg-white hover:bg-zinc-50 text-zinc-700 border-zinc-200"
                   }`}
                 >
                   <ChevronLeft className="w-4 h-4" /> Prev Lesson
-                </Button>
+                </button>
 
                 <span className={`text-sm font-mono ${darkMode ? "text-zinc-500" : "text-zinc-400"}`}>
                   {activeIndex + 1} of {totalLessons}
                 </span>
 
                 {nextLesson ? (
-                  <Button
+                  <button
+                    type="button"
                     onClick={() => activeLesson && handleLessonSelect(nextLesson!)}
-                    className="py-2 px-5 bg-[#10B981] text-black hover:bg-[#00D8FF] text-sm font-semibold flex items-center gap-1.5 rounded-xl border-none shadow-[0_0_15px_rgba(16,185,129,0.15)]"
+                    className="py-2 px-5 bg-[#10B981] hover:bg-[#0D9488] text-white text-sm font-semibold flex items-center gap-1.5 rounded-xl border-none transition-all shadow-[0_4px_15px_rgba(16,185,129,0.15)]"
                   >
                     Next Lesson <ChevronRight className="w-4 h-4" />
-                  </Button>
+                  </button>
                 ) : (
-                  <Button
+                  <button
+                    type="button"
                     onClick={() => router.push(`/training/${course.slug}`)}
-                    className="py-2 px-5 bg-emerald-500 text-white hover:bg-emerald-600 text-sm font-semibold flex items-center gap-1.5 rounded-xl border-none shadow-[0_0_15px_rgba(16,185,129,0.2)]"
+                    className="py-2 px-5 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold flex items-center gap-1.5 rounded-xl border-none transition-all shadow-[0_4px_15px_rgba(16,185,129,0.2)]"
                   >
                     Finish Course <CheckCircle2 className="w-4 h-4" />
-                  </Button>
+                  </button>
                 )}
               </div>
 

@@ -132,7 +132,7 @@ export default async function EducationalSolutionsPage() {
 
           {/* Closing CTA card - Expansive Glassmorphic Banner */}
           <Reveal className="mt-20 md:mt-24 max-w-3xl mx-auto">
-            <div className="relative overflow-hidden p-10 md:p-12 text-center rounded-[32px] bg-[#0B2A22]/72 border border-line backdrop-blur-[18px] shadow-soft">
+            <div className="relative overflow-hidden p-10 md:p-12 text-center rounded-[32px] bg-[#0B2A22] border border-line backdrop-blur-[18px] shadow-soft">
               {/* Breathing background glow (cyan to deep blue) */}
               <div 
                 className="absolute -inset-10 bg-gradient-to-r from-[#10B981]/5 via-[#0D9488]/5 to-transparent rounded-[40px] blur-[80px] pointer-events-none"
@@ -144,7 +144,7 @@ export default async function EducationalSolutionsPage() {
               <h4 className="relative z-10 text-2xl md:text-3xl font-medium text-white mb-4">
                 {cta.title}
               </h4>
-              <p className="relative z-10 text-base text-[#E2EFE9] font-light mb-8 max-w-lg mx-auto leading-relaxed">
+              <p className="relative z-10 text-base text-emerald-50/90 font-normal mb-8 max-w-lg mx-auto leading-relaxed">
                 {cta.description}
               </p>
 

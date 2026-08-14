@@ -437,6 +437,11 @@ ${qHtml}
       result.className = 'text-sm font-bold text-brand mt-2';
       result.textContent = 'Score: ' + correct + ' / ' + questions.length + ' correct answers!';
       this.parentNode.appendChild(result);
+      try {
+        window.parent.postMessage({ type: 'KVJ_ACTIVITY_RESULT', score: correct, maxScore: questions.length }, '*');
+      } catch (e) {
+        console.error('Failed to post activity result:', e);
+      }
     ">Submit Answers</button>
   </div>
 </div>`;

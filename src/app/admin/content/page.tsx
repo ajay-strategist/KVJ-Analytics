@@ -76,7 +76,7 @@ interface SideCardData {
 interface AboutData {
   title: string;
   intro: string;
-  specializations: string[];
+  specializations: any[];
   reachLine: string;
   impact: string[];
   vision: { heading: string; body: string };
@@ -236,6 +236,128 @@ function StringList({
         ))}
         <button type="button" onClick={() => onChange([...items, ""])}
           className="flex items-center gap-1.5 text-xs font-bold text-brand hover:text-brand-700 transition-colors">
+          <Plus className="w-4 h-4" /> {placeholder}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function SpecializationsList({
+  label, items, onChange, placeholder = "Add specialization…",
+}: {
+  label: string;
+  items: any[];
+  onChange: (v: any[]) => void;
+  placeholder?: string;
+}) {
+  const move = (i: number, dir: -1 | 1) => {
+    const n = [...items];
+    const j = i + dir;
+    if (j < 0 || j >= n.length) return;
+    [n[i], n[j]] = [n[j], n[i]];
+    onChange(n);
+  };
+
+  const icons = [
+    { value: "report", label: "Report (FileText)" },
+    { value: "dashboard", label: "Dashboard (BarChart)" },
+    { value: "visualization", label: "Visualization (PieChart)" },
+    { value: "spreadsheet", label: "Spreadsheet (Table)" },
+    { value: "process", label: "Process (Settings)" },
+    { value: "training", label: "Training (GraduationCap)" },
+    { value: "education", label: "Education (Laptop)" },
+    { value: "cpu", label: "Tech (Cpu)" },
+    { value: "chart", label: "Line Chart" },
+    { value: "activity", label: "Activity" },
+    { value: "workflow", label: "Workflow" },
+    { value: "database", label: "Database" },
+    { value: "layers", label: "Layers" },
+    { value: "sliders", label: "Sliders" },
+  ];
+
+  const normalizeItem = (item: any) => {
+    if (!item) return { label: "", icon: "chart" };
+    if (typeof item === "string") {
+      let icon = "chart";
+      const text = item.toLowerCase();
+      if (text.includes("report")) icon = "report";
+      else if (text.includes("dashboard")) icon = "dashboard";
+      else if (text.includes("visual")) icon = "visualization";
+      else if (text.includes("sheet") || text.includes("excel")) icon = "spreadsheet";
+      else if (text.includes("process") || text.includes("automation")) icon = "process";
+      else if (text.includes("train") || text.includes("consult")) icon = "training";
+      else if (text.includes("edu") || text.includes("technology")) icon = "education";
+      return { label: item, icon };
+    }
+    return {
+      label: item.label || item.name || item.title || "",
+      icon: item.icon || "chart",
+    };
+  };
+
+  const normalizedItems = (items || []).map(normalizeItem);
+
+  return (
+    <div>
+      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate mb-2">{label}</label>
+      <div className="space-y-3">
+        {normalizedItems.map((val, i) => (
+          <div key={i} className="flex items-center gap-2">
+            <input
+              type="text"
+              value={val.label}
+              onChange={e => {
+                const n = [...normalizedItems];
+                n[i] = { ...n[i], label: e.target.value };
+                onChange(n);
+              }}
+              placeholder="Name / Label"
+              className="flex-1 px-3 py-2 rounded-input border border-line bg-surface/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand text-sm"
+            />
+            <select
+              value={val.icon}
+              onChange={e => {
+                const n = [...normalizedItems];
+                n[i] = { ...n[i], icon: e.target.value };
+                onChange(n);
+              }}
+              className="px-3 py-2 rounded-input border border-line bg-surface/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand text-sm"
+            >
+              {icons.map(opt => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+            <button
+              type="button"
+              onClick={() => move(i, -1)}
+              disabled={i === 0}
+              className="p-1.5 border border-line rounded hover:bg-surface disabled:opacity-30 shrink-0"
+            >
+              <ArrowUp className="w-3.5 h-3.5 text-slate" />
+            </button>
+            <button
+              type="button"
+              onClick={() => move(i, 1)}
+              disabled={i === normalizedItems.length - 1}
+              className="p-1.5 border border-line rounded hover:bg-surface disabled:opacity-30 shrink-0"
+            >
+              <ArrowDown className="w-3.5 h-3.5 text-slate" />
+            </button>
+            <button
+              type="button"
+              onClick={() => onChange(normalizedItems.filter((_, j) => j !== i))}
+              className="p-1.5 border border-error/20 rounded hover:bg-error/5 text-error shrink-0"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        ))}
+        <button
+          type="button"
+          onClick={() => onChange([...normalizedItems, { label: "", icon: "chart" }])}
+          className="flex items-center gap-1.5 text-xs font-bold text-brand hover:text-brand-700 transition-colors"
+        >
           <Plus className="w-4 h-4" /> {placeholder}
         </button>
       </div>
@@ -734,7 +856,7 @@ function AboutEditor({
         <Field label="Intro Paragraph" value={data.intro} rows={4} onChange={v => set("intro", v)} />
       </SectionCard>
       <SectionCard title="Core Skills & Focus Areas">
-        <StringList label="Specializations" items={data.specializations} onChange={v => set("specializations", v)} placeholder="Add specialization…" />
+        <SpecializationsList label="Specializations" items={data.specializations} onChange={v => set("specializations", v)} placeholder="Add specialization…" />
       </SectionCard>
       <SectionCard title="Track Record (Metrics Band)">
         <Field label="Reach Description" value={data.reachLine} rows={2} onChange={v => set("reachLine", v)} />

@@ -239,12 +239,21 @@ export async function GET(
       };
     });
 
+    // Shuffle questions if randomize is enabled
+    let finalQuestions = [...strippedQuestions];
+    if (test.randomize) {
+      for (let i = finalQuestions.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [finalQuestions[i], finalQuestions[j]] = [finalQuestions[j], finalQuestions[i]];
+      }
+    }
+
     const sanitizedTest = {
       id: test.id,
       title: test.title,
       durationMins: test.duration_mins,
       passMark: test.pass_mark,
-      questions: strippedQuestions,
+      questions: finalQuestions,
       courseSlug: course?.slug || "",
     };
 

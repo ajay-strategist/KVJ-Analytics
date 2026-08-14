@@ -69,6 +69,28 @@ const FALLBACK_COURSES: Record<
       "Deployment & RLS: setting up role-based safety gates and sharing dashboards.",
     ],
   },
+  "data-analytics": {
+    title: "Data Analytics",
+    segment: "college",
+    summary:
+      "A comprehensive professional pathway covering spreadsheets, database query engines, visualization, governance, and visual dashboard building.",
+    fee_inr: 8999,
+    offer_price_inr: 4999,
+    offer_label: "44% OFF",
+    offer_expiry: new Date(Date.now() + 10 * 86400000).toISOString(),
+    is_locked: false,
+    isPaid: true,
+    duration: "12 Weeks",
+    banner_url: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800",
+    introduction: "<h3>Data Analytics Course Intro</h3><p>Master data processing, modeling, SQL databases, dashboard visualization, and data privacy governance.</p>",
+    syllabus: [
+      "Module 1: Introduction to Data, variables, statistics, and basic structured data analysis.",
+      "Module 2: Spreadsheet consulting, formulas, lookups, and financial modeling principles.",
+      "Module 3: Relational databases, SQL query engines, and cohort performance telemetry.",
+      "Module 4: Business intelligence reporting, visual report building, and interactive dashboards.",
+      "Module 5: Data governance, privacy compliance (HIPAA, GDPR), and RBAC access gates.",
+    ],
+  },
 };
 
 export default async function CourseDetailPage({
