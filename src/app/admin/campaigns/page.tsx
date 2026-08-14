@@ -156,7 +156,23 @@ export default function AdminCampaignsPage() {
   const [previewTab, setPreviewTab] = useState<"editor" | "preview">("preview");
   const [previewDevice, setPreviewDevice] = useState<"desktop" | "tablet" | "mobile">("desktop");
   const [copiedPrompt, setCopiedPrompt] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
+  const [copiedEmbed, setCopiedEmbed] = useState(false);
+  const [copiedFormHtml, setCopiedFormHtml] = useState(false);
   const [iframeHeight, setIframeHeight] = useState(750);
+
+  // Helper for generating public shareable form URL
+  const getShareableFormUrl = (campaign: any) => {
+    if (!campaign) return "";
+    const slug = campaign.course?.slug || "ai";
+    const origin = typeof window !== "undefined" ? window.location.origin : "https://www.kvjanalytics.in";
+    return `${origin}/training/register?course=${slug}&campaign=${campaign.campaign_id}`;
+  };
+
+  const getFormEmbedCode = (campaign: any) => {
+    const url = getShareableFormUrl(campaign);
+    return `<iframe src="${url}" width="100%" height="800" frameborder="0" style="border:0; width:100%; min-height:800px;"></iframe>`;
+  };
 
   // Notification Settings State
   const [telegramOn, setTelegramOn] = useState(true);
@@ -778,15 +794,66 @@ Generate a premium, modern, responsive registration form while preserving all in
                       </Button>
 
                       <a
-                        href={`/training/register?course=${activeCampaignDetail.course?.slug || "ai"}&campaign=${activeCampaignDetail.campaign_id}`}
+                        href={getShareableFormUrl(activeCampaignDetail)}
                         target="_blank"
                         rel="noreferrer"
                         className="py-2 px-3.5 bg-white border border-line text-ink hover:bg-slate-50 text-xs font-bold flex items-center gap-1.5 rounded-xl cursor-pointer shadow-sm"
                       >
                         <ExternalLink className="w-3.5 h-3.5 text-brand" />
-                        Preview Registration Link
+                        Open Registration Page
                       </a>
                     </div>
+                  </div>
+
+                  {/* Shareable Link & Embed Tool Card */}
+                  <div className="bg-gradient-to-br from-emerald-950/5 via-slate-50 to-brand/5 border border-brand/20 rounded-2xl p-4 space-y-3 shadow-xs">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-line pb-2">
+                      <div className="flex items-center gap-2">
+                        <Send className="w-4 h-4 text-brand shrink-0" />
+                        <h4 className="text-xs font-bold text-ink">Shareable Registration Form Link</h4>
+                      </div>
+                      <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2.5 py-0.5 rounded-full border border-emerald-300">
+                        ✓ Connected to DB (Leads Auto-Saved)
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        readOnly
+                        value={getShareableFormUrl(activeCampaignDetail)}
+                        className="w-full px-3 py-2 border border-line rounded-xl text-xs font-mono bg-white text-slate-800 font-semibold select-all focus:outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(getShareableFormUrl(activeCampaignDetail));
+                          setCopiedLink(true);
+                          setTimeout(() => setCopiedLink(false), 3000);
+                        }}
+                        className="px-3.5 py-2 bg-brand text-white hover:bg-brand/90 text-xs font-bold rounded-xl shrink-0 flex items-center gap-1.5 shadow-sm cursor-pointer transition-all"
+                      >
+                        {copiedLink ? <Check className="w-3.5 h-3.5 text-white" /> : <Copy className="w-3.5 h-3.5" />}
+                        {copiedLink ? "Copied Link!" : "Copy Link"}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(getFormEmbedCode(activeCampaignDetail));
+                          setCopiedEmbed(true);
+                          setTimeout(() => setCopiedEmbed(false), 3000);
+                        }}
+                        className="px-3.5 py-2 bg-white border border-line text-ink hover:bg-slate-50 text-xs font-bold rounded-xl shrink-0 flex items-center gap-1.5 shadow-xs cursor-pointer transition-all"
+                      >
+                        {copiedEmbed ? <Check className="w-3.5 h-3.5 text-brand" /> : <Code className="w-3.5 h-3.5" />}
+                        {copiedEmbed ? "Copied Embed!" : "Copy Embed Code"}
+                      </button>
+                    </div>
+
+                    <p className="text-[11px] text-slate leading-relaxed">
+                      Share this direct form link or embed code anywhere. Student registrations are saved to the database under Campaign ID <strong className="text-brand font-mono">{activeCampaignDetail.campaign_id}</strong> and trigger configured Telegram & Teams notifications.
+                    </p>
                   </div>
 
                   {/* Campaign Real Analytics Row */}
@@ -1094,12 +1161,27 @@ Generate a premium, modern, responsive registration form while preserving all in
                         className="w-full px-4 py-3 border border-line rounded-2xl text-xs font-mono bg-slate-950 text-green-300 resize-y focus:outline-none focus:ring-2 focus:ring-brand/20"
                         spellCheck={false}
                       />
-                      <Button
-                        onClick={() => handleUpdateCampaign({ registration_form_html: customFormHtml })}
-                        className="py-2 px-4 bg-brand text-white hover:bg-brand/90 text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-sm"
-                      >
-                        <Check className="w-4 h-4" /> Save Form HTML Changes
-                      </Button>
+                      <div className="flex items-center gap-3">
+                        <Button
+                          onClick={() => handleUpdateCampaign({ registration_form_html: customFormHtml })}
+                          className="py-2 px-4 bg-brand text-white hover:bg-brand/90 text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-sm"
+                        >
+                          <Check className="w-4 h-4" /> Save Form HTML Changes
+                        </Button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigator.clipboard.writeText(customFormHtml);
+                            setCopiedFormHtml(true);
+                            setTimeout(() => setCopiedFormHtml(false), 3000);
+                          }}
+                          className="py-2 px-4 bg-white border border-line text-ink hover:bg-slate-50 text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer shadow-xs transition-all"
+                        >
+                          {copiedFormHtml ? <Check className="w-3.5 h-3.5 text-brand" /> : <Copy className="w-3.5 h-3.5" />}
+                          {copiedFormHtml ? "Copied Form HTML!" : "Copy Integrated Form HTML"}
+                        </button>
+                      </div>
                     </div>
                   ) : (
                     /* DYNAMIC HEIGHT FORM PREVIEW (SAFE PREVIEW MODE) */
