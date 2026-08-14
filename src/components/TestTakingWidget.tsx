@@ -371,7 +371,7 @@ export function TestTakingWidget({
         startedAt: new Date(Date.now() - elapsedSecs * 1000).toISOString(),
       };
 
-      const res = await fetch(`/api/tests/${testId}/submit${adminPreview ? "?preview=true" : ""}`, {
+      const res = await fetch(`/api/tests/${testId}${adminPreview ? "?preview=true" : ""}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(bodyPayload),
@@ -617,6 +617,13 @@ export function TestTakingWidget({
             <div className="bg-amber-500/10 border border-amber-500/30 text-amber-400 rounded-xl p-4 text-xs font-bold text-center flex items-center justify-center gap-2">
               <AlertTriangle className="w-4 h-4 shrink-0 text-amber-500" />
               <span>Preview Mode — Result was graded for preview only and not saved to database.</span>
+            </div>
+          )}
+
+          {gradedResult.dbSaveError && !isPreviewMode && (
+            <div className="bg-red-500/10 border border-red-500/30 text-red-400 rounded-xl p-4 text-xs font-bold text-center flex items-center justify-center gap-2">
+              <AlertTriangle className="w-4 h-4 shrink-0 text-red-500" />
+              <span>⚠️ Your score was calculated but could not be saved to the database. Please contact support. (DB: {gradedResult.dbSaveError})</span>
             </div>
           )}
 

@@ -533,6 +533,7 @@ export async function POST(
     const isPreview = isAdminPreview || isExplicitPreview;
 
     let attemptId = "preview-id";
+    let dbSaveError: string | null = null;
 
     if (!isPreview && user?.id) {
       // 6. Store attempt in Supabase test_attempts table
@@ -550,6 +551,7 @@ export async function POST(
         submitted_at: new Date().toISOString()
       };
 
+      console.log("[test_attempts] Attempting full insert for user:", user.id, "test:", id);
       const resInsert = await db
         .from("test_attempts")
         .insert([fullRecord])
@@ -558,6 +560,7 @@ export async function POST(
 
       if (resInsert.error) {
         console.error("[test_attempts] Full insert failed:", JSON.stringify(resInsert.error));
+        // Fallback: minimal record without extended columns
         const standardRecord = {
           user_id: user.id,
           test_slug: id,
@@ -568,6 +571,7 @@ export async function POST(
           started_at: startedAt,
           submitted_at: new Date().toISOString()
         };
+        console.log("[test_attempts] Trying fallback minimal insert...");
         const fallbackInsert = await db
           .from("test_attempts")
           .insert([standardRecord])
@@ -576,12 +580,16 @@ export async function POST(
 
         if (fallbackInsert.error) {
           console.error("[test_attempts] Fallback insert also failed:", JSON.stringify(fallbackInsert.error));
-          console.error("[test_attempts] Attempted record:", JSON.stringify(standardRecord));
-          return NextResponse.json({ error: "Failed to save test attempt results to database." }, { status: 500 });
+          console.error("[test_attempts] Fallback record:", JSON.stringify(standardRecord));
+          // Don't block student from seeing results — save error for logging only
+          dbSaveError = fallbackInsert.error.message;
+        } else {
+          attemptId = fallbackInsert.data.id;
+          console.log("[test_attempts] Fallback insert succeeded. attemptId:", attemptId);
         }
-        attemptId = fallbackInsert.data.id;
       } else {
         attemptId = resInsert.data.id;
+        console.log("[test_attempts] Full insert succeeded. attemptId:", attemptId);
       }
     }
 
@@ -596,6 +604,7 @@ export async function POST(
       gradedQuestions: perQuestionFeedback,
       attemptId: attemptId,
       isPreview: isPreview,
+      dbSaveError: dbSaveError ?? undefined,
     });
   } catch (error: any) {
     console.error("POST mock test score error:", error);
