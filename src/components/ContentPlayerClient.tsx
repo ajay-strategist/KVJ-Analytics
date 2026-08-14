@@ -146,6 +146,7 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
   const [loadingTest, setLoadingTest] = useState(false);
   const [attemptsCount, setAttemptsCount] = useState<number>(0);
   const [highestAttempt, setHighestAttempt] = useState<any>(null);
+  const [attemptsTrigger, setAttemptsTrigger] = useState(0);
 
   // Refs so the postMessage handler always sees the current lesson/user
   // without being re-created on every render (avoids stale-closure bugs).
@@ -326,7 +327,7 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
       setAttemptsCount(0);
       setHighestAttempt(null);
     }
-  }, [activeLesson?.id, activeLesson?.kind, user?.id, adminPreview]);
+  }, [activeLesson?.id, activeLesson?.kind, user?.id, adminPreview, attemptsTrigger]);
 
   // Flatten lessons for easy next/prev indexing
   const allLessons: any[] = enrichedModules.flatMap((mod: any) => mod.lessons);
@@ -723,7 +724,7 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
                 onStart={() => setIsAssessmentActive(true)}
                 onExit={() => setIsAssessmentActive(false)}
                 onComplete={async (score, maxScore, passed) => {
-                  setIsAssessmentActive(false);
+                  setAttemptsTrigger((prev) => prev + 1);
                   if (!adminPreview) {
                     try {
                       const res = await fetch("/api/activity-result", {
@@ -902,7 +903,7 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
                       onStart={() => setIsAssessmentActive(true)}
                       onExit={() => setIsAssessmentActive(false)}
                       onComplete={async (score, maxScore, passed) => {
-                        setIsAssessmentActive(false);
+                        setAttemptsTrigger((prev) => prev + 1);
                         if (!adminPreview) {
                           try {
                             const res = await fetch("/api/activity-result", {
