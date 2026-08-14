@@ -126,16 +126,25 @@ export async function POST(req: NextRequest) {
 
     // 5. Database Upsert / Insert
     let recordId = id;
-    const payload = {
+
+    // Determine course_id: try UUID parse first, fall back to text slug stored in service_interest
+    // The leads.course_id column is UUID — if a text slug is provided, we skip it
+    let resolvedCourseIdForDB: string | null = null;
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (uuidRegex.test(resolved_course_id)) {
+      resolvedCourseIdForDB = resolved_course_id;
+    }
+    // else: text slug — omit from payload to avoid FK error
+
+    const payload: Record<string, unknown> = {
       name,
       email,
       phone,
       whatsapp_number: whatsapp_number || null,
-      course_id: resolved_course_id,
       training_mode: resolved_training_mode,
-      location,
+      location: location || null,
       current_profession: current_profession || null,
-      organization: organization || null,
+      organization: organization || college_name || "",  // NOT NULL in DB — default to empty string
       college_name: college_name || null,
       current_education: current_education || null,
       preferred_start_date: preferred_start_date || null,
@@ -148,9 +157,13 @@ export async function POST(req: NextRequest) {
       landing_page: landing_page || null,
       referrer: referrer || null,
       service_interest: `Course Registration: ${courseTitle}`,
-      organization_name: organization || college_name || "Individual", // legacy column support
       status,
     };
+
+    // Only include course_id if it's a valid UUID (avoids FK constraint error on text slugs)
+    if (resolvedCourseIdForDB) {
+      payload.course_id = resolvedCourseIdForDB;
+    }
 
     if (recordId) {
       // Update existing record (draft or previous update)
