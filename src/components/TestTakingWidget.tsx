@@ -557,184 +557,382 @@ export function TestTakingWidget({
     const scorePct = gradedResult.totalPossibleMarks > 0
       ? Math.round((gradedResult.score / gradedResult.totalPossibleMarks) * 100)
       : 0;
-
+    const passed = gradedResult.passed;
     const isPreviewMode = adminPreview || gradedResult.isPreview;
+    const totalQ = test.questions.length;
+    const correctCount = test.questions.filter((q: any) => gradedResult.gradedQuestions[q.id]?.isCorrect).length;
+    const wrongCount = test.questions.filter((q: any) => gradedResult.gradedQuestions[q.id] && !gradedResult.gradedQuestions[q.id]?.isCorrect && !gradedResult.gradedQuestions[q.id]?.pending).length;
+    const pendingCount = test.questions.filter((q: any) => gradedResult.gradedQuestions[q.id]?.pending).length;
+
+    // Scorecard accent colors
+    const passGradient = "linear-gradient(135deg, #064e3b 0%, #065f46 40%, #047857 100%)";
+    const failGradient = "linear-gradient(135deg, #450a0a 0%, #7f1d1d 40%, #991b1b 100%)";
 
     return (
       <div className={`py-6 font-body ${colors.container}`}>
-        <div className="max-w-4xl mx-auto space-y-8 px-4">
+        <style>{`
+          @keyframes scoreIn {
+            0% { transform: scale(0.5) rotate(-10deg); opacity: 0; }
+            70% { transform: scale(1.12) rotate(2deg); opacity: 1; }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+          }
+          @keyframes fadeSlideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+          @keyframes shimmer {
+            0% { background-position: -200% center; }
+            100% { background-position: 200% center; }
+          }
+          @keyframes confettiFall {
+            0% { transform: translateY(-10px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(60px) rotate(720deg); opacity: 0; }
+          }
+          @keyframes pulse-ring {
+            0% { box-shadow: 0 0 0 0 rgba(16,185,129,0.4); }
+            70% { box-shadow: 0 0 0 20px rgba(16,185,129,0); }
+            100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); }
+          }
+          @keyframes pulse-ring-red {
+            0% { box-shadow: 0 0 0 0 rgba(239,68,68,0.4); }
+            70% { box-shadow: 0 0 0 20px rgba(239,68,68,0); }
+            100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); }
+          }
+          .score-circle-pass { animation: scoreIn 0.7s cubic-bezier(0.34,1.56,0.64,1) forwards, pulse-ring 2s ease-out 0.7s infinite; }
+          .score-circle-fail { animation: scoreIn 0.7s cubic-bezier(0.34,1.56,0.64,1) forwards, pulse-ring-red 2s ease-out 0.7s infinite; }
+          .result-card-anim { animation: fadeSlideUp 0.5s ease forwards; }
+          .result-card-anim-delay { animation: fadeSlideUp 0.5s ease 0.2s both; }
+          .shimmer-text {
+            background: linear-gradient(90deg, currentColor 25%, rgba(255,255,255,0.8) 50%, currentColor 75%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shimmer 2.5s linear infinite;
+          }
+          .confetti-dot { position: absolute; border-radius: 50%; animation: confettiFall 1.2s ease-in forwards; }
+        `}</style>
+
+        <div className="max-w-3xl mx-auto space-y-6 px-4">
           {isPreviewMode && (
             <div className="bg-amber-500/10 border border-amber-500/30 text-amber-400 rounded-xl p-4 text-xs font-bold text-center flex items-center justify-center gap-2">
               <AlertTriangle className="w-4 h-4 shrink-0 text-amber-500" />
               <span>Preview Mode — Result was graded for preview only and not saved to database.</span>
             </div>
           )}
-          <Card className={`p-8 shadow-soft border-t-8 ${colors.surface} ${
-            gradedResult.passed ? "border-emerald-500" : "border-red-500"
-          }`}>
-            <div className="text-center space-y-4">
-              <h2 className="text-2xl font-bold font-display">{test.title} Results</h2>
 
-              <div className="flex flex-col items-center">
-                <span className={`w-20 h-20 rounded-full flex items-center justify-center font-display text-2xl font-bold ${
-                  gradedResult.passed ? "bg-emerald-500/10 text-emerald-500" : "bg-red-500/10 text-red-500"
+          {/* ─── HERO SCORECARD ─── */}
+          <div
+            className="relative overflow-hidden rounded-3xl shadow-2xl"
+            style={{ background: passed ? passGradient : failGradient }}
+          >
+            {/* Decorative circles */}
+            <div className="absolute -top-12 -right-12 w-48 h-48 rounded-full opacity-10"
+              style={{ background: passed ? "#34d399" : "#f87171" }} />
+            <div className="absolute -bottom-8 -left-8 w-36 h-36 rounded-full opacity-10"
+              style={{ background: passed ? "#6ee7b7" : "#fca5a5" }} />
+
+            {/* Confetti particles (pass only) */}
+            {passed && (
+              <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                {["#34d399","#fbbf24","#60a5fa","#f472b6","#a78bfa","#fb923c"].map((color, i) => (
+                  <div
+                    key={i}
+                    className="confetti-dot"
+                    style={{
+                      left: `${10 + i * 15}%`,
+                      top: `${5 + (i % 3) * 8}%`,
+                      width: 8 + (i % 3) * 4,
+                      height: 8 + (i % 3) * 4,
+                      background: color,
+                      animationDelay: `${i * 0.15}s`,
+                      animationDuration: `${1.2 + i * 0.1}s`,
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+
+            <div className="relative z-10 p-8 text-center text-white space-y-6">
+              {/* Status badge */}
+              <div className="result-card-anim">
+                <span className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest border ${
+                  passed
+                    ? "bg-emerald-400/20 border-emerald-400/40 text-emerald-100"
+                    : "bg-red-400/20 border-red-400/40 text-red-100"
                 }`}>
-                  {scorePct}%
+                  {passed ? "🏆 Assessment Passed" : "❌ Assessment Failed"}
                 </span>
-                <span className="text-lg font-bold mt-3">
-                  Scored {gradedResult.score} / {gradedResult.totalPossibleMarks} Marks
-                </span>
-                <span className={`text-xs mt-1 ${colors.slate}`}>Passing standard: {gradedResult.passMark || 84}% score</span>
               </div>
 
-              <div className={`max-w-md mx-auto pt-4 border-t ${colors.line}`}>
-                {gradedResult.passed ? (
-                  <div className="bg-emerald-500/5 border border-emerald-500/20 p-4 rounded-xl text-emerald-500 text-xs font-semibold leading-relaxed">
-                    🎉 Excellent work! You passed this certification. Your progress has been updated.
-                  </div>
+              {/* Score circle */}
+              <div className="flex flex-col items-center gap-3 result-card-anim">
+                <div
+                  className={`w-36 h-36 rounded-full flex flex-col items-center justify-center border-4 bg-white/10 backdrop-blur-sm ${
+                    passed ? "border-emerald-400 score-circle-pass" : "border-red-400 score-circle-fail"
+                  }`}
+                >
+                  <span className={`text-5xl font-black leading-none ${passed ? "text-emerald-300" : "text-red-300"}`}>
+                    {scorePct}%
+                  </span>
+                  <span className="text-xs font-bold text-white/70 mt-1">Score</span>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-2xl font-bold">
+                    {passed ? "🎉 Congratulations!" : "😔 Don't give up!"}
+                  </p>
+                  <p className="text-white/70 text-sm font-medium">
+                    {gradedResult.score} / {gradedResult.totalPossibleMarks} marks • Passing: {gradedResult.passMark || 84}%
+                  </p>
+                </div>
+              </div>
+
+              {/* Stats row */}
+              <div className="result-card-anim-delay grid grid-cols-3 gap-3 max-w-sm mx-auto">
+                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-3 border border-white/10">
+                  <div className="text-2xl font-black text-emerald-300">{correctCount}</div>
+                  <div className="text-[10px] font-bold text-white/60 uppercase tracking-wider mt-0.5">Correct ✅</div>
+                </div>
+                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-3 border border-white/10">
+                  <div className="text-2xl font-black text-red-300">{wrongCount}</div>
+                  <div className="text-[10px] font-bold text-white/60 uppercase tracking-wider mt-0.5">Wrong ❌</div>
+                </div>
+                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-3 border border-white/10">
+                  <div className="text-2xl font-black text-amber-300">{totalQ}</div>
+                  <div className="text-[10px] font-bold text-white/60 uppercase tracking-wider mt-0.5">Total 📝</div>
+                </div>
+              </div>
+
+              {/* Message */}
+              <div className="result-card-anim-delay max-w-md mx-auto">
+                {passed ? (
+                  <p className="text-emerald-100 text-sm leading-relaxed bg-emerald-500/10 border border-emerald-400/20 rounded-2xl px-5 py-3">
+                    🌟 Outstanding achievement! You've demonstrated mastery of this topic. Your certification has been recorded and your course progress updated.
+                  </p>
                 ) : (
-                  <div className="bg-red-500/5 border border-red-500/20 p-4 rounded-xl text-red-500 text-xs font-semibold leading-relaxed">
-                    😢 You did not achieve the passing mark. Do not worry, review your incorrect responses and try again.
-                  </div>
+                  <p className="text-red-100 text-sm leading-relaxed bg-red-500/10 border border-red-400/20 rounded-2xl px-5 py-3">
+                    📚 Review the correct answers below, revisit the study material, and try again. Every expert was once a beginner — keep going!
+                  </p>
                 )}
               </div>
 
               {onExit && (
-                <div className="pt-4">
-                  <Button onClick={onExit} variant="primary" className="px-6 py-2.5 text-xs bg-brand text-white font-bold">
+                <div className="result-card-anim-delay pt-2">
+                  <button
+                    type="button"
+                    onClick={onExit}
+                    className="inline-flex items-center gap-2 px-8 py-3 rounded-xl font-bold text-sm bg-white text-slate-800 hover:bg-slate-100 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
                     Return to Course Player
-                  </Button>
+                  </button>
                 </div>
               )}
             </div>
-          </Card>
+          </div>
 
-          {/* Per Question Details Review */}
-          <div className="space-y-6">
-            <h3 className="text-base font-bold font-display uppercase tracking-wider border-b pb-2.5">
-              Review Test Response Details
-            </h3>
+          {/* ─── PER-QUESTION REVIEW ─── */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-3 border-b border-line pb-3">
+              <div className="w-7 h-7 rounded-lg bg-brand/10 flex items-center justify-center">
+                <FileCode className="w-4 h-4 text-brand" />
+              </div>
+              <h3 className={`text-sm font-bold uppercase tracking-wider ${darkMode ? "text-zinc-200" : "text-ink"}`}>
+                Detailed Answer Review
+              </h3>
+            </div>
 
             {test.questions.map((q: any, idx: number) => {
               const res = gradedResult.gradedQuestions[q.id];
               if (!res) return null;
 
+              const qCorrect = res.isCorrect;
+              const qPending = res.pending;
+
               return (
-                <Card key={q.id} className={`p-6 shadow-soft space-y-4 ${colors.surface}`}>
-                  <div className={`flex items-center justify-between border-b pb-3 ${colors.line}`}>
-                    <div className="flex items-center gap-2">
-                      <span className="w-6 h-6 rounded bg-brand/10 text-brand text-[11px] font-bold flex items-center justify-center">
-                        Q{idx + 1}
+                <div
+                  key={q.id}
+                  className={`rounded-2xl border-2 overflow-hidden shadow-sm transition-all ${
+                    qPending
+                      ? (darkMode ? "border-amber-500/30 bg-zinc-900" : "border-amber-300 bg-amber-50/30")
+                      : qCorrect
+                        ? (darkMode ? "border-emerald-500/30 bg-zinc-900" : "border-emerald-300 bg-emerald-50/20")
+                        : (darkMode ? "border-red-500/30 bg-zinc-900" : "border-red-300 bg-red-50/20")
+                  }`}
+                  style={{ animation: `fadeSlideUp 0.4s ease ${idx * 0.07}s both` }}
+                >
+                  {/* Question header bar */}
+                  <div className={`flex items-center justify-between px-5 py-3 border-b ${
+                    qPending
+                      ? (darkMode ? "bg-amber-500/10 border-amber-500/20" : "bg-amber-100/60 border-amber-200")
+                      : qCorrect
+                        ? (darkMode ? "bg-emerald-500/10 border-emerald-500/20" : "bg-emerald-100/60 border-emerald-200")
+                        : (darkMode ? "bg-red-500/10 border-red-500/20" : "bg-red-100/60 border-red-200")
+                  }`}>
+                    <div className="flex items-center gap-2.5">
+                      <span className={`w-7 h-7 rounded-lg text-xs font-black flex items-center justify-center ${
+                        qCorrect ? "bg-emerald-500 text-white" : qPending ? "bg-amber-400 text-white" : "bg-red-500 text-white"
+                      }`}>
+                        {idx + 1}
                       </span>
-                      <span className="px-2 py-0.5 rounded border border-corporate/30 bg-corporate/10 text-corporate text-[9px] font-bold uppercase tracking-wider">
+                      <span className={`px-2 py-0.5 rounded border text-[9px] font-bold uppercase tracking-wider ${darkMode ? "border-zinc-600 bg-zinc-800 text-zinc-300" : "border-slate-200 bg-white text-slate-500"}`}>
                         {q.type}
                       </span>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      {res.pending ? (
-                        <span className={`flex items-center gap-1 text-xs font-bold uppercase tracking-wider ${colors.slate}`}>
-                          <HelpCircle className="w-4 h-4" /> Manual Review
-                        </span>
-                      ) : res.isCorrect ? (
-                        <span className="flex items-center gap-1 text-emerald-500 text-xs font-bold uppercase tracking-wider">
-                          <CheckCircle2 className="w-4 h-4" /> Correct
-                        </span>
-                      ) : (
-                        <span className="flex items-center gap-1 text-red-500 text-xs font-bold uppercase tracking-wider">
-                          <XCircle className="w-4 h-4" /> Incorrect
-                        </span>
-                      )}
-                      <span className={`text-xs font-semibold ml-2 ${colors.slate}`}>
-                        Score: {res.earned} / {res.marks}
+                      <span className={`text-xs font-bold ${darkMode ? "text-zinc-300" : "text-slate-600"}`}>
+                        {res.earned}/{res.marks} pts
                       </span>
                     </div>
-                  </div>
-
-                  <div className="text-xs font-medium leading-relaxed space-y-3">
-                    <h4 className={`font-bold mb-1 ${colors.slate}`}>Question prompt:</h4>
-                    <div dangerouslySetInnerHTML={{ __html: q.stem }} className={`prose text-xs max-w-none ${darkMode ? "prose-invert text-zinc-300" : "text-ink"}`} />
-                    {q.image_url && (
-                      <div className="max-w-md rounded-xl overflow-hidden border border-line shadow-sm bg-white p-1.5">
-                        <img
-                          src={getDirectImageUrl(q.image_url)}
-                          alt="Question attachment"
-                          className="max-h-60 w-auto object-contain rounded-lg"
-                        />
-                      </div>
-                    )}
-                  </div>
-
-                  <div className={`p-3 rounded-lg border space-y-2 text-xs font-medium ${colors.card}`}>
-                    <div>
-                      <span className={`${colors.slate} font-bold block mb-1`}>Your Submitted Response:</span>
-                      {q.type === "code" ? (
-                        <pre className={`p-2 border rounded font-mono text-[10px] overflow-x-auto max-h-40 whitespace-pre-wrap ${colors.card}`}>{res.studentAnswer || "Not answered."}</pre>
-                      ) : q.type === "dragtable" ? (
-                        <div className="space-y-1">
-                          {Object.entries(res.studentAnswer || {}).map(([slot, val]) => (
-                            <div key={slot}>
-                              - Slot <span className="font-bold">{slot}</span> matched with <span className="font-bold">{String(val || "(unmatched)")}</span>
-                            </div>
-                          ))}
-                        </div>
-                      ) : q.type === "dragdrop" ? (
-                        <div className="space-y-1">
-                          {(res.studentAnswer || []).map((p: any, pidx: number) => (
-                            <div key={pidx}>
-                              - <span className="font-bold">{p[0]}</span> matched with <span className="font-bold">{p[1] || "(unmatched)"}</span>
-                            </div>
-                          ))}
-                        </div>
-                      ) : q.type === "sequence" ? (
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          {(res.studentAnswer || []).map((val: string, sidx: number) => (
-                            <span key={sidx} className={`px-2 py-1 border rounded text-[10px] font-semibold ${colors.card}`}>
-                              {sidx + 1}. {val}
-                            </span>
-                          ))}
-                        </div>
-                      ) : q.type === "fillblank" ? (
-                        <div className="space-y-1">
-                          {(res.studentAnswer || []).map((ans: string, bidx: number) => (
-                            <div key={bidx}>Blank #{bidx + 1}: <span className="font-bold">{ans || "(blank)"}</span></div>
-                          ))}
-                        </div>
+                    <span className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full ${
+                      qPending
+                        ? "bg-amber-400/20 text-amber-500"
+                        : qCorrect
+                          ? "bg-emerald-500/20 text-emerald-500"
+                          : "bg-red-500/20 text-red-500"
+                    }`}>
+                      {qPending ? (
+                        <><HelpCircle className="w-3.5 h-3.5" /> Pending Review</>
+                      ) : qCorrect ? (
+                        <><CheckCircle2 className="w-3.5 h-3.5" /> ✅ Correct</>
                       ) : (
-                        <span className="font-bold">{String(res.studentAnswer ?? "Not answered.")}</span>
+                        <><XCircle className="w-3.5 h-3.5" /> ❌ Incorrect</>
+                      )}
+                    </span>
+                  </div>
+
+                  <div className="px-5 py-4 space-y-4">
+                    {/* Question stem */}
+                    <div>
+                      <p className={`text-[10px] font-bold uppercase tracking-wider mb-1.5 ${darkMode ? "text-zinc-400" : "text-slate-400"}`}>Question</p>
+                      <div dangerouslySetInnerHTML={{ __html: q.stem }} className={`prose prose-sm max-w-none text-xs leading-relaxed ${darkMode ? "prose-invert text-zinc-300" : "text-ink"}`} />
+                      {q.image_url && (
+                        <div className="mt-2 max-w-sm rounded-xl overflow-hidden border border-line shadow-sm bg-white p-1.5">
+                          <img src={getDirectImageUrl(q.image_url)} alt="Question attachment" className="max-h-48 w-auto object-contain rounded-lg" />
+                        </div>
                       )}
                     </div>
 
-                    {!res.pending && (
-                      <div className={`border-t pt-2 mt-2 ${colors.line}`}>
-                        <span className={`${colors.slate} font-bold block mb-0.5`}>Correct Answer Key:</span>
-                        <span className="font-semibold">{res.correctAnswer}</span>
+                    {/* MCQ options with correct/wrong highlights */}
+                    {(q.type === "single" || q.type === "multiple") && q.config?.options && (
+                      <div className="space-y-2">
+                        <p className={`text-[10px] font-bold uppercase tracking-wider mb-1 ${darkMode ? "text-zinc-400" : "text-slate-400"}`}>Options</p>
+                        {q.config.options.map((opt: string, oi: number) => {
+                          const correctKey = q.config.correct_option ?? q.config.correct_options;
+                          const isCorrectOption = q.type === "single"
+                            ? correctKey === oi
+                            : Array.isArray(correctKey) && correctKey.includes(oi);
+                          const studentAns = res.studentAnswer;
+                          const studentPicked = q.type === "single"
+                            ? studentAns === oi
+                            : Array.isArray(studentAns) && studentAns.includes(oi);
+
+                          let optStyle = darkMode
+                            ? "border-zinc-700 bg-zinc-800 text-zinc-300"
+                            : "border-slate-200 bg-white text-slate-600";
+                          let optIcon = null;
+
+                          if (isCorrectOption) {
+                            optStyle = darkMode
+                              ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-300 font-bold"
+                              : "border-emerald-400 bg-emerald-50 text-emerald-700 font-bold";
+                            optIcon = <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />;
+                          } else if (studentPicked && !isCorrectOption) {
+                            optStyle = darkMode
+                              ? "border-red-500/50 bg-red-500/10 text-red-300 font-bold"
+                              : "border-red-400 bg-red-50 text-red-700 font-bold";
+                            optIcon = <XCircle className="w-4 h-4 text-red-500 shrink-0" />;
+                          }
+
+                          return (
+                            <div key={oi} className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl border text-xs transition-all ${optStyle}`}>
+                              <span className={`w-5 h-5 rounded-full border-2 flex items-center justify-center text-[9px] font-black shrink-0 ${
+                                isCorrectOption ? "border-emerald-500 bg-emerald-500 text-white"
+                                : studentPicked ? "border-red-500 bg-red-500 text-white"
+                                : "border-current opacity-40"
+                              }`}>
+                                {String.fromCharCode(65 + oi)}
+                              </span>
+                              <span className="flex-1">{opt}</span>
+                              {optIcon}
+                              {studentPicked && !isCorrectOption && (
+                                <span className="text-[9px] font-bold text-red-500 bg-red-100 px-1.5 py-0.5 rounded-full">Your answer</span>
+                              )}
+                              {isCorrectOption && (
+                                <span className="text-[9px] font-bold text-emerald-600 bg-emerald-100 px-1.5 py-0.5 rounded-full">✓ Correct</span>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
 
+                    {/* Response + Answer key for non-MCQ */}
+                    {q.type !== "single" && q.type !== "multiple" && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className={`p-3 rounded-xl border ${darkMode ? "border-zinc-700 bg-zinc-800" : "border-slate-200 bg-white"}`}>
+                          <p className={`text-[10px] font-bold uppercase tracking-wider mb-1.5 ${darkMode ? "text-zinc-400" : "text-slate-400"}`}>📝 Your Answer</p>
+                          {q.type === "code" ? (
+                            <pre className={`font-mono text-[10px] overflow-x-auto max-h-32 whitespace-pre-wrap ${darkMode ? "text-zinc-300" : "text-slate-700"}`}>{res.studentAnswer || "Not answered."}</pre>
+                          ) : q.type === "fillblank" ? (
+                            <div className="space-y-1">
+                              {(res.studentAnswer || []).map((ans: string, bidx: number) => (
+                                <div key={bidx} className={`text-xs font-semibold ${darkMode ? "text-zinc-300" : "text-slate-700"}`}>Blank {bidx + 1}: <span className="font-bold">{ans || "(blank)"}</span></div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className={`text-xs font-semibold ${darkMode ? "text-zinc-300" : "text-slate-700"}`}>{String(res.studentAnswer ?? "Not answered.")}</p>
+                          )}
+                        </div>
+
+                        {!res.pending && (
+                          <div className={`p-3 rounded-xl border ${darkMode ? "border-emerald-500/30 bg-emerald-500/10" : "border-emerald-300 bg-emerald-50"}`}>
+                            <p className="text-[10px] font-bold uppercase tracking-wider mb-1.5 text-emerald-600">✅ Correct Answer</p>
+                            <p className={`text-xs font-bold ${darkMode ? "text-emerald-300" : "text-emerald-700"}`}>{res.correctAnswer}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Code sandbox results */}
                     {res.codeResults && (
-                      <div className={`border-t pt-2 mt-2 ${colors.line}`}>
-                        <span className={`${colors.slate} font-bold block mb-1`}>Sandbox Execution Logs:</span>
+                      <div>
+                        <p className={`text-[10px] font-bold uppercase tracking-wider mb-2 ${darkMode ? "text-zinc-400" : "text-slate-400"}`}>Sandbox Execution Logs</p>
                         <div className="space-y-2">
                           {res.codeResults.map((tc: any, tcIdx: number) => (
-                            <div key={tcIdx} className={`border p-2 rounded text-[10px] ${colors.card}`}>
+                            <div key={tcIdx} className={`border p-2.5 rounded-xl text-[10px] ${
+                              tc.passed
+                                ? darkMode ? "border-emerald-500/30 bg-emerald-500/5" : "border-emerald-200 bg-emerald-50"
+                                : darkMode ? "border-red-500/30 bg-red-500/5" : "border-red-200 bg-red-50"
+                            }`}>
                               <div className="flex justify-between font-bold">
-                                <span className={colors.slate}>Test case #{tcIdx + 1}</span>
+                                <span className={darkMode ? "text-zinc-400" : "text-slate-500"}>Test case #{tcIdx + 1}</span>
                                 <span className={tc.passed ? "text-emerald-500" : "text-red-500"}>
-                                  {tc.passed ? "PASS" : "FAIL"}
+                                  {tc.passed ? "✅ PASS" : "❌ FAIL"}
                                 </span>
                               </div>
                               {tc.error && <p className="text-red-500 font-bold mt-1">Error: {tc.error}</p>}
-                              {tc.stdout && <pre className={`p-1 mt-1 font-mono text-[9px] max-h-20 overflow-y-auto ${colors.card}`}>Stdout: {tc.stdout}</pre>}
+                              {tc.stdout && <pre className={`p-1 mt-1 font-mono max-h-20 overflow-y-auto ${darkMode ? "text-zinc-300" : "text-slate-600"}`}>Stdout: {tc.stdout}</pre>}
                             </div>
                           ))}
                         </div>
                       </div>
                     )}
                   </div>
-                </Card>
+                </div>
               );
             })}
+
+            {/* Bottom CTA */}
+            {onExit && (
+              <div className="flex justify-center pt-4">
+                <button
+                  type="button"
+                  onClick={onExit}
+                  className="inline-flex items-center gap-2 px-8 py-3 rounded-xl font-bold text-sm bg-brand text-white hover:bg-brand/90 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Return to Course
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
