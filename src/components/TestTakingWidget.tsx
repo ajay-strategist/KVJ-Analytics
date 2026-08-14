@@ -371,9 +371,16 @@ export function TestTakingWidget({
         startedAt: new Date(Date.now() - elapsedSecs * 1000).toISOString(),
       };
 
+      // Get current auth token to ensure request is authenticated
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (session?.access_token) {
+        headers["Authorization"] = `Bearer ${session.access_token}`;
+      }
+
       const res = await fetch(`/api/tests/${testId}${adminPreview ? "?preview=true" : ""}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify(bodyPayload),
       });
 

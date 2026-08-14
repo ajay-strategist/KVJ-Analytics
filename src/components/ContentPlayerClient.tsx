@@ -283,8 +283,11 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
   useEffect(() => {
     if (activeLesson?.id && activeLesson.kind === "assessment") {
       const loadTestAndAttempts = async () => {
-        setLoadingTest(true);
-        setActiveTest(null);
+        // Do not reset activeTest if we are already displaying the test for this active lesson
+        if (activeTest?.lesson_id !== activeLesson.id) {
+          setLoadingTest(true);
+          setActiveTest(null);
+        }
         setAttemptsCount(0);
         setHighestAttempt(null);
         try {
@@ -342,13 +345,19 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
         return;
       }
 
-      // 1. Get user session
+      // 1. Get user session & sync cookie for API routes
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) {
         router.push(`/signin?redirect=/training/${course.slug}/learn`);
         return;
       }
       setUser(session.user);
+
+      if (session.access_token) {
+        const isSecure = typeof window !== "undefined" && window.location.protocol === "https:";
+        const secureFlag = isSecure ? "; Secure" : "";
+        document.cookie = `sb-access-token=${session.access_token}; path=/; max-age=${session.expires_in || 3600}; SameSite=Lax${secureFlag}`;
+      }
 
       // 2. Verify enrollment
       const { data: enrollment } = await supabase

@@ -186,8 +186,10 @@ export async function GET(
       .eq("id", test.course_id)
       .maybeSingle();
 
-    // 2. Validate session from cookie
-    const token = req.cookies.get("sb-access-token")?.value;
+    // 2. Validate session from cookie or Authorization header
+    const authHeader = req.headers.get("authorization");
+    const bearerToken = authHeader?.startsWith("Bearer ") ? authHeader.substring(7) : null;
+    const token = req.cookies.get("sb-access-token")?.value || bearerToken;
     const adminSession = req.cookies.get("admin_session")?.value;
     const isExplicitPreview = req.nextUrl.searchParams.get("preview") === "1" || req.nextUrl.searchParams.get("preview") === "true";
     const isAdminPreview = (adminSession === adminToken()) && isExplicitPreview;
@@ -313,9 +315,11 @@ export async function POST(
       .eq("id", test.course_id)
       .maybeSingle();
 
-    // 2. Validate session
+    // 2. Validate session from cookie or Authorization header
     let user: any = null;
-    const token = req.cookies.get("sb-access-token")?.value;
+    const authHeader = req.headers.get("authorization");
+    const bearerToken = authHeader?.startsWith("Bearer ") ? authHeader.substring(7) : null;
+    const token = req.cookies.get("sb-access-token")?.value || bearerToken;
     const adminSession = req.cookies.get("admin_session")?.value;
     const urlObj = new URL(req.url);
     const isExplicitPreview = urlObj.searchParams.get("preview") === "true" || urlObj.searchParams.get("preview") === "1";
