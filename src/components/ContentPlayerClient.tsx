@@ -702,11 +702,16 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
 
               {/* Lesson Title & Completion Toggle */}
               <div className={`flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-6 ${darkMode ? "border-white/5" : "border-line"}`}>
-                <div>
-                  <h1 className={`text-2xl md:text-3xl font-bold font-display ${darkMode ? "text-white" : "text-ink"}`}>
-                    {activeLesson.moduleTitle || activeLesson.title}
+                  {activeLesson.moduleTitle && (
+                    <span className={`text-[10px] font-extrabold uppercase tracking-widest block mb-1.5 font-mono ${
+                      darkMode ? "text-emerald-500/80" : "text-[#0F766E]/80"
+                    }`}>
+                      {activeLesson.moduleTitle}
+                    </span>
+                  )}
+                  <h1 className={`text-2xl md:text-3xl font-bold font-display tracking-tight ${darkMode ? "text-white" : "text-slate-900"}`}>
+                    {activeLesson.title}
                   </h1>
-                </div>
 
                 {activeLesson.kind === "assessment" ? (
                   completedLessonIds.has(activeLesson.id) ? (
