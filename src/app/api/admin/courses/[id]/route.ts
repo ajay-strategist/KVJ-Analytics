@@ -110,6 +110,33 @@ export async function PUT(
   }
 }
 
+// PATCH: Partial update (e.g. just registration_form_html)
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  if (!isAuthenticated(req)) return unauthorized();
+  const db = getAdmin();
+  if (!db) return notConfigured();
+
+  const { id } = await params;
+  try {
+    const body = await req.json();
+    const { data, error } = await db
+      .from("courses")
+      .update(body)
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ course: data });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message || "Invalid request body" }, { status: 400 });
+  }
+}
+
+
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }

@@ -34,18 +34,27 @@ export default async function RegisterPage({
   
   // Fetch dynamic published courses list from Supabase
   let courses: { id: string; slug: string; title: string }[] = [];
+  let customFormHtml: string | null = null;
   const db = getAdminClient();
   
   if (db) {
     try {
       const { data, error } = await db
         .from("courses")
-        .select("id, slug, title")
+        .select("id, slug, title, registration_form_html")
         .eq("is_published", true)
         .order("display_order", { ascending: true });
         
       if (!error && data) {
-        courses = data;
+        courses = data.map(({ id, slug, title }: any) => ({ id, slug, title }));
+        
+        // If a specific course is requested, load its custom form HTML
+        if (courseSlug) {
+          const matched = data.find((c: any) => c.slug === courseSlug);
+          if (matched?.registration_form_html?.trim()) {
+            customFormHtml = matched.registration_form_html;
+          }
+        }
       }
     } catch (err) {
       console.error("Failed to load courses for registration page:", err);
@@ -69,23 +78,38 @@ export default async function RegisterPage({
       <div className="absolute bottom-[20%] right-[-10%] w-[600px] h-[600px] bg-[#0D9488]/4 rounded-full blur-[160px] pointer-events-none" />
 
       <Container className="relative z-10">
-        {/* Header Block */}
-        <Reveal className="max-w-3xl mx-auto text-center mb-12">
-          <SplitHeading
-            as="h1"
-            className="text-[34px] lg:text-[48px] font-bold tracking-tight leading-[1.1] font-display text-ink mb-4"
-          >
-            Register Your Interest
-          </SplitHeading>
-          <p className="text-lg text-slate font-light leading-relaxed">
-            Fill in your details below to request program details, schedule, fee structures, and counselor guidance for the selected training track.
-          </p>
-        </Reveal>
+        {/* Header Block — only shown for generic form */}
+        {!customFormHtml && (
+          <Reveal className="max-w-3xl mx-auto text-center mb-12">
+            <SplitHeading
+              as="h1"
+              className="text-[34px] lg:text-[48px] font-bold tracking-tight leading-[1.1] font-display text-ink mb-4"
+            >
+              Register Your Interest
+            </SplitHeading>
+            <p className="text-lg text-slate font-light leading-relaxed">
+              Fill in your details below to request program details, schedule, fee structures, and counselor guidance for the selected training track.
+            </p>
+          </Reveal>
+        )}
 
-        {/* Dynamic Form block */}
-        <Reveal delay={100} className="w-full">
-          <DynamicRegisterForm courses={courses} initialCourseSlug={courseSlug} />
-        </Reveal>
+        {/* Custom course-specific form rendered in sandboxed iframe */}
+        {customFormHtml ? (
+          <Reveal className="w-full">
+            <iframe
+              srcDoc={customFormHtml}
+              sandbox="allow-scripts allow-forms allow-same-origin"
+              className="w-full border-0 rounded-2xl"
+              style={{ minHeight: "100vh" }}
+              title="Course Registration Form"
+            />
+          </Reveal>
+        ) : (
+          /* Generic dynamic form block */
+          <Reveal delay={100} className="w-full">
+            <DynamicRegisterForm courses={courses} initialCourseSlug={courseSlug} />
+          </Reveal>
+        )}
       </Container>
     </div>
   );

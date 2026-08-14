@@ -58,6 +58,10 @@ create index if not exists idx_test_attempts_test_id   on public.test_attempts(t
 create index if not exists idx_test_attempts_test_slug on public.test_attempts(test_slug);
 create index if not exists idx_mock_tests_lesson_id    on public.mock_tests(lesson_id);
 
+-- 8. Add registration_form_html column to courses table for custom per-course registration forms
+alter table public.courses add column if not exists registration_form_html text;
+
+
 -- 8. RLS: allow users to read/insert their own attempts
 alter table public.test_attempts enable row level security;
 
