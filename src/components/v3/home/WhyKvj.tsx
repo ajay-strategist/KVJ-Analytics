@@ -114,7 +114,7 @@ export function WhyKvj({ eyebrow, heading, cards }: { eyebrow?: string; heading:
               return (
                 <div
                   key={i}
-                  className="why-block group light-sweep glow-ring relative h-full rounded-2xl border card-tone-emerald p-6 transition-all duration-500 hover:-translate-y-1.5 hover:border-brand/40 hover:bg-white hover:shadow-[0_10px_30px_rgba(15,23,42,0.04)]"
+                  className="why-block group light-sweep glow-ring relative h-full rounded-2xl border card-tone-emerald p-6 transition-all duration-500 hover:-translate-y-1.5 hover:border-brand/40 hover:shadow-[0_10px_30px_rgba(16,185,129,0.08)]"
                   style={{ transformStyle: "preserve-3d" }}
                 >
                   <span className="mb-4 grid h-11 w-11 place-items-center rounded-xl bg-brand/10 border border-brand/20 text-brand transition-transform duration-500 group-hover:scale-110 group-hover:-translate-y-0.5">

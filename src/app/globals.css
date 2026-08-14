@@ -238,14 +238,21 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
    Use via <Card tone="emerald"> etc. Background + border tint; pair the
    .card-accent-* color on the icon/eyebrow. */
 .card-tone-neutral { background: var(--color-card); border-color: var(--color-line); }
-.card-tone-emerald { background: #DCFCE7; border-color: #86EFAC; }
+.card-tone-emerald {
+  background: #0B2A22 !important;
+  border-color: rgba(16, 185, 129, 0.2) !important;
+  color: #cbd5e1 !important;
+}
 .card-tone-teal    { background: #F0FDFA; border-color: #99F6E4; }
 .card-tone-amber   { background: #FFFBEB; border-color: #FDE68A; }
 .card-tone-violet  { background: #F5F3FF; border-color: #DDD6FE; }
 .card-tone-blue    { background: #EFF6FF; border-color: #BFDBFE; }
 
 /* Deepen border on hover for toned cards */
-.card-tone-emerald:hover { border-color: #6EE7B7; }
+.card-tone-emerald:hover {
+  background: #0B2A22 !important;
+  border-color: rgba(16, 185, 129, 0.45) !important;
+}
 .card-tone-teal:hover    { border-color: #5EEAD4; }
 .card-tone-amber:hover   { border-color: #FCD34D; }
 .card-tone-violet:hover  { border-color: #C4B5FD; }
@@ -253,7 +260,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 
 /* Accent color for icon/eyebrow inside a toned card (WCAG AA) */
 .card-accent-neutral { color: var(--color-ink); }
-.card-accent-emerald { color: #047857; }
+.card-accent-emerald { color: #10B981 !important; }
 .card-accent-teal    { color: #0F766E; }
 .card-accent-amber   { color: #B45309; }
 .card-accent-violet  { color: #6D28D9; }
@@ -261,7 +268,54 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 
 /* Soft tint chip background for icons (~10-12% of accent) */
 .card-chip-neutral { background: rgba(11, 42, 34, 0.06); }
-.card-chip-emerald { background: rgba(4, 120, 87, 0.10); }
+.card-chip-emerald { background: rgba(16, 185, 129, 0.10) !important; }
+
+/* Nested text styles for dark green cards to ensure high readability */
+.card-tone-emerald h1,
+.card-tone-emerald h2,
+.card-tone-emerald h3,
+.card-tone-emerald h4,
+.card-tone-emerald h5,
+.card-tone-emerald h6 {
+  color: #ffffff !important;
+}
+.card-tone-emerald p,
+.card-tone-emerald li,
+.card-tone-emerald span,
+.card-tone-emerald label,
+.card-tone-emerald input,
+.card-tone-emerald textarea,
+.card-tone-emerald select,
+.card-tone-emerald td,
+.card-tone-emerald th {
+  color: #cbd5e1 !important;
+}
+.card-tone-emerald strong {
+  color: #ffffff !important;
+}
+.card-tone-emerald .text-slate,
+.card-tone-emerald .text-slate-500,
+.card-tone-emerald .text-slate-600,
+.card-tone-emerald .text-zinc-500,
+.card-tone-emerald .text-zinc-600,
+.card-tone-emerald .text-zinc-650 {
+  color: #cbd5e1 !important;
+}
+.card-tone-emerald .text-ink {
+  color: #ffffff !important;
+}
+.card-tone-emerald .text-brand {
+  color: #10B981 !important;
+}
+.card-tone-emerald .text-muted {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+.card-tone-emerald .text-zinc-800 {
+  color: #ffffff !important;
+}
+.card-tone-emerald .text-zinc-900 {
+  color: #ffffff !important;
+}
 .card-chip-teal    { background: rgba(15, 118, 110, 0.10); }
 .card-chip-amber   { background: rgba(180, 83, 9, 0.10); }
 .card-chip-violet  { background: rgba(109, 40, 217, 0.10); }
