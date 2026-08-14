@@ -98,7 +98,7 @@ export default async function RegisterPage({
           <Reveal className="w-full">
             <iframe
               srcDoc={customFormHtml}
-              sandbox="allow-scripts allow-forms allow-same-origin"
+              sandbox="allow-scripts allow-forms allow-same-origin allow-modals"
               className="w-full border-0 rounded-2xl"
               style={{ minHeight: "100vh" }}
               title="Course Registration Form"

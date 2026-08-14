@@ -60,8 +60,13 @@ export async function POST(req: NextRequest) {
       referrer = "",
     } = body;
 
-    // 1. Honeypot Spam Protection Check
-    if (username && username.trim().length > 0) {
+    // 1. Support both standard names and kvj_ prefixed names
+    const resolved_course_id = course_id || body.kvj_course_id;
+    const resolved_training_mode = training_mode || body.kvj_training_mode || "online";
+    const resolved_username = username || body.kvj_honeypot;
+
+    // Honeypot Spam Protection Check
+    if (resolved_username && resolved_username.trim().length > 0) {
       console.warn("Spam honeypot triggered by submission name:", name);
       return NextResponse.json({ success: true, message: "Spam discarded." });
     }
@@ -85,7 +90,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 3. Server-side Validations
-    if (!name || !email || !phone || !course_id || !training_mode) {
+    if (!name || !email || !phone || !resolved_course_id || !resolved_training_mode) {
       return NextResponse.json({ error: "Missing required registration parameters." }, { status: 400 });
     }
 
@@ -110,7 +115,7 @@ export async function POST(req: NextRequest) {
       const { data: courseRow } = await db
         .from("courses")
         .select("title")
-        .eq("id", course_id)
+        .eq("id", resolved_course_id)
         .maybeSingle();
       if (courseRow?.title) {
         courseTitle = courseRow.title;
@@ -126,8 +131,8 @@ export async function POST(req: NextRequest) {
       email,
       phone,
       whatsapp_number: whatsapp_number || null,
-      course_id,
-      training_mode,
+      course_id: resolved_course_id,
+      training_mode: resolved_training_mode,
       location,
       current_profession: current_profession || null,
       organization: organization || null,
@@ -164,7 +169,7 @@ export async function POST(req: NextRequest) {
         .from("leads")
         .select("id")
         .eq("email", email)
-        .eq("course_id", course_id)
+        .eq("course_id", resolved_course_id)
         .eq("status", "draft")
         .maybeSingle();
 
