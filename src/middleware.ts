@@ -1,21 +1,20 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 /**
- * Page ON/OFF gate. When a page is toggled off in the admin (Global Settings →
- * Page Visibility, stored in page_content `site-settings`), this blocks direct
- * access to that route and sends the visitor home. The nav/footer already hide
- * the link; this closes the back door of typing the URL directly.
+ * 1. 301 / 302 Dynamic SEO Redirect Engine
+ * 2. Page ON/OFF Visibility Gate
  *
- * The visibility map is fetched from Supabase and cached in-memory for 60s so we
- * don't hit the DB on every request.
+ * Redirects and page visibility maps are cached in-memory for 60s
+ * to eliminate DB overhead on public page requests.
  */
 
 const GATED = ["/about", "/corporate", "/education", "/products", "/training", "/blog", "/contact"];
 
-let cache: { at: number; vis: Record<string, boolean> } | null = null;
+let visCache: { at: number; vis: Record<string, boolean> } | null = null;
+let redirectCache: { at: number; map: Record<string, { target: string; type: 301 | 302 }> } | null = null;
 
 async function getVisibility(): Promise<Record<string, boolean>> {
-  if (cache && Date.now() - cache.at < 60_000) return cache.vis;
+  if (visCache && Date.now() - visCache.at < 60_000) return visCache.vis;
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!url || !key || url.includes("placeholder")) return {};
@@ -26,8 +25,50 @@ async function getVisibility(): Promise<Record<string, boolean>> {
     );
     const rows = (await res.json()) as { data?: { pageVisibility?: Record<string, boolean> } }[];
     const vis = rows?.[0]?.data?.pageVisibility ?? {};
-    cache = { at: Date.now(), vis };
+    visCache = { at: Date.now(), vis };
     return vis;
+  } catch {
+    return {};
+  }
+}
+
+async function getRedirects(): Promise<Record<string, { target: string; type: 301 | 302 }>> {
+  if (redirectCache && Date.now() - redirectCache.at < 60_000) return redirectCache.map;
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!url || !key || url.includes("placeholder")) {
+    try {
+      const mockRedirects = require("@/lib/mockSupabase").mockDb.seo_redirects || [];
+      const map: Record<string, { target: string; type: 301 | 302 }> = {};
+      mockRedirects.forEach((r: any) => {
+        if (r.is_active && r.source_path && r.target_path) {
+          const src = r.source_path.replace(/\/$/, "") || "/";
+          map[src] = { target: r.target_path, type: r.redirect_type === 302 ? 302 : 301 };
+        }
+      });
+      redirectCache = { at: Date.now(), map };
+      return map;
+    } catch {
+      return {};
+    }
+  }
+
+  try {
+    const res = await fetch(
+      `${url}/rest/v1/seo_redirects?is_active=eq.true&select=source_path,target_path,redirect_type`,
+      { headers: { apikey: key, authorization: `Bearer ${key}` } }
+    );
+    const rows = (await res.json()) as { source_path: string; target_path: string; redirect_type: number }[];
+    const map: Record<string, { target: string; type: 301 | 302 }> = {};
+    (rows || []).forEach((r) => {
+      if (r.source_path && r.target_path && r.source_path !== r.target_path) {
+        const src = r.source_path.replace(/\/$/, "") || "/";
+        map[src] = { target: r.target_path, type: r.redirect_type === 302 ? 302 : 301 };
+      }
+    });
+    redirectCache = { at: Date.now(), map };
+    return map;
   } catch {
     return {};
   }
@@ -35,6 +76,20 @@ async function getVisibility(): Promise<Record<string, boolean>> {
 
 export async function middleware(req: NextRequest) {
   const path = req.nextUrl.pathname;
+  const cleanPath = path.replace(/\/$/, "") || "/";
+
+  // 1. Check Dynamic SEO Redirects
+  const redirects = await getRedirects();
+  if (redirects[cleanPath]) {
+    const targetRule = redirects[cleanPath];
+    // Safety check against loop
+    if (targetRule.target !== cleanPath && targetRule.target !== path) {
+      const redirectUrl = new URL(targetRule.target, req.url);
+      return NextResponse.redirect(redirectUrl, targetRule.type);
+    }
+  }
+
+  // 2. Check Page Visibility Gate
   const base = "/" + (path.split("/")[1] || "");
   if (!GATED.includes(base)) return NextResponse.next();
 
@@ -50,12 +105,13 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    "/about", "/about/:path*",
-    "/corporate", "/corporate/:path*",
-    "/education", "/education/:path*",
-    "/products", "/products/:path*",
-    "/training", "/training/:path*",
-    "/blog", "/blog/:path*",
-    "/contact", "/contact/:path*",
+    /*
+     * Match all request paths except for:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public files (images, files, etc.)
+     */
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|pdf)$).*)",
   ],
 };

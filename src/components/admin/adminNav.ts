@@ -3,7 +3,7 @@ import {
   LayoutDashboard, Globe, Newspaper, Star, Building2, Users, GraduationCap,
   BookOpen, FolderTree, ClipboardList, Ticket, UserSquare2, MessageSquare,
   FileText, Briefcase, ShoppingCart, CreditCard, Image, BarChart3, Shield,
-  Settings, ScrollText, Layers, Award, Megaphone,
+  Settings, ScrollText, Layers, Award, Megaphone, Search,
 } from "lucide-react";
 
 export type AdminStatus = "active" | "soon";
@@ -30,6 +30,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     label: "Website",
     items: [
       { label: "Website CMS", href: "/admin/content", icon: Globe, status: "active" },
+      { label: "Digital Marketing", href: "/admin/seo", icon: Search, status: "active" },
       { label: "Blog", href: "/admin/blog", icon: Newspaper, status: "active" },
       { label: "Campaigns", href: "/admin/campaigns", icon: Megaphone, status: "active" },
       { label: "Case Studies", href: "/admin/case-studies", icon: FileText, status: "active" },
