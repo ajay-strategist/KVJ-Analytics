@@ -22,7 +22,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { supabase } from "@/lib/supabase";
 
-import { DndContext, useDraggable, useDroppable } from "@dnd-kit/core";
+import { DndContext, useDraggable, useDroppable, useSensor, useSensors, PointerSensor, TouchSensor } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
@@ -172,17 +172,47 @@ export function TestTakingWidget({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const pointerSensor = useSensor(PointerSensor, {
+    activationConstraint: {
+      distance: 5,
+    },
+  });
+  const touchSensor = useSensor(TouchSensor, {
+    activationConstraint: {
+      delay: 250,
+      tolerance: 5,
+    },
+  });
+  const sensors = useSensors(pointerSensor, touchSensor);
+
   const [test, setTest] = useState<any>(null);
   const [started, setStarted] = useState(false);
   const [completed, setCompleted] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(0); // in seconds
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
+  // Custom modal states
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [alertMessage, setAlertMessage] = useState<string | null>(null);
+
   // Student test values
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [flaggedQuestions, setFlaggedQuestions] = useState<Record<string, boolean>>({});
   const [submitting, setSubmitting] = useState(false);
   const [gradedResult, setGradedResult] = useState<any>(null);
+
+  // Question visitation tracking state
+  const [visitedIndexes, setVisitedIndexes] = useState<Set<number>>(new Set([0]));
+
+  useEffect(() => {
+    if (started && !completed) {
+      setVisitedIndexes((prev) => {
+        const next = new Set(prev);
+        next.add(currentQuestionIndex);
+        return next;
+      });
+    }
+  }, [currentQuestionIndex, started, completed]);
 
   useEffect(() => {
     const initialize = async () => {
@@ -250,16 +280,21 @@ export function TestTakingWidget({
     if (!test) return;
     setStarted(true);
     setTimeRemaining(test.durationMins * 60);
+    setVisitedIndexes(new Set([0]));
   };
 
   const handleAutoSubmit = () => {
     handleSubmit(true);
   };
 
-  const handleSubmit = async (isAuto = false) => {
+  const handleSubmit = async (isAuto = false, bypassConfirm = false) => {
     if (submitting || completed) return;
-    if (!isAuto && !confirm("Are you sure you want to submit your mock test for grading?")) return;
+    if (!isAuto && !bypassConfirm) {
+      setShowConfirmModal(true);
+      return;
+    }
 
+    setShowConfirmModal(false);
     setSubmitting(true);
     try {
       const elapsedSecs = test.durationMins * 60 - timeRemaining;
@@ -268,31 +303,13 @@ export function TestTakingWidget({
         startedAt: new Date(Date.now() - elapsedSecs * 1000).toISOString(),
       };
 
-      let result: any;
-      if (adminPreview) {
-        // Admin preview: simulate grading locally or fetch from server without saving to db.
-        // To score correctly, we can hit `/api/tests/${testId}/submit` but wait,
-        // the server route blocks non-enrolled students except admins!
-        // Since the current user is an admin preview user, their token will be authorized on the server.
-        // We can POST to `/api/tests/${testId}/submit`. The backend handles admin checks and
-        // stores attempts, but we asked to "allow taking but don't save".
-        // Wait, how can we avoid saving for admin preview in `/api/tests/[id]/route.ts`?
-        // Ah, let's look at `POST /api/tests/[id]/route.ts`:
-        // It always inserts a `test_attempts` row!
-        // Wait! We can add a query parameter `preview=true` or similar to the submit POST request,
-        // or the endpoint can check if `preview === true` in request body.
-        // Let's modify `/api/tests/[id]/route.ts` so that if `preview: true` is passed,
-        // it grades the test and returns the results but skips inserting the record to database!
-        // That is exceptionally clean and perfectly respects "DO NOT save — just show a toast".
-      }
-
       const res = await fetch(`/api/tests/${testId}/submit${adminPreview ? "?preview=true" : ""}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(bodyPayload),
       });
 
-      result = await res.json();
+      const result = await res.json();
       if (!res.ok) throw new Error(result.error || "Submission grading failed.");
 
       setGradedResult(result);
@@ -301,7 +318,7 @@ export function TestTakingWidget({
       // Trigger completion callback
       onComplete?.(result.score, result.totalPossibleMarks, result.passed);
     } catch (err: any) {
-      alert(err.message || "Failed to submit exam.");
+      setAlertMessage(err.message || "Failed to submit exam.");
     } finally {
       setSubmitting(false);
     }
@@ -641,8 +658,16 @@ export function TestTakingWidget({
           </div>
 
           <div className="flex items-center gap-4 shrink-0">
-            <div className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border font-mono text-sm font-bold ${colors.card}`}>
-              <Clock className="w-4 h-4 text-brand animate-pulse" />
+            <div className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border font-mono text-sm font-bold transition-all ${
+              timeRemaining < 120
+                ? "text-red-500 border-red-500/70 bg-red-500/10"
+                : colors.card
+            }`}>
+              <Clock className={`w-4 h-4 ${
+                timeRemaining < 120
+                  ? "text-red-500 animate-[pulse_0.6s_infinite]"
+                  : "text-brand animate-pulse"
+              }`} />
               <span>{formatTime(timeRemaining)}</span>
             </div>
 
@@ -685,10 +710,18 @@ export function TestTakingWidget({
                   const isCurrent = idx === currentQuestionIndex;
                   const isFlagged = flaggedQuestions[q.id];
 
-                  let btnClass = `${colors.card} hover:border-slate/40`;
-                  if (isCurrent) btnClass = "border-brand bg-brand/5 text-brand ring-2 ring-brand/20";
-                  else if (isFlagged) btnClass = "border-corporate bg-corporate/5 text-corporate";
-                  else if (isAnswered) btnClass = "border-success bg-success/5 text-success";
+                  let btnClass = "";
+                  if (isCurrent) {
+                    btnClass = "border-brand bg-brand/5 text-brand ring-2 ring-brand/20";
+                  } else if (isFlagged) {
+                    btnClass = "border-corporate bg-corporate/5 text-corporate";
+                  } else if (isAnswered) {
+                    btnClass = "border-success bg-success/5 text-success";
+                  } else if (visitedIndexes.has(idx)) {
+                    btnClass = "border-slate bg-slate/10 text-slate";
+                  } else {
+                    btnClass = `${colors.card} opacity-60 hover:opacity-100 hover:border-slate/40`;
+                  }
 
                   return (
                     <button
@@ -705,8 +738,12 @@ export function TestTakingWidget({
 
               <div className={`pt-3 border-t space-y-2 text-[10px] font-bold uppercase tracking-wider ${colors.line} ${colors.slate}`}>
                 <div className="flex items-center gap-2">
-                  <span className={`w-3 h-3 rounded border shrink-0 ${colors.card}`} />
+                  <span className={`w-3 h-3 rounded border shrink-0 ${colors.card} opacity-60`} />
                   <span>Unvisited</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded border border-slate bg-slate/10 shrink-0" />
+                  <span>Visited (Skipped)</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="w-3 h-3 rounded border border-success bg-success/5 shrink-0" />
@@ -844,7 +881,7 @@ export function TestTakingWidget({
                 )}
 
                 {currentQuestion.type === "dragdrop" && (
-                  <DndContext onDragEnd={handleDragEndDragDrop}>
+                  <DndContext sensors={sensors} onDragEnd={handleDragEndDragDrop}>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       {/* Left Matching slots */}
                       <div className="space-y-4">
@@ -890,7 +927,7 @@ export function TestTakingWidget({
                 )}
 
                 {currentQuestion.type === "sequence" && (
-                  <DndContext onDragEnd={handleDragEndSequence}>
+                  <DndContext sensors={sensors} onDragEnd={handleDragEndSequence}>
                     <div className="max-w-md mx-auto space-y-4">
                       <h4 className={`text-[10px] font-bold uppercase tracking-wider mb-2 text-center ${colors.slate}`}>
                         Drag items to rearrange sequence
@@ -968,53 +1005,96 @@ export function TestTakingWidget({
                 )}
 
                 {currentQuestion.type === "matrix" && (
-                  <div className="overflow-x-auto">
-                    <table className={`w-full text-sm border rounded-xl overflow-hidden ${colors.line}`}>
-                      <thead>
-                        <tr className="bg-surface/50">
-                          <th className={`p-3 border text-left ${colors.line}`}></th>
-                          {(currentQuestion.config.columns || []).map((col: string, cIdx: number) => (
-                            <th key={cIdx} className={`p-3 border text-xs font-bold text-center whitespace-nowrap ${colors.line}`}>
-                              {col}
-                            </th>
+                  <>
+                    {/* Desktop Table View */}
+                    <div className="hidden md:block overflow-x-auto">
+                      <table className={`w-full text-sm border rounded-xl overflow-hidden ${colors.line}`}>
+                        <thead>
+                          <tr className="bg-surface/50">
+                            <th className={`p-3 border text-left ${colors.line}`}></th>
+                            {(currentQuestion.config.columns || []).map((col: string, cIdx: number) => (
+                              <th key={cIdx} className={`p-3 border text-xs font-bold text-center whitespace-nowrap ${colors.line}`}>
+                                {col}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {(currentQuestion.config.rows || []).map((row: string, rIdx: number) => (
+                            <tr key={rIdx}>
+                              <td className={`p-3 border text-sm font-semibold ${colors.line}`}>{row}</td>
+                              {(currentQuestion.config.columns || []).map((col: string, cIdx: number) => {
+                                const rowAns: number[] = answers[currentQuestion.id]?.[rIdx] || [];
+                                const checked = rowAns.includes(cIdx);
+                                return (
+                                  <td key={cIdx} className={`p-3 border text-center ${colors.line}`}>
+                                    <input
+                                      type={currentQuestion.config.multiple ? "checkbox" : "radio"}
+                                      name={`matrix-${currentQuestion.id}-row-${rIdx}`}
+                                      checked={checked}
+                                      onChange={() => setAnswers((prev) => {
+                                        const grid = ((prev[currentQuestion.id] || []) as number[][]).map((r) => [...(r || [])]);
+                                        while (grid.length <= rIdx) grid.push([]);
+                                        if (currentQuestion.config.multiple) {
+                                          const set = new Set<number>(grid[rIdx]);
+                                          if (set.has(cIdx)) set.delete(cIdx); else set.add(cIdx);
+                                          grid[rIdx] = Array.from(set).sort((a, b) => a - b);
+                                        } else {
+                                          grid[rIdx] = [cIdx];
+                                        }
+                                        return { ...prev, [currentQuestion.id]: grid };
+                                      })}
+                                      className="w-4 h-4 accent-brand cursor-pointer"
+                                    />
+                                  </td>
+                                );
+                              })}
+                            </tr>
                           ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {(currentQuestion.config.rows || []).map((row: string, rIdx: number) => (
-                          <tr key={rIdx}>
-                            <td className={`p-3 border text-sm font-semibold ${colors.line}`}>{row}</td>
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Mobile Stacked Card View */}
+                    <div className="block md:hidden space-y-4">
+                      {(currentQuestion.config.rows || []).map((row: string, rIdx: number) => (
+                        <div key={rIdx} className={`p-4 border rounded-xl space-y-3 ${colors.card}`}>
+                          <h5 className="text-xs font-bold uppercase tracking-wider text-brand">{row}</h5>
+                          <div className="flex flex-wrap gap-2">
                             {(currentQuestion.config.columns || []).map((col: string, cIdx: number) => {
                               const rowAns: number[] = answers[currentQuestion.id]?.[rIdx] || [];
                               const checked = rowAns.includes(cIdx);
                               return (
-                                <td key={cIdx} className={`p-3 border text-center ${colors.line}`}>
-                                  <input
-                                    type={currentQuestion.config.multiple ? "checkbox" : "radio"}
-                                    name={`matrix-${currentQuestion.id}-row-${rIdx}`}
-                                    checked={checked}
-                                    onChange={() => setAnswers((prev) => {
-                                      const grid = ((prev[currentQuestion.id] || []) as number[][]).map((r) => [...(r || [])]);
-                                      while (grid.length <= rIdx) grid.push([]);
-                                      if (currentQuestion.config.multiple) {
-                                        const set = new Set<number>(grid[rIdx]);
-                                        if (set.has(cIdx)) set.delete(cIdx); else set.add(cIdx);
-                                        grid[rIdx] = Array.from(set).sort((a, b) => a - b);
-                                      } else {
-                                        grid[rIdx] = [cIdx];
-                                      }
-                                      return { ...prev, [currentQuestion.id]: grid };
-                                    })}
-                                    className="w-4 h-4 accent-brand cursor-pointer"
-                                  />
-                                </td>
+                                <button
+                                  key={cIdx}
+                                  type="button"
+                                  onClick={() => setAnswers((prev) => {
+                                    const grid = ((prev[currentQuestion.id] || []) as number[][]).map((r) => [...(r || [])]);
+                                    while (grid.length <= rIdx) grid.push([]);
+                                    if (currentQuestion.config.multiple) {
+                                      const set = new Set<number>(grid[rIdx]);
+                                      if (set.has(cIdx)) set.delete(cIdx); else set.add(cIdx);
+                                      grid[rIdx] = Array.from(set).sort((a, b) => a - b);
+                                    } else {
+                                      grid[rIdx] = [cIdx];
+                                    }
+                                    return { ...prev, [currentQuestion.id]: grid };
+                                  })}
+                                  className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
+                                    checked
+                                      ? "border-brand bg-brand/10 text-brand"
+                                      : `${colors.card} hover:border-slate/40`
+                                  }`}
+                                >
+                                  {col}
+                                </button>
                               );
                             })}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
                 )}
 
                 {currentQuestion.type === "code" && (
@@ -1068,6 +1148,65 @@ export function TestTakingWidget({
           </div>
         </div>
       </div>
+
+      {/* Custom Confirmation Modal */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+          <div className={`relative w-full max-w-md rounded-3xl p-6 shadow-2xl border text-center space-y-6 ${colors.surface}`}>
+            <div className="mx-auto w-12 h-12 bg-brand/10 text-[#10B981] rounded-full flex items-center justify-center">
+              <HelpCircle className="w-6 h-6" />
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-lg font-bold">Submit Certification Exam</h3>
+              <p className={`text-sm ${colors.slate}`}>
+                Are you sure you want to submit your mock test for grading? You will not be able to modify your answers after submission.
+              </p>
+            </div>
+            <div className="flex gap-3 justify-center">
+              <button
+                type="button"
+                onClick={() => setShowConfirmModal(false)}
+                className={`px-4 py-2 border rounded-xl text-xs font-bold transition-all ${colors.btnSecondary}`}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSubmit(false, true)}
+                className="px-4 py-2 bg-brand text-black rounded-xl hover:opacity-90 text-xs font-bold transition-all"
+              >
+                Yes, Submit
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Custom Alert Modal */}
+      {alertMessage && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+          <div className={`relative w-full max-w-md rounded-3xl p-6 shadow-2xl border text-center space-y-6 ${colors.surface}`}>
+            <div className="mx-auto w-12 h-12 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center animate-bounce">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-lg font-bold text-red-500">Submission Error</h3>
+              <p className={`text-sm ${colors.slate}`}>
+                {alertMessage}
+              </p>
+            </div>
+            <div className="flex justify-center">
+              <button
+                type="button"
+                onClick={() => setAlertMessage(null)}
+                className="px-6 py-2 bg-red-500 text-white rounded-xl hover:opacity-90 text-xs font-bold transition-all"
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

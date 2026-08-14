@@ -32,9 +32,13 @@ a:hover {
   color: #10B981 !important;
 }
 blockquote {
-  background: rgba(16, 185, 129, 0.03) !important;
-  border-left-color: #10B981 !important;
+  background: rgba(16, 185, 129, 0.05) !important;
+  border-left: 4px solid #10B981 !important;
   color: #f1f5f9 !important;
+  font-style: italic !important;
+  padding: 1rem 1.5rem !important;
+  margin: 1.5rem 0 !important;
+  border-radius: 0 12px 12px 0 !important;
 }
 blockquote p {
   color: #f8fafc !important;
@@ -118,12 +122,16 @@ a:hover {
   color: #0369a1 !important;
 }
 blockquote {
-  background: #f8fafc !important;
-  border-left-color: #0284c7 !important;
-  color: #334155 !important;
+  background: #f0fdf4 !important;
+  border-left: 4px solid #10b981 !important;
+  color: #0f172a !important;
+  font-style: italic !important;
+  padding: 1rem 1.5rem !important;
+  margin: 1.5rem 0 !important;
+  border-radius: 0 12px 12px 0 !important;
 }
 blockquote p {
-  color: #0f172a !important;
+  color: #334155 !important;
 }
 pre {
   background-color: #0f172a !important;
