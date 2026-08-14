@@ -339,7 +339,21 @@ export async function POST(req: NextRequest) {
       }
 
       // C. Microsoft Teams Webhook Alert
-      const teamsWebhookUrl = process.env.TEAMS_WEBHOOK_URL;
+      // Prefer DB-stored setting (from Admin → Settings) over environment variable
+      let teamsWebhookUrl = process.env.TEAMS_WEBHOOK_URL;
+      try {
+        const { data: adminSettings } = await db
+          .from("page_content")
+          .select("data")
+          .eq("slug", "admin-settings")
+          .maybeSingle();
+        if (adminSettings?.data?.teamsWebhookUrl?.trim()) {
+          teamsWebhookUrl = adminSettings.data.teamsWebhookUrl.trim();
+        }
+      } catch {
+        // ignore — fall back to env var
+      }
+
       if (teamsEnabled && teamsWebhookUrl) {
         try {
           const teamsPayload = {

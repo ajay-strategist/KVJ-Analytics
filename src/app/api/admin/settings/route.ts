@@ -23,6 +23,10 @@ const DEFAULTS = {
   whatsappNumber: "",
   leadNotificationEmail: "",
   maintenanceMode: false,
+  // Notification Integrations
+  teamsWebhookUrl: "",
+  telegramBotToken: "",
+  telegramChatId: "",
 };
 
 export async function GET(req: NextRequest) {
