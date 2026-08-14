@@ -472,7 +472,7 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
       )}
 
       <div className={`w-full flex-1 flex relative overflow-hidden transition-colors duration-300 ${
-        darkMode ? "bg-[#050505] text-zinc-200" : "bg-[#F5FCF8] text-zinc-800"
+        darkMode ? "bg-[#050505] text-zinc-200" : "bg-[#F8FAFC] text-zinc-800"
       }`}>
 
         {/* 1. Collapsible Sidebar */}
