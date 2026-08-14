@@ -40,6 +40,29 @@ if (typeof window !== "undefined") {
   sql = require("@codemirror/lang-sql").sql;
 }
 
+export function getDirectImageUrl(url: string): string {
+  if (!url) return "";
+  
+  // 1. Google Drive
+  const gdRegex1 = /drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/;
+  const gdMatch1 = url.match(gdRegex1);
+  if (gdMatch1 && gdMatch1[1]) {
+    return `https://drive.google.com/uc?export=download&id=${gdMatch1[1]}`;
+  }
+  const gdRegex2 = /drive\.google\.com\/open\?id=([a-zA-Z0-9_-]+)/;
+  const gdMatch2 = url.match(gdRegex2);
+  if (gdMatch2 && gdMatch2[1]) {
+    return `https://drive.google.com/uc?export=download&id=${gdMatch2[1]}`;
+  }
+  
+  // 2. OneDrive
+  if (url.includes("onedrive.live.com") && url.includes("/redir?")) {
+    return url.replace("/redir?", "/download?");
+  }
+  
+  return url;
+}
+
 // Draggable Right Item for DragDrop Matching
 function DraggableItem({ id, text, colors }: { id: string; text: string; colors: any }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id });
@@ -558,9 +581,18 @@ export function TestTakingWidget({
                     </div>
                   </div>
 
-                  <div className="text-xs font-medium leading-relaxed">
+                  <div className="text-xs font-medium leading-relaxed space-y-3">
                     <h4 className={`font-bold mb-1 ${colors.slate}`}>Question prompt:</h4>
                     <div dangerouslySetInnerHTML={{ __html: q.stem }} className={`prose text-xs max-w-none ${darkMode ? "prose-invert text-zinc-300" : "text-ink"}`} />
+                    {q.image_url && (
+                      <div className="max-w-md rounded-xl overflow-hidden border border-line shadow-sm bg-white p-1.5">
+                        <img
+                          src={getDirectImageUrl(q.image_url)}
+                          alt="Question attachment"
+                          className="max-h-60 w-auto object-contain rounded-lg"
+                        />
+                      </div>
+                    )}
                   </div>
 
                   <div className={`p-3 rounded-lg border space-y-2 text-xs font-medium ${colors.card}`}>
@@ -798,8 +830,17 @@ export function TestTakingWidget({
               </div>
 
               {/* Question stem */}
-              <div className="text-sm font-medium leading-relaxed">
+              <div className="text-sm font-medium leading-relaxed space-y-4">
                 <div dangerouslySetInnerHTML={{ __html: currentQuestion.stem }} className={`prose text-sm max-w-none ${darkMode ? "prose-invert text-zinc-300" : "text-ink"}`} />
+                {currentQuestion.image_url && (
+                  <div className="max-w-2xl mx-auto rounded-2xl overflow-hidden border border-line shadow-sm bg-white p-2">
+                    <img
+                      src={getDirectImageUrl(currentQuestion.image_url)}
+                      alt="Question attachment"
+                      className="max-h-96 w-auto mx-auto object-contain rounded-xl"
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Workspace widgets */}

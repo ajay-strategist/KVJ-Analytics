@@ -40,6 +40,29 @@ const QUESTION_TYPES = [
   { value: "code", label: "Code", hint: "Sandbox execution" },
 ];
 
+export function getDirectImageUrl(url: string): string {
+  if (!url) return "";
+  
+  // 1. Google Drive
+  const gdRegex1 = /drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/;
+  const gdMatch1 = url.match(gdRegex1);
+  if (gdMatch1 && gdMatch1[1]) {
+    return `https://drive.google.com/uc?export=download&id=${gdMatch1[1]}`;
+  }
+  const gdRegex2 = /drive\.google\.com\/open\?id=([a-zA-Z0-9_-]+)/;
+  const gdMatch2 = url.match(gdRegex2);
+  if (gdMatch2 && gdMatch2[1]) {
+    return `https://drive.google.com/uc?export=download&id=${gdMatch2[1]}`;
+  }
+  
+  // 2. OneDrive
+  if (url.includes("onedrive.live.com") && url.includes("/redir?")) {
+    return url.replace("/redir?", "/download?");
+  }
+  
+  return url;
+}
+
 interface QuestionBuilderProps {
   testId: string;
 }
@@ -248,6 +271,37 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
               className="w-full px-3 py-2.5 rounded border border-line bg-white text-sm font-mono"
               placeholder="e.g. <p>What is the output of the following code?</p>"
             />
+          </div>
+
+          <div>
+            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate mb-1">
+              Image URL / Attachment (Google Drive or OneDrive sharing link) — Optional
+            </label>
+            <input
+              type="url"
+              value={questionForm.image_url || ""}
+              onChange={(e) => setQuestionForm({ ...questionForm, image_url: e.target.value })}
+              className="w-full px-3 py-2 rounded border border-line bg-white text-sm"
+              placeholder="e.g. https://drive.google.com/file/d/XYZ/view?usp=sharing"
+            />
+            {questionForm.image_url && (
+              <div className="mt-2 border border-line rounded-lg p-2 bg-white max-w-sm">
+                <span className="block text-[9px] font-bold text-slate uppercase mb-1">Image Preview:</span>
+                <img
+                  src={getDirectImageUrl(questionForm.image_url)}
+                  alt="Question Preview"
+                  className="max-h-40 w-auto object-contain rounded"
+                  onError={(e) => {
+                    (e.target as HTMLElement).style.display = "none";
+                    const nextSibling = (e.target as HTMLElement).nextElementSibling;
+                    if (nextSibling) (nextSibling as HTMLElement).style.display = "block";
+                  }}
+                />
+                <p className="text-[10px] text-error font-medium mt-1 hidden">
+                  ⚠️ Failed to load image. Ensure it is a valid public shareable link.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Tailored Config Editor Forms */}
@@ -989,10 +1043,19 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
                     {q.marks} {q.marks === 1 ? "mark" : "marks"}
                   </span>
                 </div>
-                <div
-                  className="text-xs text-slate font-medium truncate mt-1.5 max-w-xl"
-                  dangerouslySetInnerHTML={{ __html: q.stem }}
-                />
+                <div className="flex gap-3 items-start mt-1.5">
+                  {q.image_url && (
+                    <img
+                      src={getDirectImageUrl(q.image_url)}
+                      alt="Thumbnail"
+                      className="w-10 h-10 object-contain rounded border border-line bg-surface shrink-0"
+                    />
+                  )}
+                  <div
+                    className="text-xs text-slate font-medium truncate max-w-xl"
+                    dangerouslySetInnerHTML={{ __html: q.stem }}
+                  />
+                </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <button
