@@ -557,7 +557,7 @@ export async function POST(
         .single();
 
       if (resInsert.error) {
-        console.warn("Full test_attempts insert failed, attempting standard schema insert:", resInsert.error.message);
+        console.error("[test_attempts] Full insert failed:", JSON.stringify(resInsert.error));
         const standardRecord = {
           user_id: user.id,
           test_slug: id,
@@ -575,7 +575,8 @@ export async function POST(
           .single();
 
         if (fallbackInsert.error) {
-          console.error("Error saving test attempt:", fallbackInsert.error);
+          console.error("[test_attempts] Fallback insert also failed:", JSON.stringify(fallbackInsert.error));
+          console.error("[test_attempts] Attempted record:", JSON.stringify(standardRecord));
           return NextResponse.json({ error: "Failed to save test attempt results to database." }, { status: 500 });
         }
         attemptId = fallbackInsert.data.id;
