@@ -150,12 +150,21 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
   // Initialise hide-sidebar toggle from localStorage on mount
   useEffect(() => {
     const storedHide = lsGet(lsHideKey);
-    if (storedHide !== null) setHideSidebarRaw(storedHide);
+    if (storedHide !== null) {
+      setHideSidebarRaw(storedHide);
+      setSidebarOpen(!storedHide);
+    } else {
+      setSidebarOpen(true);
+    }
     setViewerReady(true);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [course.slug]);
 
-  const setHideSidebar = (v: boolean) => { setHideSidebarRaw(v); lsSet(lsHideKey, v); };
+  const setSidebarOpenWithSync = (open: boolean) => {
+    setSidebarOpen(open);
+    setHideSidebarRaw(!open);
+    lsSet(lsHideKey, !open);
+  };
 
   /**
    * Called by LessonIframe once per load — no-op now that dark mode is removed.
@@ -585,7 +594,7 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
           <div className="flex items-center gap-3 min-w-0">
             {!sidebarOpen && (
               <button
-                onClick={() => setSidebarOpen(true)}
+                onClick={() => setSidebarOpenWithSync(true)}
                 className={`p-2 rounded-lg border shrink-0 transition-colors ${darkMode ? "bg-zinc-900 border-white/5 text-zinc-400 hover:text-white" : "bg-white border-zinc-200 text-zinc-650 hover:text-zinc-800"}`}
               >
                 <Menu className="w-5 h-5" />
@@ -605,15 +614,15 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
               <>
                 {/* Hide embedded sidebar toggle */}
                 <ViewerToggle
-                  active={hideSidebar}
-                  onClick={() => setHideSidebar(!hideSidebar)}
-                  title={hideSidebar ? "Restore embedded navigation" : "Hide embedded sidebar & header"}
+                  active={!sidebarOpen}
+                  onClick={() => setSidebarOpenWithSync(!sidebarOpen)}
+                  title={!sidebarOpen ? "Show navigation sidebar" : "Hide navigation sidebar"}
                 >
-                  {hideSidebar
+                  {!sidebarOpen
                     ? <PanelLeftOpen className="w-3.5 h-3.5" />
                     : <PanelLeftClose className="w-3.5 h-3.5" />}
                   <span className="hidden sm:inline text-[10px] font-semibold leading-none">
-                    {hideSidebar ? "Show Nav" : "Hide Nav"}
+                    {!sidebarOpen ? "Show Nav" : "Hide Nav"}
                   </span>
                 </ViewerToggle>
 
