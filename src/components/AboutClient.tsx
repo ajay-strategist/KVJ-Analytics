@@ -275,9 +275,9 @@ export function AboutClientContent({ pageData }: AboutClientProps) {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto items-stretch">
+          <div className="flex flex-wrap justify-center gap-6 max-w-6xl mx-auto">
             {parsedStats.map((stat, idx) => (
-              <Reveal key={idx} delay={idx * 80} variant="scale" className="h-full">
+              <Reveal key={idx} delay={idx * 80} variant="scale" className="w-full md:w-[calc(50%-12px)] lg:w-[calc(25%-18px)] h-full">
                 <div className="card-tone-emerald border rounded-3xl p-6 flex flex-col justify-between h-full hover:border-[#10B981]/50 hover:-translate-y-1 transition-all duration-300 relative group overflow-hidden shadow-soft text-left">
                   
                   {stat.isStat ? (

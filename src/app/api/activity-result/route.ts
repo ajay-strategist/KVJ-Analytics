@@ -70,6 +70,8 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    const scorePercent = maxScore > 0 ? Number(((score / maxScore) * 100).toFixed(2)) : 0;
+
     // 4. Upsert activity result
     const { data, error } = await db
       .from("activity_results")
@@ -79,6 +81,7 @@ export async function POST(req: NextRequest) {
         course_slug: courseSlug,
         score,
         max_score: maxScore,
+        score_percent: scorePercent,
         passed: passed !== false,
         submitted_at: new Date().toISOString(),
       }, {

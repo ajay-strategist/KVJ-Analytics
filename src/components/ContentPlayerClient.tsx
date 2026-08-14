@@ -132,6 +132,7 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [isAssessmentActive, setIsAssessmentActive] = useState(false);
   const [activeLesson, setActiveLesson] = useState<Lesson | null>(null);
   const [completedLessonIds, setCompletedLessonIds] = useState<Set<string>>(new Set());
   const [actionLoading, setActionLoading] = useState(false);
@@ -407,6 +408,7 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
   const nextLesson = activeIndex < allLessons.length - 1 ? allLessons[activeIndex + 1] : null;
 
   const handleLessonSelect = (lesson: Lesson) => {
+    setIsAssessmentActive(false);
     setActiveLesson(lesson);
     // Close sidebar on mobile
     if (window.innerWidth < 1024) {
@@ -483,12 +485,16 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
 
         {/* 1. Collapsible Sidebar */}
         <div
-          className={`fixed ${adminPreview ? "top-[33px]" : "top-0"} bottom-0 left-0 z-40 lg:relative lg:top-0 w-[320px] flex flex-col transition-all duration-300 transform ${
-            sidebarOpen ? "translate-x-0" : "-translate-x-full lg:-ml-[320px]"
+          className={`fixed ${adminPreview ? "top-[33px]" : "top-0"} bottom-0 left-0 z-40 w-[320px] flex flex-col transition-all duration-300 transform ${
+            isAssessmentActive
+              ? "-translate-x-full lg:-ml-[320px] lg:hidden"
+              : sidebarOpen
+                ? "translate-x-0 lg:relative lg:translate-x-0"
+                : "-translate-x-full lg:-ml-[320px]"
           } ${
             darkMode 
               ? "bg-[#070E0B] border-r border-white/5" 
-              : "bg-[#F8FAF9] border-r border-slate-200/60 shadow-[1px_0_10px_rgba(0,0,0,0.01)]"
+              : "bg-white border-r border-slate-200/60 shadow-[1px_0_10px_rgba(0,0,0,0.01)]"
           }`}
         >
         {/* Sidebar Header */}
@@ -517,19 +523,19 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
         </div>
 
         {/* Progress Tracker */}
-        <div className={`p-6 border-b shrink-0 ${darkMode ? "border-white/5 bg-[#080E0B]/30" : "border-slate-200/60 bg-[#10B981]/[0.01]"}`}>
+        <div className={`p-6 border-b shrink-0 ${darkMode ? "border-white/5 bg-[#080E0B]/30" : "border-slate-105 bg-white"}`}>
           <div className={`p-4 rounded-2xl border ${
-            darkMode ? "bg-black/10 border-white/5" : "bg-white border-slate-200/40 shadow-[0_2px_8px_rgba(0,0,0,0.01)]"
+            darkMode ? "bg-black/10 border-white/5" : "bg-[#F4F9FD]/40 border-slate-200/50 shadow-[0_4px_15px_rgba(16,35,63,0.01)]"
           }`}>
-            <div className={`flex items-center justify-between text-[10px] font-bold uppercase tracking-wider mb-2 ${
-              darkMode ? "text-zinc-400" : "text-slate-500"
+            <div className={`flex items-center justify-between text-[10px] font-extrabold uppercase tracking-wider mb-2.5 ${
+              darkMode ? "text-zinc-400" : "text-[#7B8A99]"
             }`}>
               <span>Course Progress</span>
-              <span className="text-[#10B981] font-mono font-bold">{percentComplete}% ({completedLessonsCount}/{totalLessons})</span>
+              <span className="text-[#08A88A] font-mono font-bold">{percentComplete}% ({completedLessonsCount}/{totalLessons})</span>
             </div>
-            <div className={`w-full h-2 rounded-full overflow-hidden ${darkMode ? "bg-zinc-800" : "bg-slate-200/60"}`}>
+            <div className={`w-full h-2 rounded-full overflow-hidden ${darkMode ? "bg-zinc-800" : "bg-[#DCE5E8]"}`}>
               <div
-                className="h-full bg-gradient-to-r from-[#10B981] to-[#0D9488] rounded-full transition-all duration-550 shadow-[0_0_8px_rgba(16,185,129,0.3)]"
+                className="h-full bg-gradient-to-r from-[#08A88A] to-[#0E7490] rounded-full transition-all duration-550 shadow-[0_0_8px_rgba(8,168,138,0.2)]"
                 style={{ width: `${percentComplete}%` }}
               />
             </div>
@@ -539,20 +545,22 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
         {/* Curriculum list */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {enrichedModules.map((mod: any, modIdx: number) => (
-            <div key={mod.id} className="space-y-3">
+            <div key={mod.id} className="space-y-3.5">
               <div className="flex items-center gap-2">
-                <span className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded font-mono ${
-                  darkMode ? "bg-[#10B981]/15 text-[#10B981]" : "bg-[#10B981]/10 text-[#0F766E]"
+                <span className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded font-mono border ${
+                  darkMode 
+                    ? "bg-[#10B981]/15 text-[#10B981] border-[#10B981]/30" 
+                    : "bg-[#F0FBF7] text-[#08A88A] border-[#DDF8F0]"
                 }`}>
                   Mod {modIdx + 1}
                 </span>
-                <h3 className={`text-[10px] font-bold uppercase tracking-wider font-display truncate ${
-                  darkMode ? "text-zinc-500" : "text-slate-500"
+                <h3 className={`text-[10px] font-extrabold uppercase tracking-wider truncate font-sans ${
+                  darkMode ? "text-zinc-500" : "text-[#10233F]"
                 }`}>
                   {mod.title}
                 </h3>
               </div>
-              <div className="space-y-1.5">
+              <div className="space-y-2">
                 {mod.lessons.map((les: any) => {
                   const isActive = activeLesson?.id === les.id;
                   const isCompleted = completedLessonIds.has(les.id);
@@ -565,39 +573,41 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
                         isActive
                           ? darkMode
                             ? "bg-[#10B981]/10 text-white font-bold border-[#10B981]/30 shadow-[0_2px_8px_rgba(16,185,129,0.05)]"
-                            : "bg-[#10B981]/8 text-[#0F766E] font-bold border-[#10B981]/20 shadow-[0_2px_8px_rgba(16,185,129,0.04)]"
+                            : "bg-white text-[#10233F] font-bold border-[#08A88A]/60 shadow-[0_4px_12px_rgba(8,168,138,0.08)] scale-[1.01]"
                           : darkMode
                             ? "hover:bg-[#111814] border-transparent text-zinc-400 hover:text-zinc-200"
-                            : "hover:bg-slate-200/50 border-transparent text-slate-600 hover:text-slate-900"
+                            : "hover:bg-[#F4F9FD] border-transparent text-[#526477] hover:text-[#10233F]"
                       }`}
                     >
                       <div className="flex items-center gap-2.5 overflow-hidden min-w-0">
                         {isCompleted ? (
-                          <CheckCircle2 className="w-4 h-4 text-[#10B981] shrink-0" />
+                          <CheckCircle2 className="w-4 h-4 text-[#08A88A] shrink-0" />
                         ) : (
                           <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 transition-colors ${
                             isActive
-                              ? "border-[#10B981]"
+                              ? "border-[#08A88A]"
                               : darkMode
                                 ? "border-zinc-700 group-hover:border-zinc-650"
-                                : "border-slate-300 group-hover:border-slate-450"
+                                : "border-[#DCE5E8] group-hover:border-[#08A88A]/40"
                           }`}>
                             <div className={`w-1.5 h-1.5 rounded-full transition-transform ${
                               isActive
-                                ? "bg-[#10B981] scale-100"
+                                ? "bg-[#08A88A] scale-100"
                                 : "bg-transparent scale-0"
                             }`} />
                           </div>
                         )}
-                        <span className="truncate tracking-tight">{les.title}</span>
+                        <span className={`truncate tracking-tight font-sans ${isActive ? "font-bold text-[#10233F]" : "font-semibold text-[#526477] group-hover:text-[#10233F]"}`}>
+                          {les.title}
+                        </span>
                       </div>
                       {les.video_url && (
                         <PlayCircle className={`w-3.5 h-3.5 shrink-0 ${
                           isActive 
-                            ? "text-[#10B981]" 
+                            ? "text-[#08A88A]" 
                             : darkMode 
                               ? "text-zinc-600 group-hover:text-zinc-400" 
-                              : "text-zinc-400 group-hover:text-zinc-600"
+                              : "text-[#7B8A99] group-hover:text-[#08A88A]"
                         }`} />
                       )}
                     </button>
@@ -657,7 +667,7 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
             )}
 
             {/* Prev / Next mini buttons in header */}
-            {activeLesson && (
+            {activeLesson && !isAssessmentActive && (
               <div className="flex items-center gap-2">
                 <button
                   type="button"
@@ -703,8 +713,43 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
 
         {/* Player Content Body */}
         {activeLesson ? (
-          <div className="flex-1 overflow-y-auto p-6 md:p-10 relative">
-            <div className="max-w-4xl mx-auto space-y-8">
+          isAssessmentActive && activeTest ? (
+            <div className="flex-1 overflow-y-auto p-0 relative bg-[#F8FAFC]">
+              <TestTakingWidget
+                testId={activeTest.id}
+                courseSlug={course.slug}
+                adminPreview={adminPreview}
+                darkMode={darkMode}
+                onStart={() => setIsAssessmentActive(true)}
+                onExit={() => setIsAssessmentActive(false)}
+                onComplete={async (score, maxScore, passed) => {
+                  setIsAssessmentActive(false);
+                  if (!adminPreview) {
+                    try {
+                      const res = await fetch("/api/activity-result", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          lessonId: activeLesson.id,
+                          score,
+                          maxScore,
+                          courseSlug: course.slug,
+                          passed,
+                        }),
+                      });
+                      if (res.ok && passed) {
+                        setCompletedLessonIds((prev) => new Set([...prev, activeLesson.id]));
+                      }
+                    } catch (err) {
+                      console.error("Failed to save activity result:", err);
+                    }
+                  }
+                }}
+              />
+            </div>
+          ) : (
+            <div className="flex-1 overflow-y-auto p-6 md:p-10 relative">
+              <div className="max-w-4xl mx-auto space-y-8">
 
               {/* Lesson Title & Completion Toggle */}
               <div className={`flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-6 ${darkMode ? "border-white/5" : "border-line"}`}>
@@ -837,7 +882,7 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
                       }`}>
                         <span className="block uppercase tracking-wider font-bold text-[9px] mb-1 opacity-70">Your Best Score</span>
                         <span className={`text-sm font-bold block ${darkMode ? "text-white" : "text-ink"}`}>
-                          {highestAttempt.score} / {highestAttempt.max_score} Marks
+                          {highestAttempt.score} / {highestAttempt.max_score} Marks ({highestAttempt.max_score > 0 ? Math.round((highestAttempt.score / highestAttempt.max_score) * 100) : 0}%)
                         </span>
                         <span className={`inline-block mt-2 px-2 py-0.5 rounded text-[10px] font-bold ${
                           highestAttempt.passed ? "bg-emerald-500/10 text-emerald-450" : "bg-red-500/10 text-red-450"
@@ -854,7 +899,10 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
                       courseSlug={course.slug}
                       adminPreview={adminPreview}
                       darkMode={darkMode}
+                      onStart={() => setIsAssessmentActive(true)}
+                      onExit={() => setIsAssessmentActive(false)}
                       onComplete={async (score, maxScore, passed) => {
+                        setIsAssessmentActive(false);
                         if (!adminPreview) {
                           try {
                             const res = await fetch("/api/activity-result", {
@@ -896,46 +944,49 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
               )}
 
               {/* Bottom Navigation */}
-              <div className={`flex items-center justify-between border-t pt-6 mt-12 ${darkMode ? "border-white/5" : "border-line"}`}>
-                <button
-                  type="button"
-                  disabled={!prevLesson}
-                  onClick={() => activeLesson && handleLessonSelect(prevLesson!)}
-                  className={`py-2 px-5 text-sm border flex items-center gap-1.5 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
-                    darkMode
-                      ? "bg-zinc-900 hover:bg-zinc-800 text-zinc-350 border-white/5"
-                      : "bg-white hover:bg-zinc-50 text-zinc-700 border-zinc-200"
-                  }`}
-                >
-                  <ChevronLeft className="w-4 h-4" /> Prev Lesson
-                </button>
-
-                <span className={`text-sm font-mono ${darkMode ? "text-zinc-500" : "text-zinc-400"}`}>
-                  {activeIndex + 1} of {totalLessons}
-                </span>
-
-                {nextLesson ? (
+              {!isAssessmentActive && (
+                <div className={`flex items-center justify-between border-t pt-6 mt-12 ${darkMode ? "border-white/5" : "border-line"}`}>
                   <button
                     type="button"
-                    onClick={() => activeLesson && handleLessonSelect(nextLesson!)}
-                    className="py-2 px-5 bg-[#10B981] hover:bg-[#0D9488] text-white text-sm font-semibold flex items-center gap-1.5 rounded-xl border-none transition-all shadow-[0_4px_15px_rgba(16,185,129,0.15)]"
+                    disabled={!prevLesson}
+                    onClick={() => activeLesson && handleLessonSelect(prevLesson!)}
+                    className={`py-2 px-5 text-sm border flex items-center gap-1.5 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                      darkMode
+                        ? "bg-zinc-900 hover:bg-zinc-800 text-zinc-350 border-white/5"
+                        : "bg-white hover:bg-zinc-50 text-zinc-700 border-zinc-200"
+                    }`}
                   >
-                    Next Lesson <ChevronRight className="w-4 h-4" />
+                    <ChevronLeft className="w-4 h-4" /> Prev Lesson
                   </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => router.push(`/training/${course.slug}`)}
-                    className="py-2 px-5 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold flex items-center gap-1.5 rounded-xl border-none transition-all shadow-[0_4px_15px_rgba(16,185,129,0.2)]"
-                  >
-                    Finish Course <CheckCircle2 className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
+
+                  <span className={`text-sm font-mono ${darkMode ? "text-zinc-500" : "text-zinc-400"}`}>
+                    {activeIndex + 1} of {totalLessons}
+                  </span>
+
+                  {nextLesson ? (
+                    <button
+                      type="button"
+                      onClick={() => activeLesson && handleLessonSelect(nextLesson!)}
+                      className="py-2 px-5 bg-[#10B981] hover:bg-[#0D9488] text-white text-sm font-semibold flex items-center gap-1.5 rounded-xl border-none transition-all shadow-[0_4px_15px_rgba(16,185,129,0.15)]"
+                    >
+                      Next Lesson <ChevronRight className="w-4 h-4" />
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => router.push(`/training/${course.slug}`)}
+                      className="py-2 px-5 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold flex items-center gap-1.5 rounded-xl border-none transition-all shadow-[0_4px_15px_rgba(16,185,129,0.2)]"
+                    >
+                      Finish Course <CheckCircle2 className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              )}
 
             </div>
           </div>
-        ) : (
+        )
+      ) : (
           <div className="flex-1 flex items-center justify-center p-6 text-center">
             <div>
               <BookOpen className="w-12 h-12 text-zinc-500 mx-auto mb-4" />

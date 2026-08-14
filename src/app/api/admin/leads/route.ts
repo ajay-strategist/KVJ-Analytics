@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
   try {
     const { data, error } = await supabaseAdmin
       .from("leads")
-      .select("*")
+      .select("*, course:courses(id, title)")
       .order("created_at", { ascending: false });
 
     if (error) throw error;
@@ -64,22 +64,50 @@ export async function PATCH(req: NextRequest) {
   }
 
   try {
-    const { id, status } = await req.json();
+    const { id, status, notes, rating } = await req.json();
 
-    if (!id || !status) {
+    if (!id) {
       return NextResponse.json(
-        { error: "Missing lead ID or status." },
+        { error: "Missing lead ID." },
         { status: 400 }
       );
     }
 
-    if (!["new", "contacted", "closed"].includes(status)) {
-      return NextResponse.json({ error: "Invalid status value." }, { status: 400 });
+    const updatePayload: any = {};
+
+    if (status !== undefined) {
+      const allowedStatuses = [
+        "draft",
+        "new",
+        "contacted",
+        "interested",
+        "follow_up",
+        "qualified",
+        "converted",
+        "rejected",
+        "closed",
+      ];
+      if (!allowedStatuses.includes(status)) {
+        return NextResponse.json({ error: "Invalid status value." }, { status: 400 });
+      }
+      updatePayload.status = status;
+    }
+
+    if (notes !== undefined) {
+      updatePayload.notes = notes;
+    }
+
+    if (rating !== undefined) {
+      const ratingVal = parseInt(rating);
+      if (isNaN(ratingVal) || ratingVal < 1 || ratingVal > 5) {
+        return NextResponse.json({ error: "Invalid rating value." }, { status: 400 });
+      }
+      updatePayload.rating = ratingVal;
     }
 
     const { error } = await supabaseAdmin
       .from("leads")
-      .update({ status })
+      .update(updatePayload)
       .eq("id", id);
 
     if (error) throw error;

@@ -107,112 +107,90 @@ td {
 export const LIGHT_MODE_CSS = `
 :root {
   --color-base: #ffffff !important;
-  --color-base-2: #f8fafc !important;
-  --color-surface: #f8fafc !important;
-  --color-card: #f1f5f9 !important;
-  --color-line: #e2e8f0 !important;
-  --color-ink: #0f172a !important;
-  --color-slate: #475569 !important;
+  --color-base-2: #F7FAF9 !important;
+  --color-surface: #ffffff !important;
+  --color-card: #ffffff !important;
+  --color-line: #DCE5E8 !important;
+  --color-ink: #132238 !important;
+  --color-slate: #526477 !important;
+  --color-brand: #08A88A !important;
+  --color-brand-secondary: #0E7490 !important;
 }
 html, body {
   background-color: #ffffff !important;
-  color: #334155 !important;
+  color: #132238 !important;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
 }
 h1, h2, h3, h4, h5, h6 {
-  color: #0f172a !important;
+  color: #10233F !important;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
 }
 p, li, td, th, dt, dd, label {
-  color: #334155 !important;
+  color: #132238 !important;
 }
 strong, b {
-  color: #0f172a !important;
+  color: #10233F !important;
 }
 a {
-  color: #0284c7 !important;
+  color: #08A88A !important;
+  border-bottom-color: rgba(8, 168, 138, 0.2) !important;
 }
 a:hover {
-  color: #0369a1 !important;
+  color: #0E7490 !important;
+  border-bottom-color: #0E7490 !important;
 }
 blockquote {
-  background: #f0fdf4 !important;
-  border-left: 4px solid #10b981 !important;
-  color: #0f172a !important;
+  background: #F0FBF7 !important;
+  border-left: 4px solid #08A88A !important;
+  color: #132238 !important;
   font-style: italic !important;
   padding: 1rem 1.5rem !important;
   margin: 1.5rem 0 !important;
   border-radius: 0 12px 12px 0 !important;
 }
 blockquote p {
-  color: #334155 !important;
+  color: #132238 !important;
 }
 pre {
-  background-color: #0f172a !important;
-  color: #f8fafc !important;
+  background-color: #10233F !important;
+  color: #F4F9FD !important;
 }
 pre code {
-  color: #e2e8f0 !important;
+  color: #F4F9FD !important;
 }
 :not(pre) > code {
-  background-color: #f1f5f9 !important;
-  border-color: #e2e8f0 !important;
-  color: #0284c7 !important;
+  background-color: #F4F9FD !important;
+  border-color: #DCE5E8 !important;
+  color: #0E7490 !important;
 }
 table {
-  border-color: #e2e8f0 !important;
+  border-color: #DCE5E8 !important;
 }
 th {
-  background-color: #f8fafc !important;
-  color: #0f172a !important;
-  border-bottom-color: #e2e8f0 !important;
+  background-color: #F4F9FD !important;
+  color: #10233F !important;
+  border-bottom-color: #DCE5E8 !important;
 }
 td {
-  border-bottom-color: #f1f5f9 !important;
-  color: #334155 !important;
+  border-bottom-color: #DCE5E8 !important;
+  color: #132238 !important;
 }
-.text-slate-350 {
-  color: #475569 !important;
-}
-.callout, .callout-info, .callout-success, .callout-warning, .callout-danger, .callout-tip, .callout-important, .callout-example {
-  background-color: #f8fafc !important;
-  border: 1px solid #e2e8f0 !important;
-}
-.callout-info, .callout-note {
-  border-left: 4px solid #3b82f6 !important;
-  background-color: #f0f9ff !important;
-}
-.callout-success {
-  border-left: 4px solid #10b981 !important;
-  background-color: #f0fdf4 !important;
-}
-.callout-warning {
-  border-left: 4px solid #f59e0b !important;
-  background-color: #fffbeb !important;
-}
-.callout-tip {
-  border-left: 4px solid #8b5cf6 !important;
-  background-color: #f5f3ff !important;
-}
-.callout-important {
-  border-left: 4px solid #ef4444 !important;
-  background-color: #fef2f2 !important;
-}
-.callout-example {
-  border-left: 4px solid #14b8a6 !important;
-  background-color: #f0fdfa !important;
+.text-slate-355 {
+  color: #526477 !important;
 }
 [data-qidx] button {
-  background-color: #f8fafc !important;
-  border-color: #e2e8f0 !important;
-  color: #334155 !important;
+  background-color: #ffffff !important;
+  border-color: #DCE5E8 !important;
+  color: #132238 !important;
 }
 [data-qidx] button:hover {
-  background-color: #f1f5f9 !important;
+  background-color: #f8fafc !important;
   border-color: #cbd5e1 !important;
 }
 [data-qidx] button.border-brand.bg-brand\/10 {
-  background-color: #f0fdf4 !important;
-  border-color: #10b981 !important;
-  color: #047857 !important;
+  background-color: #F0FBF7 !important;
+  border-color: #08A88A !important;
+  color: #10233F !important;
 }
 [data-qidx] button[disabled] {
   opacity: 1 !important;
@@ -221,30 +199,30 @@ td {
 [data-qidx] button[disabled].border-green-500\/30,
 [data-qidx] button[disabled].text-green-400,
 [data-qidx] button[disabled].bg-green-500\/10 {
-  background-color: #d1fae5 !important;
-  border-color: #10b981 !important;
-  color: #065f46 !important;
+  background-color: #E8F8F0 !important;
+  border-color: #22c55e !important;
+  color: #15803d !important;
 }
 [data-qidx] button[disabled].border-red-500\/30,
 [data-qidx] button[disabled].text-red-400,
 [data-qidx] button[disabled].bg-red-500\/10 {
-  background-color: #fee2e2 !important;
+  background-color: #FFF2F4 !important;
   border-color: #ef4444 !important;
-  color: #991b1b !important;
+  color: #b91c1c !important;
 }
 .borderedtext-block {
-  background-color: #f5f3ff !important;
-  border-left: 4px solid #8b5cf6 !important;
-  border-top-left-radius: 0 !important;
-  border-bottom-left-radius: 0 !important;
+  background-color: #F4F9FD !important;
+  border: 1px solid #DCE5E8 !important;
+  border-left: 4px solid #0E7490 !important;
+  border-radius: 0 12px 12px 0 !important;
   padding: 1.25rem 1.5rem !important;
   margin: 1.5rem 0 !important;
 }
 .borderedtext-title {
-  color: #1e3a8a !important;
+  color: #10233F !important;
 }
 .borderedtext-content {
-  color: #334155 !important;
+  color: #526477 !important;
 }
 `;
 
@@ -311,9 +289,9 @@ export function LessonIframe({
     --color-slate: #CBD5E1;
   }
   html,body{
-    font-family: 'Lora', Georgia, serif;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     font-size:16px;
-    line-height:1.85;
+    line-height:1.8;
     color: var(--color-slate);
     background-color:transparent;
     margin:0;

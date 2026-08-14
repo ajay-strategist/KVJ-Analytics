@@ -528,7 +528,8 @@ export async function POST(
       };
     }
 
-    const passed = earnedMarks >= Number(test.pass_mark || 0);
+    const scorePercent = totalPossibleMarks > 0 ? Number(((earnedMarks / totalPossibleMarks) * 100).toFixed(2)) : 0;
+    const passed = scorePercent >= Number(test.pass_mark || 84);
     const isPreview = isAdminPreview || isExplicitPreview;
 
     let attemptId = "preview-id";
@@ -542,6 +543,7 @@ export async function POST(
         answers: answers,
         score: earnedMarks,
         max_score: totalPossibleMarks,
+        score_percent: scorePercent,
         passed: passed,
         per_question: perQuestionFeedback,
         started_at: startedAt,
@@ -561,6 +563,7 @@ export async function POST(
           test_slug: id,
           answers: answers,
           score: earnedMarks,
+          score_percent: scorePercent,
           passed: passed,
           started_at: startedAt,
           submitted_at: new Date().toISOString()
@@ -586,6 +589,7 @@ export async function POST(
       success: true,
       score: earnedMarks,
       totalPossibleMarks,
+      scorePercent,
       passed,
       passMark: test.pass_mark,
       gradedQuestions: perQuestionFeedback,

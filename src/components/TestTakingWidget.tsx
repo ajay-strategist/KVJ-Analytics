@@ -197,6 +197,7 @@ interface TestTakingWidgetProps {
   adminPreview?: boolean;
   darkMode?: boolean;
   onComplete?: (score: number, maxScore: number, passed: boolean) => void;
+  onStart?: () => void;
   onExit?: () => void;
 }
 
@@ -206,6 +207,7 @@ export function TestTakingWidget({
   adminPreview = false,
   darkMode = false,
   onComplete,
+  onStart,
   onExit,
 }: TestTakingWidgetProps) {
   // Theme coloring mapping
@@ -346,6 +348,7 @@ export function TestTakingWidget({
     setStarted(true);
     setTimeRemaining(test.durationMins * 60);
     setVisitedIndexes(new Set([0]));
+    onStart?.();
   };
 
   const handleAutoSubmit = () => {
@@ -517,8 +520,8 @@ export function TestTakingWidget({
                   <span className="text-sm font-bold">{test.questions?.length || 0} Items</span>
                 </div>
                 <div className={`col-span-2 border-t pt-2 mt-2 ${colors.line}`}>
-                  <span className={`${colors.slate} opacity-60 text-[10px] uppercase block`}>Passing Mark</span>
-                  <span className="text-sm font-bold">{test.passMark} Marks Required</span>
+                  <span className={`${colors.slate} opacity-60 text-[10px] uppercase block`}>Passing Standard</span>
+                  <span className="text-sm font-bold">{test.passMark || 84}% Passing Score Required</span>
                 </div>
               </div>
 
@@ -581,7 +584,7 @@ export function TestTakingWidget({
                 <span className="text-lg font-bold mt-3">
                   Scored {gradedResult.score} / {gradedResult.totalPossibleMarks} Marks
                 </span>
-                <span className={`text-xs mt-1 ${colors.slate}`}>Passing standard: {gradedResult.passMark} marks</span>
+                <span className={`text-xs mt-1 ${colors.slate}`}>Passing standard: {gradedResult.passMark || 84}% score</span>
               </div>
 
               <div className={`max-w-md mx-auto pt-4 border-t ${colors.line}`}>
@@ -821,9 +824,13 @@ export function TestTakingWidget({
                   if (isCurrent) {
                     btnClass = "border-brand bg-brand/5 text-brand ring-2 ring-brand/20";
                   } else if (isFlagged) {
-                    btnClass = "border-corporate bg-corporate/5 text-corporate";
+                    btnClass = darkMode
+                      ? "border-red-500/30 bg-red-500/10 text-red-405 font-bold"
+                      : "border-red-500 bg-red-50 text-red-650 font-bold";
                   } else if (isAnswered) {
-                    btnClass = "border-success bg-success/5 text-success";
+                    btnClass = darkMode
+                      ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-405 font-bold"
+                      : "border-emerald-600 bg-emerald-50 text-emerald-750 font-bold";
                   } else if (visitedIndexes.has(idx)) {
                     btnClass = "border-slate bg-slate/10 text-slate";
                   } else {
@@ -853,11 +860,15 @@ export function TestTakingWidget({
                   <span>Visited (Skipped)</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 rounded border border-success bg-success/5 shrink-0" />
+                  <span className={`w-3 h-3 rounded border shrink-0 ${
+                    darkMode ? "border-emerald-500/30 bg-emerald-500/10" : "border-emerald-600 bg-emerald-50"
+                  }`} />
                   <span>Answered</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 rounded border border-corporate bg-corporate/5 shrink-0" />
+                  <span className={`w-3 h-3 rounded border shrink-0 ${
+                    darkMode ? "border-red-500/30 bg-red-500/10" : "border-red-500 bg-red-50"
+                  }`} />
                   <span>Flagged</span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -892,14 +903,15 @@ export function TestTakingWidget({
                       ...prev,
                       [currentQuestion.id]: !prev[currentQuestion.id],
                     }))}
-                    className={`p-1.5 border rounded-lg transition-all cursor-pointer ${
+                    className={`px-3 py-1.5 border rounded-xl transition-all cursor-pointer flex items-center gap-1.5 text-xs font-semibold ${
                       flaggedQuestions[currentQuestion.id]
-                        ? "border-corporate bg-corporate/5 text-corporate"
-                        : `${colors.card} hover:text-ink`
+                        ? "border-red-500 bg-red-50 text-red-650 shadow-sm shadow-red-100/50 font-bold"
+                        : `${colors.card} hover:bg-slate-50 text-slate-600 hover:text-slate-800`
                     }`}
                     title="Flag for review"
                   >
-                    <Bookmark className="w-4 h-4" />
+                    <Bookmark className={`w-3.5 h-3.5 ${flaggedQuestions[currentQuestion.id] ? "fill-red-500 text-red-500" : ""}`} />
+                    <span>{flaggedQuestions[currentQuestion.id] ? "Flagged for Review" : "Mark for Review"}</span>
                   </button>
                 </div>
               </div>

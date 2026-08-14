@@ -3,7 +3,7 @@
 
 -- 1. Drop existing lessons.kind check constraint if it exists, and recreate it to include 'assessment'
 alter table public.lessons drop constraint if exists lessons_kind_check;
-alter table public.lessons add constraint lessons_kind_check check (kind in ('material', 'activity', 'assessment'));
+alter table public.lessons add constraint lessons_kind_check check (kind in ('theory', 'material', 'activity', 'assessment'));
 
 -- 2. Add columns to public.mock_tests to support link to lesson, attempts, negative marking, randomization, and result visibility
 alter table public.mock_tests add column if not exists lesson_id uuid references public.lessons(id) on delete cascade;
@@ -40,5 +40,9 @@ alter table public.questions add column if not exists image_url text;
 
 -- 7. Add passed column to public.activity_results table to support saving failed/all attempts
 alter table public.activity_results add column if not exists passed boolean default true;
+
+-- 8. Add score_percent column to public.test_attempts and public.activity_results tables
+alter table public.test_attempts add column if not exists score_percent numeric(5, 2);
+alter table public.activity_results add column if not exists score_percent numeric(5, 2);
 
 

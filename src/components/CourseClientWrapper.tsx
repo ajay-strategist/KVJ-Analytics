@@ -546,17 +546,26 @@ export function CourseClientWrapper({ course, modules }: CourseClientWrapperProp
               ) : isOneToOne ? (
                 <Button
                   variant="primary"
-                  onClick={() => router.push("/#contact")}
+                  onClick={() => router.push(`/training/register?course=${course.slug}${window.location.search}`)}
                   className="w-full py-4 text-center font-bold text-[15px] block whitespace-nowrap rounded-full shrink-0"
                 >
-                  Enquire Now / Contact Us
+                  Register Interest
                 </Button>
               ) : (
-                <div className="p-4 bg-zinc-900/30 border border-white/5 rounded-2xl text-center space-y-1.5">
-                  <div className="text-xs font-bold text-zinc-350">Controlled Enrollment</div>
-                  <div className="text-[11px] text-zinc-500 leading-relaxed">
-                    Enrollment is managed directly by your company or college roster administrator.
+                <div className="space-y-3 w-full">
+                  <div className="p-4 bg-[#0B2A22]/20 border border-white/5 rounded-2xl text-center space-y-1.5">
+                    <div className="text-xs font-bold text-zinc-350">Controlled Enrollment</div>
+                    <div className="text-[11px] text-zinc-500 leading-relaxed">
+                      Enrollment is managed directly by your company or college roster administrator.
+                    </div>
                   </div>
+                  <Button
+                    variant="primary"
+                    onClick={() => router.push(`/training/register?course=${course.slug}${window.location.search}`)}
+                    className="w-full py-4 text-center font-bold text-[15px] block whitespace-nowrap rounded-full shrink-0"
+                  >
+                    Register Roster Interest
+                  </Button>
                 </div>
               )}
 

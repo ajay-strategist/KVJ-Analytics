@@ -8,6 +8,8 @@ import { AnimationProvider } from "@/components/AnimationProvider";
 import { getPageContent, mergePageContent } from "@/lib/content";
 import { FALLBACK_SITE_SETTINGS } from "@/lib/constants";
 
+import { UtmTracker } from "@/components/UtmTracker";
+
 export const revalidate = 3600; // Cache for 1 hour, or revalidate on demand
 
 export default async function WebsiteLayout({
@@ -21,6 +23,7 @@ export default async function WebsiteLayout({
 
   return (
     <AnimationProvider>
+      <UtmTracker />
       <div className="min-h-screen flex flex-col justify-between">
         <IntroLoader />
         <ScrollProgress />

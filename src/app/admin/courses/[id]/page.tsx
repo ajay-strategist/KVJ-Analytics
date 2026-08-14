@@ -1678,100 +1678,139 @@ const LessonEditor = React.memo(function LessonEditor({
                       )}
 
                       {/* Add Block Toolbar */}
-                      <div className="space-y-2 border-t border-line pt-4">
-                        <label className="block text-[10px] font-bold uppercase tracking-wider text-slate mb-1">Add Content Block</label>
-                        <div className="flex flex-wrap gap-2">
-                          <button
-                            type="button"
-                            onClick={() => addDocumentBlock("heading")}
-                            className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-355 rounded text-xs font-bold transition-colors"
-                          >
-                            + Heading
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => addDocumentBlock("subheading")}
-                            className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-355 rounded text-xs font-bold transition-colors"
-                          >
-                            + Subheading
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => addDocumentBlock("paragraph")}
-                            className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-355 rounded text-xs font-bold transition-colors"
-                          >
-                            + Paragraph
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => addDocumentBlock("image")}
-                            className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-355 rounded text-xs font-bold transition-colors"
-                          >
-                            + Image
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => addDocumentBlock("callout")}
-                            className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-355 rounded text-xs font-bold transition-colors"
-                          >
-                            + Callout Box
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => addDocumentBlock("list")}
-                            className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-355 rounded text-xs font-bold transition-colors"
-                          >
-                            + Diamond List
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => addDocumentBlock("borderedtext")}
-                            className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-355 rounded text-xs font-bold transition-colors"
-                          >
-                            + Bordered Text
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => addDocumentBlock("infographics")}
-                            className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-355 rounded text-xs font-bold transition-colors"
-                          >
-                            + Infographics
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => addDocumentBlock("smartarts")}
-                            className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-355 rounded text-xs font-bold transition-colors"
-                          >
-                            + Smart Art
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => addDocumentBlock("table")}
-                            className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-355 rounded text-xs font-bold transition-colors"
-                          >
-                            + Table
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => addDocumentBlock("html")}
-                            className="px-3 py-1.5 bg-brand/10 hover:bg-brand/20 text-brand rounded text-xs font-bold transition-colors"
-                          >
-                            + Theory (HTML)
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => addDocumentBlock("activity")}
-                            className="px-3 py-1.5 bg-brand/10 hover:bg-brand/20 text-brand rounded text-xs font-bold transition-colors"
-                          >
-                            + Interactive Activity
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => addDocumentBlock("assessment")}
-                            className="px-3 py-1.5 bg-brand/10 hover:bg-brand/20 text-brand rounded text-xs font-bold transition-colors"
-                          >
-                            + Assessment (MCQ)
-                          </button>
+                      <div className="space-y-4 border-t border-line pt-4">
+                        <label className="block text-[10px] font-extrabold uppercase tracking-wider text-[#7B8A99] mb-1">Add Content Block</label>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          {/* Content Category */}
+                          <div className="p-4 rounded-xl border border-slate-100 bg-[#F4F9FD]/50 space-y-3">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm">📝</span>
+                              <div>
+                                <h4 className="text-xs font-bold text-[#10233F]">CONTENT</h4>
+                                <p className="text-[10px] text-slate-500 leading-tight">Basic layout and text blocks</p>
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                              <button
+                                type="button"
+                                onClick={() => addDocumentBlock("heading")}
+                                className="px-2.5 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 rounded-lg text-[11px] font-semibold transition-all hover:border-[#08A88A] hover:text-[#08A88A] text-left flex items-center gap-1 cursor-pointer"
+                              >
+                                <span>➕</span> Heading
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => addDocumentBlock("subheading")}
+                                className="px-2.5 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 rounded-lg text-[11px] font-semibold transition-all hover:border-[#08A88A] hover:text-[#08A88A] text-left flex items-center gap-1 cursor-pointer"
+                              >
+                                <span>➕</span> Subheading
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => addDocumentBlock("paragraph")}
+                                className="px-2.5 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 rounded-lg text-[11px] font-semibold transition-all hover:border-[#08A88A] hover:text-[#08A88A] text-left flex items-center gap-1 cursor-pointer"
+                              >
+                                <span>➕</span> Paragraph
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => addDocumentBlock("image")}
+                                className="px-2.5 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 rounded-lg text-[11px] font-semibold transition-all hover:border-[#08A88A] hover:text-[#08A88A] text-left flex items-center gap-1 cursor-pointer"
+                              >
+                                <span>📷</span> Image
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Visual Category */}
+                          <div className="p-4 rounded-xl border border-slate-100 bg-[#F4F9FD]/50 space-y-3">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm">🎨</span>
+                              <div>
+                                <h4 className="text-xs font-bold text-[#10233F]">VISUAL</h4>
+                                <p className="text-[10px] text-slate-500 leading-tight">Visual components and aids</p>
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                              <button
+                                type="button"
+                                onClick={() => addDocumentBlock("callout")}
+                                className="px-2.5 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 rounded-lg text-[11px] font-semibold transition-all hover:border-[#08A88A] hover:text-[#08A88A] text-left flex items-center gap-1 cursor-pointer"
+                              >
+                                <span>💡</span> Callout
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => addDocumentBlock("list")}
+                                className="px-2.5 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 rounded-lg text-[11px] font-semibold transition-all hover:border-[#08A88A] hover:text-[#08A88A] text-left flex items-center gap-1 cursor-pointer"
+                              >
+                                <span>◆</span> List
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => addDocumentBlock("borderedtext")}
+                                className="px-2.5 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 rounded-lg text-[11px] font-semibold transition-all hover:border-[#08A88A] hover:text-[#08A88A] text-left flex items-center gap-1 cursor-pointer"
+                              >
+                                <span>🔳</span> Bordered
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => addDocumentBlock("infographics")}
+                                className="px-2.5 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 rounded-lg text-[11px] font-semibold transition-all hover:border-[#08A88A] hover:text-[#08A88A] text-left flex items-center gap-1 cursor-pointer"
+                              >
+                                <span>📊</span> Infographic
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => addDocumentBlock("smartarts")}
+                                className="px-2.5 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 rounded-lg text-[11px] font-semibold transition-all hover:border-[#08A88A] hover:text-[#08A88A] text-left flex items-center gap-1 cursor-pointer"
+                              >
+                                <span>Timeline</span> Smart Art
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => addDocumentBlock("table")}
+                                className="px-2.5 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 rounded-lg text-[11px] font-semibold transition-all hover:border-[#08A88A] hover:text-[#08A88A] text-left flex items-center gap-1 cursor-pointer"
+                              >
+                                <span>📅</span> Table
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Learning Category */}
+                          <div className="p-4 rounded-xl border border-slate-100 bg-[#F4F9FD]/50 space-y-3">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm">🎓</span>
+                              <div>
+                                <h4 className="text-xs font-bold text-[#10233F]">LEARNING</h4>
+                                <p className="text-[10px] text-slate-500 leading-tight">Theory and interactive items</p>
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-1 gap-2">
+                              <button
+                                type="button"
+                                onClick={() => addDocumentBlock("html")}
+                                className="px-2.5 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 rounded-lg text-[11px] font-semibold transition-all hover:border-[#08A88A] hover:text-[#08A88A] text-left flex items-center gap-2 cursor-pointer"
+                              >
+                                <span>📖</span> Theory (HTML)
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => addDocumentBlock("activity")}
+                                className="px-2.5 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 rounded-lg text-[11px] font-semibold transition-all hover:border-[#08A88A] hover:text-[#08A88A] text-left flex items-center gap-2 cursor-pointer"
+                              >
+                                <span>⚡</span> Interactive Activity
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => addDocumentBlock("assessment")}
+                                className="px-2.5 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 rounded-lg text-[11px] font-semibold transition-all hover:border-[#08A88A] hover:text-[#08A88A] text-left flex items-center gap-2 cursor-pointer"
+                              >
+                                <span>❓</span> Assessment (MCQ)
+                              </button>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1779,9 +1818,9 @@ const LessonEditor = React.memo(function LessonEditor({
                 </div>
               )
             ) : (
-              <div className="w-full min-h-[340px] max-h-[500px] overflow-y-auto border border-line rounded-xl bg-[#050505] p-4">
+              <div className="w-full min-h-[340px] max-h-[500px] overflow-y-auto border border-[#DCE5E8] rounded-xl bg-white p-4">
                 {previewHtml ? (
-                  <LessonIframe html={previewHtml} darkMode={true} />
+                  <LessonIframe html={previewHtml} darkMode={false} />
                 ) : (
                   <div className="py-16 text-center space-y-2">
                     <ImageIcon className="w-10 h-10 text-slate/30 mx-auto" />

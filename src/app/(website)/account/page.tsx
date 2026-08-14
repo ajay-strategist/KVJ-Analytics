@@ -432,8 +432,8 @@ function StudentAccountDashboard() {
                         </div>
                         <span className={`text-[9px] font-extrabold font-mono uppercase tracking-wider px-2.5 py-1 rounded-lg border ${
                           attempt.passed
-                            ? "bg-emerald-50 text-emerald-600 border-emerald-100"
-                            : "bg-slate-50 text-slate-550 border-slate-100"
+                            ? "bg-[#F0FBF7] text-[#08A88A] border-[#DDF8F0]"
+                            : "bg-[#FFF2F4] text-[#E11D48] border-[#FFE0E5]"
                         }`}>
                           {attempt.passed ? "Passed" : "Failed"}
                         </span>
