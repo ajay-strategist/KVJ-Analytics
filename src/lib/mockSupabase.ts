@@ -143,6 +143,32 @@ if (!globalForMockDb.mockDb) {
         created_at: new Date(Date.now() - 24 * 3600000).toISOString(),
       },
     ],
+    campaigns: [
+      {
+        id: "cmp-1",
+        campaign_id: "CMP-AI-2026-001",
+        campaign_name: "Artificial Intelligence — August 2026",
+        course_id: "16f618f5-83f1-4050-a8c6-f6f20e5a2026",
+        training_mode: "online",
+        registration_form_id: "rf-1",
+        registration_form_html: "",
+        status: "active",
+        telegram_enabled: true,
+        teams_enabled: true,
+        created_at: new Date(Date.now() - 5 * 86400000).toISOString(),
+        updated_at: new Date(Date.now() - 5 * 86400000).toISOString(),
+      },
+    ],
+    registration_forms: [
+      {
+        id: "rf-1",
+        name: "Artificial Intelligence Registration Form",
+        course_id: "16f618f5-83f1-4050-a8c6-f6f20e5a2026",
+        html_content: "",
+        created_at: new Date(Date.now() - 5 * 86400000).toISOString(),
+        updated_at: new Date(Date.now() - 5 * 86400000).toISOString(),
+      },
+    ],
     profiles: [
       {
         id: "user1",

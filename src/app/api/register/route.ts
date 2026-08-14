@@ -63,6 +63,7 @@ export async function POST(req: NextRequest) {
     // 1. Support both standard names and kvj_ prefixed names
     const resolved_course_id = course_id || body.kvj_course_id;
     const resolved_training_mode = training_mode || body.kvj_training_mode || "online";
+    const resolved_campaign_id = body.campaign_id || body.kvj_campaign_id;
     const resolved_username = username || body.kvj_honeypot;
 
     // Honeypot Spam Protection Check
@@ -104,7 +105,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid phone number. Must be at least 10 digits." }, { status: 400 });
     }
 
-    // 4. Resolve Course UUID + Title from Database
+    // 4. Resolve Course & Campaign Details from Database
     const db = getAdminClient();
     if (!db) {
       return NextResponse.json({ error: "Database connection could not be established." }, { status: 500 });
@@ -112,12 +113,15 @@ export async function POST(req: NextRequest) {
 
     let courseTitle = "Dynamic Learning Program";
     let resolvedCourseIdForDB: string | null = null;
+    let campaignName = "General Registration";
+    let activeCampaignId: string | null = resolved_campaign_id || null;
+    let telegramEnabled = true;
+    let teamsEnabled = true;
 
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
     try {
       if (uuidRegex.test(resolved_course_id)) {
-        // It's already a UUID — look up by ID
         const { data: courseRow } = await db
           .from("courses")
           .select("id, title")
@@ -128,7 +132,6 @@ export async function POST(req: NextRequest) {
           resolvedCourseIdForDB = courseRow.id;
         }
       } else {
-        // It's a text slug like 'artificial-intelligence' — look up by slug column
         const { data: courseRow } = await db
           .from("courses")
           .select("id, title")
@@ -136,11 +139,41 @@ export async function POST(req: NextRequest) {
           .maybeSingle();
         if (courseRow) {
           courseTitle = courseRow.title;
-          resolvedCourseIdForDB = courseRow.id; // Store the resolved UUID
+          resolvedCourseIdForDB = courseRow.id;
+        }
+      }
+
+      // Resolve Campaign
+      if (activeCampaignId) {
+        const { data: campRow } = await db
+          .from("campaigns")
+          .select("*")
+          .or(`campaign_id.eq.${activeCampaignId},id.eq.${activeCampaignId}`)
+          .maybeSingle();
+        if (campRow) {
+          campaignName = campRow.campaign_name;
+          activeCampaignId = campRow.campaign_id;
+          telegramEnabled = campRow.telegram_enabled !== false;
+          teamsEnabled = campRow.teams_enabled !== false;
+        }
+      } else if (resolvedCourseIdForDB) {
+        // Fallback: look up latest active campaign for this course
+        const { data: campRow } = await db
+          .from("campaigns")
+          .select("*")
+          .eq("course_id", resolvedCourseIdForDB)
+          .eq("status", "active")
+          .order("created_at", { ascending: false })
+          .maybeSingle();
+        if (campRow) {
+          campaignName = campRow.campaign_name;
+          activeCampaignId = campRow.campaign_id;
+          telegramEnabled = campRow.telegram_enabled !== false;
+          teamsEnabled = campRow.teams_enabled !== false;
         }
       }
     } catch (err) {
-      console.warn("Failed to fetch course details, using default title:", err);
+      console.warn("Failed to fetch course/campaign details:", err);
     }
 
     // 5. Database Upsert / Insert
@@ -154,7 +187,7 @@ export async function POST(req: NextRequest) {
       training_mode: resolved_training_mode,
       location: location || null,
       current_profession: current_profession || null,
-      organization: organization || college_name || "",  // NOT NULL in DB — default to empty string
+      organization: organization || college_name || "",
       college_name: college_name || null,
       current_education: current_education || null,
       preferred_start_date: preferred_start_date || null,
@@ -168,16 +201,14 @@ export async function POST(req: NextRequest) {
       referrer: referrer || null,
       service_interest: `Course Registration: ${courseTitle}`,
       status,
+      campaign_id: activeCampaignId || null,
     };
 
-    // Only include course_id if we resolved a valid UUID
     if (resolvedCourseIdForDB) {
       payload.course_id = resolvedCourseIdForDB;
-
     }
 
     if (recordId) {
-      // Update existing record (draft or previous update)
       const { error: updateErr } = await db
         .from("leads")
         .update(payload)
@@ -188,7 +219,6 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Failed to update lead record." }, { status: 500 });
       }
     } else {
-      // Check if a draft with the same email and course exists to prevent duplicate entries
       const { data: existingDraft } = await db
         .from("leads")
         .select("id")
@@ -209,7 +239,6 @@ export async function POST(req: NextRequest) {
           return NextResponse.json({ error: "Failed to update lead record." }, { status: 500 });
         }
       } else {
-        // Insert new record
         const { data: newRow, error: insertErr } = await db
           .from("leads")
           .insert([payload])
@@ -224,78 +253,35 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 6. Action-Triggered Operations on Final Submission (status = 'new')
+    // 6. Action-Triggered Notifications (status = 'new')
     if (status === "new") {
       // A. Transactional Emails (Resend)
       const resend = getResend();
-      if (!resend) {
-        console.warn("Resend API key not configured. Skipping email alerts.");
-      } else {
+      if (resend) {
         try {
-          // Send registration notification to admin
           await resend.emails.send({
             from: "KVJ Alerts <onboarding@resend.dev>",
             to: "info@kvjanalytics.in",
-            subject: `[New Registration] ${courseTitle} - ${name}`,
+            subject: `[New Lead] ${courseTitle} - ${name}`,
             html: `
               <div style="font-family: sans-serif; padding: 25px; line-height: 1.6; color: #0F172A; max-width: 600px; margin: 0 auto; border: 1px solid #E2E8F0; border-radius: 12px;">
-                <h2 style="color: #08A88A; border-bottom: 2px solid #F0FBF7; padding-bottom: 10px; margin-top: 0;">New Program Registration</h2>
+                <h2 style="color: #08A88A; border-bottom: 2px solid #F0FBF7; padding-bottom: 10px; margin-top: 0;">New Training Lead Received</h2>
                 <p>A new student has registered interest for a training course.</p>
                 <hr style="border: 0; border-top: 1px solid #E2E8F0; margin: 20px 0;" />
                 <table style="width: 100%; border-collapse: collapse;">
                   <tr><td style="padding: 6px 0; font-weight: bold; width: 35%;">Name:</td><td style="padding: 6px 0;">${name}</td></tr>
                   <tr><td style="padding: 6px 0; font-weight: bold;">Email:</td><td style="padding: 6px 0;"><a href="mailto:${email}">${email}</a></td></tr>
                   <tr><td style="padding: 6px 0; font-weight: bold;">Phone:</td><td style="padding: 6px 0;"><a href="tel:${phone}">${phone}</a></td></tr>
-                  <tr><td style="padding: 6px 0; font-weight: bold;">WhatsApp:</td><td style="padding: 6px 0;">${whatsapp_number || "Same / None"}</td></tr>
                   <tr><td style="padding: 6px 0; font-weight: bold;">Course Program:</td><td style="padding: 6px 0; color: #0E7490; font-weight: bold;">${courseTitle}</td></tr>
-                  <tr><td style="padding: 6px 0; font-weight: bold;">Training Mode:</td><td style="padding: 6px 0; font-weight: bold; text-transform: uppercase;">${training_mode}</td></tr>
-                  <tr><td style="padding: 6px 0; font-weight: bold;">Location:</td><td style="padding: 6px 0;">${location}</td></tr>
-                  <tr><td style="padding: 6px 0; font-weight: bold;">Profession:</td><td style="padding: 6px 0;">${current_profession || "Not specified"}</td></tr>
-                  ${organization ? `<tr><td style="padding: 6px 0; font-weight: bold;">Company Name:</td><td style="padding: 6px 0;">${organization}</td></tr>` : ""}
-                  ${college_name ? `<tr><td style="padding: 6px 0; font-weight: bold;">College Name:</td><td style="padding: 6px 0;">${college_name}</td></tr>` : ""}
-                  ${current_education ? `<tr><td style="padding: 6px 0; font-weight: bold;">Education Details:</td><td style="padding: 6px 0;">${current_education}</td></tr>` : ""}
-                  ${preferred_start_date ? `<tr><td style="padding: 6px 0; font-weight: bold;">Start Date:</td><td style="padding: 6px 0;">${preferred_start_date}</td></tr>` : ""}
+                  <tr><td style="padding: 6px 0; font-weight: bold;">Training Mode:</td><td style="padding: 6px 0; font-weight: bold; text-transform: uppercase;">${resolved_training_mode}</td></tr>
+                  <tr><td style="padding: 6px 0; font-weight: bold;">Campaign:</td><td style="padding: 6px 0; font-weight: bold;">${campaignName} (${activeCampaignId || "N/A"})</td></tr>
+                  <tr><td style="padding: 6px 0; font-weight: bold;">Location:</td><td style="padding: 6px 0;">${location || "Not specified"}</td></tr>
                 </table>
-                <hr style="border: 0; border-top: 1px solid #E2E8F0; margin: 20px 0;" />
-                <p><strong>Additional Message:</strong></p>
-                <blockquote style="background: #F4F9FD; border-left: 4px solid #0E7490; padding: 10px 15px; margin: 0; font-style: italic;">
-                  ${message ? message.replace(/\n/g, "<br />") : "No custom message added."}
-                </blockquote>
-                ${
-                  utmSource || utmMedium || utmCampaign
-                    ? `<div style="background: #F0FBF7; border: 1px solid #DDF8F0; padding: 12px; border-radius: 8px; margin-top: 20px; font-size: 11px; color: #526477;">
-                        <strong>Marketing Attribution:</strong><br />
-                        Source: ${utmSource} | Medium: ${utmMedium} | Campaign: ${utmCampaign}<br />
-                        Landing Page: ${landing_page} | Referrer: ${referrer}
-                       </div>`
-                    : ""
-                }
-              </div>
-            `,
-          });
-
-          // Send confirmation email auto-reply to student
-          await resend.emails.send({
-            from: "KVJ Analytics <onboarding@resend.dev>",
-            to: email,
-            subject: `Registration Received - ${courseTitle}`,
-            html: `
-              <div style="font-family: sans-serif; padding: 25px; line-height: 1.6; color: #132238; max-width: 600px; margin: 0 auto; border: 1px solid #DCE5E8; border-radius: 12px;">
-                <h2 style="color: #08A88A; margin-top: 0;">Hello ${name},</h2>
-                <p>We have successfully received your training registration request for the <strong>${courseTitle}</strong> program.</p>
-                <p>An academic program counselor from our office is reviewing your application details. We will reach back to you shortly regarding the details and schedules for your preferred <strong>${training_mode}</strong> learning format.</p>
-                <p>Should you need immediate assistance, please call our support team directly at +91 9961813730.</p>
-                <hr style="border: 0; border-top: 1px solid #DCE5E8; margin: 30px 0;" />
-                <p style="font-size: 11px; color: #7B8A99;">
-                  <strong>KVJ Analytics</strong><br />
-                  Analytics • Automation • Training • Educational Technology<br />
-                  Cochin, Kerala, India | info@kvjanalytics.in
-                </p>
               </div>
             `,
           });
         } catch (emailErr) {
-          console.error("Resend notification dispatch failure:", emailErr);
+          console.error("Resend notification error:", emailErr);
         }
       }
 
@@ -303,38 +289,42 @@ export async function POST(req: NextRequest) {
       const telegramToken = process.env.TELEGRAM_BOT_TOKEN;
       const telegramChatId = process.env.TELEGRAM_GROUP_CHAT_ID;
 
-      if (telegramToken && telegramChatId) {
-        // Enforce try-catch to keep db transaction successful even if Telegram API fails
+      if (telegramEnabled && telegramToken && telegramChatId) {
         try {
           const telegramMessage = [
-            `🎓 *NEW TRAINING REGISTRATION*`,
-            `----------------------------------`,
-            `*Course:* ${courseTitle}`,
-            `*Mode:* ${training_mode.toUpperCase()}`,
-            `*Date:* ${formatDate(new Date())}`,
+            `🔔 *NEW TRAINING LEAD*`,
             ``,
-            `👤 *STUDENT PROFILE*`,
-            `• *Name:* ${name}`,
-            `• *Email:* ${email}`,
-            `• *Phone:* ${phone}`,
-            whatsapp_number ? `• *WhatsApp:* ${whatsapp_number}` : null,
-            location ? `• *Location:* ${location}` : null,
-            current_profession ? `• *Profession:* ${current_profession}` : null,
-            organization ? `• *Company:* ${organization}` : null,
-            college_name ? `• *College:* ${college_name}` : null,
-            current_education ? `• *Education:* ${current_education}` : null,
-            preferred_start_date ? `• *Start Date:* ${preferred_start_date}` : null,
+            `*${courseTitle}*`,
             ``,
-            message ? `💬 *MESSAGE:* \n_"${message}"_\n` : null,
-            utmSource || utmCampaign
-              ? `📢 *ATTRIBUTION*\n• *Source:* ${utmSource || "N/A"}\n• *Medium:* ${utmMedium || "N/A"}\n• *Campaign:* ${utmCampaign || "N/A"}\n• *Content:* ${utmContent || "N/A"}`
-              : null,
-            landing_page ? `🔗 *Page:* ${landing_page}` : null,
-          ]
-            .filter((line) => line !== null)
-            .join("\n");
+            `👤 *Name:*`,
+            `${name}`,
+            ``,
+            `📱 *Phone:*`,
+            `${phone}`,
+            ``,
+            `📧 *Email:*`,
+            `${email}`,
+            ``,
+            `🎓 *Course:*`,
+            `${courseTitle}`,
+            ``,
+            `💻 *Training Mode:*`,
+            `${resolved_training_mode.toUpperCase()}`,
+            ``,
+            `📍 *District / Location:*`,
+            `${location || "Not specified"}`,
+            ``,
+            `📢 *Campaign:*`,
+            `${campaignName}`,
+            ``,
+            `🆔 *Campaign ID:*`,
+            `${activeCampaignId || "N/A"}`,
+            ``,
+            `🕐 *Registered:*`,
+            `${formatDate(new Date())}`,
+          ].join("\n");
 
-          const response = await fetch(`https://api.telegram.org/bot${telegramToken}/sendMessage`, {
+          await fetch(`https://api.telegram.org/bot${telegramToken}/sendMessage`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -343,16 +333,48 @@ export async function POST(req: NextRequest) {
               parse_mode: "Markdown",
             }),
           });
-
-          if (!response.ok) {
-            const errBody = await response.text();
-            console.error("Telegram bot API returned error status:", response.status, errBody);
-          }
         } catch (teleErr) {
-          console.error("Telegram webhook request failure:", teleErr);
+          console.error("Telegram webhook request failure (lead preserved):", teleErr);
         }
-      } else {
-        console.warn("Telegram environment variables not set. Skipping Telegram notification.");
+      }
+
+      // C. Microsoft Teams Webhook Alert
+      const teamsWebhookUrl = process.env.TEAMS_WEBHOOK_URL;
+      if (teamsEnabled && teamsWebhookUrl) {
+        try {
+          const teamsPayload = {
+            "@type": "MessageCard",
+            "@context": "http://schema.org/extensions",
+            "themeColor": "08A88A",
+            "summary": `New Lead: ${name} (${courseTitle})`,
+            "sections": [
+              {
+                "activityTitle": "🔔 NEW TRAINING LEAD",
+                "activitySubtitle": `${courseTitle} — ${campaignName}`,
+                "facts": [
+                  { "name": "Name", "value": name },
+                  { "name": "Email", "value": email },
+                  { "name": "Phone", "value": phone },
+                  { "name": "Course", "value": courseTitle },
+                  { "name": "Training Mode", "value": resolved_training_mode.toUpperCase() },
+                  { "name": "District / Location", "value": location || "Not specified" },
+                  { "name": "Campaign", "value": campaignName },
+                  { "name": "Campaign ID", "value": activeCampaignId || "N/A" },
+                  { "name": "Registered At", "value": formatDate(new Date()) }
+                ],
+                "markdown": true
+              }
+            ]
+          };
+
+          await fetch(teamsWebhookUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(teamsPayload),
+          });
+        } catch (teamsErr) {
+          console.error("Teams webhook request failure (lead preserved):", teamsErr);
+        }
       }
     }
 
