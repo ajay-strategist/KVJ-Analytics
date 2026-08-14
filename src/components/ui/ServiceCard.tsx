@@ -389,7 +389,7 @@ const ICONS: Record<string, React.ComponentType> = {
 
 export type ServiceCardTone = "emerald" | "teal" | "amber" | "violet" | "blue" | "neutral";
 const TONE_ACCENT: Record<ServiceCardTone, string> = {
-  emerald: "#047857", teal: "#0F766E", amber: "#B45309",
+  emerald: "#10B981", teal: "#10B981", amber: "#B45309",
   violet: "#6D28D9", blue: "#1D4ED8", neutral: "#0B2A22",
 };
 
