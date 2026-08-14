@@ -152,6 +152,34 @@ td {
 .text-slate-350 {
   color: #475569 !important;
 }
+.callout, .callout-info, .callout-success, .callout-warning, .callout-danger, .callout-tip, .callout-important, .callout-example {
+  background-color: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+}
+.callout-info, .callout-note {
+  border-left: 4px solid #3b82f6 !important;
+  background-color: #f0f9ff !important;
+}
+.callout-success {
+  border-left: 4px solid #10b981 !important;
+  background-color: #f0fdf4 !important;
+}
+.callout-warning {
+  border-left: 4px solid #f59e0b !important;
+  background-color: #fffbeb !important;
+}
+.callout-tip {
+  border-left: 4px solid #8b5cf6 !important;
+  background-color: #f5f3ff !important;
+}
+.callout-important {
+  border-left: 4px solid #ef4444 !important;
+  background-color: #fef2f2 !important;
+}
+.callout-example {
+  border-left: 4px solid #14b8a6 !important;
+  background-color: #f0fdfa !important;
+}
 `;
 
 export const HIDE_SIDEBAR_CSS = `
@@ -456,8 +484,10 @@ export function LessonIframe({
   }
 </style>
 </head>
-<body class="p-1">
+<body class="px-6 py-8 sm:px-10 sm:py-12 md:px-14 md:py-16">
+<div class="max-w-3xl mx-auto">
 ${html}
+</div>
 <script>
   // Copy Code Button & Language Label
   document.querySelectorAll('pre').forEach(pre => {

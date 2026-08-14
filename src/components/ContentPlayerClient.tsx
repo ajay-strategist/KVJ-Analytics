@@ -434,26 +434,27 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
   const percentComplete = totalLessons > 0 ? Math.round((completedLessonsCount / totalLessons) * 100) : 0;
 
   return (
-    <div className={`w-full h-screen flex relative overflow-hidden transition-colors duration-300 ${
-      darkMode ? "bg-[#050505] text-zinc-200" : "bg-[#F5FCF8] text-zinc-800"
-    }`}>
-
+    <div className="w-full h-screen flex flex-col overflow-hidden">
       {/* Admin preview banner */}
       {adminPreview && (
-        <div className="absolute top-0 inset-x-0 z-50 flex items-center justify-center gap-2 bg-amber-500 px-4 py-1.5 text-center text-[12px] font-bold text-black">
-          <Award className="h-3.5 w-3.5" />
-          ADMIN PREVIEW — this is exactly what enrolled students see. Progress isn&apos;t saved.
+        <div className="w-full shrink-0 flex items-center justify-center gap-2 bg-amber-500 px-4 py-2 text-center text-[12px] font-bold text-black border-b border-amber-600 relative z-50 shadow-sm">
+          <Award className="h-3.5 w-3.5 shrink-0" />
+          <span>ADMIN PREVIEW — this is exactly what enrolled students see. Progress isn&apos;t saved.</span>
         </div>
       )}
 
-      {/* 1. Collapsible Sidebar */}
-      <div
-        className={`fixed inset-y-0 left-0 z-40 lg:relative w-[320px] flex flex-col transition-all duration-300 transform ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full lg:-ml-[320px]"
-        } ${
-          darkMode ? "bg-[#0A0A0C] border-r border-white/5" : "bg-white border-r border-line"
-        }`}
-      >
+      <div className={`w-full flex-1 flex relative overflow-hidden transition-colors duration-300 ${
+        darkMode ? "bg-[#050505] text-zinc-200" : "bg-[#F5FCF8] text-zinc-800"
+      }`}>
+
+        {/* 1. Collapsible Sidebar */}
+        <div
+          className={`fixed ${adminPreview ? "top-[33px]" : "top-0"} bottom-0 left-0 z-40 lg:relative lg:top-0 w-[320px] flex flex-col transition-all duration-300 transform ${
+            sidebarOpen ? "translate-x-0" : "-translate-x-full lg:-ml-[320px]"
+          } ${
+            darkMode ? "bg-[#0A0A0C] border-r border-white/5" : "bg-white border-r border-line"
+          }`}
+        >
         {/* Sidebar Header */}
         <div className={`p-6 border-b flex items-center justify-between ${darkMode ? "border-white/5" : "border-line"}`}>
           <div>
@@ -869,5 +870,6 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
 
       </div>
     </div>
+  </div>
   );
 }
