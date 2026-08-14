@@ -479,90 +479,173 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
             )}
 
             {questionForm.type === "dragdrop" && (
-              <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate mb-1">Matching Pairs</label>
-                <p className="text-[10px] text-slate mb-3">Add left items and their matching right items. The system will shuffle the right items for the student.</p>
-                {(() => {
-                  const config = questionForm.config || { left: [], right: [], correctPairs: [] };
-                  const pairs = (config.left || []).map((l: string, idx: number) => ({
-                    leftText: l,
-                    rightText: config.right?.[idx] || "",
-                  }));
+              <div className="space-y-4">
+                {/* 1. Options Pool */}
+                <div className="border border-line/60 p-4 rounded-xl space-y-3 bg-white">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">Draggable Options Pool</label>
+                    <span className="text-[10px] text-slate-400 font-medium">Add all draggable choices here</span>
+                  </div>
+                  {(() => {
+                    const config = questionForm.config || { left: [], right: [], correctPairs: [] };
+                    const rightPool = config.right || [];
+                    return (
+                      <div className="space-y-2">
+                        {rightPool.map((r: string, rIdx: number) => (
+                          <div key={rIdx} className="flex gap-2 items-center">
+                            <input
+                              type="text"
+                              required
+                              placeholder={`Option ${rIdx + 1}`}
+                              value={r}
+                              onChange={(e) => {
+                                const newRight = [...rightPool];
+                                newRight[rIdx] = e.target.value;
+                                setQuestionForm((prev: any) => ({
+                                  ...prev,
+                                  config: { ...prev.config, right: newRight },
+                                }));
+                              }}
+                              className="flex-1 px-3 py-1.5 rounded border border-line bg-white text-sm"
+                            />
+                            <button
+                              type="button"
+                              disabled={rightPool.length <= 1}
+                              onClick={() => {
+                                const newRight = [...rightPool];
+                                newRight.splice(rIdx, 1);
+                                const newCorrectPairs = (config.correctPairs || [])
+                                  .filter((pair: any) => pair[1] !== rIdx)
+                                  .map((pair: any) => {
+                                    const nextR = pair[1] > rIdx ? pair[1] - 1 : pair[1];
+                                    return [pair[0], nextR];
+                                  });
+                                setQuestionForm((prev: any) => ({
+                                  ...prev,
+                                  config: { ...prev.config, right: newRight, correctPairs: newCorrectPairs },
+                                }));
+                              }}
+                              className="text-error text-xs hover:underline shrink-0 disabled:opacity-30 cursor-pointer"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        ))}
+                        <Button
+                          type="button"
+                          onClick={() => {
+                            const newRight = [...rightPool, `New Option`];
+                            setQuestionForm((prev: any) => ({
+                              ...prev,
+                              config: { ...prev.config, right: newRight },
+                            }));
+                          }}
+                          variant="secondary"
+                          className="py-1 px-3 text-xs mt-1"
+                        >
+                          + Add Option
+                        </Button>
+                      </div>
+                    );
+                  })()}
+                </div>
 
-                  return (
-                    <div className="space-y-2">
-                      {pairs.map((p: any, idx: number) => (
-                        <div key={idx} className="flex gap-2 items-center">
-                          <input
-                            type="text"
-                            required
-                            placeholder="Left Item"
-                            value={p.leftText}
-                            onChange={(e) => {
-                              const left = [...config.left];
-                              left[idx] = e.target.value;
-                              setQuestionForm((prev: any) => ({
-                                ...prev,
-                                config: { ...prev.config, left },
-                              }));
-                            }}
-                            className="flex-1 px-3 py-1.5 rounded border border-line bg-white text-sm"
-                          />
-                          <span className="text-slate font-bold">⇌</span>
-                          <input
-                            type="text"
-                            required
-                            placeholder="Matching Right Item"
-                            value={p.rightText}
-                            onChange={(e) => {
-                              const right = [...(config.right || [])];
-                              right[idx] = e.target.value;
-                              setQuestionForm((prev: any) => ({
-                                ...prev,
-                                config: { ...prev.config, right },
-                              }));
-                            }}
-                            className="flex-1 px-3 py-1.5 rounded border border-line bg-white text-sm"
-                          />
-                          <button
-                            type="button"
-                            disabled={pairs.length <= 1}
-                            onClick={() => {
-                              const left = [...config.left];
-                              const right = [...config.right];
-                              left.splice(idx, 1);
-                              right.splice(idx, 1);
-                              const correctPairs = left.map((_: any, i: number) => [i, i]);
-                              setQuestionForm((prev: any) => ({
-                                ...prev,
-                                config: { left, right, correctPairs },
-                              }));
-                            }}
-                            className="text-error text-xs hover:underline shrink-0 disabled:opacity-30 cursor-pointer"
-                          >
-                            Remove
-                          </button>
-                        </div>
-                      ))}
-                      <Button
-                        type="button"
-                        onClick={() => {
-                          const left = [...(config.left || []), ""];
-                          const right = [...(config.right || []), ""];
-                          const correctPairs = left.map((_: any, i: number) => [i, i]);
-                          setQuestionForm((prev: any) => ({
-                            ...prev,
-                            config: { left, right, correctPairs },
-                          }));
-                        }}
-                        variant="secondary"
-                        className="py-1 px-3 text-xs mt-2"
-                      >
-                        + Add Pair
-                      </Button>
-                    </div>
-                  );
-                })()}
+                {/* 2. Left Targets & Mapping */}
+                <div className="border border-line/60 p-4 rounded-xl space-y-3 bg-white">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">Left Targets & Correct Matches</label>
+                    <span className="text-[10px] text-slate-400 font-medium">Match each target to a pool option</span>
+                  </div>
+                  {(() => {
+                    const config = questionForm.config || { left: [], right: [], correctPairs: [] };
+                    const leftList = config.left || [];
+                    return (
+                      <div className="space-y-3">
+                        {leftList.map((l: string, lIdx: number) => {
+                          const pair = (config.correctPairs || []).find((p: any) => p[0] === lIdx);
+                          const matchedIdx = pair ? pair[1] : -1;
+
+                          return (
+                            <div key={lIdx} className="flex gap-3 items-center bg-surface/30 p-2.5 rounded-lg border border-line/40">
+                              <input
+                                type="text"
+                                required
+                                placeholder={`Target ${lIdx + 1} (e.g. Average)`}
+                                value={l}
+                                onChange={(e) => {
+                                  const newLeft = [...leftList];
+                                  newLeft[lIdx] = e.target.value;
+                                  setQuestionForm((prev: any) => ({
+                                    ...prev,
+                                    config: { ...prev.config, left: newLeft },
+                                  }));
+                                }}
+                                className="flex-1 px-3 py-1.5 rounded border border-line bg-white text-sm"
+                              />
+                              <span className="text-slate font-bold text-xs shrink-0">⇌ Match:</span>
+                              <select
+                                value={matchedIdx}
+                                onChange={(e) => {
+                                  const selectVal = Number(e.target.value);
+                                  let newCorrectPairs = [...(config.correctPairs || [])];
+                                  newCorrectPairs = newCorrectPairs.filter((p: any) => p[0] !== lIdx);
+                                  if (selectVal >= 0) {
+                                    newCorrectPairs.push([lIdx, selectVal]);
+                                  }
+                                  setQuestionForm((prev: any) => ({
+                                    ...prev,
+                                    config: { ...prev.config, correctPairs: newCorrectPairs },
+                                  }));
+                                }}
+                                className="px-2 py-1.5 rounded border border-line bg-white text-xs shrink-0 max-w-[150px]"
+                              >
+                                <option value={-1}>-- No Match --</option>
+                                {(config.right || []).map((r: string, rIdx: number) => (
+                                  <option key={rIdx} value={rIdx}>{r || `Option ${rIdx + 1}`}</option>
+                                ))}
+                              </select>
+                              <button
+                                type="button"
+                                disabled={leftList.length <= 1}
+                                onClick={() => {
+                                  const newLeft = [...leftList];
+                                  newLeft.splice(lIdx, 1);
+                                  const newCorrectPairs = (config.correctPairs || [])
+                                    .filter((pair: any) => pair[0] !== lIdx)
+                                    .map((pair: any) => {
+                                      const nextL = pair[0] > lIdx ? pair[0] - 1 : pair[0];
+                                      return [nextL, pair[1]];
+                                    });
+                                  setQuestionForm((prev: any) => ({
+                                    ...prev,
+                                    config: { ...prev.config, left: newLeft, correctPairs: newCorrectPairs },
+                                  }));
+                                }}
+                                className="text-error text-xs hover:underline shrink-0 disabled:opacity-30 cursor-pointer"
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          );
+                        })}
+                        <Button
+                          type="button"
+                          onClick={() => {
+                            const newLeft = [...leftList, ""];
+                            setQuestionForm((prev: any) => ({
+                              ...prev,
+                              config: { ...prev.config, left: newLeft },
+                            }));
+                          }}
+                          variant="secondary"
+                          className="py-1 px-3 text-xs mt-1"
+                        >
+                          + Add Target
+                        </Button>
+                      </div>
+                    );
+                  })()}
+                </div>
               </div>
             )}
 
