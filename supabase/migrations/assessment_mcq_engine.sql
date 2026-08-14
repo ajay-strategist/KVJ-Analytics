@@ -33,7 +33,7 @@ alter table public.test_attempts add column if not exists per_question jsonb;
 
 -- 5. Drop existing questions.type check constraint if it exists, and recreate it to support new question types
 alter table public.questions drop constraint if exists questions_type_check;
-alter table public.questions add constraint questions_type_check check (type in ('single', 'multiple', 'truefalse', 'fillblank', 'dragdrop', 'sequence', 'matrix', 'code'));
+alter table public.questions add constraint questions_type_check check (type in ('single', 'multiple', 'truefalse', 'fillblank', 'dragdrop', 'sequence', 'matrix', 'code', 'dragtable'));
 
 -- 6. Add image_url column to public.questions table to support attachments (Google Drive, OneDrive, etc.)
 alter table public.questions add column if not exists image_url text;

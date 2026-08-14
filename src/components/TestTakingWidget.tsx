@@ -129,6 +129,47 @@ function DroppableSlot({
   );
 }
 
+function TableDroppableSlot({
+  id,
+  matchedItem,
+  onClear,
+  colors,
+}: {
+  id: string;
+  matchedItem?: string;
+  onClear: () => void;
+  colors: any;
+}) {
+  const { isOver, setNodeRef } = useDroppable({ id });
+  return (
+    <div
+      ref={setNodeRef}
+      className={`p-2 border rounded-lg min-h-[38px] flex items-center justify-between text-xs font-semibold transition-all relative ${
+        isOver
+          ? "border-brand bg-brand/5 border-dashed"
+          : matchedItem
+          ? "border-emerald-500/30 bg-emerald-500/5 text-emerald-600"
+          : "border-dashed border-slate-300 bg-slate-50/50 text-slate-400"
+      }`}
+    >
+      {matchedItem ? (
+        <>
+          <span>{matchedItem}</span>
+          <button
+            type="button"
+            onClick={onClear}
+            className="text-error font-bold text-xs hover:underline cursor-pointer bg-transparent border-none p-0.5 ml-2"
+          >
+            ✕
+          </button>
+        </>
+      ) : (
+        <span className="text-[10px] italic opacity-60 text-center w-full">Drop here</span>
+      )}
+    </div>
+  );
+}
+
 // Sortable Item for Sequence Ordering
 function SortableSeqItem({ id, text, colors }: { id: string; text: string; colors: any }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
@@ -259,6 +300,7 @@ export function TestTakingWidget({
           if (q.type === "single") defaultAnswers[q.id] = null;
           else if (q.type === "multiple") defaultAnswers[q.id] = [];
           else if (q.type === "truefalse") defaultAnswers[q.id] = null;
+          else if (q.type === "dragtable") defaultAnswers[q.id] = {};
           else if (q.type === "dragdrop") {
             defaultAnswers[q.id] = (q.config.left || []).map((l: string) => [l, ""]);
           } else if (q.type === "sequence") {
@@ -384,6 +426,31 @@ export function TestTakingWidget({
     });
 
     setAnswers((prev) => ({ ...prev, [currentQuestion.id]: nextMatches }));
+  };
+
+  const handleClearDragTable = (slotId: string) => {
+    const nextAnswers = { ...(answers[currentQuestion.id] || {}) };
+    delete nextAnswers[slotId];
+    setAnswers((prev) => ({ ...prev, [currentQuestion.id]: nextAnswers }));
+  };
+
+  const handleDragEndDragTable = (event: any) => {
+    const { over, active } = event;
+    if (!over || !active) return;
+
+    const dragItem = active.id;
+    const slotId = over.id.replace("slot-", "");
+    const currentAnswers = { ...(answers[currentQuestion.id] || {}) };
+
+    // If this item was already assigned to another slot, clear it from there
+    Object.keys(currentAnswers).forEach((key) => {
+      if (currentAnswers[key] === dragItem) {
+        delete currentAnswers[key];
+      }
+    });
+
+    currentAnswers[slotId] = dragItem;
+    setAnswers((prev) => ({ ...prev, [currentQuestion.id]: currentAnswers }));
   };
 
   const handleDragEndSequence = (event: any) => {
@@ -600,6 +667,14 @@ export function TestTakingWidget({
                       <span className={`${colors.slate} font-bold block mb-1`}>Your Submitted Response:</span>
                       {q.type === "code" ? (
                         <pre className={`p-2 border rounded font-mono text-[10px] overflow-x-auto max-h-40 whitespace-pre-wrap ${colors.card}`}>{res.studentAnswer || "Not answered."}</pre>
+                      ) : q.type === "dragtable" ? (
+                        <div className="space-y-1">
+                          {Object.entries(res.studentAnswer || {}).map(([slot, val]) => (
+                            <div key={slot}>
+                              - Slot <span className="font-bold">{slot}</span> matched with <span className="font-bold">{String(val || "(unmatched)")}</span>
+                            </div>
+                          ))}
+                        </div>
                       ) : q.type === "dragdrop" ? (
                         <div className="space-y-1">
                           {(res.studentAnswer || []).map((p: any, pidx: number) => (
@@ -919,6 +994,81 @@ export function TestTakingWidget({
                       );
                     })}
                   </div>
+                )}
+
+                {currentQuestion.type === "dragtable" && (
+                  <DndContext sensors={sensors} onDragEnd={handleDragEndDragTable}>
+                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                      {/* Left Side: Draggable choices pool */}
+                      <div className="lg:col-span-1 border border-line p-4 rounded-2xl bg-surface/50 space-y-4">
+                        <h4 className={`text-[10px] font-bold uppercase tracking-wider text-slate`}>Draggable Options</h4>
+                        {(() => {
+                          const currentAnswers = answers[currentQuestion.id] || {};
+                          const matchedOptions = Object.values(currentAnswers);
+                          const pool = (currentQuestion.config.draggables || []).filter((d: string) => !matchedOptions.includes(d));
+
+                          if (pool.length === 0) {
+                            return <p className={`text-[11px] italic ${colors.slate}`}>All options matching.</p>;
+                          }
+
+                          return (
+                            <div className="flex flex-col gap-2.5">
+                              {pool.map((d: string) => (
+                                <DraggableItem key={d} id={d} text={d} colors={colors} />
+                              ))}
+                            </div>
+                          );
+                        })()}
+                      </div>
+
+                      {/* Right Side: Interactive Table grid */}
+                      <div className="lg:col-span-3 space-y-4">
+                        <h4 className={`text-[10px] font-bold uppercase tracking-wider text-slate`}>Fill in the Answer Area</h4>
+                        <div className="overflow-x-auto border border-line rounded-xl bg-white shadow-soft">
+                          <table className="w-full text-left border-collapse min-w-[500px]">
+                            <thead>
+                              <tr className="bg-slate-50 border-b border-line">
+                                {(currentQuestion.config.headers || []).map((h: string, idx: number) => (
+                                  <th key={idx} className="p-3 text-[10px] font-bold text-slate uppercase tracking-wider select-none">
+                                    {h}
+                                  </th>
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {(currentQuestion.config.rows || []).map((row: string[], rIdx: number) => (
+                                <tr key={rIdx} className="border-b border-line/60 last:border-0 hover:bg-slate-50/50">
+                                  {row.map((cell: string, cIdx: number) => {
+                                    const isPlaceholder = cell.startsWith("{{") && cell.endsWith("}}");
+                                    if (isPlaceholder) {
+                                      const slotId = cell.replace("{{", "").replace("}}", "").trim();
+                                      const matchedItem = (answers[currentQuestion.id] || {})[slotId] || "";
+                                      return (
+                                        <td key={cIdx} className="p-2 min-w-[120px]">
+                                          <TableDroppableSlot
+                                            id={`slot-${slotId}`}
+                                            matchedItem={matchedItem}
+                                            onClear={() => handleClearDragTable(slotId)}
+                                            colors={colors}
+                                          />
+                                        </td>
+                                      );
+                                    }
+
+                                    return (
+                                      <td key={cIdx} className="p-3 text-xs font-semibold text-ink select-none">
+                                        {cell}
+                                      </td>
+                                    );
+                                  })}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  </DndContext>
                 )}
 
                 {currentQuestion.type === "dragdrop" && (

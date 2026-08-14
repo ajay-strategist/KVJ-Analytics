@@ -15,7 +15,7 @@ function isAuthenticated(req: NextRequest) {
   return req.cookies.get("admin_session")?.value === adminToken();
 }
 
-const TYPE_FILTERS = ["single", "multiple", "truefalse", "fillblank", "dragdrop", "sequence", "matrix", "code"];
+const TYPE_FILTERS = ["single", "multiple", "truefalse", "fillblank", "dragdrop", "sequence", "matrix", "code", "dragtable"];
 
 /** Read-only cross-course question index. Mutations reuse `/api/admin/questions`. */
 export async function GET(req: NextRequest) {

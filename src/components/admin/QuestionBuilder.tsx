@@ -35,6 +35,7 @@ const QUESTION_TYPES = [
   { value: "truefalse", label: "True / False", hint: "Boolean" },
   { value: "fillblank", label: "Fill in the Blank", hint: "Text / dropdown" },
   { value: "dragdrop", label: "Drag & Drop", hint: "Matching pairs" },
+  { value: "dragtable", label: "Drag & Drop to Table", hint: "Drag items directly into table cells" },
   { value: "sequence", label: "Sequence", hint: "Reorder steps" },
   { value: "matrix", label: "Matrix / Grid", hint: "Rows × columns" },
   { value: "code", label: "Code", hint: "Sandbox execution" },
@@ -113,6 +114,17 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
       defaultConfig = { correct: true };
     } else if (type === "dragdrop") {
       defaultConfig = { left: ["Left Item A"], right: ["Right Item A"], correctPairs: [[0, 0]] };
+    } else if (type === "dragtable") {
+      defaultConfig = {
+        headers: ["Region", "Quarter 1", "Answer area"],
+        rows: [
+          ["North", "25000", "{{drop_0}}"]
+        ],
+        draggables: ["Average", "Max"],
+        correct: {
+          "drop_0": "Average"
+        }
+      };
     } else if (type === "sequence") {
       defaultConfig = { items: ["Item 1", "Item 2"], correctOrder: [0, 1] };
     } else if (type === "fillblank") {
@@ -641,6 +653,329 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
                           className="py-1 px-3 text-xs mt-1"
                         >
                           + Add Target
+                        </Button>
+                      </div>
+                    );
+                  })()}
+                </div>
+              </div>
+            )}
+
+            {questionForm.type === "dragtable" && (
+              <div className="space-y-6">
+                {/* 1. Headers Editor */}
+                <div className="border border-line/60 p-4 rounded-xl space-y-3 bg-white">
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">Table Headers / Columns</label>
+                  {(() => {
+                    const config = questionForm.config || { headers: [], rows: [], draggables: [], correct: {} };
+                    const headers = config.headers || [];
+                    return (
+                      <div className="space-y-2">
+                        <div className="flex flex-wrap gap-2">
+                          {headers.map((h: string, idx: number) => (
+                            <div key={idx} className="flex items-center gap-1.5 bg-surface border border-line px-2.5 py-1 rounded-lg">
+                              <input
+                                type="text"
+                                value={h}
+                                onChange={(e) => {
+                                  const newHeaders = [...headers];
+                                  newHeaders[idx] = e.target.value;
+                                  setQuestionForm((prev: any) => ({
+                                    ...prev,
+                                    config: { ...prev.config, headers: newHeaders },
+                                  }));
+                                }}
+                                className="bg-transparent border-0 font-semibold text-xs focus:ring-0 w-24 p-0"
+                              />
+                              <button
+                                type="button"
+                                disabled={headers.length <= 1}
+                                onClick={() => {
+                                  const newHeaders = [...headers];
+                                  newHeaders.splice(idx, 1);
+                                  // Trim rows to match
+                                  const newRows = (config.rows || []).map((row: string[]) => {
+                                    const newRow = [...row];
+                                    newRow.splice(idx, 1);
+                                    return newRow;
+                                  });
+                                  setQuestionForm((prev: any) => ({
+                                    ...prev,
+                                    config: { ...prev.config, headers: newHeaders, rows: newRows },
+                                  }));
+                                }}
+                                className="text-error font-bold text-xs hover:text-red-700 disabled:opacity-30 cursor-pointer"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                        <Button
+                          type="button"
+                          onClick={() => {
+                            const newHeaders = [...headers, `Column ${headers.length + 1}`];
+                            // Append empty cell to all rows
+                            const newRows = (config.rows || []).map((row: string[]) => [...row, ""]);
+                            setQuestionForm((prev: any) => ({
+                              ...prev,
+                              config: { ...prev.config, headers: newHeaders, rows: newRows },
+                            }));
+                          }}
+                          variant="secondary"
+                          className="py-1 px-3 text-xs mt-1"
+                        >
+                          + Add Column Header
+                        </Button>
+                      </div>
+                    );
+                  })()}
+                </div>
+
+                {/* 2. Draggable Options Pool */}
+                <div className="border border-line/60 p-4 rounded-xl space-y-3 bg-white">
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">Draggable Choices (Correct Answers & Decoys)</label>
+                  {(() => {
+                    const config = questionForm.config || { headers: [], rows: [], draggables: [], correct: {} };
+                    const draggables = config.draggables || [];
+                    return (
+                      <div className="space-y-2">
+                        {draggables.map((d: string, idx: number) => (
+                          <div key={idx} className="flex gap-2 items-center">
+                            <input
+                              type="text"
+                              required
+                              placeholder={`Option ${idx + 1}`}
+                              value={d}
+                              onChange={(e) => {
+                                const newDraggables = [...draggables];
+                                newDraggables[idx] = e.target.value;
+                                // If this option was used as correct answer in mapping, update its text there as well
+                                const oldVal = draggables[idx];
+                                const newVal = e.target.value;
+                                const newCorrect = { ...(config.correct || {}) };
+                                Object.keys(newCorrect).forEach((k) => {
+                                  if (newCorrect[k] === oldVal) {
+                                    newCorrect[k] = newVal;
+                                  }
+                                });
+                                setQuestionForm((prev: any) => ({
+                                  ...prev,
+                                  config: { ...prev.config, draggables: newDraggables, correct: newCorrect },
+                                }));
+                              }}
+                              className="flex-1 px-3 py-1.5 rounded border border-line bg-white text-sm"
+                            />
+                            <button
+                              type="button"
+                              disabled={draggables.length <= 1}
+                              onClick={() => {
+                                const newDraggables = [...draggables];
+                                newDraggables.splice(idx, 1);
+                                setQuestionForm((prev: any) => ({
+                                  ...prev,
+                                  config: { ...prev.config, draggables: newDraggables },
+                                }));
+                              }}
+                              className="text-error text-xs hover:underline shrink-0 disabled:opacity-30 cursor-pointer"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        ))}
+                        <Button
+                          type="button"
+                          onClick={() => {
+                            const newDraggables = [...draggables, `Choice ${draggables.length + 1}`];
+                            setQuestionForm((prev: any) => ({
+                              ...prev,
+                              config: { ...prev.config, draggables: newDraggables },
+                            }));
+                          }}
+                          variant="secondary"
+                          className="py-1 px-3 text-xs mt-1"
+                        >
+                          + Add Choice Option
+                        </Button>
+                      </div>
+                    );
+                  })()}
+                </div>
+
+                {/* 3. Interactive Table Rows Editor */}
+                <div className="border border-line/60 p-4 rounded-xl space-y-4 bg-white">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">Table Rows & Cells Editor</label>
+                    <span className="text-[10px] text-slate-400 font-medium">Click "Drop Target" to turn any cell into a drop zone</span>
+                  </div>
+                  {(() => {
+                    const config = questionForm.config || { headers: [], rows: [], draggables: [], correct: {} };
+                    const headers = config.headers || [];
+                    const rows = config.rows || [];
+                    const draggables = config.draggables || [];
+                    const correct = config.correct || {};
+
+                    return (
+                      <div className="space-y-3">
+                        <div className="overflow-x-auto border border-line rounded-lg bg-surface/20">
+                          <table className="w-full text-left border-collapse min-w-[600px]">
+                            <thead>
+                              <tr className="bg-slate-50 border-b border-line">
+                                {headers.map((h: string, idx: number) => (
+                                  <th key={idx} className="p-2 text-[10px] font-bold text-slate uppercase tracking-wider">
+                                    {h}
+                                  </th>
+                                ))}
+                                <th className="p-2 w-16"></th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {rows.map((row: string[], rIdx: number) => (
+                                <tr key={rIdx} className="border-b border-line last:border-0 hover:bg-slate-50/50">
+                                  {row.map((cell: string, cIdx: number) => {
+                                    const isPlaceholder = cell.startsWith("{{") && cell.endsWith("}}");
+                                    if (isPlaceholder) {
+                                      const slotId = cell.replace("{{", "").replace("}}", "").trim();
+                                      const matchedVal = correct[slotId] || "";
+
+                                      return (
+                                        <td key={cIdx} className="p-2">
+                                          <div className="flex items-center gap-1 bg-emerald-500/5 border border-emerald-500/25 p-1 rounded-lg">
+                                            <select
+                                              value={matchedVal}
+                                              onChange={(e) => {
+                                                const newCorrect = { ...correct };
+                                                newCorrect[slotId] = e.target.value;
+                                                setQuestionForm((prev: any) => ({
+                                                  ...prev,
+                                                  config: { ...prev.config, correct: newCorrect },
+                                                }));
+                                              }}
+                                              className="flex-1 px-1 py-1 rounded border border-emerald-500/30 bg-white text-[11px] font-semibold text-emerald-700"
+                                            >
+                                              <option value="">-- Correct Match --</option>
+                                              {draggables.map((d: string, dIdx: number) => (
+                                                <option key={dIdx} value={d}>{d}</option>
+                                              ))}
+                                            </select>
+                                            <button
+                                              type="button"
+                                              onClick={() => {
+                                                const newRow = [...row];
+                                                newRow[cIdx] = "";
+                                                const newRows = [...rows];
+                                                newRows[rIdx] = newRow;
+                                                // Clear matching in config
+                                                const newCorrect = { ...correct };
+                                                delete newCorrect[slotId];
+                                                setQuestionForm((prev: any) => ({
+                                                  ...prev,
+                                                  config: { ...prev.config, rows: newRows, correct: newCorrect },
+                                                }));
+                                              }}
+                                              className="p-1 rounded text-red-500 hover:bg-red-50 text-[10px] font-bold cursor-pointer shrink-0"
+                                              title="Convert back to text cell"
+                                            >
+                                              ✕ Text
+                                            </button>
+                                          </div>
+                                        </td>
+                                      );
+                                    }
+
+                                    return (
+                                      <td key={cIdx} className="p-2">
+                                        <div className="flex items-center gap-1.5">
+                                          <input
+                                            type="text"
+                                            value={cell}
+                                            onChange={(e) => {
+                                              const newRow = [...row];
+                                              newRow[cIdx] = e.target.value;
+                                              const newRows = [...rows];
+                                              newRows[rIdx] = newRow;
+                                              setQuestionForm((prev: any) => ({
+                                                ...prev,
+                                                config: { ...prev.config, rows: newRows },
+                                              }));
+                                            }}
+                                            className="flex-1 px-2.5 py-1.5 rounded border border-line bg-white text-xs"
+                                            placeholder="Text cell"
+                                          />
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              // Find next slot index
+                                              let nextSlotNum = 0;
+                                              const allRowsStr = JSON.stringify(rows);
+                                              const slotRegex = /drop_(\d+)/g;
+                                              let match;
+                                              const existingNums: number[] = [];
+                                              while ((match = slotRegex.exec(allRowsStr)) !== null) {
+                                                existingNums.push(Number(match[1]));
+                                              }
+                                              if (existingNums.length > 0) {
+                                                nextSlotNum = Math.max(...existingNums) + 1;
+                                              }
+                                              const slotId = `drop_${nextSlotNum}`;
+
+                                              const newRow = [...row];
+                                              newRow[cIdx] = `{{${slotId}}}`;
+                                              const newRows = [...rows];
+                                              newRows[rIdx] = newRow;
+
+                                              const newCorrect = { ...correct };
+                                              newCorrect[slotId] = draggables[0] || "";
+
+                                              setQuestionForm((prev: any) => ({
+                                                ...prev,
+                                                config: { ...prev.config, rows: newRows, correct: newCorrect },
+                                              }));
+                                            }}
+                                            className="px-2 py-1.5 rounded border border-brand/20 bg-brand/5 text-brand text-[10px] font-bold hover:bg-brand/10 shrink-0 cursor-pointer"
+                                          >
+                                            🎯 Drop Target
+                                          </button>
+                                        </div>
+                                      </td>
+                                    );
+                                  })}
+                                  <td className="p-2 text-right">
+                                    <button
+                                      type="button"
+                                      disabled={rows.length <= 1}
+                                      onClick={() => {
+                                        const newRows = [...rows];
+                                        newRows.splice(rIdx, 1);
+                                        setQuestionForm((prev: any) => ({
+                                          ...prev,
+                                          config: { ...prev.config, rows: newRows },
+                                        }));
+                                      }}
+                                      className="text-error text-xs hover:underline disabled:opacity-30 cursor-pointer"
+                                    >
+                                      Remove Row
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                        <Button
+                          type="button"
+                          onClick={() => {
+                            const emptyRow = Array(headers.length).fill("");
+                            const newRows = [...rows, emptyRow];
+                            setQuestionForm((prev: any) => ({
+                              ...prev,
+                              config: { ...prev.config, rows: newRows },
+                            }));
+                          }}
+                          variant="secondary"
+                          className="py-1 px-3 text-xs mt-1"
+                        >
+                          + Add Row
                         </Button>
                       </div>
                     );

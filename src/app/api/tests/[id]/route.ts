@@ -20,6 +20,11 @@ function stripAnswers(type: string, config: any) {
     delete c.correctIndexes;
   } else if (type === "truefalse") {
     delete c.correct;
+  } else if (type === "dragtable") {
+    delete c.correct;
+    if (c.draggables) {
+      c.draggables = [...c.draggables].sort(() => Math.random() - 0.5);
+    }
   } else if (type === "dragdrop") {
     delete c.correctPairs;
     // Shuffle the right side items to present them randomly to the student
@@ -68,6 +73,12 @@ function getCorrectAnswerLabel(type: string, config: any) {
     return labels.join(", ");
   }
   if (type === "truefalse") return config.correct ? "True" : "False";
+  if (type === "dragtable") {
+    const correct = config.correct || {};
+    return Object.entries(correct)
+      .map(([slot, val]) => `${slot} = ${val}`)
+      .join("; ");
+  }
   if (type === "dragdrop") {
     const pairs = (config.correctPairs || []).map((p: any) => {
       const l = config.left?.[p[0]] ?? p[0];
@@ -396,6 +407,15 @@ export async function POST(
         }
       } else if (q.type === "truefalse") {
         isCorrect = String(studentAns).toLowerCase() === String(config.correct).toLowerCase();
+      } else if (q.type === "dragtable") {
+        const correct = config.correct || {};
+        if (typeof studentAns !== "object" || studentAns === null) {
+          isCorrect = false;
+        } else {
+          isCorrect = Object.keys(correct).every((key) => {
+            return String(studentAns[key] || "").trim() === String(correct[key] || "").trim();
+          });
+        }
       } else if (q.type === "dragdrop") {
         const correctPairs = config.correctPairs || [];
         const leftList = config.left || [];
