@@ -413,12 +413,15 @@ export function DynamicRegisterForm({ courses, initialCourseSlug }: DynamicRegis
         )}
 
         {/* Submission Button */}
-        <div className="flex justify-end pt-4 border-t border-line">
+        <div className="flex flex-col sm:flex-row items-center justify-between pt-6 mt-6 border-t border-line gap-4">
+          <p className="text-xs text-slate/70 text-center sm:text-left">
+            By submitting, you agree to receive program details & counselor guidance from KVJ Analytics.
+          </p>
           <Button
             type="submit"
             variant="primary"
             disabled={loading}
-            className="w-full sm:w-auto px-10 py-4 flex items-center justify-center space-x-2 rounded-full font-bold shadow-[0_4px_14px_rgba(8,168,138,0.15)] hover:scale-[1.02] active:scale-[0.98] transition-all"
+            className="w-full sm:w-auto px-10 py-4 flex items-center justify-center space-x-2 rounded-full font-bold shadow-[0_4px_14px_rgba(8,168,138,0.2)] hover:scale-[1.02] active:scale-[0.98] transition-all shrink-0"
           >
             {loading ? (
               <>

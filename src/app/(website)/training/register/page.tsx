@@ -1,4 +1,6 @@
 import React from "react";
+import fs from "fs";
+import path from "path";
 import { Container } from "@/components/ui/Container";
 import { SplitHeading } from "@/components/v3/ScrollFx";
 import { Reveal } from "@/components/ui/Reveal";
@@ -28,17 +30,71 @@ function getAdminClient() {
 export default async function RegisterPage({
   searchParams,
 }: {
-  searchParams: Promise<{ course?: string }>;
+  searchParams: Promise<{ course?: string; campaign?: string; form?: string }>;
 }) {
-  const { course: courseSlug } = await searchParams;
+  const params = await searchParams;
+  const courseSlug = params.course;
+  const campaignId = params.campaign;
+  const formId = params.form;
   
-  // Fetch dynamic published courses list from Supabase
   let courses: { id: string; slug: string; title: string }[] = [];
   let customFormHtml: string | null = null;
   const db = getAdminClient();
+
+  // Helper to load static HTML files from "Course Registration Forms" folder
+  const loadLocalHtmlForm = (fileName?: string) => {
+    try {
+      const dir = path.join(process.cwd(), "Course Registration Forms");
+      if (fileName && fs.existsSync(path.join(dir, fileName))) {
+        return fs.readFileSync(path.join(dir, fileName), "utf-8");
+      }
+      const defaultAiFile = path.join(dir, "AI Course Registration.html");
+      if (fs.existsSync(defaultAiFile)) {
+        return fs.readFileSync(defaultAiFile, "utf-8");
+      }
+    } catch (e) {
+      console.error("Error reading local HTML form:", e);
+    }
+    return null;
+  };
   
   if (db) {
     try {
+      // 1. If campaign parameter is provided, check campaigns table
+      if (campaignId) {
+        const { data: campaignData } = await db
+          .from("campaigns")
+          .select("registration_form_html, registration_form_id")
+          .or(`campaign_id.eq.${campaignId},id.eq.${campaignId}`)
+          .maybeSingle();
+
+        if (campaignData?.registration_form_html?.trim()) {
+          customFormHtml = campaignData.registration_form_html;
+        } else if (campaignData?.registration_form_id) {
+          const { data: formData } = await db
+            .from("registration_forms")
+            .select("html_content")
+            .eq("id", campaignData.registration_form_id)
+            .maybeSingle();
+          if (formData?.html_content?.trim()) {
+            customFormHtml = formData.html_content;
+          }
+        }
+      }
+
+      // 2. If form parameter is provided, check registration_forms table
+      if (!customFormHtml && formId) {
+        const { data: formData } = await db
+          .from("registration_forms")
+          .select("html_content")
+          .eq("id", formId)
+          .maybeSingle();
+        if (formData?.html_content?.trim()) {
+          customFormHtml = formData.html_content;
+        }
+      }
+
+      // 3. Fetch published courses
       const { data, error } = await db
         .from("courses")
         .select("id, slug, title, registration_form_html")
@@ -48,9 +104,9 @@ export default async function RegisterPage({
       if (!error && data) {
         courses = data.map(({ id, slug, title }: any) => ({ id, slug, title }));
         
-        // If a specific course is requested, load its custom form HTML
-        if (courseSlug) {
-          const matched = data.find((c: any) => c.slug === courseSlug);
+        // If a specific course is requested, load course custom form HTML
+        if (!customFormHtml && courseSlug) {
+          const matched = data.find((c: any) => c.slug === courseSlug || c.id === courseSlug);
           if (matched?.registration_form_html?.trim()) {
             customFormHtml = matched.registration_form_html;
           }
@@ -61,7 +117,15 @@ export default async function RegisterPage({
     }
   }
 
-  // Fallback courses if database is empty/unconfigured
+  // 4. Fallback for static local HTML files
+  // If custom form HTML not found in DB but courseSlug matches AI / Data Analytics, read from disk
+  if (!customFormHtml) {
+    if (courseSlug === "ai" || courseSlug === "ai-and-data-analytics" || formId === "ai" || courseSlug === "data-analytics") {
+      customFormHtml = loadLocalHtmlForm("AI Course Registration.html");
+    }
+  }
+
+  // Fallback courses list if database is empty
   if (courses.length === 0) {
     courses = [
       { id: "fallback-excel-id", slug: "excel-mis-automation", title: "Advanced Excel & MIS Automation" },
@@ -93,14 +157,13 @@ export default async function RegisterPage({
           </Reveal>
         )}
 
-        {/* Custom course-specific form rendered in sandboxed iframe */}
+        {/* Custom course/campaign form rendered in sandboxed iframe */}
         {customFormHtml ? (
-          <Reveal className="w-full">
+          <Reveal className="w-full max-w-5xl mx-auto">
             <iframe
               srcDoc={customFormHtml}
               sandbox="allow-scripts allow-forms allow-same-origin allow-modals"
-              className="w-full border-0 rounded-2xl"
-              style={{ minHeight: "100vh" }}
+              className="w-full border-0 rounded-2xl shadow-xl min-h-[780px] lg:min-h-[680px]"
               title="Course Registration Form"
             />
           </Reveal>
@@ -114,3 +177,4 @@ export default async function RegisterPage({
     </div>
   );
 }
+
