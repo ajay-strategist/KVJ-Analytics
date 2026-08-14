@@ -448,9 +448,9 @@ ${qHtml}
     }
 
     case "borderedtext":
-      return `<div class="my-6 border-l-4 border-white bg-white/5 p-6 rounded-r-2xl text-left">
-  ${b.title ? `<h4 class="text-white font-bold text-sm mb-3">${escHtml(b.title)}</h4>` : ""}
-  <p class="text-slate-355 text-sm leading-relaxed mb-0">${escHtml(b.text || "")}</p>
+      return `<div class="my-6 p-6 rounded-r-2xl text-left borderedtext-block">
+  ${b.title ? `<h4 class="font-bold text-sm mb-1.5 borderedtext-title">${escHtml(b.title)}</h4>` : ""}
+  <p class="text-sm leading-relaxed mb-0 borderedtext-content">${escHtml(b.text || "")}</p>
 </div>`;
 
     default:

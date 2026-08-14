@@ -90,6 +90,18 @@ td {
   border-bottom-color: rgba(255, 255, 255, 0.04) !important;
   color: #cbd5e1 !important;
 }
+.borderedtext-block {
+  background-color: rgba(139, 92, 246, 0.08) !important;
+  border-left: 4px solid #a78bfa !important;
+  border-top-left-radius: 0 !important;
+  border-bottom-left-radius: 0 !important;
+}
+.borderedtext-title {
+  color: #f5f3ff !important;
+}
+.borderedtext-content {
+  color: #cbd5e1 !important;
+}
 `;
 
 export const LIGHT_MODE_CSS = `
@@ -219,6 +231,20 @@ td {
   background-color: #fee2e2 !important;
   border-color: #ef4444 !important;
   color: #991b1b !important;
+}
+.borderedtext-block {
+  background-color: #f5f3ff !important;
+  border-left: 4px solid #8b5cf6 !important;
+  border-top-left-radius: 0 !important;
+  border-bottom-left-radius: 0 !important;
+  padding: 1.25rem 1.5rem !important;
+  margin: 1.5rem 0 !important;
+}
+.borderedtext-title {
+  color: #1e3a8a !important;
+}
+.borderedtext-content {
+  color: #334155 !important;
 }
 `;
 
