@@ -38,4 +38,7 @@ alter table public.questions add constraint questions_type_check check (type in 
 -- 6. Add image_url column to public.questions table to support attachments (Google Drive, OneDrive, etc.)
 alter table public.questions add column if not exists image_url text;
 
+-- 7. Add passed column to public.activity_results table to support saving failed/all attempts
+alter table public.activity_results add column if not exists passed boolean default true;
+
 

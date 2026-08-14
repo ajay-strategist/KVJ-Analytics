@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { lessonId, score, maxScore, courseSlug } = await req.json();
+    const { lessonId, score, maxScore, courseSlug, passed } = await req.json();
 
     if (!lessonId || score === undefined || maxScore === undefined || !courseSlug) {
       return NextResponse.json(
@@ -79,6 +79,7 @@ export async function POST(req: NextRequest) {
         course_slug: courseSlug,
         score,
         max_score: maxScore,
+        passed: passed !== false,
         submitted_at: new Date().toISOString(),
       }, {
         onConflict: "user_id,lesson_id"

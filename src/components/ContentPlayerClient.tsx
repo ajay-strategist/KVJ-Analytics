@@ -366,12 +366,18 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
       // 3. Fetch completed lessons (activity results)
       const { data: results } = await supabase
         .from("activity_results")
-        .select("lesson_id")
+        .select("lesson_id, passed")
         .eq("user_id", session.user.id)
         .eq("course_slug", course.slug);
 
       if (results) {
-        setCompletedLessonIds(new Set(results.map((r: any) => r.lesson_id)));
+        setCompletedLessonIds(
+          new Set(
+            results
+              .filter((r: any) => r.passed !== false)
+              .map((r: any) => r.lesson_id)
+          )
+        );
       }
 
       // 4. Set first lesson as active by default
@@ -849,7 +855,7 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
                       adminPreview={adminPreview}
                       darkMode={darkMode}
                       onComplete={async (score, maxScore, passed) => {
-                        if (passed && !adminPreview) {
+                        if (!adminPreview) {
                           try {
                             const res = await fetch("/api/activity-result", {
                               method: "POST",
@@ -859,13 +865,14 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
                                 score,
                                 maxScore,
                                 courseSlug: course.slug,
+                                passed,
                               }),
                             });
-                            if (res.ok) {
+                            if (res.ok && passed) {
                               setCompletedLessonIds((prev) => new Set([...prev, activeLesson.id]));
                             }
                           } catch (err) {
-                            console.error("Failed to mark assessment complete:", err);
+                            console.error("Failed to save activity result:", err);
                           }
                         }
                       }}
