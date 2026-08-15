@@ -1,6 +1,4 @@
 import React from "react";
-import fs from "fs";
-import path from "path";
 import { redirect } from "next/navigation";
 import { Container } from "@/components/ui/Container";
 import { SplitHeading } from "@/components/v3/ScrollFx";
@@ -120,10 +118,7 @@ export default async function RegisterPage({
     const localKey = courseSlug ?? formId ?? "";
     const localPath = LOCAL_FORM_MAP[localKey];
     if (localPath) {
-      const absPath = path.join(process.cwd(), "public", localPath);
-      if (fs.existsSync(absPath)) {
-        redirect(localPath);
-      }
+      redirect(localPath);
     }
   }
 
