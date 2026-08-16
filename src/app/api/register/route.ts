@@ -323,10 +323,33 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      // B. Telegram Bot Alert
-      const telegramToken = process.env.TELEGRAM_BOT_TOKEN;
-      const telegramChatId = process.env.TELEGRAM_GROUP_CHAT_ID;
+      // Load notification credentials from DB with env variables as fallbacks
+      let telegramToken = process.env.TELEGRAM_BOT_TOKEN;
+      let telegramChatId = process.env.TELEGRAM_GROUP_CHAT_ID;
+      let teamsWebhookUrl = process.env.TEAMS_WEBHOOK_URL;
 
+      try {
+        const { data: adminSettings } = await db
+          .from("page_content")
+          .select("data")
+          .eq("slug", "admin-settings")
+          .maybeSingle();
+        if (adminSettings?.data) {
+          if (adminSettings.data.telegramBotToken?.trim()) {
+            telegramToken = adminSettings.data.telegramBotToken.trim();
+          }
+          if (adminSettings.data.telegramChatId?.trim()) {
+            telegramChatId = adminSettings.data.telegramChatId.trim();
+          }
+          if (adminSettings.data.teamsWebhookUrl?.trim()) {
+            teamsWebhookUrl = adminSettings.data.teamsWebhookUrl.trim();
+          }
+        }
+      } catch (dbErr) {
+        console.error("Failed to load notification settings from DB, using env fallback:", dbErr);
+      }
+
+      // B. Telegram Bot Alert
       if (telegramEnabled && telegramToken && telegramChatId) {
         try {
           const telegramMessageLines = [
@@ -383,20 +406,6 @@ export async function POST(req: NextRequest) {
       }
 
       // C. Microsoft Teams Webhook Alert
-      // Prefer DB-stored setting (from Admin → Settings) over environment variable
-      let teamsWebhookUrl = process.env.TEAMS_WEBHOOK_URL;
-      try {
-        const { data: adminSettings } = await db
-          .from("page_content")
-          .select("data")
-          .eq("slug", "admin-settings")
-          .maybeSingle();
-        if (adminSettings?.data?.teamsWebhookUrl?.trim()) {
-          teamsWebhookUrl = adminSettings.data.teamsWebhookUrl.trim();
-        }
-      } catch {
-        // ignore — fall back to env var
-      }
 
       if (teamsEnabled && teamsWebhookUrl) {
         try {

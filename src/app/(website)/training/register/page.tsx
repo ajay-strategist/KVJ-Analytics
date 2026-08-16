@@ -5,17 +5,46 @@ import { SplitHeading } from "@/components/v3/ScrollFx";
 import { Reveal } from "@/components/ui/Reveal";
 import { DynamicRegisterForm } from "@/components/shared/DynamicRegisterForm";
 import { createClient } from "@supabase/supabase-js";
-import { pageMeta } from "@/lib/seo";
+import { pageMeta, resolveSeo } from "@/lib/seo";
+import { Metadata } from "next";
 
 export const revalidate = 0;
 
-export const metadata = pageMeta({
-  title: "Register Interest — KVJ Analytics",
-  description:
-    "Register for professional spreadsheet modeling, MIS automation, Power BI dashboards, and data analytics training programs.",
-  path: "/training/register",
-  keywords: ["course registration", "analytics training", "enrollment interest"],
-});
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ course?: string; campaign?: string; form?: string }>;
+}): Promise<Metadata> {
+  const params = await searchParams;
+  const courseSlug = params.course;
+
+  let pageTitle = "Register Interest — KVJ Analytics";
+  let pageDesc =
+    "Register for professional spreadsheet modeling, MIS automation, Power BI dashboards, and data analytics training programs.";
+
+  const db = getAdminClient();
+  if (db && courseSlug) {
+    try {
+      const { data } = await db
+        .from("courses")
+        .select("title")
+        .eq("slug", courseSlug)
+        .maybeSingle();
+      if (data?.title) {
+        pageTitle = `Register for ${data.title} — KVJ Analytics`;
+        pageDesc = `Enroll in our professional ${data.title} training program. Reserve your seat today!`;
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  return resolveSeo("/training/register", {
+    title: pageTitle,
+    description: pageDesc,
+    keywords: ["course registration", "analytics training", "enrollment interest"],
+  });
+}
 
 function getAdminClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
