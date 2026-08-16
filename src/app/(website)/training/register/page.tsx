@@ -55,11 +55,18 @@ export default async function RegisterPage({
     try {
       // 1. Campaign param → look up campaigns table for DB-stored HTML
       if (campaignId) {
-        const { data: campaignData } = await db
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(campaignId);
+        let query = db
           .from("campaigns")
-          .select("registration_form_html, registration_form_id")
-          .or(`campaign_id.eq.${campaignId},id.eq.${campaignId}`)
-          .maybeSingle();
+          .select("registration_form_html, registration_form_id");
+
+        if (isUuid) {
+          query = query.or(`campaign_id.eq.${campaignId},id.eq.${campaignId}`);
+        } else {
+          query = query.eq("campaign_id", campaignId);
+        }
+
+        const { data: campaignData } = await query.maybeSingle();
 
         if (campaignData?.registration_form_html?.trim()) {
           customFormHtml = campaignData.registration_form_html;

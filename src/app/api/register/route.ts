@@ -60,6 +60,38 @@ export async function POST(req: NextRequest) {
       referrer = "",
     } = body;
 
+    // Extract arbitrary custom form fields
+    const standardKeys = new Set([
+      "id", "name", "email", "phone", "whatsapp_number", "course_id", "training_mode",
+      "location", "current_profession", "organization", "college_name", "current_education",
+      "preferred_start_date", "message", "username", "turnstileToken", "status",
+      "utmSource", "utmMedium", "utmCampaign", "utmTerm", "utmContent", "landing_page", "referrer",
+      "kvj_course_id", "kvj_training_mode", "kvj_campaign_id", "kvj_honeypot", "campaign_id"
+    ]);
+
+    const customFields: Record<string, any> = {};
+    for (const [key, val] of Object.entries(body)) {
+      if (
+        !standardKeys.has(key) &&
+        val !== undefined &&
+        val !== null &&
+        val !== "" &&
+        typeof val !== "object"
+      ) {
+        customFields[key] = val;
+      }
+    }
+
+    let finalMessage = message || "";
+    if (Object.keys(customFields).length > 0) {
+      const customSummary = Object.entries(customFields)
+        .map(([k, v]) => `${k.charAt(0).toUpperCase() + k.slice(1)}: ${v}`)
+        .join("\n");
+      finalMessage = finalMessage
+        ? `${finalMessage}\n\n[Additional Form Fields]:\n${customSummary}`
+        : customSummary;
+    }
+
     // 1. Support both standard names and kvj_ prefixed names
     const resolved_course_id = course_id || body.kvj_course_id;
     const resolved_training_mode = training_mode || body.kvj_training_mode || "online";
@@ -145,11 +177,16 @@ export async function POST(req: NextRequest) {
 
       // Resolve Campaign
       if (activeCampaignId) {
-        const { data: campRow } = await db
-          .from("campaigns")
-          .select("*")
-          .or(`campaign_id.eq.${activeCampaignId},id.eq.${activeCampaignId}`)
-          .maybeSingle();
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(activeCampaignId);
+        let query = db.from("campaigns").select("*");
+        
+        if (isUuid) {
+          query = query.or(`campaign_id.eq.${activeCampaignId},id.eq.${activeCampaignId}`);
+        } else {
+          query = query.eq("campaign_id", activeCampaignId);
+        }
+
+        const { data: campRow } = await query.maybeSingle();
         if (campRow) {
           campaignName = campRow.campaign_name;
           activeCampaignId = campRow.campaign_id;
@@ -191,7 +228,7 @@ export async function POST(req: NextRequest) {
       college_name: college_name || null,
       current_education: current_education || null,
       preferred_start_date: preferred_start_date || null,
-      message: message || "",
+      message: finalMessage || "",
       utm_source: utmSource || null,
       utm_medium: utmMedium || null,
       utm_campaign: utmCampaign || null,
@@ -276,6 +313,7 @@ export async function POST(req: NextRequest) {
                   <tr><td style="padding: 6px 0; font-weight: bold;">Training Mode:</td><td style="padding: 6px 0; font-weight: bold; text-transform: uppercase;">${resolved_training_mode}</td></tr>
                   <tr><td style="padding: 6px 0; font-weight: bold;">Campaign:</td><td style="padding: 6px 0; font-weight: bold;">${campaignName} (${activeCampaignId || "N/A"})</td></tr>
                   <tr><td style="padding: 6px 0; font-weight: bold;">Location:</td><td style="padding: 6px 0;">${location || "Not specified"}</td></tr>
+                  ${finalMessage ? `<tr><td style="padding: 6px 0; font-weight: bold; vertical-align: top;">Message / Details:</td><td style="padding: 6px 0; white-space: pre-wrap;">${finalMessage}</td></tr>` : ""}
                 </table>
               </div>
             `,
@@ -291,7 +329,7 @@ export async function POST(req: NextRequest) {
 
       if (telegramEnabled && telegramToken && telegramChatId) {
         try {
-          const telegramMessage = [
+          const telegramMessageLines = [
             `🔔 *NEW TRAINING LEAD*`,
             ``,
             `*${courseTitle}*`,
@@ -322,7 +360,13 @@ export async function POST(req: NextRequest) {
             ``,
             `🕐 *Registered:*`,
             `${formatDate(new Date())}`,
-          ].join("\n");
+          ];
+
+          if (finalMessage) {
+            telegramMessageLines.push(``, `📝 *Message / Additional Details:*`, finalMessage);
+          }
+
+          const telegramMessage = telegramMessageLines.join("\n");
 
           await fetch(`https://api.telegram.org/bot${telegramToken}/sendMessage`, {
             method: "POST",
@@ -374,7 +418,8 @@ export async function POST(req: NextRequest) {
                   { "name": "District / Location", "value": location || "Not specified" },
                   { "name": "Campaign", "value": campaignName },
                   { "name": "Campaign ID", "value": activeCampaignId || "N/A" },
-                  { "name": "Registered At", "value": formatDate(new Date()) }
+                  { "name": "Registered At", "value": formatDate(new Date()) },
+                  ...(finalMessage ? [{ "name": "Message / Details", "value": finalMessage.replace(/\n/g, "<br>") }] : [])
                 ],
                 "markdown": true
               }
