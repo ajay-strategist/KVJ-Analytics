@@ -152,6 +152,30 @@ export default async function RegisterPage({
           background: "#0a0f23",
         }}
       >
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `
+              /* Hide layout components that clash with the custom standalone page design */
+              header, footer, .noise-overlay, .scroll-progress, a[href*="wa.me"] {
+                display: none !important;
+              }
+              /* Lock parent scrolling and force full height layout */
+              html, body {
+                overflow: hidden !important;
+                height: 100% !important;
+              }
+              /* Ensure the page wrapper does not constrain the fixed overlay */
+              main {
+                padding-top: 0 !important;
+                height: 100vh !important;
+              }
+              /* Re-enable interactions and native scroll inside the iframe */
+              iframe {
+                pointer-events: auto !important;
+              }
+            `,
+          }}
+        />
         <iframe
           srcDoc={customFormHtml}
           sandbox="allow-scripts allow-forms allow-same-origin allow-modals"
