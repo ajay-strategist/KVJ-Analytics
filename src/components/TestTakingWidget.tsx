@@ -1115,18 +1115,18 @@ export function TestTakingWidget({
         </div>
 
         {isInline && (
-          <div className="pt-4 border-t flex flex-col gap-3">
-            <div className="flex gap-2">
-              {!checkedAnswers[q.id]?.checked ? (
-                <Button
-                  type="button"
-                  onClick={() => checkAnswerInline(q.id)}
-                  className="py-2 px-4 bg-[#10233F] text-white hover:bg-slate-800 text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-md rounded-lg"
-                >
-                  <span>Check Answer</span>
-                </Button>
-              ) : (
-                !checkedAnswers[q.id]?.correct && (
+          <div className="pt-3 border-t flex flex-col gap-2.5">
+            {(!checkedAnswers[q.id]?.checked || !checkedAnswers[q.id]?.correct) && (
+              <div className="flex gap-2">
+                {!checkedAnswers[q.id]?.checked ? (
+                  <Button
+                    type="button"
+                    onClick={() => checkAnswerInline(q.id)}
+                    className="py-2 px-4 bg-[#10233F] text-white hover:bg-slate-800 text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-md rounded-lg"
+                  >
+                    <span>Check Answer</span>
+                  </Button>
+                ) : (
                   <Button
                     type="button"
                     onClick={() => {
@@ -1140,9 +1140,9 @@ export function TestTakingWidget({
                   >
                     <span>Try Again</span>
                   </Button>
-                )
-              )}
-            </div>
+                )}
+              </div>
+            )}
 
             {checkedAnswers[q.id]?.checked && (
               <div className={`p-4 rounded-xl border text-xs space-y-2 animate-fade-in ${
