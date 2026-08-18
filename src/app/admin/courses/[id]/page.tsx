@@ -468,13 +468,14 @@ const LessonEditor = React.memo(function LessonEditor({
             { value: "theory",   label: "⌨️ Raw HTML",     hint: "Paste / import HTML" },
             { value: "activity", label: "⚡ Activity",     hint: "Interactive iframe" },
             { value: "assessment", label: "📝 Timed Exam", hint: "MCQ exam" },
+            { value: "inline_assessment", label: "📝 Inline Assessment", hint: "Practice test" },
           ].map(opt => (
             <button
               key={opt.value}
               type="button"
               onClick={() => {
                 setEditorKind(opt.value);
-                if (opt.value === "assessment") { setKind("assessment"); }
+                if (opt.value === "assessment" || opt.value === "inline_assessment") { setKind("assessment"); }
                 else if (opt.value === "activity") { setKind("activity"); }
                 else { setKind("theory"); }
               }}
@@ -2212,7 +2213,20 @@ const LessonEditor = React.memo(function LessonEditor({
               )
             ) : (
               <div className="w-full min-h-[340px] max-h-[500px] overflow-y-auto border border-[#DCE5E8] rounded-xl bg-white p-4">
-                {previewHtml ? (
+                {kind === "assessment" && linkedTest ? (
+                  <div className="p-4 bg-slate-50/50 rounded-xl">
+                    <TestTakingWidget
+                      testId={linkedTest.id}
+                      courseSlug={course.slug}
+                      adminPreview={true}
+                      darkMode={false}
+                      isInline={editorKind === "inline_assessment" || (linkedTest.is_inline || false)}
+                      showAnswers={editorKind === "inline_assessment" || (linkedTest.is_inline || false)}
+                      onStart={() => {}}
+                      onExit={() => {}}
+                    />
+                  </div>
+                ) : previewHtml ? (
                   <LessonIframe html={previewHtml} darkMode={false} />
                 ) : (
                   <div className="py-16 text-center space-y-2">
@@ -2307,7 +2321,7 @@ const LessonEditor = React.memo(function LessonEditor({
         )}
 
         {/* Assessment Settings + QuestionBuilder */}
-        {kind === "assessment" && editorKind !== "inline_assessment" && (
+        {kind === "assessment" && (
           <div className="md:col-span-2 border-t border-line/60 pt-4 mt-2 space-y-4">
             <h5 className="text-[11px] font-bold text-slate uppercase tracking-wider">Assessment Settings</h5>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">

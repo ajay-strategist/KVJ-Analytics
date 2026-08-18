@@ -1117,13 +1117,31 @@ export function TestTakingWidget({
         {isInline && (
           <div className="pt-4 border-t flex flex-col gap-3">
             <div className="flex gap-2">
-              <Button
-                type="button"
-                onClick={() => checkAnswerInline(q.id)}
-                className="py-2 px-4 bg-[#10233F] text-white hover:bg-slate-800 text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-md rounded-lg"
-              >
-                <span>Check Answer</span>
-              </Button>
+              {!checkedAnswers[q.id]?.checked ? (
+                <Button
+                  type="button"
+                  onClick={() => checkAnswerInline(q.id)}
+                  className="py-2 px-4 bg-[#10233F] text-white hover:bg-slate-800 text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-md rounded-lg"
+                >
+                  <span>Check Answer</span>
+                </Button>
+              ) : (
+                !checkedAnswers[q.id]?.correct && (
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      setCheckedAnswers((prev) => {
+                        const next = { ...prev };
+                        delete next[q.id];
+                        return next;
+                      });
+                    }}
+                    className="py-2 px-4 text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-md rounded-lg border border-line bg-white hover:bg-surface text-slate"
+                  >
+                    <span>Try Again</span>
+                  </Button>
+                )
+              )}
             </div>
 
             {checkedAnswers[q.id]?.checked && (
@@ -1876,6 +1894,25 @@ export function TestTakingWidget({
 
   // ── INLINE MODE: All questions stacked vertically, no timer/nav map/submit ──
   if (isInline) {
+    const checkedCount = Object.keys(checkedAnswers).length;
+    const correctCount = Object.values(checkedAnswers).filter((x) => x.correct).length;
+    
+    let totalMarks = 0;
+    let earnedMarks = 0;
+    test.questions.forEach((q: any) => {
+      const qMarks = q.marks ?? 1;
+      totalMarks += qMarks;
+      const ans = checkedAnswers[q.id];
+      if (ans?.checked) {
+        if (ans.correct) {
+          earnedMarks += qMarks;
+        } else {
+          const qNegative = q.negative_marks ?? 0;
+          earnedMarks -= qNegative;
+        }
+      }
+    });
+
     return (
       <div className={`py-4 font-body ${colors.container}`}>
         <div className="max-w-3xl mx-auto space-y-6 px-4">
@@ -1884,6 +1921,24 @@ export function TestTakingWidget({
               {renderQuestionWidget(q, idx)}
             </div>
           ))}
+
+          {checkedCount === totalQuestions && totalQuestions > 0 && (
+            <Card className={`p-6 text-center space-y-3 rounded-2xl animate-fade-in shadow-soft ${colors.surface} border-emerald-500/30`}>
+              <CheckCircle2 className="w-10 h-10 text-emerald-500 mx-auto" />
+              <h3 className="text-base font-bold text-ink">Practice Check Completed!</h3>
+              <p className={`text-xs ${colors.slate}`}>
+                You have answered and checked all {totalQuestions} questions.
+              </p>
+              <div className="text-2xl font-black text-[#08A88A]">
+                {correctCount} / {totalQuestions} Correct ({Math.round((correctCount / totalQuestions) * 100)}%)
+              </div>
+              {totalMarks > 0 && (
+                <div className={`text-xs font-semibold ${colors.slate}`}>
+                  Total Marks: {earnedMarks} / {totalMarks}
+                </div>
+              )}
+            </Card>
+          )}
         </div>
       </div>
     );
