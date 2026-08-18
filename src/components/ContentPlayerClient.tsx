@@ -154,9 +154,9 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
   const userRef = useRef<any>(null);
   const adminPreviewRef = useRef(adminPreview);
   const courseSlugRef = useRef(course.slug);
-  // contentWindow of the currently-loaded lesson iframe, used to validate
+  // contentWindows of the currently-loaded lesson iframe(s), used to validate
   // event.source in the postMessage handler so we ignore rogue messages.
-  const lessonFrameWindowRef = useRef<Window | null>(null);
+  const lessonFrameWindowsRef = useRef<Set<Window>>(new Set());
 
   // Viewer controls — hide-sidebar persisted in localStorage per course slug.
   // Dark mode is permanently OFF — player always uses the light theme.
@@ -203,7 +203,7 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
   // Clear the score banner AND the remembered iframe window when navigating lessons.
   useEffect(() => {
     setActivityResult(null);
-    lessonFrameWindowRef.current = null; // stale until the new iframe fires onLoad
+    lessonFrameWindowsRef.current.clear(); // stale until the new iframe fires onLoad
   }, [activeLesson?.id]);
 
   // ── postMessage listener: receives kvjSubmit(score, maxScore) from the iframe ──
@@ -260,7 +260,7 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
       // callback after each load. If it's null (e.g. first render not yet
       // loaded) we still accept the message — the type guard is sufficient
       // given sandbox="allow-scripts allow-same-origin".
-      if (lessonFrameWindowRef.current && event.source !== lessonFrameWindowRef.current) {
+      if (lessonFrameWindowsRef.current.size > 0 && !lessonFrameWindowsRef.current.has(event.source as Window)) {
         console.warn("[KVJ] Ignoring KVJ_ACTIVITY_RESULT from unexpected source.");
         return;
       }
@@ -938,13 +938,43 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
               ) : (
                 <div className={`border rounded-3xl overflow-hidden ${darkMode ? "bg-[#0A0A0C]/55 border-white/5" : "bg-white border-line shadow-soft"}`}>
                   {activeLesson.content_html ? (
-                    <LessonIframe
-                      html={activeLesson.content_html}
-                      darkMode={viewerReady ? darkMode : false}
-                      hideSidebar={viewerReady ? hideSidebar : false}
-                      onLightDetected={handleLightDetected}
-                      onContentWindow={(win) => { lessonFrameWindowRef.current = win; }}
-                    />
+                    <div className="divide-y divide-line dark:divide-white/5">
+                      {activeLesson.content_html.split(/(<div class="kvj-assessment-placeholder[^>]*><\/div>)/g).map((segment, idx) => {
+                        const match = segment.match(/data-test-id="([^"]*)"/);
+                        if (match) {
+                          const testId = match[1];
+                          return (
+                            <div key={idx} className="p-6 md:p-10 bg-slate-50/30 dark:bg-slate-900/20">
+                              <TestTakingWidget
+                                testId={testId}
+                                courseSlug={course.slug}
+                                adminPreview={adminPreview}
+                                darkMode={darkMode}
+                                onStart={() => setIsAssessmentActive(true)}
+                                onExit={() => setIsAssessmentActive(false)}
+                                onComplete={async (score, maxScore, passed) => {
+                                  console.log(`Embedded test ${testId} completed: ${score}/${maxScore}`);
+                                }}
+                              />
+                            </div>
+                          );
+                        }
+
+                        if (!segment.trim() || segment === " ") return null;
+
+                        return (
+                          <div key={idx} className="p-1">
+                            <LessonIframe
+                              html={segment}
+                              darkMode={viewerReady ? darkMode : false}
+                              hideSidebar={viewerReady ? hideSidebar : false}
+                              onLightDetected={handleLightDetected}
+                              onContentWindow={(win) => { if (win) lessonFrameWindowsRef.current.add(win); }}
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
                   ) : (
                     <p className={`italic text-sm p-8 ${darkMode ? "text-zinc-550" : "text-zinc-400"}`}>No textbook or text reference uploaded for this lesson. Use worksheets.</p>
                   )}

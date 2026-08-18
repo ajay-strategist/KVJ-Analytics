@@ -4,6 +4,8 @@ import React, { useEffect, useState, useRef } from "react";
 import { useRouter, usePathname, useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { QuestionBuilder } from "@/components/admin/QuestionBuilder";
+import { ColorPicker } from "@/components/admin/ColorPicker";
+import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -984,12 +986,10 @@ const LessonEditor = React.memo(function LessonEditor({
                               {b.type === "paragraph" && (
                                 <div className="space-y-1.5">
                                   <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">Paragraph Body Text</label>
-                                  <textarea
-                                    rows={4}
+                                  <RichTextEditor
                                     value={b.text || ""}
-                                    onChange={(e) => updateDocumentBlock(b.id, { text: e.target.value })}
+                                    onChange={(val) => updateDocumentBlock(b.id, { text: val })}
                                     placeholder="Enter paragraph description text..."
-                                    className="w-full px-3 py-2 border border-line bg-white text-slate-800 dark:text-slate-100 dark:bg-slate-900 rounded-lg text-sm font-sans"
                                   />
                                 </div>
                               )}
@@ -1065,11 +1065,11 @@ const LessonEditor = React.memo(function LessonEditor({
                                 </div>
                               )}
 
-                              {(b.type === "callout" || b.type === "list") && (
+                              {b.type === "list" && (
                                 <div className="space-y-3">
                                   <div className="space-y-1.5">
                                     <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">
-                                      {b.type === "callout" ? "Callout Header Title" : "List Header Title"}
+                                      List Header Title
                                     </label>
                                     <input
                                       type="text"
@@ -1080,6 +1080,242 @@ const LessonEditor = React.memo(function LessonEditor({
                                     />
                                   </div>
                                   <div className="space-y-2">
+                                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">Bullet Points</label>
+                                    <div className="space-y-2">
+                                      {(b.points || []).map((pt: string, ptIdx: number) => (
+                                        <div key={ptIdx} className="flex items-center gap-2">
+                                          <span className="text-brand shrink-0 text-xs">◆</span>
+                                          <input
+                                            type="text"
+                                            value={pt}
+                                            onChange={(e) => {
+                                              const pts = [...(b.points || [])];
+                                              pts[ptIdx] = e.target.value;
+                                              updateDocumentBlock(b.id, { points: pts });
+                                            }}
+                                            placeholder="Enter point..."
+                                            className="w-full px-3 py-1.5 border border-line bg-white text-slate-800 dark:text-slate-100 dark:bg-slate-900 rounded-lg text-xs"
+                                          />
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              const pts = (b.points || []).filter((_: any, pIdx: number) => pIdx !== ptIdx);
+                                              updateDocumentBlock(b.id, { points: pts });
+                                            }}
+                                            className="text-red-500 hover:text-red-650 font-bold px-1.5 py-0.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-sm"
+                                          >
+                                            ✕
+                                          </button>
+                                        </div>
+                                      ))}
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          updateDocumentBlock(b.id, { points: [...(b.points || []), ""] });
+                                        }}
+                                        className="text-xs text-brand hover:underline font-bold"
+                                      >
+                                        + Add Bullet Point
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+
+                              {b.type === "callout" && (
+                                <div className="space-y-4 border border-line rounded-xl p-4 bg-slate-50/30 dark:bg-slate-900/30">
+                                  {/* Callout Presets */}
+                                  <div className="space-y-1.5">
+                                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">Callout Presets</label>
+                                    <div className="flex flex-wrap gap-2">
+                                      {[
+                                        { key: "note", label: "Note", color: "bg-slate-500" },
+                                        { key: "tip", label: "Tip", color: "bg-brand" },
+                                        { key: "warning", label: "Warning", color: "bg-rose-500" },
+                                        { key: "important", label: "Important", color: "bg-amber-500" },
+                                        { key: "success", label: "Success", color: "bg-green-500" },
+                                        { key: "info", label: "Info", color: "bg-cyan-600" },
+                                        { key: "danger", label: "Danger", color: "bg-red-600" }
+                                      ].map((preset) => (
+                                        <button
+                                          key={preset.key}
+                                          type="button"
+                                          onClick={() => {
+                                            const presets: Record<string, any> = {
+                                              note: { bgColor: "#F4F9FD", borderColor: "#DCE5E8", accentColor: "#526477", textColor: "#132238", leftAccent: true },
+                                              tip: { bgColor: "#F0FBF7", borderColor: "#DDF8F0", accentColor: "#08A88A", textColor: "#132238", leftAccent: true },
+                                              warning: { bgColor: "#FFF2F4", borderColor: "#FFE0E5", accentColor: "#E11D48", textColor: "#132238", leftAccent: true },
+                                              important: { bgColor: "#FFF7E6", borderColor: "#FFE3A8", accentColor: "#D97706", textColor: "#132238", leftAccent: true },
+                                              success: { bgColor: "#F0FBF7", borderColor: "#DDF8F0", accentColor: "#08A88A", textColor: "#132238", leftAccent: true },
+                                              info: { bgColor: "#EAF6FF", borderColor: "#D2ECFF", accentColor: "#0E7490", textColor: "#132238", leftAccent: true },
+                                              danger: { bgColor: "#FFF2F4", borderColor: "#FFE0E5", accentColor: "#E11D48", textColor: "#132238", leftAccent: true },
+                                            };
+                                            updateDocumentBlock(b.id, presets[preset.key]);
+                                          }}
+                                          className={`px-2.5 py-1 text-xxs font-bold text-white rounded-md cursor-pointer hover:opacity-90 transition-opacity ${preset.color}`}
+                                        >
+                                          {preset.label}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  </div>
+
+                                  <div className="space-y-1.5">
+                                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">
+                                      Callout Header Title
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={b.title || ""}
+                                      onChange={(e) => updateDocumentBlock(b.id, { title: e.target.value })}
+                                      placeholder="Header Title (optional)..."
+                                      className="w-full px-3 py-2 border border-line bg-white text-slate-800 dark:text-slate-100 dark:bg-slate-900 rounded-lg text-sm"
+                                    />
+                                  </div>
+
+                                  {/* Visual Customization Overrides */}
+                                  <details className="cursor-pointer border-t border-line/60 pt-3">
+                                    <summary className="text-[10px] font-bold text-slate uppercase tracking-wider select-none hover:text-brand transition-colors">
+                                      Visual Style Customizations
+                                    </summary>
+                                    <div className="pt-3 space-y-3 cursor-default">
+                                      {/* Colors */}
+                                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                        <ColorPicker
+                                          label="Background"
+                                          color={b.bgColor}
+                                          onChange={(color) => updateDocumentBlock(b.id, { bgColor: color })}
+                                        />
+                                        <ColorPicker
+                                          label="Border Color"
+                                          color={b.borderColor}
+                                          onChange={(color) => updateDocumentBlock(b.id, { borderColor: color })}
+                                        />
+                                        <ColorPicker
+                                          label="Accent Color"
+                                          color={b.accentColor}
+                                          onChange={(color) => updateDocumentBlock(b.id, { accentColor: color })}
+                                        />
+                                        <ColorPicker
+                                          label="Text Color"
+                                          color={b.textColor}
+                                          onChange={(color) => updateDocumentBlock(b.id, { textColor: color })}
+                                        />
+                                      </div>
+
+                                      {/* Border specs */}
+                                      <div className="grid grid-cols-3 gap-3 text-xs font-semibold">
+                                        <div>
+                                          <label className="block text-[9px] font-bold text-slate uppercase mb-1">Thickness</label>
+                                          <select
+                                            value={b.borderThickness || "1px"}
+                                            onChange={(e) => updateDocumentBlock(b.id, { borderThickness: e.target.value })}
+                                            className="w-full px-2 py-1.5 border border-line bg-white text-slate-800 dark:bg-slate-900 rounded-md text-xs"
+                                          >
+                                            <option value="1px">Thin (1px)</option>
+                                            <option value="2px">Medium (2px)</option>
+                                            <option value="4px">Thick (4px)</option>
+                                          </select>
+                                        </div>
+                                        <div>
+                                          <label className="block text-[9px] font-bold text-slate uppercase mb-1">Border Radius</label>
+                                          <select
+                                            value={b.borderRadius || "16px"}
+                                            onChange={(e) => updateDocumentBlock(b.id, { borderRadius: e.target.value })}
+                                            className="w-full px-2 py-1.5 border border-line bg-white text-slate-800 dark:bg-slate-900 rounded-md text-xs"
+                                          >
+                                            <option value="4px">Small (4px)</option>
+                                            <option value="8px">Medium (8px)</option>
+                                            <option value="12px">Large (12px)</option>
+                                            <option value="16px">Extra Large (16px)</option>
+                                          </select>
+                                        </div>
+                                        <div>
+                                          <label className="block text-[9px] font-bold text-slate uppercase mb-1">Border Style</label>
+                                          <select
+                                            value={b.borderStyle || "solid"}
+                                            onChange={(e) => updateDocumentBlock(b.id, { borderStyle: e.target.value })}
+                                            className="w-full px-2 py-1.5 border border-line bg-white text-slate-800 dark:bg-slate-900 rounded-md text-xs"
+                                          >
+                                            <option value="solid">Solid</option>
+                                            <option value="dashed">Dashed</option>
+                                            <option value="dotted">Dotted</option>
+                                          </select>
+                                        </div>
+                                      </div>
+
+                                      {/* Font sizes & alignments */}
+                                      <div className="grid grid-cols-2 gap-3">
+                                        <div>
+                                          <label className="block text-[9px] font-bold text-slate uppercase mb-1">Font Size</label>
+                                          <select
+                                            value={b.fontSize || "normal"}
+                                            onChange={(e) => updateDocumentBlock(b.id, { fontSize: e.target.value })}
+                                            className="w-full px-2 py-1.5 border border-line bg-white text-slate-800 dark:bg-slate-900 rounded-md text-xs"
+                                          >
+                                            <option value="sm">Small</option>
+                                            <option value="normal">Normal</option>
+                                            <option value="lg">Large</option>
+                                          </select>
+                                        </div>
+                                        <div>
+                                          <label className="block text-[9px] font-bold text-slate uppercase mb-1">Alignment</label>
+                                          <select
+                                            value={b.align || "left"}
+                                            onChange={(e) => updateDocumentBlock(b.id, { align: e.target.value })}
+                                            className="w-full px-2 py-1.5 border border-line bg-white text-slate-800 dark:bg-slate-900 rounded-md text-xs"
+                                          >
+                                            <option value="left">Left</option>
+                                            <option value="center">Center</option>
+                                            <option value="right">Right</option>
+                                          </select>
+                                        </div>
+                                      </div>
+
+                                      {/* Formatting toggles */}
+                                      <div className="flex gap-4 items-center pt-1 text-xs font-semibold">
+                                        <label className="flex items-center gap-1.5 cursor-pointer">
+                                          <input
+                                            type="checkbox"
+                                            checked={!!b.bold}
+                                            onChange={(e) => updateDocumentBlock(b.id, { bold: e.target.checked })}
+                                            className="w-4 h-4 text-brand border-line rounded"
+                                          />
+                                          <span>Bold</span>
+                                        </label>
+                                        <label className="flex items-center gap-1.5 cursor-pointer">
+                                          <input
+                                            type="checkbox"
+                                            checked={!!b.italic}
+                                            onChange={(e) => updateDocumentBlock(b.id, { italic: e.target.checked })}
+                                            className="w-4 h-4 text-brand border-line rounded"
+                                          />
+                                          <span>Italic</span>
+                                        </label>
+                                        <label className="flex items-center gap-1.5 cursor-pointer">
+                                          <input
+                                            type="checkbox"
+                                            checked={!!b.underline}
+                                            onChange={(e) => updateDocumentBlock(b.id, { underline: e.target.checked })}
+                                            className="w-4 h-4 text-brand border-line rounded"
+                                          />
+                                          <span>Underline</span>
+                                        </label>
+                                        <label className="flex items-center gap-1.5 cursor-pointer">
+                                          <input
+                                            type="checkbox"
+                                            checked={b.leftAccent !== false}
+                                            onChange={(e) => updateDocumentBlock(b.id, { leftAccent: e.target.checked })}
+                                            className="w-4 h-4 text-brand border-line rounded"
+                                          />
+                                          <span>Left Accent Border</span>
+                                        </label>
+                                      </div>
+                                    </div>
+                                  </details>
+
+                                  {/* Callout Points */}
+                                  <div className="space-y-2 pt-2 border-t border-line/60">
                                     <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">Bullet Points</label>
                                     <div className="space-y-2">
                                       {(b.points || []).map((pt: string, ptIdx: number) => (
@@ -1167,6 +1403,151 @@ const LessonEditor = React.memo(function LessonEditor({
                                             className="w-full px-2 py-1 text-xs border border-line bg-white rounded resize-none"
                                             placeholder="Card Description"
                                           />
+                                        </div>
+
+                                        {/* Expandable Custom Styling */}
+                                        <div className="pt-2 border-t border-line/60 space-y-2">
+                                          <details className="cursor-pointer">
+                                            <summary className="text-[9px] font-bold text-slate uppercase tracking-wider select-none hover:text-brand transition-colors">
+                                              Card Style
+                                            </summary>
+                                            <div className="pt-2 space-y-2 text-xxs font-medium cursor-default">
+                                              <div className="grid grid-cols-2 gap-1.5">
+                                                <ColorPicker
+                                                  label="Card BG"
+                                                  color={c.bgColor}
+                                                  onChange={(col) => {
+                                                    const cards = [...(b.cards || [])];
+                                                    cards[cIdx] = { ...c, bgColor: col };
+                                                    updateDocumentBlock(b.id, { cards });
+                                                  }}
+                                                />
+                                                <ColorPicker
+                                                  label="Border"
+                                                  color={c.borderColor}
+                                                  onChange={(col) => {
+                                                    const cards = [...(b.cards || [])];
+                                                    cards[cIdx] = { ...c, borderColor: col };
+                                                    updateDocumentBlock(b.id, { cards });
+                                                  }}
+                                                />
+                                                <ColorPicker
+                                                  label="Number"
+                                                  color={c.numberColor}
+                                                  onChange={(col) => {
+                                                    const cards = [...(b.cards || [])];
+                                                    cards[cIdx] = { ...c, numberColor: col };
+                                                    updateDocumentBlock(b.id, { cards });
+                                                  }}
+                                                />
+                                                <ColorPicker
+                                                  label="Title"
+                                                  color={c.titleColor}
+                                                  onChange={(col) => {
+                                                    const cards = [...(b.cards || [])];
+                                                    cards[cIdx] = { ...c, titleColor: col };
+                                                    updateDocumentBlock(b.id, { cards });
+                                                  }}
+                                                />
+                                                <ColorPicker
+                                                  label="Body Text"
+                                                  color={c.textColor}
+                                                  onChange={(col) => {
+                                                    const cards = [...(b.cards || [])];
+                                                    cards[cIdx] = { ...c, textColor: col };
+                                                    updateDocumentBlock(b.id, { cards });
+                                                  }}
+                                                />
+                                                <ColorPicker
+                                                  label="Accent BG"
+                                                  color={c.accentColor}
+                                                  onChange={(col) => {
+                                                    const cards = [...(b.cards || [])];
+                                                    cards[cIdx] = { ...c, accentColor: col };
+                                                    updateDocumentBlock(b.id, { cards });
+                                                  }}
+                                                />
+                                              </div>
+
+                                              <div className="grid grid-cols-2 gap-1.5 pt-1">
+                                                <div>
+                                                  <label className="block text-[8px] font-bold text-slate uppercase">Font Size</label>
+                                                  <select
+                                                    value={c.fontSize || "normal"}
+                                                    onChange={(e) => {
+                                                      const cards = [...(b.cards || [])];
+                                                      cards[cIdx] = { ...c, fontSize: e.target.value };
+                                                      updateDocumentBlock(b.id, { cards });
+                                                    }}
+                                                    className="w-full mt-0.5 px-1 py-0.5 border border-line bg-white text-slate-800 dark:bg-slate-900 rounded text-xxs"
+                                                  >
+                                                    <option value="sm">Small</option>
+                                                    <option value="normal">Normal</option>
+                                                    <option value="lg">Large</option>
+                                                  </select>
+                                                </div>
+                                                <div>
+                                                  <label className="block text-[8px] font-bold text-slate uppercase">Align</label>
+                                                  <select
+                                                    value={c.align || "left"}
+                                                    onChange={(e) => {
+                                                      const cards = [...(b.cards || [])];
+                                                      cards[cIdx] = { ...c, align: e.target.value };
+                                                      updateDocumentBlock(b.id, { cards });
+                                                    }}
+                                                    className="w-full mt-0.5 px-1 py-0.5 border border-line bg-white text-slate-800 dark:bg-slate-900 rounded text-xxs"
+                                                  >
+                                                    <option value="left">Left</option>
+                                                    <option value="center">Center</option>
+                                                    <option value="right">Right</option>
+                                                    <option value="justify">Justify</option>
+                                                  </select>
+                                                </div>
+                                              </div>
+
+                                              <div className="flex gap-2 pt-1 font-semibold">
+                                                <label className="flex items-center gap-1 cursor-pointer">
+                                                  <input
+                                                    type="checkbox"
+                                                    checked={!!c.bold}
+                                                    onChange={(e) => {
+                                                      const cards = [...(b.cards || [])];
+                                                      cards[cIdx] = { ...c, bold: e.target.checked };
+                                                      updateDocumentBlock(b.id, { cards });
+                                                    }}
+                                                    className="w-3 h-3 text-brand border-line rounded"
+                                                  />
+                                                  <span>B</span>
+                                                </label>
+                                                <label className="flex items-center gap-1 cursor-pointer">
+                                                  <input
+                                                    type="checkbox"
+                                                    checked={!!c.italic}
+                                                    onChange={(e) => {
+                                                      const cards = [...(b.cards || [])];
+                                                      cards[cIdx] = { ...c, italic: e.target.checked };
+                                                      updateDocumentBlock(b.id, { cards });
+                                                    }}
+                                                    className="w-3 h-3 text-brand border-line rounded"
+                                                  />
+                                                  <span>I</span>
+                                                </label>
+                                                <label className="flex items-center gap-1 cursor-pointer">
+                                                  <input
+                                                    type="checkbox"
+                                                    checked={!!c.underline}
+                                                    onChange={(e) => {
+                                                      const cards = [...(b.cards || [])];
+                                                      cards[cIdx] = { ...c, underline: e.target.checked };
+                                                      updateDocumentBlock(b.id, { cards });
+                                                    }}
+                                                    className="w-3 h-3 text-brand border-line rounded"
+                                                  />
+                                                  <span>U</span>
+                                                </label>
+                                              </div>
+                                            </div>
+                                          </details>
                                         </div>
                                       </div>
                                     ))}
@@ -1579,7 +1960,7 @@ const LessonEditor = React.memo(function LessonEditor({
                               )}
 
                               {b.type === "assessment" && (
-                                <div className="space-y-4">
+                                <div className="space-y-4 border border-line rounded-xl p-4 bg-slate-50/50 dark:bg-slate-900/50">
                                   <div className="space-y-1.5">
                                     <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">Quiz Title</label>
                                     <input
@@ -1587,89 +1968,56 @@ const LessonEditor = React.memo(function LessonEditor({
                                       value={b.title || ""}
                                       onChange={(e) => updateDocumentBlock(b.id, { title: e.target.value })}
                                       className="w-full px-3 py-2 border border-line bg-white text-slate-800 dark:text-slate-100 dark:bg-slate-900 rounded-lg text-sm"
-                                      placeholder="Pop Quiz"
+                                      placeholder="Knowledge Check"
                                     />
                                   </div>
-                                  <div className="space-y-4">
-                                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">Questions List</label>
-                                    <div className="space-y-4">
-                                      {(b.questions || []).map((q: any, qIdx: number) => (
-                                        <div key={qIdx} className="p-3 bg-slate-50 dark:bg-slate-900 rounded-lg border border-line space-y-3">
-                                          <div className="flex gap-2 items-center justify-between">
-                                            <span className="text-[10px] font-bold text-slate-400">QUESTION {qIdx + 1}</span>
-                                            <button
-                                              type="button"
-                                              onClick={() => {
-                                                const questions = (b.questions || []).filter((_: any, idx: number) => idx !== qIdx);
-                                                updateDocumentBlock(b.id, { questions });
-                                              }}
-                                              className="text-red-500 hover:text-red-650 font-bold px-1.5 py-0.5 rounded text-xs"
-                                            >
-                                              Delete Question
-                                            </button>
-                                          </div>
-                                          <input
-                                            type="text"
-                                            value={q.text || ""}
-                                            onChange={(e) => {
-                                              const questions = [...(b.questions || [])];
-                                              questions[qIdx] = { ...q, text: e.target.value };
-                                              updateDocumentBlock(b.id, { questions });
-                                            }}
-                                            className="w-full px-3 py-1.5 border border-line bg-white rounded-lg text-xs"
-                                            placeholder="Question Text"
-                                          />
-                                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                            {(q.options || []).map((opt: string, optIdx: number) => (
-                                              <div key={optIdx} className="flex items-center gap-1.5">
-                                                <span className="text-xs font-bold text-slate-400 font-mono">{String.fromCharCode(65 + optIdx)})</span>
-                                                <input
-                                                  type="text"
-                                                  value={opt}
-                                                  onChange={(e) => {
-                                                    const questions = [...(b.questions || [])];
-                                                    const opts = [...(q.options || [])];
-                                                    opts[optIdx] = e.target.value;
-                                                    questions[qIdx] = { ...q, options: opts };
-                                                    updateDocumentBlock(b.id, { questions });
-                                                  }}
-                                                  className="w-full px-2 py-1 text-xs border border-line bg-white rounded"
-                                                  placeholder={`Option ${optIdx + 1}`}
-                                                />
-                                              </div>
-                                            ))}
-                                          </div>
-                                          <div className="space-y-1.5 pt-2 border-t border-line">
-                                            <label className="block text-[10px] font-bold text-slate-400 uppercase">Correct Option</label>
-                                            <select
-                                              value={q.correct || "0"}
-                                              onChange={(e) => {
-                                                const questions = [...(b.questions || [])];
-                                                questions[qIdx] = { ...q, correct: e.target.value };
-                                                updateDocumentBlock(b.id, { questions });
-                                              }}
-                                              className="px-2 py-1 text-xs border border-line bg-white rounded text-slate-800"
-                                            >
-                                              <option value="0">Option A</option>
-                                              <option value="1">Option B</option>
-                                              <option value="2">Option C</option>
-                                              <option value="3">Option D</option>
-                                            </select>
-                                          </div>
-                                        </div>
-                                      ))}
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          const newQ = { text: "", options: ["", "", "", ""], correct: "0" };
-                                          updateDocumentBlock(b.id, { questions: [...(b.questions || []), newQ] });
-                                        }}
-                                        className="text-xs text-brand hover:underline font-bold"
-                                      >
-                                        + Add Quiz Question
-                                      </button>
+                                  
+                                  {b.testId ? (
+                                    <div className="border-t border-line/60 pt-4 mt-2">
+                                      <h4 className="text-xs font-bold text-[#10233F] dark:text-white mb-3">Assessment Questions</h4>
+                                      <QuestionBuilder testId={b.testId} />
                                     </div>
-                                  </div>
+                                  ) : (
+                                    <div className="text-center py-6 border border-dashed border-line rounded-lg bg-white dark:bg-slate-950">
+                                      <p className="text-xs text-slate font-semibold mb-3">No assessment database record is linked to this block yet.</p>
+                                      {initial.id ? (
+                                        <button
+                                          type="button"
+                                          onClick={async () => {
+                                            try {
+                                              const newTestBody = {
+                                                course_id: courseId,
+                                                module_id: initial.module_id || null,
+                                                lesson_id: initial.id,
+                                                title: b.title || "Embedded Assessment",
+                                                duration_mins: 30,
+                                                pass_mark: 84,
+                                                attempts_allowed: 0,
+                                                negative_marking: 0,
+                                                randomize: false,
+                                                publish_results: true,
+                                              };
+                                              const res = await fetch("/api/admin/tests", {
+                                                method: "POST",
+                                                headers: { "Content-Type": "application/json" },
+                                                body: JSON.stringify(newTestBody),
+                                              });
+                                              const data = await res.json();
+                                              if (!res.ok) throw new Error(data.error);
+                                              updateDocumentBlock(b.id, { testId: data.mock_test.id });
+                                            } catch (err: any) {
+                                              alert("Failed to initialize test: " + err.message);
+                                            }
+                                          }}
+                                          className="py-1.5 px-4 bg-brand hover:bg-brand/90 text-white rounded-lg text-xs font-bold cursor-pointer transition-colors"
+                                        >
+                                          Create Embedded Assessment Test
+                                        </button>
+                                      ) : (
+                                        <p className="text-xs text-slate-400">💡 Save the lesson details first to begin configuring questions.</p>
+                                      )}
+                                    </div>
+                                  )}
                                 </div>
                               )}
                             </div>

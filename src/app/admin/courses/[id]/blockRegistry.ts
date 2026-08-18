@@ -141,10 +141,8 @@ export function createBlock(type: BlockType): BlockData {
     case "assessment":
       return {
         id, type,
-        title: "Pop Quiz",
-        questions: [
-          { text: "", options: ["", "", "", ""], correct: "0" },
-        ],
+        title: "Knowledge Check",
+        testId: "",
       };
     case "borderedtext":
       return { id, type, title: "", text: "" };
@@ -207,7 +205,7 @@ function renderBlock(b: BlockData): string {
 </div>`;
 
     case "paragraph":
-      return `<p class="text-[#132238] text-[17px] md:text-[18px] leading-[1.8] font-light mb-6 tracking-wide text-left max-w-none">${escHtml(b.text)}</p>`;
+      return `<div class="text-[#132238] text-[17px] md:text-[18px] leading-[1.8] font-light mb-6 tracking-wide text-left max-w-none">${b.text || ""}</div>`;
 
     case "image":
       return `<figure class="my-8 text-center max-w-full">
@@ -241,53 +239,53 @@ function renderBlock(b: BlockData): string {
         : `<div class="my-8 h-px bg-[#DCE5E8]"></div>`;
 
     case "callout": {
-      let bgColor = "#F4F9FD";
-      let borderColor = "#DCE5E8";
-      let accentColor = "#526477";
-      let icon = "📝";
-      let label = "Note";
+      const bgColor = b.bgColor || "#F4F9FD";
+      const borderColor = b.borderColor || "#DCE5E8";
+      const accentColor = b.accentColor || "#526477";
+      const textColor = b.textColor || "#132238";
+      const leftAccent = b.leftAccent !== false; // Default true
+      
+      const borderThickness = b.borderThickness || "1px";
+      const borderRadius = b.borderRadius || "16px";
+      const borderStyle = b.borderStyle || "solid";
 
-      const lowerTitle = (b.title || "").toLowerCase();
-      if (lowerTitle.includes("tip")) {
-        bgColor = "#F0FBF7";
-        borderColor = "#DDF8F0";
-        accentColor = "#08A88A";
-        icon = "💡";
-        label = "Tip";
-      } else if (lowerTitle.includes("important") || lowerTitle.includes("remember") || lowerTitle.includes("key")) {
-        bgColor = "#FFF7E6";
-        borderColor = "#FFE3A8";
-        accentColor = "#D97706";
-        icon = "⚠️";
-        label = "Important";
-      } else if (lowerTitle.includes("info")) {
-        bgColor = "#EAF6FF";
-        borderColor = "#D2ECFF";
-        accentColor = "#0E7490";
-        icon = "ℹ️";
-        label = "Information";
-      } else if (lowerTitle.includes("warning") || lowerTitle.includes("danger") || lowerTitle.includes("caution")) {
-        bgColor = "#FFF2F4";
-        borderColor = "#FFE0E5";
-        accentColor = "#E11D48";
-        icon = "🚨";
-        label = "Warning";
-      } else if (lowerTitle.includes("success") || lowerTitle.includes("solved")) {
-        bgColor = "#F0FBF7";
-        borderColor = "#DDF8F0";
-        accentColor = "#08A88A";
-        icon = "✓";
-        label = "Success";
-      }
+      const align = b.align || "left";
+      
+      const wrapperStyle = [
+        `background-color: ${bgColor} !important;`,
+        `border: ${borderThickness} ${borderStyle} ${borderColor} !important;`,
+        leftAccent ? `border-left: 4px solid ${accentColor} !important;` : '',
+        `border-radius: ${borderRadius} !important;`,
+        `text-align: ${align} !important;`,
+      ].filter(Boolean).join(' ');
+
+      const titleStyle = [
+        `color: ${accentColor} !important;`,
+        b.fontSize === 'sm' ? 'font-size: 0.875rem !important;' : b.fontSize === 'lg' ? 'font-size: 1.125rem !important;' : '',
+        b.bold ? 'font-weight: bold !important;' : '',
+        b.italic ? 'font-style: italic !important;' : '',
+        b.underline ? 'text-decoration: underline !important;' : '',
+      ].filter(Boolean).join(' ');
 
       const pts = (b.points || [])
-        .map((p: string) => `    <li class="flex items-start gap-2.5 text-[#132238] text-sm leading-relaxed">
+        .map((p: string) => {
+          const itemStyle = [
+            `color: ${textColor} !important;`,
+            b.fontSize === 'sm' ? 'font-size: 0.75rem !important;' : b.fontSize === 'lg' ? 'font-size: 0.95rem !important;' : 'font-size: 0.875rem !important;',
+            b.bold ? 'font-weight: bold !important;' : '',
+            b.italic ? 'font-style: italic !important;' : '',
+            b.underline ? 'text-decoration: underline !important;' : '',
+          ].filter(Boolean).join(' ');
+          
+          return `    <li class="flex items-start gap-2.5 text-sm leading-relaxed" style="${itemStyle}">
       <span class="w-1.5 h-1.5 rounded-full shrink-0 mt-2" style="background-color: ${accentColor}"></span>
       <span>${escHtml(p)}</span>
-    </li>`)
+    </li>`;
+        })
         .join("\n");
-      return `<div class="my-6 border-l-4 p-6 rounded-r-2xl text-left shadow-[0_4px_15px_rgba(16,35,63,0.01)]" style="background-color: ${bgColor}; border-color: ${accentColor}">
-  ${b.title ? `<h4 class="font-bold text-sm mb-3 mt-0" style="color: ${accentColor}">${escHtml(b.title)}</h4>` : `<div class="flex items-center gap-2 mb-3"><span class="text-sm">${icon}</span><span class="text-[10px] font-extrabold uppercase tracking-widest" style="color: ${accentColor}">${label}</span></div>`}
+
+      return `<div class="my-6 p-6 text-left shadow-[0_4px_15px_rgba(16,35,63,0.01)]" style="${wrapperStyle}">
+  ${b.title ? `<h4 class="font-bold text-sm mb-3 mt-0" style="${titleStyle}">${escHtml(b.title)}</h4>` : ''}
   <ul class="space-y-2.5">
 ${pts}
   </ul>
@@ -311,12 +309,39 @@ ${pts}
 
     case "infographics": {
       const cards = (b.cards || [])
-        .map((c: any) => `  <div class="relative bg-white border border-[#DCE5E8] rounded-2xl p-6 overflow-hidden group hover:border-[#08A88A]/50 transition-all duration-300 shadow-[0_4px_15px_rgba(16,35,63,0.01)] hover:shadow-[0_8px_30px_rgba(16,35,63,0.03)] text-left">
-    <div class="absolute top-0 right-0 w-24 h-24 bg-[#F0FBF7] rounded-full blur-xl group-hover:bg-[#DDF8F0] transition-all duration-300"></div>
-    <div class="w-10 h-10 rounded-xl bg-[#F0FBF7] border border-[#DDF8F0] flex items-center justify-center mb-4 text-[#08A88A] text-sm font-extrabold shadow-sm">${escHtml(c.number)}</div>
-    <h4 class="text-[#10233F] font-bold text-sm mb-2 group-hover:text-[#08A88A] transition-colors leading-snug mt-0">${escHtml(c.title)}</h4>
-    <p class="text-[#526477] text-xs leading-relaxed mb-0">${escHtml(c.desc)}</p>
-  </div>`)
+        .map((c: any) => {
+          const cardStyle = [
+            c.bgColor ? `background-color: ${c.bgColor} !important;` : '',
+            c.borderColor ? `border-color: ${c.borderColor} !important;` : '',
+            c.align ? `text-align: ${c.align} !important;` : '',
+          ].filter(Boolean).join(' ');
+
+          const numStyle = [
+            c.numberColor ? `color: ${c.numberColor} !important;` : '',
+            c.accentColor ? `background-color: ${c.accentColor}22 !important; border-color: ${c.accentColor}44 !important; color: ${c.accentColor} !important;` : '',
+          ].filter(Boolean).join(' ');
+
+          const titleStyle = [
+            c.titleColor ? `color: ${c.titleColor} !important;` : '',
+            c.fontSize === 'sm' ? 'font-size: 0.875rem !important;' : c.fontSize === 'lg' ? 'font-size: 1.125rem !important;' : '',
+            c.bold ? 'font-weight: bold !important;' : '',
+            c.italic ? 'font-style: italic !important;' : '',
+            c.underline ? 'text-decoration: underline !important;' : '',
+          ].filter(Boolean).join(' ');
+
+          const descStyle = [
+            c.textColor ? `color: ${c.textColor} !important;` : '',
+            c.fontSize === 'sm' ? 'font-size: 0.75rem !important;' : c.fontSize === 'lg' ? 'font-size: 0.95rem !important;' : '',
+            c.italic ? 'font-style: italic !important;' : '',
+          ].filter(Boolean).join(' ');
+
+          return `  <div class="relative bg-white border border-[#DCE5E8] rounded-2xl p-6 overflow-hidden transition-all duration-300 shadow-[0_4px_15px_rgba(16,35,63,0.01)] text-left" style="${cardStyle}">
+    <div class="absolute top-0 right-0 w-24 h-24 bg-[#F0FBF7] rounded-full blur-xl transition-all duration-300"></div>
+    <div class="w-10 h-10 rounded-xl bg-[#F0FBF7] border border-[#DDF8F0] flex items-center justify-center mb-4 text-[#08A88A] text-sm font-extrabold shadow-sm" style="${numStyle}">${escHtml(c.number)}</div>
+    <h4 class="text-[#10233F] font-bold text-sm mb-2 transition-colors leading-snug mt-0" style="${titleStyle}">${escHtml(c.title)}</h4>
+    <p class="text-[#526477] text-xs leading-relaxed mb-0" style="${descStyle}">${escHtml(c.desc)}</p>
+  </div>`;
+        })
         .join("\n");
       return `<div class="grid grid-cols-1 md:grid-cols-3 gap-6 my-8">
 ${cards}
@@ -426,81 +451,7 @@ ${trRows}
 </div>`;
 
     case "assessment": {
-      const questionsJson = JSON.stringify(b.questions || []).replace(/"/g, "&quot;");
-      const blockId = `quiz-${Math.random().toString(36).substring(2, 9)}`;
-      const qHtml = (b.questions || [])
-        .map((q: any, qIdx: number) => {
-          const optHtml = (q.options || [])
-            .map((opt: string, optIdx: number) => `        <button type="button" class="w-full text-left px-4 py-3 rounded-xl border border-[#DCE5E8] bg-white hover:bg-slate-50 text-[#132238] text-xs font-semibold transition-all flex items-center justify-between group cursor-pointer" data-optidx="${optIdx}" onclick="
-          const parent = this.closest('[data-qidx]');
-          parent.querySelectorAll('button').forEach(btn => {
-            btn.className = btn.className.replace(' border-[#08A88A] bg-[#F0FBF7] text-[#10233F]', ' border-[#DCE5E8] bg-white text-[#132238]');
-            btn.querySelector('.check-indicator').className = 'check-indicator w-4 h-4 rounded-full border border-slate-200 flex items-center justify-center text-[10px] font-bold text-transparent';
-          });
-          this.className = this.className.replace(' border-[#DCE5E8] bg-white text-[#132238]', ' border-[#08A88A] bg-[#F0FBF7] text-[#10233F]');
-          this.querySelector('.check-indicator').className = 'check-indicator w-4 h-4 rounded-full border border-[#08A88A] bg-[#08A88A] flex items-center justify-center text-[10px] font-bold text-white';
-          parent.setAttribute('data-selected', '${optIdx}');
-        ">
-          <span>${escHtml(opt)}</span>
-          <span class="check-indicator w-4 h-4 rounded-full border border-slate-200 flex items-center justify-center text-[10px] font-bold text-transparent group-hover:border-[#08A88A]/40 transition-colors">✓</span>
-        </button>`)
-            .join("\n");
-          return `    <div class="space-y-3" data-qidx="${qIdx}">
-      <p class="text-[#10233F] text-sm font-bold leading-normal m-0">${qIdx + 1}. ${escHtml(q.text)}</p>
-      <div class="grid grid-cols-1 gap-3">
-${optHtml}
-      </div>
-    </div>`;
-        })
-        .join("\n");
-      return `<div class="my-8 p-6 bg-white border border-[#DCE5E8] rounded-2xl text-left space-y-6 shadow-[0_4px_15px_rgba(16,35,63,0.01)]" id="${blockId}" data-questions="${questionsJson}">
-  <div class="flex items-center justify-between border-b border-[#DCE5E8] pb-3">
-    <h4 class="text-[#10233F] font-bold text-base flex items-center gap-2 m-0 leading-none">
-      <span class="w-2.5 h-2.5 rounded-full bg-[#08A88A]"></span>
-      ${escHtml(b.title || "Quick Knowledge Check")}
-    </h4>
-    <span class="text-xs text-[#7B8A99] font-mono">${(b.questions || []).length} Questions</span>
-  </div>
-  <div class="space-y-6">
-${qHtml}
-  </div>
-  <div class="pt-4 border-t border-[#DCE5E8] flex items-center justify-between">
-    <button type="button" class="px-5 py-2.5 bg-[#08A88A] hover:bg-[#06957A] text-white rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer" onclick="
-      const quiz = this.closest('#${blockId}');
-      const questions = JSON.parse(quiz.getAttribute('data-questions') || '[]');
-      let correct = 0; let answeredAll = true;
-      quiz.querySelectorAll('[data-qidx]').forEach((qEl, idx) => {
-        const selected = qEl.getAttribute('data-selected');
-        if (selected === null) { answeredAll = false; return; }
-        const correctOpt = questions[idx] ? questions[idx].correct : '0';
-        const buttons = qEl.querySelectorAll('button');
-        buttons.forEach((btn, bIdx) => {
-          btn.disabled = true;
-          btn.className = btn.className.replace('cursor-pointer', 'cursor-not-allowed');
-          if (bIdx === Number(correctOpt)) {
-            btn.className = btn.className.replace('border-[#DCE5E8] bg-white','border-[#08A88A] bg-[#F0FBF7]').replace('border-[#08A88A] bg-[#F0FBF7]','border-green-500 bg-[#E8F8F0]');
-            btn.querySelector('.check-indicator').className = 'check-indicator w-4 h-4 rounded-full border border-green-500 bg-green-500 flex items-center justify-center text-[10px] font-bold text-white';
-          } else if (bIdx === Number(selected)) {
-            btn.className = btn.className.replace('border-[#DCE5E8] bg-white','border-red-500 bg-[#FFF2F4]').replace('border-[#08A88A] bg-[#F0FBF7]','border-red-500 bg-[#FFF2F4]');
-            btn.querySelector('.check-indicator').className = 'check-indicator w-4 h-4 rounded-full border border-red-500 bg-red-500 flex items-center justify-center text-[10px] font-bold text-white';
-          }
-        });
-        if (Number(selected) === Number(correctOpt)) correct++;
-      });
-      if (!answeredAll) { alert('Please answer all questions before submitting.'); return; }
-      this.style.display = 'none';
-      const result = document.createElement('div');
-      result.className = 'text-sm font-bold text-[#08A88A] mt-2 flex items-center gap-1.5';
-      result.innerHTML = '<span>🎉</span><span>Quiz Submitted. Score: ' + correct + ' / ' + questions.length + ' correct answers!</span>';
-      this.parentNode.appendChild(result);
-      try {
-        window.parent.postMessage({ type: 'KVJ_ACTIVITY_RESULT', score: correct, maxScore: questions.length }, '*');
-      } catch (e) {
-        console.error('Failed to post activity result:', e);
-      }
-    ">Submit Answers</button>
-  </div>
-</div>`;
+      return `<div class="kvj-assessment-placeholder my-8" data-test-id="${b.testId || ""}" data-title="${escAttr(b.title || "Assessment")}"></div>`;
     }
 
     case "borderedtext":
