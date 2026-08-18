@@ -562,36 +562,52 @@ export function TestTakingWidget({
   const renderQuestionWidget = (q: any, idx: number) => {
     return (
       <Card key={q.id} className={`p-6 shadow-soft space-y-4 ${colors.surface}`}>
-        <div className="flex justify-between items-center border-b pb-2 mb-2">
+        <div className={`flex justify-between items-center ${isInline ? "pb-3 mb-3 border-b" : "border-b pb-2 mb-2"}`}>
           <div className="flex items-center gap-2">
-            <span className="w-6 h-6 rounded-full bg-brand text-white font-extrabold text-xs flex items-center justify-center">
-              {idx + 1}
-            </span>
-            <span className="px-2 py-0.5 rounded border border-corporate/30 bg-corporate/10 text-corporate text-[9px] font-bold uppercase tracking-wider">
-              {q.type}
-            </span>
+            {isInline ? (
+              <span className={`px-2.5 py-1 rounded-lg text-xs font-extrabold tracking-wide ${
+                darkMode
+                  ? "bg-brand/20 text-brand"
+                  : "bg-slate-100 text-slate-700"
+              }`}>
+                Q{idx + 1}
+              </span>
+            ) : (
+              <>
+                <span className="w-6 h-6 rounded-full bg-brand text-white font-extrabold text-xs flex items-center justify-center">
+                  {idx + 1}
+                </span>
+                <span className="px-2 py-0.5 rounded border border-corporate/30 bg-corporate/10 text-corporate text-[9px] font-bold uppercase tracking-wider">
+                  {q.type}
+                </span>
+              </>
+            )}
           </div>
 
           <div className="flex items-center gap-3">
-            <span className={`text-xs font-semibold ${colors.slate}`}>
-              {q.marks} {q.marks === 1 ? "mark" : "marks"}
-            </span>
-            <button
-              type="button"
-              onClick={() => setFlaggedQuestions((prev) => ({
-                ...prev,
-                [q.id]: !prev[q.id],
-              }))}
-              className={`px-3 py-1.5 border rounded-xl transition-all cursor-pointer flex items-center gap-1.5 text-xs font-semibold ${
-                flaggedQuestions[q.id]
-                  ? "border-red-500 bg-red-50 text-red-650 shadow-sm shadow-red-100/50 font-bold"
-                  : `${colors.card} hover:bg-slate-50 text-slate-600 hover:text-slate-800`
-              }`}
-              title="Flag for review"
-            >
-              <Bookmark className={`w-3.5 h-3.5 ${flaggedQuestions[q.id] ? "fill-red-500 text-red-500" : ""}`} />
-              <span>{flaggedQuestions[q.id] ? "Flagged for Review" : "Mark for Review"}</span>
-            </button>
+            {!isInline && (
+              <span className={`text-xs font-semibold ${colors.slate}`}>
+                {q.marks} {q.marks === 1 ? "mark" : "marks"}
+              </span>
+            )}
+            {!isInline && (
+              <button
+                type="button"
+                onClick={() => setFlaggedQuestions((prev) => ({
+                  ...prev,
+                  [q.id]: !prev[q.id],
+                }))}
+                className={`px-3 py-1.5 border rounded-xl transition-all cursor-pointer flex items-center gap-1.5 text-xs font-semibold ${
+                  flaggedQuestions[q.id]
+                    ? "border-red-500 bg-red-50 text-red-650 shadow-sm shadow-red-100/50 font-bold"
+                    : `${colors.card} hover:bg-slate-50 text-slate-600 hover:text-slate-800`
+                }`}
+                title="Flag for review"
+              >
+                <Bookmark className={`w-3.5 h-3.5 ${flaggedQuestions[q.id] ? "fill-red-500 text-red-500" : ""}`} />
+                <span>{flaggedQuestions[q.id] ? "Flagged for Review" : "Mark for Review"}</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -1858,6 +1874,22 @@ export function TestTakingWidget({
   const totalQuestions = test.questions.length;
   const isLastQuestion = currentQuestionIndex === totalQuestions - 1;
 
+  // ── INLINE MODE: All questions stacked vertically, no timer/nav map/submit ──
+  if (isInline) {
+    return (
+      <div className={`py-4 font-body ${colors.container}`}>
+        <div className="max-w-3xl mx-auto space-y-6 px-4">
+          {test.questions.map((q: any, idx: number) => (
+            <div key={q.id}>
+              {renderQuestionWidget(q, idx)}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // ── REGULAR EXAM MODE ───────────────────────────────────────────────────────
   return (
     <div className={`py-6 font-body ${colors.container}`}>
       <div className="max-w-7xl mx-auto space-y-6 px-4">
@@ -1875,25 +1907,23 @@ export function TestTakingWidget({
             )}
             <div>
               <h1 className="text-sm font-bold leading-tight">{test.title}</h1>
-              <p className={`text-[10px] mt-0.5 ${colors.slate}`}>{isInline ? "Practice assessment" : "Program mock certification examination"}</p>
+              <p className={`text-[10px] mt-0.5 ${colors.slate}`}>Program mock certification examination</p>
             </div>
           </div>
 
           <div className="flex items-center gap-4 shrink-0">
-            {!isInline && (
-              <div className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border font-mono text-sm font-bold transition-all ${
+            <div className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border font-mono text-sm font-bold transition-all ${
+              timeRemaining < 120
+                ? "text-red-500 border-red-500/70 bg-red-500/10"
+                : colors.card
+            }`}>
+              <Clock className={`w-4 h-4 ${
                 timeRemaining < 120
-                  ? "text-red-500 border-red-500/70 bg-red-500/10"
-                  : colors.card
-              }`}>
-                <Clock className={`w-4 h-4 ${
-                  timeRemaining < 120
-                    ? "text-red-500 animate-[pulse_0.6s_infinite]"
-                    : "text-brand animate-pulse"
-                }`} />
-                <span>{formatTime(timeRemaining)}</span>
-              </div>
-            )}
+                  ? "text-red-500 animate-[pulse_0.6s_infinite]"
+                  : "text-brand animate-pulse"
+              }`} />
+              <span>{formatTime(timeRemaining)}</span>
+            </div>
 
             <Button
               onClick={() => handleSubmit(false)}
