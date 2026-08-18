@@ -66,7 +66,7 @@ export const BLOCK_REGISTRY: BlockConfig[] = [
   { type: "html",        label: "HTML Block",   description: "Raw HTML / CSS code block",      category: "interactive", icon: "<>" },
   { type: "borderedtext",label: "Bordered Text", description: "Bordered box with title & text",category: "layout",      icon: "▎"  },
   { type: "activity",    label: "Activity",     description: "Embedded interactive iframe",    category: "interactive", icon: "⚡" },
-  { type: "assessment",  label: "Quiz (MCQ)",   description: "Inline multiple-choice quiz",    category: "interactive", icon: "✅" },
+  { type: "assessment",  label: "Inline Assessment", description: "Inline multiple-choice quiz",    category: "interactive", icon: "✅" },
 ];
 
 export const BLOCK_CATEGORIES = [
@@ -143,6 +143,8 @@ export function createBlock(type: BlockType): BlockData {
         id, type,
         title: "Knowledge Check",
         testId: "",
+        showAnswers: false,
+        isInline: false,
       };
     case "borderedtext":
       return { id, type, title: "", text: "" };
@@ -451,7 +453,7 @@ ${trRows}
 </div>`;
 
     case "assessment": {
-      return `<div class="kvj-assessment-placeholder my-8" data-test-id="${b.testId || ""}" data-title="${escAttr(b.title || "Assessment")}"></div>`;
+      return `<div class="kvj-assessment-placeholder my-8" data-test-id="${b.testId || ""}" data-title="${escAttr(b.title || "Assessment")}" data-show-answers="${b.showAnswers ? "true" : "false"}" data-is-inline="${b.isInline ? "true" : "false"}"></div>`;
     }
 
     case "borderedtext":

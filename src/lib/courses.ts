@@ -12,6 +12,7 @@ export interface PublicCourse {
   offer_price_inr: number | null;
   offer_label: string | null;
   is_locked: boolean;
+  hide_pricing?: boolean;
 }
 
 /**
@@ -33,6 +34,7 @@ function mapCourse(c: Record<string, any>): PublicCourse {
     offer_price_inr: c.offer_price_inr != null ? Number(c.offer_price_inr) : null,
     offer_label: c.offer_label || null,
     is_locked: c.is_locked != null ? !!c.is_locked : false,
+    hide_pricing: c.hide_pricing != null ? !!c.hide_pricing : false,
   };
 }
 

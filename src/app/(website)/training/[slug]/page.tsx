@@ -222,6 +222,7 @@ export default async function CourseDetailPage({
             isPaid,
             introduction,
             syllabus,
+            hide_pricing: course?.hide_pricing !== undefined ? !!course.hide_pricing : false,
           }}
           modules={modules}
         />

@@ -907,8 +907,18 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
                       courseSlug={course.slug}
                       adminPreview={adminPreview}
                       darkMode={darkMode}
-                      onStart={() => setIsAssessmentActive(true)}
-                      onExit={() => setIsAssessmentActive(false)}
+                      isInline={activeTest.is_inline}
+                      showAnswers={activeTest.is_inline ? true : false}
+                      onStart={() => {
+                        if (!activeTest.is_inline) {
+                          setIsAssessmentActive(true);
+                        }
+                      }}
+                      onExit={() => {
+                        if (!activeTest.is_inline) {
+                          setIsAssessmentActive(false);
+                        }
+                      }}
                       onComplete={async (score, maxScore, passed) => {
                         setAttemptsTrigger((prev) => prev + 1);
                         if (!adminPreview) {
@@ -943,6 +953,10 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
                         const match = segment.match(/data-test-id="([^"]*)"/);
                         if (match) {
                           const testId = match[1];
+                          const showAnswersMatch = segment.match(/data-show-answers="([^"]*)"/);
+                          const showAnswers = showAnswersMatch ? showAnswersMatch[1] === "true" : false;
+                          const isInlineMatch = segment.match(/data-is-inline="([^"]*)"/);
+                          const isInlineBlock = isInlineMatch ? isInlineMatch[1] === "true" : false;
                           return (
                             <div key={idx} className="p-6 md:p-10 bg-slate-50/30 dark:bg-slate-900/20">
                               <TestTakingWidget
@@ -950,8 +964,10 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
                                 courseSlug={course.slug}
                                 adminPreview={adminPreview}
                                 darkMode={darkMode}
-                                onStart={() => setIsAssessmentActive(true)}
-                                onExit={() => setIsAssessmentActive(false)}
+                                isInline={isInlineBlock}
+                                showAnswers={showAnswers}
+                                onStart={() => {}}
+                                onExit={() => {}}
                                 onComplete={async (score, maxScore, passed) => {
                                   console.log(`Embedded test ${testId} completed: ${score}/${maxScore}`);
                                 }}

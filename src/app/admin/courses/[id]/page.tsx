@@ -29,6 +29,8 @@ import {
   ListOrdered,
   GripVertical,
   Eye,
+  EyeOff,
+  Settings,
   Image as ImageIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
@@ -78,6 +80,7 @@ interface Course {
   price_inr: number;
   is_paid: boolean;
   display_order: number;
+  hide_pricing?: boolean;
 }
 
 type LessonValues = {
@@ -94,6 +97,7 @@ type LessonValues = {
     negative_marking: number;
     randomize: boolean;
     publish_results: boolean;
+    is_inline?: boolean;
   };
 };
 
@@ -178,6 +182,11 @@ const LessonEditor = React.memo(function LessonEditor({
             setNegativeMarking(data.negative_marking ?? 0);
             setRandomize(data.randomize ?? false);
             setPublishResults(data.publish_results ?? true);
+            if (data.is_inline) {
+              setEditorKind("inline_assessment");
+            } else {
+              setEditorKind("assessment");
+            }
           }
         } catch (err) {
           console.error("Error loading linked test:", err);
@@ -206,7 +215,11 @@ const LessonEditor = React.memo(function LessonEditor({
     } else if (initial.content_html && initial.content_html.trim() !== "") {
       parseKind = "theory";
     } else if (initial.kind) {
-      parseKind = initial.kind === "theory" ? "document" : initial.kind;
+      if (initial.kind === "assessment") {
+        parseKind = "assessment";
+      } else {
+        parseKind = initial.kind === "theory" ? "document" : initial.kind;
+      }
     }
 
     if (parsedMeta) {
@@ -241,7 +254,10 @@ const LessonEditor = React.memo(function LessonEditor({
       ]);
     }
 
-    setEditorKind(parseKind);
+    // If it is assessment kind, let the test loader useEffect handle editorKind asynchronously
+    if (initial.kind !== "assessment") {
+      setEditorKind(parseKind);
+    }
   }, [initial]);
 
   const addDocumentBlock = (type: BlockType) => {
@@ -401,6 +417,8 @@ const LessonEditor = React.memo(function LessonEditor({
     if (editorKind === "document") {
       finalKind = "theory";
       finalContentHtml = generateHtmlFromBlocks(documentBlocks);
+    } else if (editorKind === "inline_assessment") {
+      finalKind = "assessment";
     }
 
     onSave({
@@ -408,12 +426,13 @@ const LessonEditor = React.memo(function LessonEditor({
       module_id: initial.module_id,
       title: title.trim(),
       kind: finalKind,
-      content_html: finalKind === "assessment" ? "" : finalContentHtml,
+      content_html: (finalKind === "assessment" || editorKind === "inline_assessment") ? "" : finalContentHtml,
       max_score: finalKind === "activity" ? maxScore : null,
-      assessment_settings: finalKind === "assessment" ? {
+      assessment_settings: (finalKind === "assessment" || editorKind === "inline_assessment") ? {
         duration_mins: durationMins, pass_mark: passMark,
         attempts_allowed: attemptsAllowed, negative_marking: negativeMarking,
         randomize, publish_results: publishResults,
+        is_inline: editorKind === "inline_assessment",
       } : undefined,
     });
   };
@@ -448,14 +467,15 @@ const LessonEditor = React.memo(function LessonEditor({
             { value: "document", label: "📄 Block Editor", hint: "Visual no-code builder" },
             { value: "theory",   label: "⌨️ Raw HTML",     hint: "Paste / import HTML" },
             { value: "activity", label: "⚡ Activity",     hint: "Interactive iframe" },
-            { value: "assessment", label: "📝 Assessment", hint: "MCQ test" },
+            { value: "assessment", label: "📝 Timed Exam", hint: "MCQ exam" },
+            { value: "inline_assessment", label: "📝 Inline Assessment", hint: "Practice test" },
           ].map(opt => (
             <button
               key={opt.value}
               type="button"
               onClick={() => {
                 setEditorKind(opt.value);
-                if (opt.value === "assessment") { setKind("assessment"); }
+                if (opt.value === "assessment" || opt.value === "inline_assessment") { setKind("assessment"); }
                 else if (opt.value === "activity") { setKind("activity"); }
                 else { setKind("theory"); }
               }}
@@ -1972,6 +1992,32 @@ const LessonEditor = React.memo(function LessonEditor({
                                     />
                                   </div>
                                   
+                                  <div className="flex items-center gap-2 pt-1">
+                                    <input
+                                      type="checkbox"
+                                      id={`show-answers-${b.id}`}
+                                      checked={b.showAnswers || false}
+                                      onChange={(e) => updateDocumentBlock(b.id, { showAnswers: e.target.checked })}
+                                      className="rounded border-line text-[#08A88A] focus:ring-[#08A88A] w-4 h-4 cursor-pointer"
+                                    />
+                                    <label htmlFor={`show-answers-${b.id}`} className="text-xs font-semibold text-slate-700 dark:text-slate-300 cursor-pointer select-none">
+                                      Show questions and selected answers directly
+                                    </label>
+                                  </div>
+                                  
+                                  <div className="flex items-center gap-2 pt-1">
+                                    <input
+                                      type="checkbox"
+                                      id={`is-inline-${b.id}`}
+                                      checked={b.isInline || false}
+                                      onChange={(e) => updateDocumentBlock(b.id, { isInline: e.target.checked })}
+                                      className="rounded border-line text-[#08A88A] focus:ring-[#08A88A] w-4 h-4 cursor-pointer"
+                                    />
+                                    <label htmlFor={`is-inline-${b.id}`} className="text-xs font-semibold text-slate-700 dark:text-slate-300 cursor-pointer select-none">
+                                      Inline assessment (Check answer for each question immediately)
+                                    </label>
+                                  </div>
+                                  
                                   {b.testId ? (
                                     <div className="border-t border-line/60 pt-4 mt-2">
                                       <h4 className="text-xs font-bold text-[#10233F] dark:text-white mb-3">Assessment Questions</h4>
@@ -2155,7 +2201,7 @@ const LessonEditor = React.memo(function LessonEditor({
                                 onClick={() => addDocumentBlock("assessment")}
                                 className="px-2.5 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 rounded-lg text-[11px] font-semibold transition-all hover:border-[#08A88A] hover:text-[#08A88A] text-left flex items-center gap-2 cursor-pointer"
                               >
-                                <span>❓</span> Assessment (MCQ)
+                                <span>❓</span> Inline Assessment
                               </button>
                             </div>
                           </div>
@@ -2262,7 +2308,7 @@ const LessonEditor = React.memo(function LessonEditor({
         )}
 
         {/* Assessment Settings + QuestionBuilder */}
-        {kind === "assessment" && (
+        {kind === "assessment" && editorKind !== "inline_assessment" && (
           <div className="md:col-span-2 border-t border-line/60 pt-4 mt-2 space-y-4">
             <h5 className="text-[11px] font-bold text-slate uppercase tracking-wider">Assessment Settings</h5>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -2423,6 +2469,7 @@ export default function AdminCourseDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [savingCourse, setSavingCourse] = useState(false);
+  const [showSettings, setShowSettings] = useState(true);
 
 
   // Form states for modules
@@ -2752,6 +2799,7 @@ export default function AdminCourseDetailsPage() {
           negative_marking: assessment_settings?.negative_marking ?? 0,
           randomize: assessment_settings?.randomize ?? false,
           publish_results: assessment_settings?.publish_results ?? true,
+          is_inline: assessment_settings?.is_inline ?? false,
         };
 
         const testRes = await fetch("/api/admin/tests", {
@@ -2883,6 +2931,23 @@ export default function AdminCourseDetailsPage() {
           </div>
           {course.slug && (
             <div className="flex items-center gap-2 shrink-0">
+              <Button
+                variant="ghost"
+                onClick={() => setShowSettings(!showSettings)}
+                className="py-2 px-4 text-sm border border-line text-slate hover:text-brand flex items-center gap-1.5"
+              >
+                {showSettings ? (
+                  <>
+                    <EyeOff className="w-4 h-4" />
+                    Hide Settings
+                  </>
+                ) : (
+                  <>
+                    <Settings className="w-4 h-4" />
+                    Show Settings
+                  </>
+                )}
+              </Button>
               <a href={`/training/${course.slug}`} target="_blank" rel="noreferrer" title="Preview the course landing page students see">
                 <Button
                   variant="ghost"
@@ -2907,132 +2972,146 @@ export default function AdminCourseDetailsPage() {
         {/* Two Columns: Course Info & Curriculum Outline */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Left Column: Course Details */}
-          <div className="lg:col-span-4 space-y-6">
-            <div className="bg-white border border-line rounded-card p-6 shadow-soft space-y-6">
-              <h2 className="text-base font-bold font-display text-ink border-b border-line pb-2.5">
-                Course Settings
-              </h2>
+          {showSettings && (
+            <div className="lg:col-span-4 space-y-6">
+              <div className="bg-white border border-line rounded-card p-6 shadow-soft space-y-6">
+                <h2 className="text-base font-bold font-display text-ink border-b border-line pb-2.5">
+                  Course Settings
+                </h2>
 
-              <form onSubmit={handleUpdateCourse} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate mb-1">
-                    Course Title *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={course.title}
-                    onChange={(e) => setCourse({ ...course, title: e.target.value })}
-                    className="w-full px-3 py-2 rounded-input border border-line bg-surface/50 text-sm focus:bg-white"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate mb-1">
-                    URL Slug
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={course.slug}
-                    onChange={(e) => setCourse({ ...course, slug: e.target.value })}
-                    className="w-full px-3 py-2 rounded-input border border-line bg-surface/50 text-sm focus:bg-white"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
+                <form onSubmit={handleUpdateCourse} className="space-y-4">
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-wider text-slate mb-1">
-                      Segment
-                    </label>
-                    <select
-                      value={course.segment}
-                      onChange={(e: any) => setCourse({ ...course, segment: e.target.value })}
-                      className="w-full px-3 py-2 rounded-input border border-line bg-surface/50 text-sm"
-                    >
-                      <option value="college">College</option>
-                      <option value="corporate">Corporate</option>
-                    </select>
-                  </div>
-                  <div className="flex items-center pt-5 pl-1">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={course.is_paid}
-                        onChange={(e) => setCourse({ ...course, is_paid: e.target.checked })}
-                        className="w-4 h-4 rounded text-brand border-line"
-                      />
-                      <span className="text-xs font-bold uppercase tracking-wider text-slate">Paid</span>
-                    </label>
-                  </div>
-                </div>
-
-                {course.is_paid && (
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-slate mb-1">
-                      Price (INR)
+                      Course Title *
                     </label>
                     <input
-                      type="number"
+                      type="text"
                       required
-                      value={course.price_inr}
-                      onChange={(e) => setCourse({ ...course, price_inr: Number(e.target.value) })}
+                      value={course.title}
+                      onChange={(e) => setCourse({ ...course, title: e.target.value })}
                       className="w-full px-3 py-2 rounded-input border border-line bg-surface/50 text-sm focus:bg-white"
                     />
                   </div>
-                )}
 
-                <div className="md:col-span-2">
-                  <ImageField
-                    label="Thumbnail Image"
-                    value={course.thumbnail_url}
-                    onChange={(url) => setCourse({ ...course, thumbnail_url: url })}
-                  />
-                </div>
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate mb-1">
+                      URL Slug
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={course.slug}
+                      onChange={(e) => setCourse({ ...course, slug: e.target.value })}
+                      className="w-full px-3 py-2 rounded-input border border-line bg-surface/50 text-sm focus:bg-white"
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate mb-1">
-                    Introduction (Markdown / Rich HTML)
-                  </label>
-                  <textarea
-                    rows={8}
-                    value={course.introduction}
-                    onChange={(e) => setCourse({ ...course, introduction: e.target.value })}
-                    placeholder="Provide HTML content explaining what students learn in this program..."
-                    className="w-full px-3 py-2.5 rounded-input border border-line bg-surface/50 focus:bg-white text-xs font-mono resize-y"
-                  />
-                </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate mb-1">
+                        Segment
+                      </label>
+                      <select
+                        value={course.segment}
+                        onChange={(e: any) => setCourse({ ...course, segment: e.target.value })}
+                        className="w-full px-3 py-2 rounded-input border border-line bg-surface/50 text-sm"
+                      >
+                        <option value="college">College</option>
+                        <option value="corporate">Corporate</option>
+                      </select>
+                    </div>
+                    <div className="flex items-center pt-5 pl-1">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={course.is_paid}
+                          onChange={(e) => setCourse({ ...course, is_paid: e.target.checked })}
+                          className="w-4 h-4 rounded text-brand border-line"
+                        />
+                        <span className="text-xs font-bold uppercase tracking-wider text-slate">Paid</span>
+                      </label>
+                    </div>
+                  </div>
 
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate mb-1">
-                    Summary Text
-                  </label>
-                  <textarea
-                    rows={3}
-                    value={course.summary}
-                    onChange={(e) => setCourse({ ...course, summary: e.target.value })}
-                    className="w-full px-3 py-2 rounded-input border border-line bg-surface/50 text-sm focus:bg-white resize-none"
-                  />
-                </div>
-
-                <Button
-                  type="submit"
-                  disabled={savingCourse}
-                  className="w-full py-3 justify-center text-sm font-bold bg-brand text-white"
-                >
-                  {savingCourse ? (
-                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                  ) : (
-                    <Check className="w-4 h-4 mr-2" />
+                  {course.is_paid && (
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate mb-1">
+                        Price (INR)
+                      </label>
+                      <input
+                        type="number"
+                        required
+                        value={course.price_inr}
+                        onChange={(e) => setCourse({ ...course, price_inr: Number(e.target.value) })}
+                        className="w-full px-3 py-2 rounded-input border border-line bg-surface/50 text-sm focus:bg-white"
+                      />
+                    </div>
                   )}
-                  Save Program Settings
-                </Button>
-              </form>
+
+                  <div className="flex items-center pl-1 py-1">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={course.hide_pricing || false}
+                        onChange={(e) => setCourse({ ...course, hide_pricing: e.target.checked })}
+                        className="w-4 h-4 rounded text-brand border-line"
+                      />
+                      <span className="text-xs font-bold uppercase tracking-wider text-slate">Hide Pricing / Details</span>
+                    </label>
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <ImageField
+                      label="Thumbnail Image"
+                      value={course.thumbnail_url}
+                      onChange={(url) => setCourse({ ...course, thumbnail_url: url })}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate mb-1">
+                      Introduction (Markdown / Rich HTML)
+                    </label>
+                    <textarea
+                      rows={8}
+                      value={course.introduction}
+                      onChange={(e) => setCourse({ ...course, introduction: e.target.value })}
+                      placeholder="Provide HTML content explaining what students learn in this program..."
+                      className="w-full px-3 py-2.5 rounded-input border border-line bg-surface/50 focus:bg-white text-xs font-mono resize-y"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate mb-1">
+                      Summary Text
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={course.summary}
+                      onChange={(e) => setCourse({ ...course, summary: e.target.value })}
+                      className="w-full px-3 py-2 rounded-input border border-line bg-surface/50 text-sm focus:bg-white resize-none"
+                    />
+                  </div>
+
+                  <Button
+                    type="submit"
+                    disabled={savingCourse}
+                    className="w-full py-3 justify-center text-sm font-bold bg-brand text-white"
+                  >
+                    {savingCourse ? (
+                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    ) : (
+                      <Check className="w-4 h-4 mr-2" />
+                    )}
+                    Save Program Settings
+                  </Button>
+                </form>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Right Column: Curriculum & Mock Tests Tabs */}
-          <div className="lg:col-span-8 space-y-6">
+          <div className={`${showSettings ? "lg:col-span-8" : "lg:col-span-12"} space-y-6 transition-all duration-300`}>
             <div className="bg-white border border-line rounded-card p-6 shadow-soft space-y-6">
               {/* Tab Selector */}
               <div className="flex border-b border-line -mx-6 -mt-6 px-6 bg-surface/20 rounded-t-card overflow-x-auto">

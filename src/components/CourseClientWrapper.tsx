@@ -51,6 +51,7 @@ interface CourseClientWrapperProps {
     isPaid: boolean;
     introduction?: string | null;
     syllabus?: string[] | null;
+    hide_pricing?: boolean;
   };
   modules: Module[];
 }
@@ -439,7 +440,7 @@ export function CourseClientWrapper({ course, modules }: CourseClientWrapperProp
       {/* RIGHT COLUMN: Sticky enrollment panel (lg:col-span-1) */}
       <div className="lg:col-span-1 lg:sticky lg:top-28 space-y-6 w-full">
         {/* Countdown Timer at the top of the column */}
-        {isDiscounted && course.offer_expiry && (
+        {!course.hide_pricing && isDiscounted && course.offer_expiry && (
           <OfferCountdown expiryDate={course.offer_expiry} pulse={pulseTimer} />
         )}
 
@@ -485,64 +486,76 @@ export function CourseClientWrapper({ course, modules }: CourseClientWrapperProp
             </div>
 
             {/* Pricing / Investment block */}
-            <div>
-              <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider block font-mono">
-                Course Investment
-              </span>
-              {isOnline ? (
-                course.isPaid ? (
-                  <div className="space-y-2 mt-2">
-                    <div className="flex items-baseline gap-2.5">
-                      <span className="text-3xl font-bold text-white font-display">
-                        ₹{finalPrice}
-                      </span>
-                      {isDiscounted && (
-                        <span className="text-zinc-500 line-through text-sm font-mono">
-                          ₹{course.fee_inr}
+            {!course.hide_pricing && (
+              <div>
+                <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider block font-mono">
+                  Course Investment
+                </span>
+                {isOnline ? (
+                  course.isPaid ? (
+                    <div className="space-y-2 mt-2">
+                      <div className="flex items-baseline gap-2.5">
+                        <span className="text-3xl font-bold text-white font-display">
+                          ₹{finalPrice}
+                        </span>
+                        {isDiscounted && (
+                          <span className="text-zinc-500 line-through text-sm font-mono">
+                            ₹{course.fee_inr}
+                          </span>
+                        )}
+                      </div>
+                      {isDiscounted && course.offer_label && (
+                        <span className="text-xs font-bold text-[#10B981] mt-1 block">
+                          ★ {course.offer_label}
                         </span>
                       )}
                     </div>
-                    {isDiscounted && course.offer_label && (
-                      <span className="text-xs font-bold text-[#10B981] mt-1 block">
-                        ★ {course.offer_label}
-                      </span>
-                    )}
+                  ) : (
+                    <div className="mt-2 text-zinc-300 text-sm font-semibold">
+                      Free Enrollment
+                    </div>
+                  )
+                ) : isOneToOne ? (
+                  <div className="mt-2 text-zinc-300 text-sm font-semibold">
+                    Personalized 1:1 Training Plan
                   </div>
                 ) : (
                   <div className="mt-2 text-zinc-300 text-sm font-semibold">
-                    Free Enrollment
+                    Managed by Organization / College
                   </div>
-                )
-              ) : isOneToOne ? (
-                <div className="mt-2 text-zinc-300 text-sm font-semibold">
-                  Personalized 1:1 Training Plan
-                </div>
-              ) : (
-                <div className="mt-2 text-zinc-300 text-sm font-semibold">
-                  Managed by Organization / College
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            )}
 
             {/* CTA Buttons */}
             <div className="space-y-3">
               {/* Register Now / Enquire Button based on Segment */}
               {isOnline ? (
-                <Button
-                  variant="primary"
-                  onClick={finalPrice > 0 ? handlePayment : handleFreeEnroll}
-                  disabled={checkoutLoading}
-                  className="w-full py-4 text-center font-bold text-[15px] block whitespace-nowrap rounded-full shrink-0"
-                >
-                  {checkoutLoading ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Initializing...
-                    </span>
-                  ) : (
-                    <span>Buy Now / Enroll Now</span>
-                  )}
-                </Button>
+                course.hide_pricing ? (
+                  <Button
+                    variant="primary"
+                    onClick={() => router.push(`/training/register?course=${course.slug}${window.location.search || ""}`)}
+                    className="w-full py-4 text-center font-bold text-[15px] block whitespace-nowrap rounded-full shrink-0"
+                  >
+                    <span>Register Interest</span>
+                  </Button>
+                ) : (
+                  <Button
+                    variant="primary"
+                    onClick={finalPrice > 0 ? handlePayment : handleFreeEnroll}
+                    disabled={checkoutLoading}
+                    className="w-full py-4 text-center font-bold text-[15px] block whitespace-nowrap rounded-full shrink-0"
+                  >
+                    {checkoutLoading ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Initializing...
+                      </span>
+                    ) : (
+                      <span>Buy Now / Enroll Now</span>
+                    )}
+                  </Button>
+                )
               ) : isOneToOne ? (
                 <Button
                   variant="primary"
@@ -570,7 +583,7 @@ export function CourseClientWrapper({ course, modules }: CourseClientWrapperProp
               )}
 
               {/* Get Offer outline button for Online Courses only */}
-              {isOnline && isDiscounted && !offerApplied && (
+              {isOnline && !course.hide_pricing && isDiscounted && !offerApplied && (
                 <Button
                   variant="secondary"
                   onClick={() => {
@@ -588,7 +601,7 @@ export function CourseClientWrapper({ course, modules }: CourseClientWrapperProp
               )}
 
               {/* Confirmation + copyable dummy coupon code */}
-              {isOnline && offerApplied && isDiscounted && (
+              {isOnline && !course.hide_pricing && offerApplied && isDiscounted && (
                 <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-2xl text-center space-y-2.5 animate-fadeIn">
                   <div className="text-sm font-bold flex items-center justify-center gap-1.5">
                     <span>Offer Applied ✓</span>

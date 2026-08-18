@@ -97,7 +97,7 @@ export function OnlineCoursesClient({ courses, header }: OnlineCoursesClientProp
                       )}
 
                       {/* Floating offer label */}
-                      {hasOffer && course.offer_label && (
+                      {!course.hide_pricing && hasOffer && course.offer_label && (
                         <div className="absolute top-3 right-3 bg-brand/90 text-black font-extrabold text-[10px] px-2.5 py-1 rounded-lg uppercase tracking-wider shadow-md">
                           {course.offer_label}
                         </div>
@@ -123,23 +123,25 @@ export function OnlineCoursesClient({ courses, header }: OnlineCoursesClientProp
                           </span>
                           <span className="text-ink font-medium">{course.duration || "Self-Paced"}</span>
                         </div>
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-slate flex items-center gap-1.5 font-light">
-                            <DollarSign className="w-4 h-4 text-[#10B981]" /> Price
-                          </span>
-                          <div className="text-right">
-                            {hasOffer ? (
-                              <div className="flex items-center gap-2">
-                                <span className="text-slate line-through text-xs">₹{course.fee_inr}</span>
-                                <span className="text-[#10B981] font-bold">₹{displayPrice}</span>
-                              </div>
-                            ) : (
-                              <span className="text-ink font-bold">
-                                {course.fee_inr > 0 ? `₹${course.fee_inr}` : "Free"}
-                              </span>
-                            )}
+                        {!course.hide_pricing && (
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-slate flex items-center gap-1.5 font-light">
+                              <DollarSign className="w-4 h-4 text-[#10B981]" /> Price
+                            </span>
+                            <div className="text-right">
+                              {hasOffer ? (
+                                <div className="flex items-center gap-2">
+                                  <span className="text-slate line-through text-xs">₹{course.fee_inr}</span>
+                                  <span className="text-[#10B981] font-bold">₹{displayPrice}</span>
+                                </div>
+                              ) : (
+                                <span className="text-ink font-bold">
+                                  {course.fee_inr > 0 ? `₹${course.fee_inr}` : "Free"}
+                                </span>
+                              )}
+                            </div>
                           </div>
-                        </div>
+                        )}
                       </div>
                     </div>
 
@@ -150,12 +152,20 @@ export function OnlineCoursesClient({ courses, header }: OnlineCoursesClientProp
                           Details
                         </Button>
                       </Link>
-                      <Button
-                        onClick={() => setSelectedCourse(course)}
-                        className="w-full text-xs py-2 bg-gradient-to-r from-[#10B981] to-[#0D9488] text-black font-bold hover:brightness-110 border-none flex items-center justify-center gap-1"
-                      >
-                        Buy Now <ArrowRight className="w-3.5 h-3.5" />
-                      </Button>
+                      {course.hide_pricing ? (
+                        <Link href={`/training/register?course=${course.slug}`} className="w-full">
+                          <Button className="w-full text-xs py-2 bg-gradient-to-r from-[#10B981] to-[#0D9488] text-black font-bold hover:brightness-110 border-none flex items-center justify-center gap-1">
+                            Enquire <ArrowRight className="w-3.5 h-3.5" />
+                          </Button>
+                        </Link>
+                      ) : (
+                        <Button
+                          onClick={() => setSelectedCourse(course)}
+                          className="w-full text-xs py-2 bg-gradient-to-r from-[#10B981] to-[#0D9488] text-black font-bold hover:brightness-110 border-none flex items-center justify-center gap-1"
+                        >
+                          Buy Now <ArrowRight className="w-3.5 h-3.5" />
+                        </Button>
+                      )}
                     </div>
 
                   </div>

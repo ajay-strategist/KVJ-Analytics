@@ -199,6 +199,8 @@ interface TestTakingWidgetProps {
   onComplete?: (score: number, maxScore: number, passed: boolean) => void;
   onStart?: () => void;
   onExit?: () => void;
+  isInline?: boolean;
+  showAnswers?: boolean;
 }
 
 export function TestTakingWidget({
@@ -209,6 +211,8 @@ export function TestTakingWidget({
   onComplete,
   onStart,
   onExit,
+  isInline = false,
+  showAnswers = false,
 }: TestTakingWidgetProps) {
   // Theme coloring mapping
   const colors = darkMode
@@ -252,9 +256,60 @@ export function TestTakingWidget({
   const sensors = useSensors(pointerSensor, touchSensor);
 
   const [test, setTest] = useState<any>(null);
-  const [started, setStarted] = useState(false);
+  const [started, setStarted] = useState(isInline);
   const [completed, setCompleted] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(0); // in seconds
+  
+  const [showQuestionsList, setShowQuestionsList] = useState(showAnswers || isInline);
+  const [checkedAnswers, setCheckedAnswers] = useState<Record<string, {
+    checked: boolean;
+    correct: boolean;
+    correctAnswerLabel: string;
+    explanation: string;
+  }>>({});
+
+  const checkAnswerInline = async (questionId: string) => {
+    const studentAnswer = answers[questionId];
+    if (studentAnswer === undefined || studentAnswer === null) {
+      alert("Please select an answer first.");
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/tests/${testId}/check${adminPreview ? "?preview=1" : ""}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ questionId, studentAnswer }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      setCheckedAnswers((prev) => ({
+        ...prev,
+        [questionId]: {
+          checked: true,
+          correct: data.correct,
+          correctAnswerLabel: data.correctAnswerLabel,
+          explanation: data.explanation,
+        },
+      }));
+    } catch (err: any) {
+      alert("Failed to check answer: " + err.message);
+    }
+  };
+
+  useEffect(() => {
+    if (isInline) {
+      setStarted(true);
+      setShowQuestionsList(true);
+    }
+  }, [isInline]);
+
+  useEffect(() => {
+    if (showAnswers) {
+      setShowQuestionsList(true);
+    }
+  }, [showAnswers]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
   // Custom modal states
@@ -328,6 +383,7 @@ export function TestTakingWidget({
 
   // Countdown timer
   useEffect(() => {
+    if (isInline) return;
     if (!started || completed || timeRemaining <= 0) return;
     const interval = setInterval(() => {
       setTimeRemaining((prev) => {
@@ -341,7 +397,7 @@ export function TestTakingWidget({
     }, 1000);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [started, completed, timeRemaining]);
+  }, [started, completed, timeRemaining, isInline]);
 
   const startTest = () => {
     if (!test) return;
@@ -503,6 +559,727 @@ export function TestTakingWidget({
     );
   }
 
+  const renderQuestionWidget = (q: any, idx: number) => {
+    return (
+      <Card key={q.id} className={`p-6 shadow-soft space-y-4 ${colors.surface}`}>
+        <div className="flex justify-between items-center border-b pb-2 mb-2">
+          <div className="flex items-center gap-2">
+            <span className="w-6 h-6 rounded-full bg-brand text-white font-extrabold text-xs flex items-center justify-center">
+              {idx + 1}
+            </span>
+            <span className="px-2 py-0.5 rounded border border-corporate/30 bg-corporate/10 text-corporate text-[9px] font-bold uppercase tracking-wider">
+              {q.type}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <span className={`text-xs font-semibold ${colors.slate}`}>
+              {q.marks} {q.marks === 1 ? "mark" : "marks"}
+            </span>
+            <button
+              type="button"
+              onClick={() => setFlaggedQuestions((prev) => ({
+                ...prev,
+                [q.id]: !prev[q.id],
+              }))}
+              className={`px-3 py-1.5 border rounded-xl transition-all cursor-pointer flex items-center gap-1.5 text-xs font-semibold ${
+                flaggedQuestions[q.id]
+                  ? "border-red-500 bg-red-50 text-red-650 shadow-sm shadow-red-100/50 font-bold"
+                  : `${colors.card} hover:bg-slate-50 text-slate-600 hover:text-slate-800`
+              }`}
+              title="Flag for review"
+            >
+              <Bookmark className={`w-3.5 h-3.5 ${flaggedQuestions[q.id] ? "fill-red-500 text-red-500" : ""}`} />
+              <span>{flaggedQuestions[q.id] ? "Flagged for Review" : "Mark for Review"}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Question stem */}
+        <div className="text-sm font-medium leading-relaxed space-y-4">
+          <div dangerouslySetInnerHTML={{ __html: q.stem }} className={`prose text-sm max-w-none ${darkMode ? "prose-invert text-zinc-300" : "text-ink"}`} />
+          {q.image_url && (
+            <div className="max-w-2xl mx-auto rounded-2xl overflow-hidden border border-line shadow-sm bg-white p-2">
+              <img
+                src={getDirectImageUrl(q.image_url)}
+                alt="Question attachment"
+                className="max-h-96 w-auto mx-auto object-contain rounded-xl"
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Workspace widgets */}
+        <div className={`pt-2 border-t ${colors.line}`}>
+          {q.type === "single" && q.config?.options && (
+            <div className="space-y-3">
+              {q.config.options.map((opt: string, oIdx: number) => {
+                const isSelected = answers[q.id] === oIdx;
+                const isChecked = checkedAnswers[q.id]?.checked;
+                const isCorrect = checkedAnswers[q.id]?.correct;
+
+                let borderStyle = isSelected ? "border-brand bg-brand/5" : `${colors.card} ${colors.hover}`;
+                if (isChecked && isSelected) {
+                  borderStyle = isCorrect
+                    ? "border-emerald-500 bg-emerald-500/10 dark:bg-emerald-500/5 text-emerald-400 font-bold"
+                    : "border-red-500 bg-red-500/10 dark:bg-red-500/5 text-red-400 font-bold";
+                }
+
+                return (
+                  <div
+                    key={oIdx}
+                    onClick={() => {
+                      setAnswers((prev) => ({ ...prev, [q.id]: oIdx }));
+                      setCheckedAnswers((prev) => {
+                        const next = { ...prev };
+                        delete next[q.id];
+                        return next;
+                      });
+                    }}
+                    className={`p-4 border rounded-xl cursor-pointer transition-all flex items-center gap-3 ${borderStyle}`}
+                  >
+                    {isInline ? (
+                      <span className={`w-5 h-5 rounded-full border flex items-center justify-center text-[10px] font-bold shrink-0 transition-colors ${
+                        isChecked && isSelected
+                          ? (isCorrect ? "border-emerald-500 bg-emerald-500 text-white" : "border-red-500 bg-red-500 text-white")
+                          : isSelected
+                            ? "border-brand bg-brand text-black font-black"
+                            : "border-[#DCE5E8] text-zinc-500 dark:border-white/10"
+                      }`}>
+                        {String.fromCharCode(65 + oIdx)}
+                      </span>
+                    ) : (
+                      <input
+                        type="radio"
+                        checked={isSelected}
+                        readOnly
+                        className="w-4 h-4 text-brand"
+                      />
+                    )}
+                    <span className="text-sm font-semibold">{opt}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {q.type === "multiple" && q.config?.options && (
+            <div className="space-y-3">
+              {q.config.options.map((opt: string, oIdx: number) => {
+                const currentVal = answers[q.id] || [];
+                const isSelected = currentVal.includes(oIdx);
+                const isChecked = checkedAnswers[q.id]?.checked;
+                const isCorrect = checkedAnswers[q.id]?.correct;
+
+                let borderStyle = isSelected ? "border-brand bg-brand/5" : `${colors.card} ${colors.hover}`;
+                if (isChecked && isSelected) {
+                  borderStyle = isCorrect
+                    ? "border-emerald-500 bg-emerald-500/10 dark:bg-emerald-500/5 text-emerald-400 font-bold"
+                    : "border-red-500 bg-red-500/10 dark:bg-red-500/5 text-red-400 font-bold";
+                }
+
+                return (
+                  <div
+                    key={oIdx}
+                    onClick={() => {
+                      let next = [...currentVal];
+                      if (isSelected) next = next.filter((x) => x !== oIdx);
+                      else next.push(oIdx);
+                      setAnswers((prev) => ({ ...prev, [q.id]: next }));
+                      setCheckedAnswers((prev) => {
+                        const next = { ...prev };
+                        delete next[q.id];
+                        return next;
+                      });
+                    }}
+                    className={`p-4 border rounded-xl cursor-pointer transition-all flex items-center gap-3 ${borderStyle}`}
+                  >
+                    {isInline ? (
+                      <span className={`w-5 h-5 rounded-md border flex items-center justify-center text-[10px] font-bold shrink-0 transition-colors ${
+                        isChecked && isSelected
+                          ? (isCorrect ? "border-emerald-500 bg-emerald-500 text-white" : "border-red-500 bg-red-500 text-white")
+                          : isSelected
+                            ? "border-brand bg-brand text-black font-black"
+                            : "border-[#DCE5E8] text-zinc-500 dark:border-white/10"
+                      }`}>
+                        {String.fromCharCode(65 + oIdx)}
+                      </span>
+                    ) : (
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        readOnly
+                        className="w-4 h-4 rounded text-brand border-line"
+                      />
+                    )}
+                    <span className="text-sm font-semibold">{opt}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {q.type === "truefalse" && (
+            <div className="flex gap-4">
+              {[true, false].map((val) => {
+                const isSelected = answers[q.id] !== null && String(answers[q.id]) === String(val);
+                const isChecked = checkedAnswers[q.id]?.checked;
+                const isCorrect = checkedAnswers[q.id]?.correct;
+
+                let borderStyle = isSelected ? "border-brand bg-brand/5 text-brand" : `${colors.card} ${colors.hover}`;
+                if (isChecked && isSelected) {
+                  borderStyle = isCorrect
+                    ? "border-emerald-500 bg-emerald-500/10 dark:bg-emerald-500/5 text-emerald-400 font-bold"
+                    : "border-red-500 bg-red-500/10 dark:bg-red-500/5 text-red-400 font-bold";
+                }
+
+                return (
+                  <button
+                    key={String(val)}
+                    type="button"
+                    onClick={() => {
+                      setAnswers((prev) => ({ ...prev, [q.id]: val }));
+                      setCheckedAnswers((prev) => {
+                        const next = { ...prev };
+                        delete next[q.id];
+                        return next;
+                      });
+                    }}
+                    className={`flex-1 py-4 border rounded-xl font-bold transition-all text-center cursor-pointer ${borderStyle}`}
+                  >
+                    {val ? "True" : "False"}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {q.type === "dragtable" && (
+            <DndContext sensors={sensors} onDragEnd={(event) => {
+              const { over, active } = event;
+              if (!over || !active) return;
+              const dragItem = active.id;
+              const slotId = over.id.replace("slot-", "");
+              const currentAnswers = { ...(answers[q.id] || {}) };
+              Object.keys(currentAnswers).forEach((key) => {
+                if (currentAnswers[key] === dragItem) {
+                  delete currentAnswers[key];
+                }
+              });
+              currentAnswers[slotId] = dragItem;
+              setAnswers((prev) => ({ ...prev, [q.id]: currentAnswers }));
+            }}>
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                <div className="lg:col-span-1 border border-line p-4 rounded-2xl bg-surface/50 space-y-4">
+                  <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate">Draggable Options</h4>
+                  {(() => {
+                    const currentAnswers = answers[q.id] || {};
+                    const matchedOptions = Object.values(currentAnswers);
+                    const pool = (q.config.draggables || []).filter((d: string) => !matchedOptions.includes(d));
+                    if (pool.length === 0) {
+                      return <p className={`text-[11px] italic ${colors.slate}`}>All options matching.</p>;
+                    }
+                    return (
+                      <div className="flex flex-col gap-2.5">
+                        {pool.map((d: string) => (
+                          <DraggableItem key={d} id={d} text={d} colors={colors} />
+                        ))}
+                      </div>
+                    );
+                  })()}
+                </div>
+                <div className="lg:col-span-3 space-y-4">
+                  <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate">Fill in the Answer Area</h4>
+                  <div className="overflow-x-auto border border-line rounded-xl bg-white shadow-soft">
+                    <table className="w-full text-left border-collapse min-w-[500px]">
+                      <thead>
+                        <tr className="bg-slate-50 border-b border-line">
+                          {(q.config.headers || []).map((h: string, hIdx: number) => (
+                            <th key={hIdx} className="p-3 text-[10px] font-bold text-slate uppercase tracking-wider select-none">
+                              {h}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(q.config.rows || []).map((row: string[], rIdx: number) => (
+                          <tr key={rIdx} className="border-b border-line/60 last:border-0 hover:bg-slate-50/50">
+                            {row.map((cell: string, cIdx: number) => {
+                              const isPlaceholder = cell.startsWith("{{") && cell.endsWith("}}");
+                              if (isPlaceholder) {
+                                const slotId = cell.replace("{{", "").replace("}}", "").trim();
+                                const matchedItem = (answers[q.id] || {})[slotId] || "";
+                                return (
+                                  <td key={cIdx} className="p-2 min-w-[120px]">
+                                    <TableDroppableSlot
+                                      id={`slot-${slotId}`}
+                                      matchedItem={matchedItem}
+                                      onClear={() => {
+                                        const nextAnswers = { ...(answers[q.id] || {}) };
+                                        delete nextAnswers[slotId];
+                                        setAnswers((prev) => ({ ...prev, [q.id]: nextAnswers }));
+                                      }}
+                                      colors={colors}
+                                    />
+                                  </td>
+                                );
+                              }
+                              return (
+                                <td key={cIdx} className="p-3 text-xs font-semibold text-ink select-none">
+                                  {cell}
+                                </td>
+                              );
+                            })}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </DndContext>
+          )}
+
+          {q.type === "dragdrop" && (
+            <DndContext sensors={sensors} onDragEnd={(event) => {
+              const { over, active } = event;
+              if (!over || !active) return;
+              const rightStr = active.id;
+              const leftStr = over.id.replace("slot-", "");
+              const currentMatches = answers[q.id] || [];
+              const nextMatches = currentMatches.map((p: any) => {
+                if (p[0] === leftStr) return [leftStr, rightStr];
+                if (p[1] === rightStr) return [p[0], ""];
+                return p;
+              });
+              setAnswers((prev) => ({ ...prev, [q.id]: nextMatches }));
+            }}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-3">
+                  <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate">Items to Match</h4>
+                  {(q.config.left || []).map((l: string) => {
+                    const pair = (answers[q.id] || []).find((p: any) => p[0] === l);
+                    return (
+                      <DroppableSlot
+                        key={l}
+                        id={`slot-${l}`}
+                        label={l}
+                        matchedItem={pair ? pair[1] : ""}
+                        onClear={() => {
+                          const nextMatches = (answers[q.id] || []).map((p: any) => {
+                            if (p[0] === l) return [l, ""];
+                            return p;
+                          });
+                          setAnswers((prev) => ({ ...prev, [q.id]: nextMatches }));
+                        }}
+                        colors={colors}
+                      />
+                    );
+                  })}
+                </div>
+                <div className="space-y-3">
+                  <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate">Match Choices</h4>
+                  {(() => {
+                    const matchedRights = (answers[q.id] || []).map((p: any) => p[1]).filter(Boolean);
+                    const pool = (q.config.right || []).filter((r: string) => !matchedRights.includes(r));
+                    if (pool.length === 0) {
+                      return <p className={`text-[11px] italic ${colors.slate}`}>All choices matched.</p>;
+                    }
+                    return (
+                      <div className="flex flex-wrap gap-2">
+                        {pool.map((r: string) => (
+                          <DraggableItem key={r} id={r} text={r} colors={colors} />
+                        ))}
+                      </div>
+                    );
+                  })()}
+                </div>
+              </div>
+            </DndContext>
+          )}
+
+          {q.type === "sequence" && (
+            <DndContext sensors={sensors} onDragEnd={(event) => {
+              const { active, over } = event;
+              if (!active || !over || active.id === over.id) return;
+              const currentSeq = answers[q.id] || [];
+              const oldIndex = currentSeq.indexOf(active.id);
+              const newIndex = currentSeq.indexOf(over.id);
+              const nextSeq = [...currentSeq];
+              nextSeq.splice(oldIndex, 1);
+              nextSeq.splice(newIndex, 0, active.id);
+              setAnswers((prev) => ({ ...prev, [q.id]: nextSeq }));
+            }}>
+              <div className="max-w-md mx-auto space-y-4">
+                <h4 className={`text-[10px] font-bold uppercase tracking-wider mb-2 text-center ${colors.slate}`}>
+                  Drag items to rearrange sequence
+                </h4>
+                <SortableContext items={answers[q.id] || []} strategy={verticalListSortingStrategy}>
+                  <div className="space-y-2">
+                    {(answers[q.id] || []).map((item: string) => (
+                      <SortableSeqItem key={item} id={item} text={item} colors={colors} />
+                    ))}
+                  </div>
+                </SortableContext>
+              </div>
+            </DndContext>
+          )}
+
+          {q.type === "fillblank" && (
+            <div className={`leading-loose text-sm font-medium border rounded-xl p-5 ${colors.card}`}>
+              {(() => {
+                const template = q.config.template || "";
+                const blanks = q.config.blanks || [];
+                const currentVal = answers[q.id] || [];
+                const parts = template.split(/(\{\{\d+\}\})/g);
+
+                return parts.map((part: string, index: number) => {
+                  const match = part.match(/\{\{(\d+)\}\}/);
+                  if (match) {
+                    const blankIdx = parseInt(match[1], 10) - 1;
+                    const blank = blanks[blankIdx];
+                    if (!blank) return null;
+                    const val = currentVal[blankIdx] || "";
+
+                    if (blank.mode === "dropdown") {
+                      return (
+                        <select
+                          key={index}
+                          value={val}
+                          onChange={(e) => {
+                            const next = [...currentVal];
+                            next[blankIdx] = e.target.value;
+                            setAnswers((prev) => ({ ...prev, [q.id]: next }));
+                          }}
+                          className={`inline-block mx-1.5 px-2.5 py-1 rounded border text-xs font-semibold focus:outline-none focus:border-brand ${colors.card}`}
+                        >
+                          <option value="">-- select --</option>
+                          {(blank.options || []).map((o: string) => (
+                            <option key={o} value={o}>
+                              {o}
+                            </option>
+                          ))}
+                        </select>
+                      );
+                    } else {
+                      return (
+                        <input
+                          key={index}
+                          type="text"
+                          placeholder={`blank #${blankIdx + 1}`}
+                          value={val}
+                          onChange={(e) => {
+                            const next = [...currentVal];
+                            next[blankIdx] = e.target.value;
+                            setAnswers((prev) => ({ ...prev, [q.id]: next }));
+                          }}
+                          className={`inline-block mx-1.5 px-2.5 py-1 rounded border text-xs font-semibold w-32 focus:outline-none focus:border-brand ${colors.card}`}
+                        />
+                      );
+                    }
+                  }
+                  return <span key={index}>{part}</span>;
+                });
+              })()}
+            </div>
+          )}
+
+          {q.type === "matrix" && (
+            <>
+              {/* Desktop Table View */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className={`w-full text-sm border rounded-xl overflow-hidden ${colors.line}`}>
+                  <thead>
+                    <tr className="bg-surface/50">
+                      <th className={`p-3 border text-left ${colors.line}`}></th>
+                      {(q.config.columns || []).map((col: string, cIdx: number) => (
+                        <th key={cIdx} className={`p-3 border text-xs font-bold text-center whitespace-nowrap ${colors.line}`}>
+                          {col}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(q.config.rows || []).map((row: string, rIdx: number) => (
+                      <tr key={rIdx}>
+                        <td className={`p-3 border text-sm font-semibold ${colors.line}`}>{row}</td>
+                        {(q.config.columns || []).map((col: string, cIdx: number) => {
+                          const rowAns: number[] = answers[q.id]?.[rIdx] || [];
+                          const checked = rowAns.includes(cIdx);
+                          return (
+                            <td key={cIdx} className={`p-3 border text-center ${colors.line}`}>
+                              <input
+                                type={q.config.multiple ? "checkbox" : "radio"}
+                                name={`matrix-${q.id}-row-${rIdx}`}
+                                checked={checked}
+                                onChange={() => setAnswers((prev) => {
+                                  const grid = ((prev[q.id] || []) as number[][]).map((r) => [...(r || [])]);
+                                  while (grid.length <= rIdx) grid.push([]);
+                                  if (q.config.multiple) {
+                                    const set = new Set<number>(grid[rIdx]);
+                                    if (set.has(cIdx)) set.delete(cIdx); else set.add(cIdx);
+                                    grid[rIdx] = Array.from(set).sort((a, b) => a - b);
+                                  } else {
+                                    grid[rIdx] = [cIdx];
+                                  }
+                                  return { ...prev, [q.id]: grid };
+                                })}
+                                className="w-4 h-4 accent-brand cursor-pointer"
+                              />
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Stacked Card View */}
+              <div className="block md:hidden space-y-4">
+                {(q.config.rows || []).map((row: string, rIdx: number) => (
+                  <div key={rIdx} className={`p-4 border rounded-xl space-y-3 ${colors.card}`}>
+                    <h5 className="text-xs font-bold uppercase tracking-wider text-brand">{row}</h5>
+                    <div className="flex flex-wrap gap-2">
+                      {(q.config.columns || []).map((col: string, cIdx: number) => {
+                        const rowAns: number[] = answers[q.id]?.[rIdx] || [];
+                        const checked = rowAns.includes(cIdx);
+                        return (
+                          <button
+                            key={cIdx}
+                            type="button"
+                            onClick={() => setAnswers((prev) => {
+                              const grid = ((prev[q.id] || []) as number[][]).map((r) => [...(r || [])]);
+                              while (grid.length <= rIdx) grid.push([]);
+                              if (q.config.multiple) {
+                                const set = new Set<number>(grid[rIdx]);
+                                if (set.has(cIdx)) set.delete(cIdx); else set.add(cIdx);
+                                grid[rIdx] = Array.from(set).sort((a, b) => a - b);
+                              } else {
+                                grid[rIdx] = [cIdx];
+                              }
+                              return { ...prev, [q.id]: grid };
+                            })}
+                            className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
+                              checked
+                                ? "border-brand bg-brand/10 text-brand"
+                                : `${colors.card} hover:border-slate/40`
+                            }`}
+                          >
+                            {col}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          {q.type === "code" && (
+            <div className="space-y-2">
+              <div className={`flex justify-between items-center px-4 py-2 border-t border-x rounded-t-xl ${colors.line}`}>
+                <span className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
+                  <FileCode className="w-4 h-4 text-brand" />
+                  {q.config.language} Sandbox compiler
+                </span>
+              </div>
+              <div className={`border rounded-b-xl overflow-hidden ${colors.line}`}>
+                <CodeMirror
+                  value={answers[q.id] || ""}
+                  height="320px"
+                  theme={darkMode ? "dark" : "light"}
+                  extensions={getExtensions(q.config.language)}
+                  onChange={(val: string) => setAnswers((prev) => ({ ...prev, [q.id]: val }))}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {isInline && (
+          <div className="pt-4 border-t flex flex-col gap-3">
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                onClick={() => checkAnswerInline(q.id)}
+                className="py-2 px-4 bg-[#10233F] text-white hover:bg-slate-800 text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-md rounded-lg"
+              >
+                <span>Check Answer</span>
+              </Button>
+            </div>
+
+            {checkedAnswers[q.id]?.checked && (
+              <div className={`p-4 rounded-xl border text-xs space-y-2 animate-fade-in ${
+                checkedAnswers[q.id].correct
+                  ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-700 dark:text-emerald-400"
+                  : "bg-red-500/10 border-red-500/20 text-red-700 dark:text-red-400"
+              }`}>
+                <div className="font-bold flex items-center gap-2 text-sm">
+                  {checkedAnswers[q.id].correct ? (
+                    <>
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                      <span>Correct!</span>
+                    </>
+                  ) : (
+                    <>
+                      <XCircle className="w-4 h-4 text-red-500 shrink-0" />
+                      <span>Incorrect</span>
+                      <span className="font-normal opacity-85 text-xs">Try again!</span>
+                    </>
+                  )}
+                </div>
+                {checkedAnswers[q.id].explanation && (
+                  <p className="opacity-90 leading-relaxed font-normal mt-1">
+                    {checkedAnswers[q.id].explanation}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </Card>
+    );
+  };
+
+  if (showQuestionsList && test) {
+    return (
+      <div className={`py-6 font-body ${colors.container}`}>
+        <div className="max-w-4xl mx-auto space-y-6 px-4">
+          {/* Header */}
+          <div className={`sticky top-0 z-40 p-4 shadow-soft flex items-center justify-between gap-4 rounded-xl ${colors.surface}`}>
+            <div className="flex items-center gap-3">
+              {(onExit || !showAnswers) && !isInline && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (showAnswers) {
+                      onExit?.();
+                    } else {
+                      setShowQuestionsList(false);
+                    }
+                  }}
+                  className={`p-2 border rounded-lg shrink-0 cursor-pointer ${colors.btnSecondary}`}
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                </button>
+              )}
+              <div>
+                <h1 className="text-sm font-bold leading-tight">{test.title}</h1>
+                <p className={`text-[10px] mt-0.5 ${colors.slate}`}>Inline Assessment Questions</p>
+              </div>
+            </div>
+            
+            {!isInline && (
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => handleSubmit(false)}
+                  disabled={submitting}
+                  className="py-2 px-4 bg-[#10B981] text-black hover:bg-[#00D8FF] text-xs font-bold flex items-center gap-1"
+                >
+                  {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                  <span>Submit Answers</span>
+                </Button>
+              </div>
+            )}
+          </div>
+
+          {/* List of Questions */}
+          <div className="space-y-6">
+            {test.questions.map((q: any, idx: number) => renderQuestionWidget(q, idx))}
+          </div>
+
+          {/* Footer CTA */}
+          {!isInline && (
+            <div className="flex justify-between items-center border-t pt-6 mt-8">
+              {!showAnswers ? (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => setShowQuestionsList(false)}
+                  className="text-xs px-4 py-2"
+                >
+                  Go Back
+                </Button>
+              ) : (
+                <div />
+              )}
+
+              <Button
+                onClick={() => handleSubmit(false)}
+                disabled={submitting}
+                className="py-2.5 px-6 bg-[#10B981] text-black hover:bg-[#00D8FF] text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-md"
+              >
+                {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                <span>Submit Assessment</span>
+              </Button>
+            </div>
+          )}
+        </div>
+
+        {/* Confirmation Modal */}
+        {showConfirmModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+            <div className={`relative w-full max-w-md rounded-3xl p-6 shadow-2xl border text-center space-y-6 ${colors.surface}`}>
+              <div className="mx-auto w-12 h-12 bg-brand/10 text-[#10B981] rounded-full flex items-center justify-center">
+                <HelpCircle className="w-6 h-6" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-lg font-bold">Submit Assessment</h3>
+                <p className={`text-sm ${colors.slate}`}>
+                  Are you sure you want to submit your answers for grading? You will not be able to modify your answers after submission.
+                </p>
+              </div>
+              <div className="flex gap-3 justify-center">
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmModal(false)}
+                  className={`px-4 py-2 border rounded-xl text-xs font-bold transition-all ${colors.btnSecondary}`}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSubmit(false, true)}
+                  className="px-4 py-2 bg-brand text-black rounded-xl hover:opacity-90 text-xs font-bold transition-all"
+                >
+                  Yes, Submit
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Alert Modal */}
+        {alertMessage && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+            <div className={`relative w-full max-w-md rounded-3xl p-6 shadow-2xl border text-center space-y-6 ${colors.surface}`}>
+              <div className="mx-auto w-12 h-12 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center animate-bounce">
+                <AlertTriangle className="w-6 h-6" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-lg font-bold text-red-500">Submission Error</h3>
+                <p className={`text-sm ${colors.slate}`}>
+                  {alertMessage}
+                </p>
+              </div>
+              <div className="flex justify-center">
+                <button
+                  type="button"
+                  onClick={() => setAlertMessage(null)}
+                  className="px-6 py-2 bg-red-500 text-white rounded-xl hover:opacity-90 text-xs font-bold transition-all"
+                >
+                  OK
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   // 1. Introduction Screen (Before Test starts)
   if (!started) {
     return (
@@ -511,44 +1288,68 @@ export function TestTakingWidget({
           <Card className={`p-8 shadow-soft space-y-6 ${colors.surface}`}>
             <div className={`border-b pb-4 text-center ${colors.line}`}>
               <span className="px-2.5 py-1 bg-brand/10 text-brand text-[9px] font-bold uppercase tracking-wider rounded border border-brand/20">
-                timed certification exam
+                {isInline ? "inline assessment" : "timed certification exam"}
               </span>
               <h1 className="text-xl font-bold font-display mt-3">{test.title}</h1>
             </div>
 
             <div className="space-y-4 text-xs font-medium leading-relaxed">
               <div className={`grid grid-cols-2 gap-4 border rounded-lg p-4 bg-surface/20 ${colors.line}`}>
-                <div>
-                  <span className={`${colors.slate} opacity-60 text-[10px] uppercase block`}>Duration</span>
-                  <span className="text-sm font-bold">{test.durationMins} Minutes</span>
-                </div>
-                <div>
+                {!isInline && (
+                  <div>
+                    <span className={`${colors.slate} opacity-60 text-[10px] uppercase block`}>Duration</span>
+                    <span className="text-sm font-bold">{test.durationMins} Minutes</span>
+                  </div>
+                )}
+                <div className={isInline ? "col-span-2 text-center" : ""}>
                   <span className={`${colors.slate} opacity-60 text-[10px] uppercase block`}>Questions</span>
                   <span className="text-sm font-bold">{test.questions?.length || 0} Items</span>
                 </div>
-                <div className={`col-span-2 border-t pt-2 mt-2 ${colors.line}`}>
-                  <span className={`${colors.slate} opacity-60 text-[10px] uppercase block`}>Passing Standard</span>
-                  <span className="text-sm font-bold">{test.passMark || 84}% Passing Score Required</span>
-                </div>
+                {!isInline && (
+                  <div className={`col-span-2 border-t pt-2 mt-2 ${colors.line}`}>
+                    <span className={`${colors.slate} opacity-60 text-[10px] uppercase block`}>Passing Standard</span>
+                    <span className="text-sm font-bold">{test.passMark || 84}% Passing Score Required</span>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-2">
                 <h4 className="font-bold">Instructions &amp; Safety:</h4>
-                <ul className={`list-disc pl-5 space-y-1.5 ${colors.slate}`}>
-                  <li>Keep track of the countdown timer at the top of the interface.</li>
-                  <li>Leaving the page or letting the timer expire will automatically submit the test.</li>
-                  <li>Coding test cases are graded using isolated server-side sandbox environments.</li>
-                  <li>Answers cannot be modified once submitted.</li>
-                </ul>
+                {isInline ? (
+                  <ul className={`list-disc pl-5 space-y-1.5 ${colors.slate}`}>
+                    <li>Answer the questions at your own pace.</li>
+                    <li>You can view all questions directly or step-by-step.</li>
+                    <li>Answers cannot be modified once submitted.</li>
+                  </ul>
+                ) : (
+                  <ul className={`list-disc pl-5 space-y-1.5 ${colors.slate}`}>
+                    <li>Keep track of the countdown timer at the top of the interface.</li>
+                    <li>Leaving the page or letting the timer expire will automatically submit the test.</li>
+                    <li>Coding test cases are graded using isolated server-side sandbox environments.</li>
+                    <li>Answers cannot be modified once submitted.</li>
+                  </ul>
+                )}
               </div>
             </div>
 
-            <div className="flex gap-3 justify-center pt-2">
+            <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
               <Button onClick={startTest} className="px-6 py-3 bg-brand text-white font-bold text-sm w-full">
-                Begin Exam
+                {isInline ? "Check Knowledge" : "Begin Exam"}
               </Button>
+              {isInline && (
+                <Button
+                  onClick={() => {
+                    setShowQuestionsList(true);
+                    onStart?.();
+                  }}
+                  variant="secondary"
+                  className="px-6 py-3 text-sm w-full"
+                >
+                  Show Questions &amp; Answers
+                </Button>
+              )}
               {onExit && (
-                <Button onClick={onExit} variant="secondary" className="px-4 py-3 text-sm">
+                <Button onClick={onExit} variant="secondary" className="px-4 py-3 text-sm w-full">
                   Cancel
                 </Button>
               )}
@@ -1074,23 +1875,25 @@ export function TestTakingWidget({
             )}
             <div>
               <h1 className="text-sm font-bold leading-tight">{test.title}</h1>
-              <p className={`text-[10px] mt-0.5 ${colors.slate}`}>Program mock certification examination</p>
+              <p className={`text-[10px] mt-0.5 ${colors.slate}`}>{isInline ? "Practice assessment" : "Program mock certification examination"}</p>
             </div>
           </div>
 
           <div className="flex items-center gap-4 shrink-0">
-            <div className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border font-mono text-sm font-bold transition-all ${
-              timeRemaining < 120
-                ? "text-red-500 border-red-500/70 bg-red-500/10"
-                : colors.card
-            }`}>
-              <Clock className={`w-4 h-4 ${
+            {!isInline && (
+              <div className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border font-mono text-sm font-bold transition-all ${
                 timeRemaining < 120
-                  ? "text-red-500 animate-[pulse_0.6s_infinite]"
-                  : "text-brand animate-pulse"
-              }`} />
-              <span>{formatTime(timeRemaining)}</span>
-            </div>
+                  ? "text-red-500 border-red-500/70 bg-red-500/10"
+                  : colors.card
+              }`}>
+                <Clock className={`w-4 h-4 ${
+                  timeRemaining < 120
+                    ? "text-red-500 animate-[pulse_0.6s_infinite]"
+                    : "text-brand animate-pulse"
+                }`} />
+                <span>{formatTime(timeRemaining)}</span>
+              </div>
+            )}
 
             <Button
               onClick={() => handleSubmit(false)}
@@ -1192,446 +1995,7 @@ export function TestTakingWidget({
 
           {/* Question Workspace (Right) */}
           <div className="lg:col-span-9 space-y-6">
-            <Card className={`p-6 shadow-soft space-y-6 ${colors.surface}`}>
-              {/* Question metadata */}
-              <div className={`flex items-center justify-between border-b pb-3 ${colors.line}`}>
-                <div className="flex items-center gap-2">
-                  <span className="w-7 h-7 rounded bg-brand/10 text-brand text-xs font-bold flex items-center justify-center">
-                    {currentQuestionIndex + 1}
-                  </span>
-                  <span className="px-2 py-0.5 rounded border border-corporate/30 bg-corporate/10 text-corporate text-[9px] font-bold uppercase tracking-wider">
-                    {currentQuestion.type}
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <span className={`text-xs font-semibold ${colors.slate}`}>
-                    {currentQuestion.marks} {currentQuestion.marks === 1 ? "mark" : "marks"}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setFlaggedQuestions((prev) => ({
-                      ...prev,
-                      [currentQuestion.id]: !prev[currentQuestion.id],
-                    }))}
-                    className={`px-3 py-1.5 border rounded-xl transition-all cursor-pointer flex items-center gap-1.5 text-xs font-semibold ${
-                      flaggedQuestions[currentQuestion.id]
-                        ? "border-red-500 bg-red-50 text-red-650 shadow-sm shadow-red-100/50 font-bold"
-                        : `${colors.card} hover:bg-slate-50 text-slate-600 hover:text-slate-800`
-                    }`}
-                    title="Flag for review"
-                  >
-                    <Bookmark className={`w-3.5 h-3.5 ${flaggedQuestions[currentQuestion.id] ? "fill-red-500 text-red-500" : ""}`} />
-                    <span>{flaggedQuestions[currentQuestion.id] ? "Flagged for Review" : "Mark for Review"}</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Question stem */}
-              <div className="text-sm font-medium leading-relaxed space-y-4">
-                <div dangerouslySetInnerHTML={{ __html: currentQuestion.stem }} className={`prose text-sm max-w-none ${darkMode ? "prose-invert text-zinc-300" : "text-ink"}`} />
-                {currentQuestion.image_url && (
-                  <div className="max-w-2xl mx-auto rounded-2xl overflow-hidden border border-line shadow-sm bg-white p-2">
-                    <img
-                      src={getDirectImageUrl(currentQuestion.image_url)}
-                      alt="Question attachment"
-                      className="max-h-96 w-auto mx-auto object-contain rounded-xl"
-                    />
-                  </div>
-                )}
-              </div>
-
-              {/* Workspace widgets */}
-              <div className={`pt-2 border-t ${colors.line}`}>
-                {currentQuestion.type === "single" && (
-                  <div className="space-y-3">
-                    {currentQuestion.config.options.map((opt: string, idx: number) => {
-                      const isSelected = answers[currentQuestion.id] === idx;
-                      return (
-                        <div
-                          key={idx}
-                          onClick={() => setAnswers((prev) => ({ ...prev, [currentQuestion.id]: idx }))}
-                          className={`p-4 border rounded-xl cursor-pointer transition-all flex items-center gap-3 ${
-                            isSelected ? "border-brand bg-brand/5" : `${colors.card} ${colors.hover}`
-                          }`}
-                        >
-                          <input
-                            type="radio"
-                            checked={isSelected}
-                            readOnly
-                            className="w-4 h-4 text-brand"
-                          />
-                          <span className="text-sm font-semibold">{opt}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-
-                {currentQuestion.type === "multiple" && (
-                  <div className="space-y-3">
-                    {currentQuestion.config.options.map((opt: string, idx: number) => {
-                      const currentVal = answers[currentQuestion.id] || [];
-                      const isSelected = currentVal.includes(idx);
-                      return (
-                        <div
-                          key={idx}
-                          onClick={() => {
-                            let next = [...currentVal];
-                            if (isSelected) next = next.filter((x) => x !== idx);
-                            else next.push(idx);
-                            setAnswers((prev) => ({ ...prev, [currentQuestion.id]: next }));
-                          }}
-                          className={`p-4 border rounded-xl cursor-pointer transition-all flex items-center gap-3 ${
-                            isSelected ? "border-brand bg-brand/5" : `${colors.card} ${colors.hover}`
-                          }`}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
-                            readOnly
-                            className="w-4 h-4 rounded text-brand border-line"
-                          />
-                          <span className="text-sm font-semibold">{opt}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-
-                {currentQuestion.type === "truefalse" && (
-                  <div className="flex gap-4">
-                    {[true, false].map((val) => {
-                      const isSelected = answers[currentQuestion.id] !== null && String(answers[currentQuestion.id]) === String(val);
-                      return (
-                        <button
-                          key={String(val)}
-                          type="button"
-                          onClick={() => setAnswers((prev) => ({ ...prev, [currentQuestion.id]: val }))}
-                          className={`flex-1 py-4 border rounded-xl font-bold transition-all text-center cursor-pointer ${
-                            isSelected ? "border-brand bg-brand/5 text-brand" : `${colors.card} ${colors.hover}`
-                          }`}
-                        >
-                          {val ? "True" : "False"}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-
-                {currentQuestion.type === "dragtable" && (
-                  <DndContext sensors={sensors} onDragEnd={handleDragEndDragTable}>
-                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-                      {/* Left Side: Draggable choices pool */}
-                      <div className="lg:col-span-1 border border-line p-4 rounded-2xl bg-surface/50 space-y-4">
-                        <h4 className={`text-[10px] font-bold uppercase tracking-wider text-slate`}>Draggable Options</h4>
-                        {(() => {
-                          const currentAnswers = answers[currentQuestion.id] || {};
-                          const matchedOptions = Object.values(currentAnswers);
-                          const pool = (currentQuestion.config.draggables || []).filter((d: string) => !matchedOptions.includes(d));
-
-                          if (pool.length === 0) {
-                            return <p className={`text-[11px] italic ${colors.slate}`}>All options matching.</p>;
-                          }
-
-                          return (
-                            <div className="flex flex-col gap-2.5">
-                              {pool.map((d: string) => (
-                                <DraggableItem key={d} id={d} text={d} colors={colors} />
-                              ))}
-                            </div>
-                          );
-                        })()}
-                      </div>
-
-                      {/* Right Side: Interactive Table grid */}
-                      <div className="lg:col-span-3 space-y-4">
-                        <h4 className={`text-[10px] font-bold uppercase tracking-wider text-slate`}>Fill in the Answer Area</h4>
-                        <div className="overflow-x-auto border border-line rounded-xl bg-white shadow-soft">
-                          <table className="w-full text-left border-collapse min-w-[500px]">
-                            <thead>
-                              <tr className="bg-slate-50 border-b border-line">
-                                {(currentQuestion.config.headers || []).map((h: string, idx: number) => (
-                                  <th key={idx} className="p-3 text-[10px] font-bold text-slate uppercase tracking-wider select-none">
-                                    {h}
-                                  </th>
-                                ))}
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {(currentQuestion.config.rows || []).map((row: string[], rIdx: number) => (
-                                <tr key={rIdx} className="border-b border-line/60 last:border-0 hover:bg-slate-50/50">
-                                  {row.map((cell: string, cIdx: number) => {
-                                    const isPlaceholder = cell.startsWith("{{") && cell.endsWith("}}");
-                                    if (isPlaceholder) {
-                                      const slotId = cell.replace("{{", "").replace("}}", "").trim();
-                                      const matchedItem = (answers[currentQuestion.id] || {})[slotId] || "";
-                                      return (
-                                        <td key={cIdx} className="p-2 min-w-[120px]">
-                                          <TableDroppableSlot
-                                            id={`slot-${slotId}`}
-                                            matchedItem={matchedItem}
-                                            onClear={() => handleClearDragTable(slotId)}
-                                            colors={colors}
-                                          />
-                                        </td>
-                                      );
-                                    }
-
-                                    return (
-                                      <td key={cIdx} className="p-3 text-xs font-semibold text-ink select-none">
-                                        {cell}
-                                      </td>
-                                    );
-                                  })}
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-                    </div>
-                  </DndContext>
-                )}
-
-                {currentQuestion.type === "dragdrop" && (
-                  <DndContext sensors={sensors} onDragEnd={handleDragEndDragDrop}>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      {/* Left Matching slots */}
-                      <div className="space-y-4">
-                        <h4 className={`text-[10px] font-bold uppercase tracking-wider mb-2 ${colors.slate}`}>Matching Targets</h4>
-                        {(currentQuestion.config.left || []).map((l: string) => {
-                          const pair = (answers[currentQuestion.id] || []).find((p: any) => p[0] === l);
-                          const matchedItem = pair ? pair[1] : "";
-                          return (
-                            <DroppableSlot
-                              key={l}
-                              id={`slot-${l}`}
-                              matchedItem={matchedItem}
-                              label={l}
-                              onClear={() => handleClearDragDrop(l)}
-                              colors={colors}
-                            />
-                          );
-                        })}
-                      </div>
-
-                      {/* Right Draggable pool */}
-                      <div className={`border p-4 rounded-xl space-y-3 ${colors.card}`}>
-                        <h4 className={`text-[10px] font-bold uppercase tracking-wider mb-2 ${colors.slate}`}>Unmatched Options</h4>
-                        {(() => {
-                          const matchedRights = (answers[currentQuestion.id] || []).map((p: any) => p[1]).filter(Boolean);
-                          const pool = (currentQuestion.config.right || []).filter((r: string) => !matchedRights.includes(r));
-
-                          if (pool.length === 0) {
-                            return <p className={`text-[11px] italic ${colors.slate}`}>All items matching.</p>;
-                          }
-
-                          return (
-                            <div className="flex flex-wrap gap-2">
-                              {pool.map((r: string) => (
-                                <DraggableItem key={r} id={r} text={r} colors={colors} />
-                              ))}
-                            </div>
-                          );
-                        })()}
-                      </div>
-                    </div>
-                  </DndContext>
-                )}
-
-                {currentQuestion.type === "sequence" && (
-                  <DndContext sensors={sensors} onDragEnd={handleDragEndSequence}>
-                    <div className="max-w-md mx-auto space-y-4">
-                      <h4 className={`text-[10px] font-bold uppercase tracking-wider mb-2 text-center ${colors.slate}`}>
-                        Drag items to rearrange sequence
-                      </h4>
-                      <SortableContext items={answers[currentQuestion.id] || []} strategy={verticalListSortingStrategy}>
-                        <div className="space-y-2">
-                          {(answers[currentQuestion.id] || []).map((item: string) => (
-                            <SortableSeqItem key={item} id={item} text={item} colors={colors} />
-                          ))}
-                        </div>
-                      </SortableContext>
-                    </div>
-                  </DndContext>
-                )}
-
-                {currentQuestion.type === "fillblank" && (
-                  <div className={`leading-loose text-sm font-medium border rounded-xl p-5 ${colors.card}`}>
-                    {(() => {
-                      const template = currentQuestion.config.template || "";
-                      const blanks = currentQuestion.config.blanks || [];
-                      const currentVal = answers[currentQuestion.id] || [];
-
-                      const parts = template.split(/(\{\{\d+\}\})/g);
-
-                      return parts.map((part: string, index: number) => {
-                        const match = part.match(/\{\{(\d+)\}\}/);
-                        if (match) {
-                          const blankIdx = parseInt(match[1], 10) - 1;
-                          const blank = blanks[blankIdx];
-                          if (!blank) return null;
-
-                          const val = currentVal[blankIdx] || "";
-
-                          if (blank.mode === "dropdown") {
-                            return (
-                              <select
-                                key={index}
-                                value={val}
-                                onChange={(e) => {
-                                  const next = [...currentVal];
-                                  next[blankIdx] = e.target.value;
-                                  setAnswers((prev) => ({ ...prev, [currentQuestion.id]: next }));
-                                }}
-                                className={`inline-block mx-1.5 px-2.5 py-1 rounded border text-xs font-semibold focus:outline-none focus:border-brand ${colors.card}`}
-                              >
-                                <option value="">-- select --</option>
-                                {(blank.options || []).map((o: string) => (
-                                  <option key={o} value={o}>
-                                    {o}
-                                  </option>
-                                ))}
-                              </select>
-                            );
-                          } else {
-                            return (
-                              <input
-                                key={index}
-                                type="text"
-                                placeholder={`blank #${blankIdx + 1}`}
-                                value={val}
-                                onChange={(e) => {
-                                  const next = [...currentVal];
-                                  next[blankIdx] = e.target.value;
-                                  setAnswers((prev) => ({ ...prev, [currentQuestion.id]: next }));
-                                }}
-                                className={`inline-block mx-1.5 px-2.5 py-1 rounded border text-xs font-semibold w-32 focus:outline-none focus:border-brand ${colors.card}`}
-                              />
-                            );
-                          }
-                        }
-                        return <span key={index}>{part}</span>;
-                      });
-                    })()}
-                  </div>
-                )}
-
-                {currentQuestion.type === "matrix" && (
-                  <>
-                    {/* Desktop Table View */}
-                    <div className="hidden md:block overflow-x-auto">
-                      <table className={`w-full text-sm border rounded-xl overflow-hidden ${colors.line}`}>
-                        <thead>
-                          <tr className="bg-surface/50">
-                            <th className={`p-3 border text-left ${colors.line}`}></th>
-                            {(currentQuestion.config.columns || []).map((col: string, cIdx: number) => (
-                              <th key={cIdx} className={`p-3 border text-xs font-bold text-center whitespace-nowrap ${colors.line}`}>
-                                {col}
-                              </th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {(currentQuestion.config.rows || []).map((row: string, rIdx: number) => (
-                            <tr key={rIdx}>
-                              <td className={`p-3 border text-sm font-semibold ${colors.line}`}>{row}</td>
-                              {(currentQuestion.config.columns || []).map((col: string, cIdx: number) => {
-                                const rowAns: number[] = answers[currentQuestion.id]?.[rIdx] || [];
-                                const checked = rowAns.includes(cIdx);
-                                return (
-                                  <td key={cIdx} className={`p-3 border text-center ${colors.line}`}>
-                                    <input
-                                      type={currentQuestion.config.multiple ? "checkbox" : "radio"}
-                                      name={`matrix-${currentQuestion.id}-row-${rIdx}`}
-                                      checked={checked}
-                                      onChange={() => setAnswers((prev) => {
-                                        const grid = ((prev[currentQuestion.id] || []) as number[][]).map((r) => [...(r || [])]);
-                                        while (grid.length <= rIdx) grid.push([]);
-                                        if (currentQuestion.config.multiple) {
-                                          const set = new Set<number>(grid[rIdx]);
-                                          if (set.has(cIdx)) set.delete(cIdx); else set.add(cIdx);
-                                          grid[rIdx] = Array.from(set).sort((a, b) => a - b);
-                                        } else {
-                                          grid[rIdx] = [cIdx];
-                                        }
-                                        return { ...prev, [currentQuestion.id]: grid };
-                                      })}
-                                      className="w-4 h-4 accent-brand cursor-pointer"
-                                    />
-                                  </td>
-                                );
-                              })}
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-
-                    {/* Mobile Stacked Card View */}
-                    <div className="block md:hidden space-y-4">
-                      {(currentQuestion.config.rows || []).map((row: string, rIdx: number) => (
-                        <div key={rIdx} className={`p-4 border rounded-xl space-y-3 ${colors.card}`}>
-                          <h5 className="text-xs font-bold uppercase tracking-wider text-brand">{row}</h5>
-                          <div className="flex flex-wrap gap-2">
-                            {(currentQuestion.config.columns || []).map((col: string, cIdx: number) => {
-                              const rowAns: number[] = answers[currentQuestion.id]?.[rIdx] || [];
-                              const checked = rowAns.includes(cIdx);
-                              return (
-                                <button
-                                  key={cIdx}
-                                  type="button"
-                                  onClick={() => setAnswers((prev) => {
-                                    const grid = ((prev[currentQuestion.id] || []) as number[][]).map((r) => [...(r || [])]);
-                                    while (grid.length <= rIdx) grid.push([]);
-                                    if (currentQuestion.config.multiple) {
-                                      const set = new Set<number>(grid[rIdx]);
-                                      if (set.has(cIdx)) set.delete(cIdx); else set.add(cIdx);
-                                      grid[rIdx] = Array.from(set).sort((a, b) => a - b);
-                                    } else {
-                                      grid[rIdx] = [cIdx];
-                                    }
-                                    return { ...prev, [currentQuestion.id]: grid };
-                                  })}
-                                  className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
-                                    checked
-                                      ? "border-brand bg-brand/10 text-brand"
-                                      : `${colors.card} hover:border-slate/40`
-                                  }`}
-                                >
-                                  {col}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </>
-                )}
-
-                {currentQuestion.type === "code" && (
-                  <div className="space-y-2">
-                    <div className={`flex justify-between items-center px-4 py-2 border-t border-x rounded-t-xl ${colors.line}`}>
-                      <span className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
-                        <FileCode className="w-4 h-4 text-brand" />
-                        {currentQuestion.config.language} Sandbox compiler
-                      </span>
-                    </div>
-                    <div className={`border rounded-b-xl overflow-hidden ${colors.line}`}>
-                      <CodeMirror
-                        value={answers[currentQuestion.id] || ""}
-                        height="320px"
-                        theme={darkMode ? "dark" : "light"}
-                        extensions={getExtensions(currentQuestion.config.language)}
-                        onChange={(val: string) => setAnswers((prev) => ({ ...prev, [currentQuestion.id]: val }))}
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-            </Card>
+            {renderQuestionWidget(currentQuestion, currentQuestionIndex)}
 
             {/* Bottom Nav Bar */}
             <div className={`flex justify-between items-center p-4 rounded-xl shadow-soft ${colors.surface}`}>

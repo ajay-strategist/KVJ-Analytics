@@ -266,6 +266,7 @@ if (!globalForMockDb.mockDb) {
         is_locked: false,
         is_published: true,
         segment: "college",
+        hide_pricing: false,
         created_at: new Date(Date.now() - 50 * 86400000).toISOString(),
       },
       {
@@ -282,6 +283,7 @@ if (!globalForMockDb.mockDb) {
         offer_expiry: new Date(Date.now() + 3 * 86400000).toISOString(),
         is_locked: false,
         is_published: true,
+        hide_pricing: false,
         created_at: new Date(Date.now() - 100 * 86400000).toISOString(),
       },
       {
@@ -298,6 +300,7 @@ if (!globalForMockDb.mockDb) {
         offer_expiry: new Date(Date.now() + 5 * 86400000).toISOString(),
         is_locked: false,
         is_published: true,
+        hide_pricing: false,
         created_at: new Date(Date.now() - 90 * 86400000).toISOString(),
       },
       {
@@ -314,6 +317,7 @@ if (!globalForMockDb.mockDb) {
         offer_expiry: null,
         is_locked: true,
         is_published: true,
+        hide_pricing: false,
         created_at: new Date(Date.now() - 50 * 86400000).toISOString(),
       }
     ],
@@ -1541,6 +1545,7 @@ if (!globalForMockDb.mockDb) {
         duration_mins: 20,
         pass_mark: 70,
         randomize: true,
+        is_inline: false,
         display_order: 1
       },
       {
@@ -1551,6 +1556,7 @@ if (!globalForMockDb.mockDb) {
         duration_mins: 20,
         pass_mark: 70,
         randomize: true,
+        is_inline: false,
         display_order: 2
       },
       {
@@ -1561,6 +1567,7 @@ if (!globalForMockDb.mockDb) {
         duration_mins: 20,
         pass_mark: 70,
         randomize: true,
+        is_inline: false,
         display_order: 3
       },
       {
@@ -1571,6 +1578,7 @@ if (!globalForMockDb.mockDb) {
         duration_mins: 20,
         pass_mark: 70,
         randomize: true,
+        is_inline: false,
         display_order: 4
       },
       {
@@ -1581,6 +1589,7 @@ if (!globalForMockDb.mockDb) {
         duration_mins: 20,
         pass_mark: 70,
         randomize: true,
+        is_inline: false,
         display_order: 5
       },
       {
@@ -1591,6 +1600,7 @@ if (!globalForMockDb.mockDb) {
         duration_mins: 45,
         pass_mark: 75,
         randomize: true,
+        is_inline: false,
         display_order: 6
       },
       {
@@ -1601,6 +1611,7 @@ if (!globalForMockDb.mockDb) {
         duration_mins: 45,
         pass_mark: 75,
         randomize: true,
+        is_inline: false,
         display_order: 7
       },
       {
@@ -1611,6 +1622,7 @@ if (!globalForMockDb.mockDb) {
         duration_mins: 45,
         pass_mark: 75,
         randomize: true,
+        is_inline: false,
         display_order: 8
       },],
     test_attempts: [],
