@@ -21,6 +21,15 @@ export function RichTextEditor({ value, onChange, placeholder = "Write rich text
   const [showImgModal, setShowImgModal] = useState(false);
   const [imgUrl, setImgUrl] = useState("");
 
+  const [isBold, setIsBold] = useState(false);
+  const [isItalic, setIsItalic] = useState(false);
+  const [isUnderline, setIsUnderline] = useState(false);
+  const [isStrike, setIsStrike] = useState(false);
+  const [isUnorderedList, setIsUnorderedList] = useState(false);
+  const [isOrderedList, setIsOrderedList] = useState(false);
+  const [alignment, setAlignment] = useState("left");
+  const [formatBlock, setFormatBlock] = useState("p");
+
   // Keep track of internal content to avoid cursor jumping
   useEffect(() => {
     if (editorRef.current && editorRef.current.innerHTML !== value) {
@@ -28,9 +37,60 @@ export function RichTextEditor({ value, onChange, placeholder = "Write rich text
     }
   }, [value]);
 
+  const updateToolbarStates = () => {
+    if (typeof document === "undefined") return;
+    setIsBold(document.queryCommandState("bold"));
+    setIsItalic(document.queryCommandState("italic"));
+    setIsUnderline(document.queryCommandState("underline"));
+    setIsStrike(document.queryCommandState("strikeThrough"));
+    setIsUnorderedList(document.queryCommandState("insertUnorderedList"));
+    setIsOrderedList(document.queryCommandState("insertOrderedList"));
+
+    if (document.queryCommandState("justifyCenter")) {
+      setAlignment("center");
+    } else if (document.queryCommandState("justifyRight")) {
+      setAlignment("right");
+    } else if (document.queryCommandState("justifyFull")) {
+      setAlignment("justify");
+    } else {
+      setAlignment("left");
+    }
+
+    try {
+      const block = document.queryCommandValue("formatBlock");
+      if (block) {
+        const cleanBlock = block.toLowerCase().replace(/[<>]/g, "");
+        setFormatBlock(cleanBlock);
+      } else {
+        setFormatBlock("p");
+      }
+    } catch (e) {
+      setFormatBlock("p");
+    }
+  };
+
+  useEffect(() => {
+    // Enable styleWithCSS so the browser uses styles (text-align) instead of presentational tags
+    try {
+      document.execCommand("styleWithCSS", false, "true");
+    } catch (e) {}
+
+    const handleSelectionChange = () => {
+      if (document.activeElement === editorRef.current) {
+        updateToolbarStates();
+      }
+    };
+
+    document.addEventListener("selectionchange", handleSelectionChange);
+    return () => {
+      document.removeEventListener("selectionchange", handleSelectionChange);
+    };
+  }, []);
+
   const execCmd = (command: string, value: string = "") => {
     document.execCommand(command, false, value);
     triggerChange();
+    updateToolbarStates();
   };
 
   const triggerChange = () => {
@@ -41,6 +101,7 @@ export function RichTextEditor({ value, onChange, placeholder = "Write rich text
 
   const handleInput = () => {
     triggerChange();
+    updateToolbarStates();
   };
 
   const insertHtmlAtCursor = (html: string) => {
@@ -58,6 +119,7 @@ export function RichTextEditor({ value, onChange, placeholder = "Write rich text
       range.insertNode(frag);
     }
     triggerChange();
+    updateToolbarStates();
   };
 
   const handleAddLink = (e: React.FormEvent) => {
@@ -103,23 +165,35 @@ export function RichTextEditor({ value, onChange, placeholder = "Write rich text
     insertHtmlAtCursor(html);
   };
 
+  const blockOptions = ["p", "h1", "h2", "h3", "h4", "h5", "h6"];
+
   return (
     <div className="border border-line rounded-xl overflow-hidden bg-white dark:bg-slate-950 flex flex-col focus-within:ring-2 focus-within:ring-brand/20 transition-all">
+      <style>{`
+        .rte-content ul { list-style-type: disc !important; padding-left: 1.5rem !important; margin-bottom: 1rem !important; }
+        .rte-content ol { list-style-type: decimal !important; padding-left: 1.5rem !important; margin-bottom: 1rem !important; }
+        .rte-content li { margin-bottom: 0.25rem !important; display: list-item !important; }
+        .rte-content [align="left"] { text-align: left !important; }
+        .rte-content [align="center"] { text-align: center !important; }
+        .rte-content [align="right"] { text-align: right !important; }
+        .rte-content [align="justify"] { text-align: justify !important; }
+      `}</style>
+      
       {/* Editor Toolbar */}
       <div className="flex flex-wrap gap-1.5 p-2 bg-slate-50 dark:bg-slate-900 border-b border-line items-center select-none">
         {/* Headings */}
         <select
-          onChange={(e) => execCmd("formatBlock", e.target.value)}
+          value={blockOptions.includes(formatBlock) ? formatBlock : "p"}
+          onChange={(e) => execCmd("formatBlock", `<${e.target.value}>`)}
           className="px-2 py-1 text-xs border border-line rounded bg-white text-slate-800 dark:bg-slate-850 dark:text-slate-200 font-semibold cursor-pointer outline-none"
-          defaultValue="<p>"
         >
-          <option value="<p>">Paragraph</option>
-          <option value="<h1>">H1</option>
-          <option value="<h2>">H2</option>
-          <option value="<h3>">H3</option>
-          <option value="<h4>">H4</option>
-          <option value="<h5>">H5</option>
-          <option value="<h6>">H6</option>
+          <option value="p">Paragraph</option>
+          <option value="h1">H1</option>
+          <option value="h2">H2</option>
+          <option value="h3">H3</option>
+          <option value="h4">H4</option>
+          <option value="h5">H5</option>
+          <option value="h6">H6</option>
         </select>
 
         <div className="h-4 w-px bg-line" />
@@ -129,7 +203,11 @@ export function RichTextEditor({ value, onChange, placeholder = "Write rich text
           type="button"
           onClick={() => execCmd("bold")}
           title="Bold"
-          className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300 cursor-pointer"
+          className={`p-1 rounded cursor-pointer transition-all ${
+            isBold
+              ? "bg-[#08A88A]/20 text-[#08A88A] ring-1 ring-[#08A88A]/40"
+              : "hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300"
+          }`}
         >
           <Bold className="w-4 h-4" />
         </button>
@@ -137,7 +215,11 @@ export function RichTextEditor({ value, onChange, placeholder = "Write rich text
           type="button"
           onClick={() => execCmd("italic")}
           title="Italic"
-          className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300 cursor-pointer"
+          className={`p-1 rounded cursor-pointer transition-all ${
+            isItalic
+              ? "bg-[#08A88A]/20 text-[#08A88A] ring-1 ring-[#08A88A]/40"
+              : "hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300"
+          }`}
         >
           <Italic className="w-4 h-4" />
         </button>
@@ -145,7 +227,11 @@ export function RichTextEditor({ value, onChange, placeholder = "Write rich text
           type="button"
           onClick={() => execCmd("underline")}
           title="Underline"
-          className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300 cursor-pointer"
+          className={`p-1 rounded cursor-pointer transition-all ${
+            isUnderline
+              ? "bg-[#08A88A]/20 text-[#08A88A] ring-1 ring-[#08A88A]/40"
+              : "hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300"
+          }`}
         >
           <Underline className="w-4 h-4" />
         </button>
@@ -153,7 +239,11 @@ export function RichTextEditor({ value, onChange, placeholder = "Write rich text
           type="button"
           onClick={() => execCmd("strikeThrough")}
           title="Strikethrough"
-          className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300 cursor-pointer"
+          className={`p-1 rounded cursor-pointer transition-all ${
+            isStrike
+              ? "bg-[#08A88A]/20 text-[#08A88A] ring-1 ring-[#08A88A]/40"
+              : "hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300"
+          }`}
         >
           <Strikethrough className="w-4 h-4" />
         </button>
@@ -193,7 +283,11 @@ export function RichTextEditor({ value, onChange, placeholder = "Write rich text
           type="button"
           onClick={() => execCmd("justifyLeft")}
           title="Align Left"
-          className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300 cursor-pointer"
+          className={`p-1 rounded cursor-pointer transition-all ${
+            alignment === "left"
+              ? "bg-[#08A88A]/20 text-[#08A88A] ring-1 ring-[#08A88A]/40"
+              : "hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300"
+          }`}
         >
           <AlignLeft className="w-4 h-4" />
         </button>
@@ -201,7 +295,11 @@ export function RichTextEditor({ value, onChange, placeholder = "Write rich text
           type="button"
           onClick={() => execCmd("justifyCenter")}
           title="Align Center"
-          className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300 cursor-pointer"
+          className={`p-1 rounded cursor-pointer transition-all ${
+            alignment === "center"
+              ? "bg-[#08A88A]/20 text-[#08A88A] ring-1 ring-[#08A88A]/40"
+              : "hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300"
+          }`}
         >
           <AlignCenter className="w-4 h-4" />
         </button>
@@ -209,7 +307,11 @@ export function RichTextEditor({ value, onChange, placeholder = "Write rich text
           type="button"
           onClick={() => execCmd("justifyRight")}
           title="Align Right"
-          className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300 cursor-pointer"
+          className={`p-1 rounded cursor-pointer transition-all ${
+            alignment === "right"
+              ? "bg-[#08A88A]/20 text-[#08A88A] ring-1 ring-[#08A88A]/40"
+              : "hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300"
+          }`}
         >
           <AlignRight className="w-4 h-4" />
         </button>
@@ -217,7 +319,11 @@ export function RichTextEditor({ value, onChange, placeholder = "Write rich text
           type="button"
           onClick={() => execCmd("justifyFull")}
           title="Justify"
-          className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300 cursor-pointer"
+          className={`p-1 rounded cursor-pointer transition-all ${
+            alignment === "justify"
+              ? "bg-[#08A88A]/20 text-[#08A88A] ring-1 ring-[#08A88A]/40"
+              : "hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300"
+          }`}
         >
           <AlignJustify className="w-4 h-4" />
         </button>
@@ -229,7 +335,11 @@ export function RichTextEditor({ value, onChange, placeholder = "Write rich text
           type="button"
           onClick={() => execCmd("insertUnorderedList")}
           title="Bulleted List"
-          className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300 cursor-pointer"
+          className={`p-1 rounded cursor-pointer transition-all ${
+            isUnorderedList
+              ? "bg-[#08A88A]/20 text-[#08A88A] ring-1 ring-[#08A88A]/40"
+              : "hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300"
+          }`}
         >
           <List className="w-4 h-4" />
         </button>
@@ -237,7 +347,11 @@ export function RichTextEditor({ value, onChange, placeholder = "Write rich text
           type="button"
           onClick={() => execCmd("insertOrderedList")}
           title="Numbered List"
-          className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300 cursor-pointer"
+          className={`p-1 rounded cursor-pointer transition-all ${
+            isOrderedList
+              ? "bg-[#08A88A]/20 text-[#08A88A] ring-1 ring-[#08A88A]/40"
+              : "hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300"
+          }`}
         >
           <ListOrdered className="w-4 h-4" />
         </button>
@@ -329,7 +443,7 @@ export function RichTextEditor({ value, onChange, placeholder = "Write rich text
         contentEditable
         onInput={handleInput}
         placeholder={placeholder}
-        className="w-full min-h-[160px] p-4 bg-white text-slate-800 dark:bg-slate-950 dark:text-slate-100 rounded-b-xl text-sm leading-relaxed overflow-y-auto focus:outline-none list-inside prose max-w-none"
+        className="w-full min-h-[160px] p-4 bg-white text-slate-800 dark:bg-slate-950 dark:text-slate-100 rounded-b-xl text-sm leading-relaxed overflow-y-auto focus:outline-none list-inside prose max-w-none rte-content"
         style={{ outline: "none" }}
       />
 

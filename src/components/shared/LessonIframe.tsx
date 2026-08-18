@@ -299,6 +299,11 @@ export function LessonIframe({
   }
   body{overflow:hidden}
 
+  [align="left"] { text-align: left !important; }
+  [align="center"] { text-align: center !important; }
+  [align="right"] { text-align: right !important; }
+  [align="justify"] { text-align: justify !important; }
+
   button, select, input, textarea, .callout, table, code, pre {
     font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
   }

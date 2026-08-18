@@ -1297,7 +1297,7 @@ export function TestTakingWidget({
   }
 
   // 1. Introduction Screen (Before Test starts)
-  if (!started) {
+  if (!started && !isInline) {
     return (
       <div className={`py-8 font-body flex justify-center items-center min-h-[400px] ${colors.container}`}>
         <div className="max-w-xl w-full mx-auto px-4">

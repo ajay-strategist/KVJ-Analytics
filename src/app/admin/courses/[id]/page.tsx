@@ -468,14 +468,13 @@ const LessonEditor = React.memo(function LessonEditor({
             { value: "theory",   label: "⌨️ Raw HTML",     hint: "Paste / import HTML" },
             { value: "activity", label: "⚡ Activity",     hint: "Interactive iframe" },
             { value: "assessment", label: "📝 Timed Exam", hint: "MCQ exam" },
-            { value: "inline_assessment", label: "📝 Inline Assessment", hint: "Practice test" },
           ].map(opt => (
             <button
               key={opt.value}
               type="button"
               onClick={() => {
                 setEditorKind(opt.value);
-                if (opt.value === "assessment" || opt.value === "inline_assessment") { setKind("assessment"); }
+                if (opt.value === "assessment") { setKind("assessment"); }
                 else if (opt.value === "activity") { setKind("activity"); }
                 else { setKind("theory"); }
               }}
