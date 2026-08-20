@@ -682,6 +682,17 @@ ${html}
 
   // Smart Theme Contrast Enhancer
   const applySmartTheme = () => {
+    // Dynamically protect elements that have inline styles containing '!important' (legacy content)
+    document.querySelectorAll('*').forEach(el => {
+      const styleAttr = el.getAttribute('style') || '';
+      if (styleAttr.includes('!important')) {
+        el.setAttribute('data-kvj-styled', 'true');
+        el.querySelectorAll('*').forEach(child => {
+          child.setAttribute('data-kvj-styled', 'true');
+        });
+      }
+    });
+
     const isDark = document.body.classList.contains('dark');
     document.querySelectorAll('*').forEach(el => {
       if (['HTML', 'HEAD', 'SCRIPT', 'STYLE', 'BODY'].includes(el.tagName)) return;
