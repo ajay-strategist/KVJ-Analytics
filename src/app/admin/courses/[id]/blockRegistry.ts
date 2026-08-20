@@ -317,16 +317,16 @@ function renderBlock(b: BlockData): string {
             b.underline ? 'text-decoration: underline !important;' : '',
           ].filter(Boolean).join(' ');
           
-          return `    <li class="flex items-start gap-2.5 text-sm leading-relaxed" style="${itemStyle}">
-      <span class="w-1.5 h-1.5 rounded-full shrink-0 mt-2" style="background-color: ${accentColor}"></span>
-      <span>${escHtml(p)}</span>
+          return `    <li class="flex items-start gap-2.5 text-sm leading-relaxed" data-kvj-styled="true" style="${itemStyle}">
+      <span class="w-1.5 h-1.5 rounded-full shrink-0 mt-2" data-kvj-styled="true" style="background-color: ${accentColor}"></span>
+      <span data-kvj-styled="true">${escHtml(p)}</span>
     </li>`;
         })
         .join("\n");
 
-      return `<div class="my-6 p-6 text-left shadow-[0_4px_15px_rgba(16,35,63,0.01)]" style="${wrapperStyle}">
-  ${b.title ? `<h4 class="font-bold text-sm mb-3 mt-0" style="${titleStyle}">${escHtml(b.title)}</h4>` : ''}
-  <ul class="space-y-2.5">
+      return `<div class="my-6 p-6 text-left shadow-[0_4px_15px_rgba(16,35,63,0.01)]" data-kvj-styled="true" style="${wrapperStyle}">
+  ${b.title ? `<h4 class="font-bold text-sm mb-3 mt-0" data-kvj-styled="true" style="${titleStyle}">${escHtml(b.title)}</h4>` : ''}
+  <ul class="space-y-2.5" data-kvj-styled="true">
 ${pts}
   </ul>
 </div>`;
@@ -383,11 +383,11 @@ ${pts}
             c.italic ? 'font-style: italic !important;' : '',
           ].filter(Boolean).join(' ');
 
-          return `  <div class="relative bg-white border border-[#DCE5E8] rounded-2xl p-6 overflow-hidden transition-all duration-300 shadow-[0_4px_15px_rgba(16,35,63,0.01)] text-left" style="${cardStyle}">
+          return `  <div class="relative bg-white border border-[#DCE5E8] rounded-2xl p-6 overflow-hidden transition-all duration-300 shadow-[0_4px_15px_rgba(16,35,63,0.01)] text-left" data-kvj-styled="true" style="${cardStyle}">
     <div class="absolute top-0 right-0 w-24 h-24 bg-[#F0FBF7] rounded-full blur-xl transition-all duration-300"></div>
-    <div class="w-10 h-10 rounded-xl bg-[#F0FBF7] border border-[#DDF8F0] flex items-center justify-center mb-4 text-[#08A88A] text-sm font-extrabold shadow-sm" style="${numStyle}">${escHtml(c.number)}</div>
-    <h4 class="text-[#10233F] font-bold text-sm mb-2 transition-colors leading-snug mt-0" style="${titleStyle}">${escHtml(c.title)}</h4>
-    <p class="text-[#526477] text-xs leading-relaxed mb-0" style="${descStyle}">${escHtml(c.desc)}</p>
+    <div class="w-10 h-10 rounded-xl bg-[#F0FBF7] border border-[#DDF8F0] flex items-center justify-center mb-4 text-[#08A88A] text-sm font-extrabold shadow-sm" data-kvj-styled="true" style="${numStyle}">${escHtml(c.number)}</div>
+    <h4 class="text-[#10233F] font-bold text-sm mb-2 transition-colors leading-snug mt-0" data-kvj-styled="true" style="${titleStyle}">${escHtml(c.title)}</h4>
+    <p class="text-[#526477] text-xs leading-relaxed mb-0" data-kvj-styled="true" style="${descStyle}">${escHtml(c.desc)}</p>
   </div>`;
         })
         .join("\n");
@@ -467,25 +467,25 @@ ${rPts}
       const evenRowBg   = b.evenRowBgColor  || "";
 
       const thCells = headers
-        .map((h: string) => `      <th style="background-color:${headerBg};color:${headerText};border-right:1px solid ${tableBorder};" class="px-4 py-3 text-xs font-bold uppercase tracking-wider last:border-r-0">${escHtml(h)}</th>`)
+        .map((h: string) => `      <th data-kvj-styled="true" style="background-color:${headerBg};color:${headerText};border-right:1px solid ${tableBorder};" class="px-4 py-3 text-xs font-bold uppercase tracking-wider last:border-r-0">${escHtml(h)}</th>`)
         .join("\n");
       const trRows = rows
         .map((row: string[], rIdx: number) => {
           const rowBg = evenRowBg && rIdx % 2 === 1 ? `background-color:${evenRowBg};` : "";
           const tds = row
-            .map((cell: string) => `      <td style="border-right:1px solid ${tableBorder}60;" class="px-4 py-3 text-sm text-[#132238] last:border-r-0">${escHtml(cell)}</td>`)
+            .map((cell: string) => `      <td data-kvj-styled="true" style="border-right:1px solid ${tableBorder}60;" class="px-4 py-3 text-sm text-[#132238] last:border-r-0">${escHtml(cell)}</td>`)
             .join("\n");
-          return `    <tr style="border-bottom:1px solid ${tableBorder}65;${rowBg}" class="hover:bg-slate-50/50 transition-colors">\n${tds}\n    </tr>`;
+          return `    <tr data-kvj-styled="true" style="border-bottom:1px solid ${tableBorder}65;${rowBg}" class="hover:bg-slate-50/50 transition-colors">\n${tds}\n    </tr>`;
         })
         .join("\n");
-      return `<div class="mt-4 mb-8 overflow-x-auto rounded-xl shadow-[0_4px_15px_rgba(16,35,63,0.01)] bg-white" style="border:1px solid ${tableBorder};">
-  <table class="w-full text-sm text-left border-collapse">
-    <thead style="border-bottom:1px solid ${tableBorder};">
-      <tr>
+      return `<div class="mt-4 mb-8 overflow-x-auto rounded-xl shadow-[0_4px_15px_rgba(16,35,63,0.01)] bg-white" data-kvj-styled="true" style="border:1px solid ${tableBorder};">
+  <table class="w-full text-sm text-left border-collapse" data-kvj-styled="true">
+    <thead style="border-bottom:1px solid ${tableBorder};" data-kvj-styled="true">
+      <tr data-kvj-styled="true">
 ${thCells}
       </tr>
     </thead>
-    <tbody>
+    <tbody data-kvj-styled="true">
 ${trRows}
     </tbody>
   </table>

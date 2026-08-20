@@ -685,6 +685,7 @@ ${html}
     const isDark = document.body.classList.contains('dark');
     document.querySelectorAll('*').forEach(el => {
       if (['HTML', 'HEAD', 'SCRIPT', 'STYLE', 'BODY'].includes(el.tagName)) return;
+      if (el.hasAttribute('data-kvj-styled') || el.closest('[data-kvj-styled]')) return;
       if (isDark) {
         if (!el.hasAttribute('data-org-bg')) {
           el.setAttribute('data-org-bg', el.style.backgroundColor || 'NONE');
