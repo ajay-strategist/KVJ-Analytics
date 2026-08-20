@@ -144,10 +144,10 @@ export function createBlock(type: BlockType): BlockData {
         title: "Knowledge Check",
         testId: "",
         showAnswers: false,
-        isInline: false,
+        isInline: true,
       };
     case "borderedtext":
-      return { id, type, title: "", text: "" };
+      return { id, type, title: "", text: "", bgColor: "#F4F9FD", accentColor: "#0E7490", label: "KEY CONCEPT" };
   }
 }
 
@@ -196,13 +196,11 @@ function renderBlock(b: BlockData): string {
   switch (b.type) {
     case "heading":
       return `<div class="mt-12 mb-6 text-left">
-  <span class="text-[10px] font-extrabold uppercase tracking-widest text-[#08A88A] block mb-1">MODULE SECTION</span>
   <h2 class="text-2xl md:text-3xl font-extrabold text-[#10233F] tracking-tight m-0 leading-tight">${escHtml(b.text)}</h2>
 </div>`;
 
     case "subheading":
-      return `<div class="mt-8 mb-4 flex items-center gap-2.5 text-left">
-  <div class="w-1.5 h-5 bg-[#08A88A] rounded-full shrink-0"></div>
+      return `<div class="mt-8 mb-4 text-left">
   <h3 class="text-lg md:text-xl font-bold text-[#10233F] m-0 tracking-tight">${escHtml(b.text)}</h3>
 </div>`;
 
@@ -413,25 +411,33 @@ ${rPts}
     case "table": {
       const headers: string[] = b.headers || [];
       const rows: string[][] = b.rows || [];
+
+      // Admin-configurable colors with sensible defaults
+      const headerBg    = b.headerBgColor   || "#F4F9FD";
+      const headerText  = b.headerTextColor || "#10233F";
+      const tableBorder = b.borderColor     || "#DCE5E8";
+      const evenRowBg   = b.evenRowBgColor  || "";
+
       const thCells = headers
-        .map((h: string) => `      <th class="px-4 py-3 text-xs font-bold uppercase tracking-wider text-[#10233F] border-r border-[#DCE5E8] last:border-r-0">${escHtml(h)}</th>`)
+        .map((h: string) => `      <th style="background-color:${headerBg};color:${headerText};border-right:1px solid ${tableBorder};" class="px-4 py-3 text-xs font-bold uppercase tracking-wider last:border-r-0">${escHtml(h)}</th>`)
         .join("\n");
       const trRows = rows
-        .map((row: string[]) => {
+        .map((row: string[], rIdx: number) => {
+          const rowBg = evenRowBg && rIdx % 2 === 1 ? `background-color:${evenRowBg};` : "";
           const tds = row
-            .map((cell: string) => `      <td class="px-4 py-3 text-sm text-[#132238] border-r border-[#DCE5E8]/60 last:border-r-0">${escHtml(cell)}</td>`)
+            .map((cell: string) => `      <td style="border-right:1px solid ${tableBorder}60;" class="px-4 py-3 text-sm text-[#132238] last:border-r-0">${escHtml(cell)}</td>`)
             .join("\n");
-          return `    <tr class="border-b border-[#DCE5E8]/65 hover:bg-slate-50/50 transition-colors">\n${tds}\n    </tr>`;
+          return `    <tr style="border-bottom:1px solid ${tableBorder}65;${rowBg}" class="hover:bg-slate-50/50 transition-colors">\n${tds}\n    </tr>`;
         })
         .join("\n");
-      return `<div class="my-8 overflow-x-auto rounded-xl border border-[#DCE5E8] shadow-[0_4px_15px_rgba(16,35,63,0.01)] bg-white">
+      return `<div class="mt-4 mb-8 overflow-x-auto rounded-xl shadow-[0_4px_15px_rgba(16,35,63,0.01)] bg-white" style="border:1px solid ${tableBorder};">
   <table class="w-full text-sm text-left border-collapse">
-    <thead class="bg-[#F4F9FD] border-b border-[#DCE5E8]">
+    <thead style="border-bottom:1px solid ${tableBorder};">
       <tr>
 ${thCells}
       </tr>
     </thead>
-    <tbody class="divide-y divide-[#DCE5E8]/65">
+    <tbody>
 ${trRows}
     </tbody>
   </table>
@@ -456,12 +462,25 @@ ${trRows}
       return `<div class="kvj-assessment-placeholder my-8" data-test-id="${b.testId || ""}" data-title="${escAttr(b.title || "Assessment")}" data-show-answers="${b.showAnswers ? "true" : "false"}" data-is-inline="${b.isInline ? "true" : "false"}"></div>`;
     }
 
-    case "borderedtext":
-      return `<div class="my-6 border border-[#DCE5E8] border-l-4 border-l-[#0E7490] bg-[#F4F9FD] p-6 rounded-r-2xl text-left shadow-[0_4px_15px_rgba(16,35,63,0.01)]">
-  <div class="text-[10px] font-extrabold uppercase tracking-widest text-[#0E7490] mb-2">KEY CONCEPT</div>
+    case "borderedtext": {
+      const btBg     = b.bgColor      || "#F4F9FD";
+      const btBorder = b.accentColor  || "#0E7490";
+      const btLabel  = b.label        || "KEY CONCEPT";
+      // Preserve line breaks: split on \n and wrap each non-empty line in <p>
+      const btLines  = (b.text || "").split("\n");
+      const btHtml   = btLines
+        .map((line: string) =>
+          line.trim() === ""
+            ? `<p class="mb-2">&nbsp;</p>`
+            : `<p class="text-sm text-[#526477] leading-relaxed mb-2">${escHtml(line)}</p>`
+        )
+        .join("");
+      return `<div class="my-6 border border-[#DCE5E8] border-l-4 p-6 rounded-r-2xl text-left shadow-[0_4px_15px_rgba(16,35,63,0.01)]" style="background-color:${btBg};border-left-color:${btBorder};">
+  <div class="text-[10px] font-extrabold uppercase tracking-widest mb-2" style="color:${btBorder};">${escHtml(btLabel)}</div>
   ${b.title ? `<h4 class="font-bold text-sm text-[#10233F] mb-1.5 mt-0 leading-tight">${escHtml(b.title.trim())}</h4>` : ""}
-  <p class="text-sm text-[#526477] leading-relaxed mb-0">${escHtml((b.text || "").trim())}</p>
+  <div>${btHtml}</div>
 </div>`;
+    }
 
     default:
       return "";

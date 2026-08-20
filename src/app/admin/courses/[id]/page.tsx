@@ -1803,6 +1803,18 @@ const LessonEditor = React.memo(function LessonEditor({
                                 <div className="space-y-3">
                                   <div className="space-y-1.5">
                                     <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">
+                                      Block Label
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={b.label || "KEY CONCEPT"}
+                                      onChange={(e) => updateDocumentBlock(b.id, { label: e.target.value })}
+                                      placeholder="KEY CONCEPT"
+                                      className="w-full px-3 py-2 border border-line bg-white text-slate-800 dark:text-slate-100 dark:bg-slate-900 rounded-lg text-sm"
+                                    />
+                                  </div>
+                                  <div className="space-y-1.5">
+                                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">
                                       Bordered Block Header Title
                                     </label>
                                     <input
@@ -1819,9 +1831,24 @@ const LessonEditor = React.memo(function LessonEditor({
                                       rows={4}
                                       value={b.text || ""}
                                       onChange={(e) => updateDocumentBlock(b.id, { text: e.target.value })}
-                                      placeholder="Write content here..."
+                                      placeholder="Write content here... (each new line will be preserved)"
                                       className="w-full px-3 py-2 border border-line bg-white text-slate-800 dark:text-slate-100 dark:bg-slate-900 rounded-lg text-xs"
                                     />
+                                  </div>
+                                  <div className="pt-2 border-t border-line/60">
+                                    <span className="block text-[9px] font-bold uppercase tracking-wider text-slate mb-2">Block Colors</span>
+                                    <div className="grid grid-cols-2 gap-2">
+                                      <ColorPicker
+                                        label="Background"
+                                        color={b.bgColor || "#F4F9FD"}
+                                        onChange={(col) => updateDocumentBlock(b.id, { bgColor: col })}
+                                      />
+                                      <ColorPicker
+                                        label="Accent / Border"
+                                        color={b.accentColor || "#0E7490"}
+                                        onChange={(col) => updateDocumentBlock(b.id, { accentColor: col })}
+                                      />
+                                    </div>
                                   </div>
                                 </div>
                               )}
@@ -1939,6 +1966,36 @@ const LessonEditor = React.memo(function LessonEditor({
                                       </tbody>
                                     </table>
                                   </div>
+                                  {/* Table Color Customization */}
+                                  <details className="cursor-pointer pt-2 border-t border-line/60">
+                                    <summary className="text-[9px] font-bold text-slate uppercase tracking-wider select-none hover:text-brand transition-colors">
+                                      Table Style &amp; Colors
+                                    </summary>
+                                    <div className="pt-2 space-y-2">
+                                      <div className="grid grid-cols-2 gap-2">
+                                        <ColorPicker
+                                          label="Header BG"
+                                          color={b.headerBgColor || "#F4F9FD"}
+                                          onChange={(col) => updateDocumentBlock(b.id, { headerBgColor: col })}
+                                        />
+                                        <ColorPicker
+                                          label="Header Text"
+                                          color={b.headerTextColor || "#10233F"}
+                                          onChange={(col) => updateDocumentBlock(b.id, { headerTextColor: col })}
+                                        />
+                                        <ColorPicker
+                                          label="Border"
+                                          color={b.borderColor || "#DCE5E8"}
+                                          onChange={(col) => updateDocumentBlock(b.id, { borderColor: col })}
+                                        />
+                                        <ColorPicker
+                                          label="Alt Row BG"
+                                          color={b.evenRowBgColor || ""}
+                                          onChange={(col) => updateDocumentBlock(b.id, { evenRowBgColor: col })}
+                                        />
+                                      </div>
+                                    </div>
+                                  </details>
                                 </div>
                               )}
 
