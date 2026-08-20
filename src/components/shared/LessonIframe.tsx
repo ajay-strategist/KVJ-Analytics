@@ -44,31 +44,31 @@ blockquote p {
   color: #f8fafc !important;
 }
 
-/* Override any elements with hardcoded dark inline text colors */
-[style*="color: #0"], [style*="color:#0"],
-[style*="color: #1"], [style*="color:#1"],
-[style*="color: #2"], [style*="color:#2"],
-[style*="color: #3"], [style*="color:#3"],
-[style*="color: #4"], [style*="color:#4"],
-[style*="color: #5"], [style*="color:#5"],
-[style*="color: black"], [style*="color:black"],
-[style*="color: rgb(0,"], [style*="color: rgb(1"], [style*="color: rgb(2"], [style*="color: rgb(3"], [style*="color: rgb(4"], [style*="color: rgb(5"], [style*="color: rgb(6"] {
+/* Override any elements with hardcoded dark inline text colors, but EXEMPT admin-styled blocks */
+[style*="color: #0"]:not([data-kvj-styled]), [style*="color:#0"]:not([data-kvj-styled]),
+[style*="color: #1"]:not([data-kvj-styled]), [style*="color:#1"]:not([data-kvj-styled]),
+[style*="color: #2"]:not([data-kvj-styled]), [style*="color:#2"]:not([data-kvj-styled]),
+[style*="color: #3"]:not([data-kvj-styled]), [style*="color:#3"]:not([data-kvj-styled]),
+[style*="color: #4"]:not([data-kvj-styled]), [style*="color:#4"]:not([data-kvj-styled]),
+[style*="color: #5"]:not([data-kvj-styled]), [style*="color:#5"]:not([data-kvj-styled]),
+[style*="color: black"]:not([data-kvj-styled]), [style*="color:black"]:not([data-kvj-styled]),
+[style*="color: rgb(0,"]:not([data-kvj-styled]), [style*="color: rgb(1"]:not([data-kvj-styled]), [style*="color: rgb(2"]:not([data-kvj-styled]), [style*="color: rgb(3"]:not([data-kvj-styled]), [style*="color: rgb(4"]:not([data-kvj-styled]), [style*="color: rgb(5"]:not([data-kvj-styled]), [style*="color: rgb(6"]:not([data-kvj-styled]) {
   color: #cbd5e1 !important;
 }
 
-/* Strip hardcoded light background colors from imported HTML containers */
-[style*="background-color: white"], [style*="background-color:#fff"], [style*="background-color: #fff"], [style*="background-color:#ffffff"], [style*="background-color: #ffffff"],
-[style*="background-color: rgb(255"], [style*="background-color: rgb(24"], [style*="background-color: rgb(25"],
-[style*="background: white"], [style*="background: #fff"], [style*="background: #ffffff"],
-.bg-white,
-.bg-surface, .bg-base-2, .bg-slate-200,
-.bg-gray-50, .bg-gray-100, .bg-gray-200,
-.bg-zinc-50, .bg-zinc-100, .bg-zinc-200,
-.bg-neutral-50, .bg-neutral-100, .bg-neutral-200,
-[class*="bg-white"],
-[class*="bg-surface"], [class*="bg-base-2"],
-[class*="bg-gray-50"], [class*="bg-gray-100"],
-[class*="bg-zinc-50"], [class*="bg-zinc-100"] {
+/* Strip hardcoded light background colors from imported HTML containers, but EXEMPT admin-styled blocks */
+[style*="background-color: white"]:not([data-kvj-styled]), [style*="background-color:#fff"]:not([data-kvj-styled]), [style*="background-color: #fff"]:not([data-kvj-styled]), [style*="background-color:#ffffff"]:not([data-kvj-styled]), [style*="background-color: #ffffff"]:not([data-kvj-styled]),
+[style*="background-color: rgb(255"]:not([data-kvj-styled]), [style*="background-color: rgb(24"]:not([data-kvj-styled]), [style*="background-color: rgb(25"]:not([data-kvj-styled]),
+[style*="background: white"]:not([data-kvj-styled]), [style*="background: #fff"]:not([data-kvj-styled]), [style*="background: #ffffff"]:not([data-kvj-styled]),
+.bg-white:not([data-kvj-styled]),
+.bg-surface:not([data-kvj-styled]), .bg-base-2:not([data-kvj-styled]), .bg-slate-200:not([data-kvj-styled]),
+.bg-gray-50:not([data-kvj-styled]), .bg-gray-100:not([data-kvj-styled]), .bg-gray-200:not([data-kvj-styled]),
+.bg-zinc-50:not([data-kvj-styled]), .bg-zinc-100:not([data-kvj-styled]), .bg-zinc-200:not([data-kvj-styled]),
+.bg-neutral-50:not([data-kvj-styled]), .bg-neutral-100:not([data-kvj-styled]), .bg-neutral-200:not([data-kvj-styled]),
+[class*="bg-white"]:not([data-kvj-styled]),
+[class*="bg-surface"]:not([data-kvj-styled]), [class*="bg-base-2"]:not([data-kvj-styled]),
+[class*="bg-gray-50"]:not([data-kvj-styled]), [class*="bg-gray-100"]:not([data-kvj-styled]),
+[class*="bg-zinc-50"]:not([data-kvj-styled]), [class*="bg-zinc-100"]:not([data-kvj-styled]) {
   background-color: transparent !important;
 }
 
@@ -125,8 +125,15 @@ h1, h2, h3, h4, h5, h6 {
   color: #10233F !important;
   font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
 }
+h1[data-kvj-styled], h2[data-kvj-styled], h3[data-kvj-styled], h4[data-kvj-styled], h5[data-kvj-styled], h6[data-kvj-styled],
+[data-kvj-styled] h1, [data-kvj-styled] h2, [data-kvj-styled] h3, [data-kvj-styled] h4, [data-kvj-styled] h5, [data-kvj-styled] h6 {
+  color: unset;
+}
 p, li, td, th, dt, dd, label {
   color: #132238 !important;
+}
+[data-kvj-styled] p, [data-kvj-styled] li {
+  color: unset;
 }
 strong, b {
   color: #10233F !important;

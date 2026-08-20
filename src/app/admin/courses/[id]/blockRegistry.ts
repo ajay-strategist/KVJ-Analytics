@@ -225,8 +225,8 @@ function renderBlock(b: BlockData): string {
         b.textColor ? "" : `color: #10233F !important;`,
       ]);
       const hWrapStyle = b.bgColor ? `background-color: ${b.bgColor} !important; padding: 1rem 1.5rem; border-radius: 0.75rem;` : "";
-      return `<div class="mt-12 mb-6" style="text-align: ${b.align || 'left'}; ${hWrapStyle}">
-  <h2 class="text-2xl md:text-3xl font-extrabold tracking-tight m-0 leading-tight" style="${hStyle}">${escHtml(b.text)}</h2>
+      return `<div class="mt-12 mb-6" data-kvj-styled="true" style="text-align: ${b.align || 'left'}; ${hWrapStyle}">
+  <h2 class="text-2xl md:text-3xl font-extrabold tracking-tight m-0 leading-tight" data-kvj-styled="true" style="${hStyle}">${escHtml(b.text)}</h2>
 </div>`;
     }
 
@@ -235,8 +235,8 @@ function renderBlock(b: BlockData): string {
         b.textColor ? "" : `color: #10233F !important;`,
       ]);
       const shWrapStyle = b.bgColor ? `background-color: ${b.bgColor} !important; padding: 0.75rem 1rem; border-radius: 0.5rem;` : "";
-      return `<div class="mt-8 mb-4" style="text-align: ${b.align || 'left'}; ${shWrapStyle}">
-  <h3 class="text-lg md:text-xl font-bold m-0 tracking-tight" style="${shStyle}">${escHtml(b.text)}</h3>
+      return `<div class="mt-8 mb-4" data-kvj-styled="true" style="text-align: ${b.align || 'left'}; ${shWrapStyle}">
+  <h3 class="text-lg md:text-xl font-bold m-0 tracking-tight" data-kvj-styled="true" style="${shStyle}">${escHtml(b.text)}</h3>
 </div>`;
     }
 
@@ -244,7 +244,7 @@ function renderBlock(b: BlockData): string {
       const pStyle = buildBlockStyle(b, [
         b.textColor ? "" : `color: #132238 !important;`,
       ]);
-      return `<div class="leading-[1.8] font-light mb-6 tracking-wide max-w-none" style="${pStyle}; text-align: ${b.align || 'left'};">${b.text || ""}</div>`;
+      return `<div class="leading-[1.8] font-light mb-6 tracking-wide max-w-none" data-kvj-styled="true" style="${pStyle}; text-align: ${b.align || 'left'};">${b.text || ""}</div>`;
     }
 
     case "image":
@@ -342,13 +342,13 @@ ${pts}
         `text-align: ${listAlign} !important;`,
       ].filter(Boolean).join(" ");
       const pts = (b.points || [])
-        .map((p: string) => `    <li class="flex items-start gap-3 leading-relaxed" style="color: ${listTextColor} !important; font-size: ${listFontSize} !important;">
+        .map((p: string) => `    <li class="flex items-start gap-3 leading-relaxed" data-kvj-styled="true" style="color: ${listTextColor} !important; font-size: ${listFontSize} !important;">
       <span class="text-[#08A88A] shrink-0 mt-1.5 text-[10px] select-none">◆</span>
       <span>${escHtml(p)}</span>
     </li>`)
         .join("\n");
-      return `<div class="my-6 ${listBgColor ? 'p-5 rounded-xl' : ''} space-y-4" style="${listWrapStyle}">
-  ${b.title ? `<h4 class="font-bold text-base tracking-tight mb-3 mt-0" style="color: ${listTextColor} !important;">${escHtml(b.title)}</h4>` : ""}
+      return `<div class="my-6 ${listBgColor ? 'p-5 rounded-xl' : ''} space-y-4" data-kvj-styled="true" style="${listWrapStyle}">
+  ${b.title ? `<h4 class="font-bold text-base tracking-tight mb-3 mt-0" data-kvj-styled="true" style="color: ${listTextColor} !important;">${escHtml(b.title)}</h4>` : ""}
   <ul class="space-y-3 pl-1">
 ${pts}
   </ul>
@@ -536,10 +536,10 @@ ${trRows}
         `text-align: ${btAlign} !important;`,
         `box-shadow: 0 4px 15px rgba(16,35,63,0.03) !important;`,
       ].join(" ");
-      return `<div class="my-6" style="${btWrapStyle}">
-  <div class="text-[10px] font-extrabold uppercase tracking-widest mb-2" style="color: ${btBorder} !important;">${escHtml(btLabel)}</div>
-  ${b.title ? `<h4 class="font-bold mb-1.5 mt-0 leading-tight" style="color: #10233F; font-size: ${btFontSz};">${escHtml(b.title.trim())}</h4>` : ""}
-  <div>${btHtml}</div>
+      return `<div class="my-6" data-kvj-styled="true" style="${btWrapStyle}">
+  <div class="text-[10px] font-extrabold uppercase tracking-widest mb-2" data-kvj-styled="true" style="color: ${btBorder} !important;">${escHtml(btLabel)}</div>
+  ${b.title ? `<h4 class="font-bold mb-1.5 mt-0 leading-tight" data-kvj-styled="true" style="color: #10233F; font-size: ${btFontSz};">${escHtml(b.title.trim())}</h4>` : ""}
+  <div data-kvj-styled="true">${btHtml}</div>
 </div>`;
     }
 
