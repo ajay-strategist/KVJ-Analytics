@@ -334,6 +334,19 @@ export const BLOG_BLOCKS: ContentBlock[] = [
     <a href="/training" class="inline-block px-5 py-2.5 bg-white/5 border border-white/10 hover:border-brand/40 hover:bg-brand hover:text-black text-white font-bold text-xs uppercase tracking-wider rounded-full transition-all">Explore Courses</a>
   </div>
 </div>`
+  },
+  {
+    id: "text_paragraph_image",
+    name: "Paragraph with Image",
+    category: "Structured Data",
+    description: "Paragraph block with an image embedded in the middle.",
+    template: `<div class="my-6">
+  <p>First paragraph of content goes here. Write introductory text before the visual asset.</p>
+  <div class="my-6 text-center">
+    <img src="https://picsum.photos/800/400?random=4" alt="Embedded Image" class="rounded-2xl mx-auto shadow-md" />
+  </div>
+  <p>Second paragraph of content goes here. Write follow-up explanation or conclusions.</p>
+</div>`
   }
 ];
 

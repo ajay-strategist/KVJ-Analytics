@@ -15,6 +15,7 @@ import { required, maxLen, slug as slugRule, type FieldSchema } from "@/lib/admi
 import { LessonIframe } from "@/components/shared/LessonIframe";
 import { BLOG_BLOCKS, ContentBlock } from "@/lib/admin/blogBlocks";
 import { toDirectImageUrl, isShareLink } from "@/lib/mediaUrl";
+import { generateCustomBlock, type BlockStyleOptions } from "@/lib/admin/customBlockGenerator";
 
 const slugify = (s: string) => s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 
@@ -118,6 +119,132 @@ export function BlogForm({ id, initial }: { id?: string; initial?: BlogInitial }
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [selectedBlockCat, setSelectedBlockCat] = useState<string>(BLOG_BLOCKS[0].category);
   const [otherPosts, setOtherPosts] = useState<any[]>([]);
+
+  const [selectedBlock, setSelectedBlock] = useState<ContentBlock | null>(null);
+  const [blockOptions, setBlockOptions] = useState<BlockStyleOptions>({
+    bgType: 'default',
+    customBgColor: '',
+    alignment: 'left',
+    fontFamily: 'default',
+    borderStyle: 'default',
+    headingStyle: 'standard',
+    headingSize: 'md',
+    headingColor: 'white',
+    customHeadingColor: '',
+  });
+
+  const defaultBlockOptions = (blockId: string): BlockStyleOptions => {
+    const defaults: BlockStyleOptions = {
+      bgType: 'default',
+      customBgColor: '',
+      alignment: 'left',
+      fontFamily: 'default',
+      borderStyle: 'default',
+      headingStyle: 'standard',
+      headingSize: 'md',
+      headingColor: 'white',
+      customHeadingColor: '',
+    };
+
+    switch (blockId) {
+      case 'callout_info':
+        defaults.headingText = 'Important Information';
+        defaults.subheadingText = 'Here is key background details to keep in mind regarding this methodology.';
+        defaults.calloutTheme = 'blue';
+        break;
+      case 'callout_warning':
+        defaults.headingText = 'Attention Required';
+        defaults.subheadingText = 'Be careful when applying these settings, as it may break backward compatibility.';
+        defaults.calloutTheme = 'amber';
+        break;
+      case 'callout_success':
+        defaults.headingText = 'Pro Tip / Best Practice';
+        defaults.subheadingText = 'Successfully applying this flow will reduce execution times by up to 90%.';
+        defaults.calloutTheme = 'emerald';
+        break;
+      case 'callout_tip':
+        defaults.headingText = 'Interactive Spotlight';
+        defaults.subheadingText = 'You can customize this template snippet in the editor. Perfect for key takeaways.';
+        defaults.calloutTheme = 'purple';
+        break;
+      case 'layout_2col':
+        defaults.col1Heading = 'Left Column Heading';
+        defaults.col1Text = 'Add content here. This column is fully responsive and adjusts automatically.';
+        defaults.col2Heading = 'Right Column Heading';
+        defaults.col2Text = 'Add content here. Ideal for text + image pairing or side-by-side metrics.';
+        break;
+      case 'layout_3col':
+        defaults.col1Heading = 'Column 1';
+        defaults.col1Text = 'Description or detail text goes here.';
+        defaults.col2Heading = 'Column 2';
+        defaults.col2Text = 'Description or detail text goes here.';
+        defaults.col3Heading = 'Column 3';
+        defaults.col3Text = 'Description or detail text goes here.';
+        break;
+      case 'accordion_faq':
+        defaults.faqQuestion = 'How does this automated script consolidate multiple excel folders?';
+        defaults.faqAnswer = 'It reads all spreadsheets placed in the designated input folder, parses their schemas, verifies their integrity, aggregates the records, and writes the output workbook.';
+        break;
+      case 'tabs_interactive':
+        defaults.col1Heading = 'Tab Title 1';
+        defaults.col1Text = 'This is the content of the first tab. Great for explaining different approaches, tools or setups side-by-side.';
+        defaults.col2Heading = 'Tab Title 2';
+        defaults.col2Text = 'This is the content of the second tab. Fully isolated and behaves as a pure interactive element.';
+        break;
+      case 'timeline_vertical':
+        defaults.col1Heading = 'Phase 1 — Discovery';
+        defaults.headingText = 'Audit Existing Operations';
+        defaults.col1Text = 'Identify Excel spreadsheets, manual copy-paste points, and formula dependencies.';
+        defaults.col2Heading = 'Phase 2 — Implementation';
+        defaults.subheadingText = 'Deploy Python/VBA Macro Scripts';
+        defaults.col2Text = 'Build automatic folder ingestion pipelines and configure live API databases.';
+        defaults.col3Heading = 'Phase 3 — Review';
+        defaults.buttonText = 'Handover & Testing';
+        defaults.col3Text = 'Verify automated PDF scorecard outputs and train team users on dashboard utilities.';
+        break;
+      case 'media_video':
+        defaults.mediaUrl = 'https://www.youtube.com/embed/dQw4w9WgXcQ';
+        break;
+      case 'media_pdf':
+        defaults.mediaUrl = 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf';
+        break;
+      case 'media_gallery':
+        defaults.col1Text = 'https://picsum.photos/400/400?random=1';
+        defaults.col2Text = 'https://picsum.photos/400/400?random=2';
+        defaults.col3Text = 'https://picsum.photos/400/400?random=3';
+        break;
+      case 'text_paragraph_image':
+        defaults.col1Text = 'First paragraph of content goes here. Write introductory text before the visual asset.';
+        defaults.col2Text = 'Second paragraph of content goes here. Write follow-up explanation or conclusions.';
+        defaults.mediaUrl = 'https://picsum.photos/800/400?random=4';
+        defaults.headingText = 'Embedded Image';
+        break;
+      case 'snippet_cta':
+        defaults.headingText = 'Automate Your Operations Today';
+        defaults.subheadingText = 'Talk to the KVJ Analytics experts and find out how we can save your team hours of report pipelines.';
+        defaults.buttonText = 'Schedule Free Audit';
+        defaults.buttonUrl = '/contact';
+        break;
+      case 'snippet_newsletter':
+        defaults.headingText = 'Get Weekly Excel & Analytics Tips';
+        defaults.subheadingText = 'Join 2,000+ business leaders receiving spreadsheet formulas, dashboards and automation guides.';
+        defaults.buttonText = 'Subscribe';
+        break;
+      case 'snippet_training':
+        defaults.headingText = 'Master Excel & MIS Report Automation';
+        defaults.subheadingText = 'Advance your career. Gain live certification with hands-on labs, 3D equations, Power BI dashboards and macros evaluation.';
+        defaults.buttonText = 'Explore Courses';
+        defaults.buttonUrl = '/training';
+        break;
+    }
+    return defaults;
+  };
+
+  const insertCustomBlock = () => {
+    if (!selectedBlock) return;
+    const customHtml = generateCustomBlock(selectedBlock.id, blockOptions);
+    insertContent(`\n${customHtml}\n`);
+  };
 
   // Image insertion modal state
   const [showImageModal, setShowImageModal] = useState(false);
@@ -397,6 +524,715 @@ export function BlogForm({ id, initial }: { id?: string; initial?: BlogInitial }
   const blockCategories = Array.from(new Set(BLOG_BLOCKS.map(b => b.category)));
   const filteredBlocks = BLOG_BLOCKS.filter(b => b.category === selectedBlockCat);
 
+  const renderBlockCustomizer = () => {
+    if (!selectedBlock) return null;
+
+    const isCallout = ['callout_info', 'callout_warning', 'callout_success', 'callout_tip'].includes(selectedBlock.id);
+    const isParagraphWithImage = selectedBlock.id === 'text_paragraph_image';
+
+    const hasHeading = ['callout_info', 'callout_warning', 'callout_success', 'callout_tip', 'snippet_cta', 'snippet_newsletter', 'snippet_training'].includes(selectedBlock.id);
+    const hasSubheading = ['callout_info', 'callout_warning', 'callout_success', 'callout_tip', 'snippet_cta', 'snippet_newsletter', 'snippet_training'].includes(selectedBlock.id);
+    const hasColumns2 = ['layout_2col', 'tabs_interactive'].includes(selectedBlock.id);
+    const hasColumns3 = ['layout_3col', 'timeline_vertical', 'media_gallery'].includes(selectedBlock.id);
+    const hasMedia = ['media_video', 'media_pdf'].includes(selectedBlock.id);
+    const hasFaq = selectedBlock.id === 'accordion_faq';
+    const hasStats = selectedBlock.id === 'statistics_grid';
+    const hasButtons = ['snippet_cta', 'snippet_training'].includes(selectedBlock.id);
+
+    return (
+      <div className="space-y-4 animate-fade-in text-slate-800">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+          <button
+            type="button"
+            onClick={() => setSelectedBlock(null)}
+            className="text-[11px] font-bold text-slate-500 hover:text-slate-800 flex items-center gap-1 transition-colors cursor-pointer"
+          >
+            ← Back to blocks
+          </button>
+          <span className="text-[10px] font-extrabold text-brand bg-brand/5 px-2 py-0.5 rounded-full uppercase tracking-wider">
+            {selectedBlock.category}
+          </span>
+        </div>
+
+        <div>
+          <h4 className="text-xs font-extrabold text-slate-800">{selectedBlock.name}</h4>
+          <p className="text-[10px] text-slate-400 mt-0.5">{selectedBlock.description}</p>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              insertBlock(selectedBlock);
+              setSelectedBlock(null);
+            }}
+            className="px-2.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold rounded-xl transition-all cursor-pointer text-center"
+          >
+            Quick Default Insert
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              insertCustomBlock();
+              setSelectedBlock(null);
+            }}
+            className="px-2.5 py-2 bg-brand text-black text-[11px] font-bold uppercase tracking-wider rounded-xl hover:bg-[#16E6D8] transition-all cursor-pointer text-center"
+          >
+            Insert Customized
+          </button>
+        </div>
+
+        <div className="border-t border-slate-100 my-2"></div>
+
+        {/* Scrollable Customize Area */}
+        <div className="space-y-4 max-h-[380px] overflow-y-auto pr-1">
+          {/* Section 1: Content Fields */}
+          <div className="space-y-2">
+            <h6 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">1. Content Customization</h6>
+            
+            {isCallout && (
+              <div className="space-y-3 border border-slate-100 p-2.5 rounded-xl bg-slate-50/50 mb-3 text-left">
+                <span className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider">Callout Styling Theme</span>
+                
+                <div>
+                  <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">Color Theme</label>
+                  <select
+                    value={blockOptions.calloutTheme || 'blue'}
+                    onChange={(e) => setBlockOptions({ ...blockOptions, calloutTheme: e.target.value as any })}
+                    className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 focus:outline-none"
+                  >
+                    <option value="blue">Blue Info Style</option>
+                    <option value="amber">Amber Warning Style</option>
+                    <option value="emerald">Emerald Success Style</option>
+                    <option value="purple">Purple Tip Style</option>
+                    <option value="red">Red Danger Style</option>
+                    <option value="custom">Custom Color Scheme</option>
+                  </select>
+                </div>
+
+                {blockOptions.calloutTheme === 'custom' && (
+                  <div>
+                    <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">Custom Theme Color (Hex)</label>
+                    <input
+                      type="text"
+                      placeholder="#08A88A"
+                      value={blockOptions.customCalloutColor || ''}
+                      onChange={(e) => setBlockOptions({ ...blockOptions, customCalloutColor: e.target.value })}
+                      className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-brand/40"
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {isParagraphWithImage && (
+              <div className="space-y-3 border border-slate-100 p-2.5 rounded-xl bg-slate-50/50 mb-3 text-left">
+                <span className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider">Paragraph with Image Settings</span>
+                
+                <div>
+                  <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">Paragraph 1 Text</label>
+                  <textarea
+                    rows={3}
+                    value={blockOptions.col1Text || ''}
+                    onChange={(e) => setBlockOptions({ ...blockOptions, col1Text: e.target.value })}
+                    className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none resize-y"
+                    placeholder="Write introductory text..."
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-wider">Image Source</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={blockOptions.mediaUrl || ''}
+                      onChange={(e) => setBlockOptions({ ...blockOptions, mediaUrl: e.target.value })}
+                      placeholder="Paste image URL here..."
+                      className="flex-1 px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none"
+                    />
+                    <label className="cursor-pointer px-2 py-1 bg-white border border-slate-200 hover:border-slate-350 text-slate-650 hover:text-slate-905 text-[10px] font-bold rounded-lg flex items-center justify-center shrink-0 shadow-sm transition-colors">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          try {
+                            const fd = new FormData();
+                            fd.append("file", file);
+                            const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
+                            const data = await res.json();
+                            if (res.ok && data.url) {
+                              setBlockOptions(prev => ({ ...prev, mediaUrl: data.url }));
+                            }
+                          } catch (err) {
+                            console.error(err);
+                          }
+                        }}
+                        className="hidden"
+                      />
+                      <span>Upload</span>
+                    </label>
+                  </div>
+                  
+                  {/* Image Preview Panel */}
+                  {blockOptions.mediaUrl && (
+                    <div className="relative mt-2 h-28 w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-1 flex items-center justify-center group">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={blockOptions.mediaUrl}
+                        alt="Preview"
+                        className="max-h-full max-w-full object-contain animate-fade-in"
+                        onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setBlockOptions(prev => ({ ...prev, mediaUrl: '' }))}
+                        className="absolute top-1.5 right-1.5 p-1 bg-slate-800/80 hover:bg-rose-600 text-white rounded-full transition-colors cursor-pointer"
+                        title="Remove image"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">Image Alt Text / Caption</label>
+                  <input
+                    type="text"
+                    value={blockOptions.headingText || ''}
+                    onChange={(e) => setBlockOptions({ ...blockOptions, headingText: e.target.value })}
+                    className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none"
+                    placeholder="Describe the image..."
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">Paragraph 2 Text</label>
+                  <textarea
+                    rows={3}
+                    value={blockOptions.col2Text || ''}
+                    onChange={(e) => setBlockOptions({ ...blockOptions, col2Text: e.target.value })}
+                    className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none resize-y"
+                    placeholder="Write explanation text..."
+                  />
+                </div>
+              </div>
+            )}
+            
+            {hasHeading && (
+              <div>
+                <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">Heading Text</label>
+                <input
+                  type="text"
+                  value={blockOptions.headingText || ''}
+                  onChange={(e) => setBlockOptions({ ...blockOptions, headingText: e.target.value })}
+                  className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-brand/40"
+                />
+              </div>
+            )}
+
+            {hasSubheading && (
+              <div>
+                <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">Subheading / Description</label>
+                <textarea
+                  rows={3}
+                  value={blockOptions.subheadingText || ''}
+                  onChange={(e) => setBlockOptions({ ...blockOptions, subheadingText: e.target.value })}
+                  className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-brand/40 resize-y"
+                />
+              </div>
+            )}
+
+            {hasButtons && (
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">Button Text</label>
+                  <input
+                    type="text"
+                    value={blockOptions.buttonText || ''}
+                    onChange={(e) => setBlockOptions({ ...blockOptions, buttonText: e.target.value })}
+                    className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">Button URL</label>
+                  <input
+                    type="text"
+                    value={blockOptions.buttonUrl || ''}
+                    onChange={(e) => setBlockOptions({ ...blockOptions, buttonUrl: e.target.value })}
+                    className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none"
+                  />
+                </div>
+              </div>
+            )}
+
+            {hasFaq && (
+              <>
+                <div>
+                  <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">Accordion Question</label>
+                  <input
+                    type="text"
+                    value={blockOptions.faqQuestion || ''}
+                    onChange={(e) => setBlockOptions({ ...blockOptions, faqQuestion: e.target.value })}
+                    className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-brand/40"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">Accordion Answer</label>
+                  <textarea
+                    rows={3}
+                    value={blockOptions.faqAnswer || ''}
+                    onChange={(e) => setBlockOptions({ ...blockOptions, faqAnswer: e.target.value })}
+                    className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none resize-y"
+                  />
+                </div>
+              </>
+            )}
+
+            {hasMedia && (
+              <div>
+                <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">Media / File URL</label>
+                <input
+                  type="text"
+                  value={blockOptions.mediaUrl || ''}
+                  onChange={(e) => setBlockOptions({ ...blockOptions, mediaUrl: e.target.value })}
+                  className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none"
+                />
+              </div>
+            )}
+
+            {hasColumns2 && (
+              <div className="space-y-2 border border-slate-100 p-2.5 rounded-xl bg-slate-50/50">
+                <span className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider">Column Elements</span>
+                <div>
+                  <label className="block text-[9px] font-bold text-slate-500 uppercase mb-0.5">Col 1 Heading</label>
+                  <input
+                    type="text"
+                    value={blockOptions.col1Heading || ''}
+                    onChange={(e) => setBlockOptions({ ...blockOptions, col1Heading: e.target.value })}
+                    className="w-full px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[9px] font-bold text-slate-500 uppercase mb-0.5">Col 1 Content</label>
+                  <textarea
+                    rows={2}
+                    value={blockOptions.col1Text || ''}
+                    onChange={(e) => setBlockOptions({ ...blockOptions, col1Text: e.target.value })}
+                    className="w-full px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs resize-y"
+                  />
+                </div>
+                <div className="border-t border-slate-200 my-1"></div>
+                <div>
+                  <label className="block text-[9px] font-bold text-slate-500 uppercase mb-0.5">Col 2 Heading</label>
+                  <input
+                    type="text"
+                    value={blockOptions.col2Heading || ''}
+                    onChange={(e) => setBlockOptions({ ...blockOptions, col2Heading: e.target.value })}
+                    className="w-full px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[9px] font-bold text-slate-500 uppercase mb-0.5">Col 2 Content</label>
+                  <textarea
+                    rows={2}
+                    value={blockOptions.col2Text || ''}
+                    onChange={(e) => setBlockOptions({ ...blockOptions, col2Text: e.target.value })}
+                    className="w-full px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs resize-y"
+                  />
+                </div>
+              </div>
+            )}
+
+            {hasColumns3 && (
+              <div className="space-y-2 border border-slate-100 p-2.5 rounded-xl bg-slate-50/50">
+                <span className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+                  {selectedBlock.id === 'media_gallery' ? 'Gallery Image URLs' : 'Section Items'}
+                </span>
+                
+                {selectedBlock.id === 'timeline_vertical' && (
+                  <div className="grid grid-cols-3 gap-1">
+                    <div>
+                      <label className="block text-[8px] font-bold text-slate-500 uppercase">Phase 1</label>
+                      <input
+                        type="text"
+                        value={blockOptions.col1Heading || ''}
+                        onChange={(e) => setBlockOptions({ ...blockOptions, col1Heading: e.target.value })}
+                        className="w-full px-1.5 py-1 bg-white border border-slate-200 rounded-lg text-[10px]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[8px] font-bold text-slate-500 uppercase">Phase 2</label>
+                      <input
+                        type="text"
+                        value={blockOptions.col2Heading || ''}
+                        onChange={(e) => setBlockOptions({ ...blockOptions, col2Heading: e.target.value })}
+                        className="w-full px-1.5 py-1 bg-white border border-slate-200 rounded-lg text-[10px]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[8px] font-bold text-slate-500 uppercase">Phase 3</label>
+                      <input
+                        type="text"
+                        value={blockOptions.col3Heading || ''}
+                        onChange={(e) => setBlockOptions({ ...blockOptions, col3Heading: e.target.value })}
+                        className="w-full px-1.5 py-1 bg-white border border-slate-200 rounded-lg text-[10px]"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-[9px] font-bold text-slate-500 uppercase mb-0.5">
+                    {selectedBlock.id === 'media_gallery' ? 'Image 1 URL' : 'Item 1 Heading'}
+                  </label>
+                  <input
+                    type="text"
+                    value={selectedBlock.id === 'media_gallery' ? (blockOptions.col1Text || '') : (selectedBlock.id === 'timeline_vertical' ? (blockOptions.headingText || '') : (blockOptions.col1Heading || ''))}
+                    onChange={(e) => {
+                      if (selectedBlock.id === 'media_gallery') setBlockOptions({ ...blockOptions, col1Text: e.target.value });
+                      else if (selectedBlock.id === 'timeline_vertical') setBlockOptions({ ...blockOptions, headingText: e.target.value });
+                      else setBlockOptions({ ...blockOptions, col1Heading: e.target.value });
+                    }}
+                    className="w-full px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs"
+                  />
+                </div>
+                {selectedBlock.id !== 'media_gallery' && (
+                  <div>
+                    <label className="block text-[9px] font-bold text-slate-500 uppercase mb-0.5">Item 1 Content</label>
+                    <textarea
+                      rows={2}
+                      value={blockOptions.col1Text || ''}
+                      onChange={(e) => setBlockOptions({ ...blockOptions, col1Text: e.target.value })}
+                      className="w-full px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs resize-y"
+                    />
+                  </div>
+                )}
+                <div className="border-t border-slate-200 my-1"></div>
+                
+                <div>
+                  <label className="block text-[9px] font-bold text-slate-500 uppercase mb-0.5">
+                    {selectedBlock.id === 'media_gallery' ? 'Image 2 URL' : 'Item 2 Heading'}
+                  </label>
+                  <input
+                    type="text"
+                    value={selectedBlock.id === 'media_gallery' ? (blockOptions.col2Text || '') : (selectedBlock.id === 'timeline_vertical' ? (blockOptions.subheadingText || '') : (blockOptions.col2Heading || ''))}
+                    onChange={(e) => {
+                      if (selectedBlock.id === 'media_gallery') setBlockOptions({ ...blockOptions, col2Text: e.target.value });
+                      else if (selectedBlock.id === 'timeline_vertical') setBlockOptions({ ...blockOptions, subheadingText: e.target.value });
+                      else setBlockOptions({ ...blockOptions, col2Heading: e.target.value });
+                    }}
+                    className="w-full px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs"
+                  />
+                </div>
+                {selectedBlock.id !== 'media_gallery' && (
+                  <div>
+                    <label className="block text-[9px] font-bold text-slate-500 uppercase mb-0.5">Item 2 Content</label>
+                    <textarea
+                      rows={2}
+                      value={blockOptions.col2Text || ''}
+                      onChange={(e) => setBlockOptions({ ...blockOptions, col2Text: e.target.value })}
+                      className="w-full px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs resize-y"
+                    />
+                  </div>
+                )}
+                <div className="border-t border-slate-200 my-1"></div>
+
+                <div>
+                  <label className="block text-[9px] font-bold text-slate-500 uppercase mb-0.5">
+                    {selectedBlock.id === 'media_gallery' ? 'Image 3 URL' : 'Item 3 Heading'}
+                  </label>
+                  <input
+                    type="text"
+                    value={selectedBlock.id === 'media_gallery' ? (blockOptions.col3Text || '') : (selectedBlock.id === 'timeline_vertical' ? (blockOptions.buttonText || '') : (blockOptions.col3Heading || ''))}
+                    onChange={(e) => {
+                      if (selectedBlock.id === 'media_gallery') setBlockOptions({ ...blockOptions, col3Text: e.target.value });
+                      else if (selectedBlock.id === 'timeline_vertical') setBlockOptions({ ...blockOptions, buttonText: e.target.value });
+                      else setBlockOptions({ ...blockOptions, col3Heading: e.target.value });
+                    }}
+                    className="w-full px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs"
+                  />
+                </div>
+                {selectedBlock.id !== 'media_gallery' && (
+                  <div>
+                    <label className="block text-[9px] font-bold text-slate-500 uppercase mb-0.5">Item 3 Content</label>
+                    <textarea
+                      rows={2}
+                      value={blockOptions.col3Text || ''}
+                      onChange={(e) => setBlockOptions({ ...blockOptions, col3Text: e.target.value })}
+                      className="w-full px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs resize-y"
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {hasStats && (
+              <div className="space-y-2 border border-slate-100 p-2.5 rounded-xl bg-slate-50/50">
+                <span className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider">Metrics Grid</span>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-[8px] font-bold text-slate-500 uppercase">Stat 1 Value</label>
+                    <input
+                      type="text"
+                      value={blockOptions.col1Heading || ''}
+                      onChange={(e) => setBlockOptions({ ...blockOptions, col1Heading: e.target.value })}
+                      className="w-full px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[8px] font-bold text-slate-500 uppercase">Stat 1 Label</label>
+                    <input
+                      type="text"
+                      value={blockOptions.col1Text || ''}
+                      onChange={(e) => setBlockOptions({ ...blockOptions, col1Text: e.target.value })}
+                      className="w-full px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-[8px] font-bold text-slate-500 uppercase">Stat 2 Value</label>
+                    <input
+                      type="text"
+                      value={blockOptions.col2Heading || ''}
+                      onChange={(e) => setBlockOptions({ ...blockOptions, col2Heading: e.target.value })}
+                      className="w-full px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[8px] font-bold text-slate-500 uppercase">Stat 2 Label</label>
+                    <input
+                      type="text"
+                      value={blockOptions.col2Text || ''}
+                      onChange={(e) => setBlockOptions({ ...blockOptions, col2Text: e.target.value })}
+                      className="w-full px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-[8px] font-bold text-slate-500 uppercase">Stat 3 Value</label>
+                    <input
+                      type="text"
+                      value={blockOptions.col3Heading || ''}
+                      onChange={(e) => setBlockOptions({ ...blockOptions, col3Heading: e.target.value })}
+                      className="w-full px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[8px] font-bold text-slate-500 uppercase">Stat 3 Label</label>
+                    <input
+                      type="text"
+                      value={blockOptions.col3Text || ''}
+                      onChange={(e) => setBlockOptions({ ...blockOptions, col3Text: e.target.value })}
+                      className="w-full px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-[8px] font-bold text-slate-500 uppercase">Stat 4 Value</label>
+                    <input
+                      type="text"
+                      value={blockOptions.headingText || ''}
+                      onChange={(e) => setBlockOptions({ ...blockOptions, headingText: e.target.value })}
+                      className="w-full px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[8px] font-bold text-slate-500 uppercase">Stat 4 Label</label>
+                    <input
+                      type="text"
+                      value={blockOptions.subheadingText || ''}
+                      onChange={(e) => setBlockOptions({ ...blockOptions, subheadingText: e.target.value })}
+                      className="w-full px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Section 2: General Block Styling */}
+          <div className="space-y-2">
+            <h6 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">2. Block Level Styling</h6>
+            
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">Background Style</label>
+                <select
+                  value={blockOptions.bgType}
+                  onChange={(e) => setBlockOptions({ ...blockOptions, bgType: e.target.value as any })}
+                  className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-800"
+                >
+                  <option value="default">Default Template Style</option>
+                  <option value="transparent">Glass / Transparent</option>
+                  <option value="slate">Sleek Slate</option>
+                  <option value="blue">Electric Blue Shade</option>
+                  <option value="emerald">Cyber Emerald Shade</option>
+                  <option value="amber">Amber Glow Shade</option>
+                  <option value="rose">Crimson Rose Shade</option>
+                  <option value="brand">Brand Cyan Shade</option>
+                  <option value="custom">Custom Color (HEX)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">Text Alignment</label>
+                <select
+                  value={blockOptions.alignment}
+                  onChange={(e) => setBlockOptions({ ...blockOptions, alignment: e.target.value as any })}
+                  className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-800"
+                >
+                  <option value="left">Left Align</option>
+                  <option value="center">Center Align</option>
+                  <option value="right">Right Align</option>
+                  <option value="justify">Justify Text</option>
+                </select>
+              </div>
+            </div>
+
+            {blockOptions.bgType === 'custom' && (
+              <div>
+                <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">Custom Background Hex Color</label>
+                <input
+                  type="text"
+                  placeholder="#0F172A"
+                  value={blockOptions.customBgColor || ''}
+                  onChange={(e) => setBlockOptions({ ...blockOptions, customBgColor: e.target.value })}
+                  className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none"
+                />
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">Font Family</label>
+                <select
+                  value={blockOptions.fontFamily}
+                  onChange={(e) => setBlockOptions({ ...blockOptions, fontFamily: e.target.value as any })}
+                  className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-800"
+                >
+                  <option value="default">Default Sans-serif</option>
+                  <option value="serif">Elegant Editorial Serif</option>
+                  <option value="mono">Developer Monospace</option>
+                  <option value="system">System Default</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">Outer Border</label>
+                <select
+                  value={blockOptions.borderStyle}
+                  onChange={(e) => setBlockOptions({ ...blockOptions, borderStyle: e.target.value as any })}
+                  className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-800"
+                >
+                  <option value="default">Default Border</option>
+                  <option value="left-accent">Left Accent Bar</option>
+                  <option value="full">Full Thin Border</option>
+                  <option value="dashed">Dashed Border</option>
+                  <option value="none">No Border</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Section 3: Inner Typography Styling */}
+          <div className="space-y-2">
+            <h6 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">3. Heading Styles (Block/Accent)</h6>
+            
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">Heading Style</label>
+                <select
+                  value={blockOptions.headingStyle}
+                  onChange={(e) => setBlockOptions({ ...blockOptions, headingStyle: e.target.value as any })}
+                  className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-800"
+                >
+                  <option value="standard">Standard Inline</option>
+                  <option value="block-shaded">Block Shaded (Filled box + accent bar)</option>
+                  <option value="underlined">Underlined (Bottom accent line)</option>
+                  <option value="bordered">Bordered (Outline box)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">Heading Size</label>
+                <select
+                  value={blockOptions.headingSize}
+                  onChange={(e) => setBlockOptions({ ...blockOptions, headingSize: e.target.value as any })}
+                  className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-800"
+                >
+                  <option value="sm">Small (15px)</option>
+                  <option value="md">Medium (18px)</option>
+                  <option value="lg">Large (22px)</option>
+                  <option value="xl">Extra Large (28px)</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">Heading Text Color</label>
+                <select
+                  value={blockOptions.headingColor}
+                  onChange={(e) => setBlockOptions({ ...blockOptions, headingColor: e.target.value as any })}
+                  className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-800"
+                >
+                  <option value="white">Contrast White / Ink</option>
+                  <option value="brand">Brand Cyan Accent</option>
+                  <option value="blue">Corporate Blue</option>
+                  <option value="emerald">Emerald Success</option>
+                  <option value="amber">Amber Alert/Tip</option>
+                  <option value="rose">Crimson Danger</option>
+                  <option value="custom">Custom Color (HEX)</option>
+                </select>
+              </div>
+
+              {blockOptions.headingColor === 'custom' && (
+                <div>
+                  <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">Custom Heading Hex</label>
+                  <input
+                    type="text"
+                    placeholder="#10B981"
+                    value={blockOptions.customHeadingColor || ''}
+                    onChange={(e) => setBlockOptions({ ...blockOptions, customHeadingColor: e.target.value })}
+                    className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Insert Customized Trigger */}
+        <div className="pt-2 border-t border-slate-100 flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={() => setSelectedBlock(null)}
+            className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-650 text-xs font-bold rounded-lg cursor-pointer transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              insertCustomBlock();
+              setSelectedBlock(null);
+            }}
+            className="px-4 py-1.5 bg-brand text-black text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-[#16E6D8] transition-colors cursor-pointer"
+          >
+            Insert Customized Block
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   const featuredFlagsList = [
     { label: "Featured", value: "featured" },
     { label: "Trending", value: "trending" },
@@ -512,35 +1348,44 @@ export function BlogForm({ id, initial }: { id?: string; initial?: BlogInitial }
                 
                 {/* Block Picker Panel */}
                 <div className="lg:col-span-4 bg-slate-50/20 p-4 space-y-4">
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                    <h5 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                      <Sparkles className="w-3 h-3 text-brand" /> Block library
-                    </h5>
-                  </div>
-                  
-                  <select
-                    value={selectedBlockCat}
-                    onChange={(e) => setSelectedBlockCat(e.target.value)}
-                    className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-700"
-                  >
-                    {blockCategories.map(cat => (
-                      <option key={cat} value={cat}>{cat}</option>
-                    ))}
-                  </select>
-
-                  <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
-                    {filteredBlocks.map(block => (
-                      <button
-                        key={block.id}
-                        type="button"
-                        onClick={() => insertBlock(block)}
-                        className="w-full text-left p-2.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl flex flex-col transition-all group"
+                  {selectedBlock ? (
+                    renderBlockCustomizer()
+                  ) : (
+                    <>
+                      <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                        <h5 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                          <Sparkles className="w-3 h-3 text-brand" /> Block library
+                        </h5>
+                      </div>
+                      
+                      <select
+                        value={selectedBlockCat}
+                        onChange={(e) => setSelectedBlockCat(e.target.value)}
+                        className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-700"
                       >
-                        <span className="text-xs font-bold text-slate-800 group-hover:text-brand transition-colors">{block.name}</span>
-                        <span className="text-[10px] text-slate-400 mt-0.5 line-clamp-1">{block.description}</span>
-                      </button>
-                    ))}
-                  </div>
+                        {blockCategories.map(cat => (
+                          <option key={cat} value={cat}>{cat}</option>
+                        ))}
+                      </select>
+
+                      <div className="space-y-2 max-h-[350px] overflow-y-auto pr-1">
+                        {filteredBlocks.map(block => (
+                          <button
+                            key={block.id}
+                            type="button"
+                            onClick={() => {
+                              setSelectedBlock(block);
+                              setBlockOptions(defaultBlockOptions(block.id));
+                            }}
+                            className="w-full text-left p-2.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl flex flex-col transition-all group cursor-pointer"
+                          >
+                            <span className="text-xs font-bold text-slate-800 group-hover:text-brand transition-colors">{block.name}</span>
+                            <span className="text-[10px] text-slate-400 mt-0.5 line-clamp-1">{block.description}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             ) : (
