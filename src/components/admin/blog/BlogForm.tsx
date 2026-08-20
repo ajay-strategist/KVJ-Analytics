@@ -125,12 +125,14 @@ export function BlogForm({ id, initial }: { id?: string; initial?: BlogInitial }
     bgType: 'default',
     customBgColor: '',
     alignment: 'left',
-    fontFamily: 'default',
     borderStyle: 'default',
     headingStyle: 'standard',
-    headingSize: 'md',
     headingColor: 'white',
     customHeadingColor: '',
+    headingFont: 'default',
+    bodyFont: 'default',
+    headingFontSizeNum: 22,
+    bodyFontSizeNum: 15,
   });
 
   const defaultBlockOptions = (blockId: string): BlockStyleOptions => {
@@ -138,12 +140,14 @@ export function BlogForm({ id, initial }: { id?: string; initial?: BlogInitial }
       bgType: 'default',
       customBgColor: '',
       alignment: 'left',
-      fontFamily: 'default',
       borderStyle: 'default',
       headingStyle: 'standard',
-      headingSize: 'md',
       headingColor: 'white',
       customHeadingColor: '',
+      headingFont: 'default',
+      bodyFont: 'default',
+      headingFontSizeNum: 22,
+      bodyFontSizeNum: 15,
     };
 
     switch (blockId) {
@@ -248,6 +252,7 @@ export function BlogForm({ id, initial }: { id?: string; initial?: BlogInitial }
 
   // Image insertion modal state
   const [showImageModal, setShowImageModal] = useState(false);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [modalTab, setModalTab] = useState<"upload" | "link">("upload");
   const [modalLink, setModalLink] = useState("");
   const [modalAlt, setModalAlt] = useState("");
@@ -560,16 +565,17 @@ export function BlogForm({ id, initial }: { id?: string; initial?: BlogInitial }
         </div>
 
         {/* Action Buttons */}
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-3 gap-1.5">
           <button
             type="button"
             onClick={() => {
               insertBlock(selectedBlock);
               setSelectedBlock(null);
             }}
-            className="px-2.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold rounded-xl transition-all cursor-pointer text-center"
+            className="px-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-bold rounded-xl transition-all cursor-pointer text-center"
+            title="Insert the standard template directly into the post"
           >
-            Quick Default Insert
+            Default
           </button>
           <button
             type="button"
@@ -577,9 +583,18 @@ export function BlogForm({ id, initial }: { id?: string; initial?: BlogInitial }
               insertCustomBlock();
               setSelectedBlock(null);
             }}
-            className="px-2.5 py-2 bg-brand text-black text-[11px] font-bold uppercase tracking-wider rounded-xl hover:bg-[#16E6D8] transition-all cursor-pointer text-center"
+            className="px-1 py-2 bg-brand text-black text-[10px] font-bold uppercase tracking-wider rounded-xl hover:bg-[#16E6D8] transition-all cursor-pointer text-center"
+            title="Insert customized styled block into the post"
           >
-            Insert Customized
+            Insert
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowPreviewModal(true)}
+            className="px-1 py-2 bg-slate-800 hover:bg-slate-750 text-white text-[10px] font-bold rounded-xl transition-all cursor-pointer text-center"
+            title="Preview block rendering"
+          >
+            👁️ Preview
           </button>
         </div>
 
@@ -1111,25 +1126,41 @@ export function BlogForm({ id, initial }: { id?: string; initial?: BlogInitial }
 
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">Font Family</label>
+                <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">Body Font Family</label>
                 <select
-                  value={blockOptions.fontFamily}
-                  onChange={(e) => setBlockOptions({ ...blockOptions, fontFamily: e.target.value as any })}
-                  className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-800"
+                  value={blockOptions.bodyFont || 'default'}
+                  onChange={(e) => setBlockOptions({ ...blockOptions, bodyFont: e.target.value as any })}
+                  className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 focus:outline-none"
                 >
                   <option value="default">Default Sans-serif</option>
-                  <option value="serif">Elegant Editorial Serif</option>
-                  <option value="mono">Developer Monospace</option>
-                  <option value="system">System Default</option>
+                  <option value="times-new-roman">Times New Roman</option>
+                  <option value="arial">Arial</option>
+                  <option value="georgia">Georgia</option>
+                  <option value="courier-new">Courier New</option>
+                  <option value="garamond">Garamond</option>
                 </select>
               </div>
 
+              <div>
+                <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">Body Size (px)</label>
+                <input
+                  type="number"
+                  min={8}
+                  max={72}
+                  value={blockOptions.bodyFontSizeNum || 15}
+                  onChange={(e) => setBlockOptions({ ...blockOptions, bodyFontSizeNum: parseInt(e.target.value) || 15 })}
+                  className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
               <div>
                 <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">Outer Border</label>
                 <select
                   value={blockOptions.borderStyle}
                   onChange={(e) => setBlockOptions({ ...blockOptions, borderStyle: e.target.value as any })}
-                  className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-800"
+                  className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 focus:outline-none"
                 >
                   <option value="default">Default Border</option>
                   <option value="left-accent">Left Accent Bar</option>
@@ -1151,7 +1182,7 @@ export function BlogForm({ id, initial }: { id?: string; initial?: BlogInitial }
                 <select
                   value={blockOptions.headingStyle}
                   onChange={(e) => setBlockOptions({ ...blockOptions, headingStyle: e.target.value as any })}
-                  className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-800"
+                  className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 focus:outline-none"
                 >
                   <option value="standard">Standard Inline</option>
                   <option value="block-shaded">Block Shaded (Filled box + accent bar)</option>
@@ -1161,27 +1192,41 @@ export function BlogForm({ id, initial }: { id?: string; initial?: BlogInitial }
               </div>
 
               <div>
-                <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">Heading Size</label>
+                <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">Heading Font</label>
                 <select
-                  value={blockOptions.headingSize}
-                  onChange={(e) => setBlockOptions({ ...blockOptions, headingSize: e.target.value as any })}
-                  className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-800"
+                  value={blockOptions.headingFont || 'default'}
+                  onChange={(e) => setBlockOptions({ ...blockOptions, headingFont: e.target.value as any })}
+                  className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 focus:outline-none"
                 >
-                  <option value="sm">Small (15px)</option>
-                  <option value="md">Medium (18px)</option>
-                  <option value="lg">Large (22px)</option>
-                  <option value="xl">Extra Large (28px)</option>
+                  <option value="default">Default Sans-serif</option>
+                  <option value="times-new-roman">Times New Roman</option>
+                  <option value="arial">Arial</option>
+                  <option value="georgia">Georgia</option>
+                  <option value="courier-new">Courier New</option>
+                  <option value="garamond">Garamond</option>
                 </select>
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-2">
               <div>
+                <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">Heading Size (px)</label>
+                <input
+                  type="number"
+                  min={8}
+                  max={120}
+                  value={blockOptions.headingFontSizeNum || 22}
+                  onChange={(e) => setBlockOptions({ ...blockOptions, headingFontSizeNum: parseInt(e.target.value) || 22 })}
+                  className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none"
+                />
+              </div>
+
+              <div>
                 <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">Heading Text Color</label>
                 <select
                   value={blockOptions.headingColor}
                   onChange={(e) => setBlockOptions({ ...blockOptions, headingColor: e.target.value as any })}
-                  className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-800"
+                  className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 focus:outline-none"
                 >
                   <option value="white">Contrast White / Ink</option>
                   <option value="brand">Brand Cyan Accent</option>
@@ -1192,42 +1237,51 @@ export function BlogForm({ id, initial }: { id?: string; initial?: BlogInitial }
                   <option value="custom">Custom Color (HEX)</option>
                 </select>
               </div>
-
-              {blockOptions.headingColor === 'custom' && (
-                <div>
-                  <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">Custom Heading Hex</label>
-                  <input
-                    type="text"
-                    placeholder="#10B981"
-                    value={blockOptions.customHeadingColor || ''}
-                    onChange={(e) => setBlockOptions({ ...blockOptions, customHeadingColor: e.target.value })}
-                    className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none"
-                  />
-                </div>
-              )}
             </div>
+
+            {blockOptions.headingColor === 'custom' && (
+              <div className="w-full">
+                <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">Custom Heading Hex</label>
+                <input
+                  type="text"
+                  placeholder="#10B981"
+                  value={blockOptions.customHeadingColor || ''}
+                  onChange={(e) => setBlockOptions({ ...blockOptions, customHeadingColor: e.target.value })}
+                  className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-brand/40"
+                />
+              </div>
+            )}
           </div>
         </div>
 
         {/* Insert Customized Trigger */}
-        <div className="pt-2 border-t border-slate-100 flex justify-end gap-2">
+        <div className="pt-2 border-t border-slate-100 flex justify-between items-center gap-2">
           <button
             type="button"
             onClick={() => setSelectedBlock(null)}
-            className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-650 text-xs font-bold rounded-lg cursor-pointer transition-colors"
+            className="px-3 py-1.5 bg-slate-105 hover:bg-slate-200 text-slate-650 text-xs font-bold rounded-lg cursor-pointer transition-colors"
           >
             Cancel
           </button>
-          <button
-            type="button"
-            onClick={() => {
-              insertCustomBlock();
-              setSelectedBlock(null);
-            }}
-            className="px-4 py-1.5 bg-brand text-black text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-[#16E6D8] transition-colors cursor-pointer"
-          >
-            Insert Customized Block
-          </button>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setShowPreviewModal(true)}
+              className="px-3 py-1.5 bg-slate-800 hover:bg-slate-750 text-white text-xs font-bold rounded-lg cursor-pointer transition-colors"
+            >
+              👁️ Preview
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                insertCustomBlock();
+                setSelectedBlock(null);
+              }}
+              className="px-4 py-1.5 bg-brand text-black text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-[#16E6D8] transition-colors cursor-pointer"
+            >
+              Insert Block
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -1814,6 +1868,109 @@ export function BlogForm({ id, initial }: { id?: string; initial?: BlogInitial }
                 Insert Image
               </button>
             )}
+          </div>
+        </div>
+      </div>
+    )}
+    {showPreviewModal && selectedBlock && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in text-left">
+        <div className="bg-[#0B0F19] border border-white/10 rounded-2xl w-full max-w-4xl h-[85vh] flex flex-col shadow-2xl overflow-hidden animate-scale-up">
+          {/* Modal Header */}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-[#0e1423]">
+            <div>
+              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                <span>👁️ Web Rendering Preview</span>
+                <span className="text-[10px] text-slate-400 font-normal">({selectedBlock.name})</span>
+              </h3>
+              <p className="text-[11px] text-slate-400 mt-0.5">This showcases exactly how your customized block will look inside a blog post on the website.</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowPreviewModal(false)}
+              className="p-1.5 text-slate-450 hover:text-white rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Modal Body: Styled Iframe */}
+          <div className="flex-1 bg-[#05070c] p-6 overflow-hidden">
+            <iframe
+              title="Block Live Preview"
+              srcDoc={`
+                <!DOCTYPE html>
+                <html>
+                  <head>
+                    <meta charset="utf-8" />
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+                    <!-- Tailwind CSS v2 CDN -->
+                    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+                    <!-- Google Fonts -->
+                    <link rel="preconnect" href="https://fonts.googleapis.com">
+                    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+                    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+                    
+                    <style>
+                      body {
+                        background-color: #0B0F19 !important;
+                        color: #cbd5e1 !important;
+                        font-family: 'Plus Jakarta Sans', sans-serif;
+                        padding: 2rem;
+                        margin: 0;
+                      }
+                      /* Theme specifics to emulate website container */
+                      .bg-card {
+                        background-color: #131B2E !important;
+                      }
+                      .bg-base {
+                        background-color: #0B0F19 !important;
+                      }
+                      .text-brand {
+                        color: #08A88A !important;
+                      }
+                      .bg-brand {
+                        background-color: #08A88A !important;
+                      }
+                      .signature-gradient {
+                        background: linear-gradient(120deg, #10B981 0%, #0D9488 35%, #34D399 60%, #10B981 100%) !important;
+                      }
+                    </style>
+                  </head>
+                  <body>
+                    <div class="max-w-2xl mx-auto">
+                      <div class="text-[10px] text-slate-500 uppercase tracking-widest mb-6 border-b border-white/5 pb-2">--- Post Content Body ---</div>
+                      
+                      ${generateCustomBlock(selectedBlock.id, blockOptions)}
+                      
+                      <div class="text-[10px] text-slate-500 uppercase tracking-widest mt-6 border-t border-white/5 pt-2">-------------------------</div>
+                    </div>
+                  </body>
+                </html>
+              `}
+              className="w-full h-full border-none rounded-xl bg-[#0B0F19] shadow-inner"
+            />
+          </div>
+
+          {/* Modal Footer */}
+          <div className="px-6 py-4 border-t border-white/5 bg-[#0e1423] flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={() => setShowPreviewModal(false)}
+              className="px-4 py-2 border border-white/10 text-slate-300 hover:text-white rounded-xl hover:bg-white/5 transition-all text-xs font-bold cursor-pointer"
+            >
+              Close Preview
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                insertCustomBlock();
+                setShowPreviewModal(false);
+                setSelectedBlock(null);
+              }}
+              className="px-5 py-2 bg-brand text-black hover:bg-[#16E6D8] rounded-xl font-bold uppercase tracking-wider text-xs transition-all cursor-pointer"
+            >
+              Insert Block
+            </button>
           </div>
         </div>
       </div>

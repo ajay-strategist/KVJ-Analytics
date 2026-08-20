@@ -3,12 +3,16 @@ export interface BlockStyleOptions {
   bgType: 'default' | 'transparent' | 'slate' | 'blue' | 'emerald' | 'amber' | 'rose' | 'brand' | 'custom';
   customBgColor?: string;
   alignment: 'left' | 'center' | 'right' | 'justify';
-  fontFamily: 'default' | 'serif' | 'mono' | 'system';
   borderStyle: 'default' | 'left-accent' | 'full' | 'dashed' | 'none';
+
+  // Typography styling
+  headingFont?: 'default' | 'times-new-roman' | 'arial' | 'georgia' | 'courier-new' | 'garamond';
+  bodyFont?: 'default' | 'times-new-roman' | 'arial' | 'georgia' | 'courier-new' | 'garamond';
+  headingFontSizeNum?: number;
+  bodyFontSizeNum?: number;
 
   // Heading styles
   headingStyle: 'standard' | 'block-shaded' | 'underlined' | 'bordered';
-  headingSize: 'sm' | 'md' | 'lg' | 'xl';
   headingColor: 'white' | 'brand' | 'blue' | 'emerald' | 'amber' | 'rose' | 'custom';
   customHeadingColor?: string;
 
@@ -66,17 +70,49 @@ export function getBgClass(options: BlockStyleOptions, defaultClass: string): st
   return '';
 }
 
-export function getFontStyle(options: BlockStyleOptions): string {
-  switch (options.fontFamily) {
-    case 'serif':
-      return "font-family: 'Lora', Georgia, serif !important;";
-    case 'mono':
-      return "font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;";
-    case 'system':
-      return "font-family: system-ui, -apple-system, sans-serif !important;";
+export function getHeadingFontStyle(options: BlockStyleOptions): string {
+  switch (options.headingFont) {
+    case 'times-new-roman':
+      return 'font-family: "Times New Roman", Times, serif !important;';
+    case 'arial':
+      return 'font-family: Arial, Helvetica, sans-serif !important;';
+    case 'georgia':
+      return 'font-family: Georgia, serif !important;';
+    case 'courier-new':
+      return 'font-family: "Courier New", Courier, monospace !important;';
+    case 'garamond':
+      return 'font-family: Garamond, Baskerville, serif !important;';
+    case 'default':
     default:
-      return '';
+      return 'font-family: Plus Jakarta Sans, Inter, sans-serif !important;';
   }
+}
+
+export function getBodyFontStyle(options: BlockStyleOptions): string {
+  switch (options.bodyFont) {
+    case 'times-new-roman':
+      return 'font-family: "Times New Roman", Times, serif !important;';
+    case 'arial':
+      return 'font-family: Arial, Helvetica, sans-serif !important;';
+    case 'georgia':
+      return 'font-family: Georgia, serif !important;';
+    case 'courier-new':
+      return 'font-family: "Courier New", Courier, monospace !important;';
+    case 'garamond':
+      return 'font-family: Garamond, Baskerville, serif !important;';
+    case 'default':
+    default:
+      return 'font-family: Plus Jakarta Sans, Inter, sans-serif !important;';
+  }
+}
+
+export function getBodySizeStyle(options: BlockStyleOptions): string {
+  const size = options.bodyFontSizeNum || 15;
+  return `font-size: ${size}px !important; line-height: 1.5 !important;`;
+}
+
+export function getFontStyle(options: BlockStyleOptions): string {
+  return `${getBodyFontStyle(options)} ${getBodySizeStyle(options)}`;
 }
 
 export function getAlignStyle(options: BlockStyleOptions): string {
@@ -112,22 +148,12 @@ export function getHeadingColorStyle(options: BlockStyleOptions): string {
 }
 
 export function getHeadingSizeStyle(options: BlockStyleOptions): string {
-  switch (options.headingSize) {
-    case 'sm':
-      return 'font-size: 0.95rem !important; line-height: 1.4 !important;';
-    case 'md':
-      return 'font-size: 1.15rem !important; line-height: 1.4 !important;';
-    case 'lg':
-      return 'font-size: 1.35rem !important; line-height: 1.4 !important;';
-    case 'xl':
-      return 'font-size: 1.75rem !important; line-height: 1.4 !important;';
-    default:
-      return '';
-  }
+  const size = options.headingFontSizeNum || 20;
+  return `font-size: ${size}px !important; line-height: 1.4 !important;`;
 }
 
 export function getHeadingStyle(options: BlockStyleOptions): string {
-  let style = `${getHeadingColorStyle(options)} ${getHeadingSizeStyle(options)} ${getFontStyle(options)}`;
+  let style = `${getHeadingColorStyle(options)} ${getHeadingSizeStyle(options)} ${getHeadingFontStyle(options)}`;
   const accentColor = options.headingColor === 'custom' && options.customHeadingColor ? options.customHeadingColor :
     options.headingColor === 'brand' ? '#08A88A' :
     options.headingColor === 'blue' ? '#3b82f6' :
