@@ -978,39 +978,132 @@ const LessonEditor = React.memo(function LessonEditor({
 
                               {/* Block Inputs */}
                               {b.type === "heading" && (
-                                <div className="space-y-1.5">
-                                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">Heading Text</label>
-                                  <input
-                                    type="text"
-                                    value={b.text || ""}
-                                    onChange={(e) => updateDocumentBlock(b.id, { text: e.target.value })}
-                                    placeholder="Enter heading text..."
-                                    className="w-full px-3 py-2 border border-line bg-white text-slate-800 dark:text-slate-100 dark:bg-slate-900 rounded-lg text-sm"
-                                  />
+                                <div className="space-y-3">
+                                  <div className="space-y-1.5">
+                                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">Heading Text</label>
+                                    <input
+                                      type="text"
+                                      value={b.text || ""}
+                                      onChange={(e) => updateDocumentBlock(b.id, { text: e.target.value })}
+                                      placeholder="Enter heading text..."
+                                      className="w-full px-3 py-2 border border-line bg-white text-slate-800 dark:text-slate-100 dark:bg-slate-900 rounded-lg text-sm"
+                                    />
+                                  </div>
+                                  <details className="cursor-pointer">
+                                    <summary className="text-[9px] font-bold text-slate uppercase tracking-wider select-none hover:text-brand transition-colors">Block Style</summary>
+                                    <div className="pt-2 space-y-2">
+                                      <div className="grid grid-cols-2 gap-2">
+                                        <ColorPicker label="Background" color={b.bgColor || ""} onChange={(col) => updateDocumentBlock(b.id, { bgColor: col })} />
+                                        <ColorPicker label="Text Color" color={b.textColor || ""} onChange={(col) => updateDocumentBlock(b.id, { textColor: col })} />
+                                      </div>
+                                      <div className="grid grid-cols-2 gap-2">
+                                        <div>
+                                          <label className="block text-[8px] font-bold text-slate uppercase mb-0.5">Font Size</label>
+                                          <select value={b.fontSize || "normal"} onChange={(e) => updateDocumentBlock(b.id, { fontSize: e.target.value })} className="w-full px-2 py-1 border border-line bg-white text-slate-800 dark:bg-slate-900 rounded text-xs">
+                                            <option value="sm">Small</option>
+                                            <option value="normal">Normal</option>
+                                            <option value="lg">Large</option>
+                                            <option value="xl">XL</option>
+                                            <option value="2xl">2XL</option>
+                                          </select>
+                                        </div>
+                                        <div>
+                                          <label className="block text-[8px] font-bold text-slate uppercase mb-0.5">Alignment</label>
+                                          <select value={b.align || "left"} onChange={(e) => updateDocumentBlock(b.id, { align: e.target.value })} className="w-full px-2 py-1 border border-line bg-white text-slate-800 dark:bg-slate-900 rounded text-xs">
+                                            <option value="left">Left</option>
+                                            <option value="center">Center</option>
+                                            <option value="right">Right</option>
+                                          </select>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </details>
                                 </div>
                               )}
 
                               {b.type === "subheading" && (
-                                <div className="space-y-1.5">
-                                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">Subheading Text</label>
-                                  <input
-                                    type="text"
-                                    value={b.text || ""}
-                                    onChange={(e) => updateDocumentBlock(b.id, { text: e.target.value })}
-                                    placeholder="Enter subheading text..."
-                                    className="w-full px-3 py-2 border border-line bg-white text-slate-800 dark:text-slate-100 dark:bg-slate-900 rounded-lg text-sm"
-                                  />
+                                <div className="space-y-3">
+                                  <div className="space-y-1.5">
+                                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">Subheading Text</label>
+                                    <input
+                                      type="text"
+                                      value={b.text || ""}
+                                      onChange={(e) => updateDocumentBlock(b.id, { text: e.target.value })}
+                                      placeholder="Enter subheading text..."
+                                      className="w-full px-3 py-2 border border-line bg-white text-slate-800 dark:text-slate-100 dark:bg-slate-900 rounded-lg text-sm"
+                                    />
+                                  </div>
+                                  <details className="cursor-pointer">
+                                    <summary className="text-[9px] font-bold text-slate uppercase tracking-wider select-none hover:text-brand transition-colors">Block Style</summary>
+                                    <div className="pt-2 space-y-2">
+                                      <div className="grid grid-cols-2 gap-2">
+                                        <ColorPicker label="Background" color={b.bgColor || ""} onChange={(col) => updateDocumentBlock(b.id, { bgColor: col })} />
+                                        <ColorPicker label="Text Color" color={b.textColor || ""} onChange={(col) => updateDocumentBlock(b.id, { textColor: col })} />
+                                      </div>
+                                      <div className="grid grid-cols-2 gap-2">
+                                        <div>
+                                          <label className="block text-[8px] font-bold text-slate uppercase mb-0.5">Font Size</label>
+                                          <select value={b.fontSize || "normal"} onChange={(e) => updateDocumentBlock(b.id, { fontSize: e.target.value })} className="w-full px-2 py-1 border border-line bg-white text-slate-800 dark:bg-slate-900 rounded text-xs">
+                                            <option value="sm">Small</option>
+                                            <option value="normal">Normal</option>
+                                            <option value="lg">Large</option>
+                                            <option value="xl">XL</option>
+                                          </select>
+                                        </div>
+                                        <div>
+                                          <label className="block text-[8px] font-bold text-slate uppercase mb-0.5">Alignment</label>
+                                          <select value={b.align || "left"} onChange={(e) => updateDocumentBlock(b.id, { align: e.target.value })} className="w-full px-2 py-1 border border-line bg-white text-slate-800 dark:bg-slate-900 rounded text-xs">
+                                            <option value="left">Left</option>
+                                            <option value="center">Center</option>
+                                            <option value="right">Right</option>
+                                          </select>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </details>
                                 </div>
                               )}
 
                               {b.type === "paragraph" && (
-                                <div className="space-y-1.5">
-                                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">Paragraph Body Text</label>
-                                  <RichTextEditor
-                                    value={b.text || ""}
-                                    onChange={(val) => updateDocumentBlock(b.id, { text: val })}
-                                    placeholder="Enter paragraph description text..."
-                                  />
+                                <div className="space-y-3">
+                                  <div className="space-y-1.5">
+                                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">Paragraph Body Text</label>
+                                    <RichTextEditor
+                                      value={b.text || ""}
+                                      onChange={(val) => updateDocumentBlock(b.id, { text: val })}
+                                      placeholder="Enter paragraph description text..."
+                                    />
+                                  </div>
+                                  <details className="cursor-pointer">
+                                    <summary className="text-[9px] font-bold text-slate uppercase tracking-wider select-none hover:text-brand transition-colors">Block Style</summary>
+                                    <div className="pt-2 space-y-2">
+                                      <div className="grid grid-cols-2 gap-2">
+                                        <ColorPicker label="Background" color={b.bgColor || ""} onChange={(col) => updateDocumentBlock(b.id, { bgColor: col })} />
+                                        <ColorPicker label="Text Color" color={b.textColor || ""} onChange={(col) => updateDocumentBlock(b.id, { textColor: col })} />
+                                      </div>
+                                      <div className="grid grid-cols-2 gap-2">
+                                        <div>
+                                          <label className="block text-[8px] font-bold text-slate uppercase mb-0.5">Font Size</label>
+                                          <select value={b.fontSize || "normal"} onChange={(e) => updateDocumentBlock(b.id, { fontSize: e.target.value })} className="w-full px-2 py-1 border border-line bg-white text-slate-800 dark:bg-slate-900 rounded text-xs">
+                                            <option value="xs">XS</option>
+                                            <option value="sm">Small</option>
+                                            <option value="normal">Normal</option>
+                                            <option value="lg">Large</option>
+                                            <option value="xl">XL</option>
+                                          </select>
+                                        </div>
+                                        <div>
+                                          <label className="block text-[8px] font-bold text-slate uppercase mb-0.5">Alignment</label>
+                                          <select value={b.align || "left"} onChange={(e) => updateDocumentBlock(b.id, { align: e.target.value })} className="w-full px-2 py-1 border border-line bg-white text-slate-800 dark:bg-slate-900 rounded text-xs">
+                                            <option value="left">Left</option>
+                                            <option value="center">Center</option>
+                                            <option value="right">Right</option>
+                                            <option value="justify">Justify</option>
+                                          </select>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </details>
                                 </div>
                               )}
 
@@ -1139,6 +1232,35 @@ const LessonEditor = React.memo(function LessonEditor({
                                       </button>
                                     </div>
                                   </div>
+                                  <details className="cursor-pointer">
+                                    <summary className="text-[9px] font-bold text-slate uppercase tracking-wider select-none hover:text-brand transition-colors">Block Style</summary>
+                                    <div className="pt-2 space-y-2">
+                                      <div className="grid grid-cols-2 gap-2">
+                                        <ColorPicker label="Background" color={b.bgColor || ""} onChange={(col) => updateDocumentBlock(b.id, { bgColor: col })} />
+                                        <ColorPicker label="Text Color" color={b.textColor || ""} onChange={(col) => updateDocumentBlock(b.id, { textColor: col })} />
+                                      </div>
+                                      <div className="grid grid-cols-2 gap-2">
+                                        <div>
+                                          <label className="block text-[8px] font-bold text-slate uppercase mb-0.5">Font Size</label>
+                                          <select value={b.fontSize || "normal"} onChange={(e) => updateDocumentBlock(b.id, { fontSize: e.target.value })} className="w-full px-2 py-1 border border-line bg-white text-slate-800 dark:bg-slate-900 rounded text-xs">
+                                            <option value="xs">XS</option>
+                                            <option value="sm">Small</option>
+                                            <option value="normal">Normal</option>
+                                            <option value="lg">Large</option>
+                                            <option value="xl">XL</option>
+                                          </select>
+                                        </div>
+                                        <div>
+                                          <label className="block text-[8px] font-bold text-slate uppercase mb-0.5">Alignment</label>
+                                          <select value={b.align || "left"} onChange={(e) => updateDocumentBlock(b.id, { align: e.target.value })} className="w-full px-2 py-1 border border-line bg-white text-slate-800 dark:bg-slate-900 rounded text-xs">
+                                            <option value="left">Left</option>
+                                            <option value="center">Center</option>
+                                            <option value="right">Right</option>
+                                          </select>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </details>
                                 </div>
                               )}
 
@@ -1835,21 +1957,48 @@ const LessonEditor = React.memo(function LessonEditor({
                                       className="w-full px-3 py-2 border border-line bg-white text-slate-800 dark:text-slate-100 dark:bg-slate-900 rounded-lg text-xs"
                                     />
                                   </div>
-                                  <div className="pt-2 border-t border-line/60">
-                                    <span className="block text-[9px] font-bold uppercase tracking-wider text-slate mb-2">Block Colors</span>
-                                    <div className="grid grid-cols-2 gap-2">
-                                      <ColorPicker
-                                        label="Background"
-                                        color={b.bgColor || "#F4F9FD"}
-                                        onChange={(col) => updateDocumentBlock(b.id, { bgColor: col })}
-                                      />
-                                      <ColorPicker
-                                        label="Accent / Border"
-                                        color={b.accentColor || "#0E7490"}
-                                        onChange={(col) => updateDocumentBlock(b.id, { accentColor: col })}
-                                      />
+                                  <details className="cursor-pointer">
+                                    <summary className="text-[9px] font-bold text-slate uppercase tracking-wider select-none hover:text-brand transition-colors">Block Style &amp; Colors</summary>
+                                    <div className="pt-2 space-y-2">
+                                      <div className="grid grid-cols-2 gap-2">
+                                        <ColorPicker
+                                          label="Background"
+                                          color={b.bgColor || "#F4F9FD"}
+                                          onChange={(col) => updateDocumentBlock(b.id, { bgColor: col })}
+                                        />
+                                        <ColorPicker
+                                          label="Accent / Border"
+                                          color={b.accentColor || "#0E7490"}
+                                          onChange={(col) => updateDocumentBlock(b.id, { accentColor: col })}
+                                        />
+                                        <ColorPicker
+                                          label="Text Color"
+                                          color={b.textColor || "#526477"}
+                                          onChange={(col) => updateDocumentBlock(b.id, { textColor: col })}
+                                        />
+                                      </div>
+                                      <div className="grid grid-cols-2 gap-2">
+                                        <div>
+                                          <label className="block text-[8px] font-bold text-slate uppercase mb-0.5">Font Size</label>
+                                          <select value={b.fontSize || "normal"} onChange={(e) => updateDocumentBlock(b.id, { fontSize: e.target.value })} className="w-full px-2 py-1 border border-line bg-white text-slate-800 dark:bg-slate-900 rounded text-xs">
+                                            <option value="xs">XS</option>
+                                            <option value="sm">Small</option>
+                                            <option value="normal">Normal</option>
+                                            <option value="lg">Large</option>
+                                            <option value="xl">XL</option>
+                                          </select>
+                                        </div>
+                                        <div>
+                                          <label className="block text-[8px] font-bold text-slate uppercase mb-0.5">Alignment</label>
+                                          <select value={b.align || "left"} onChange={(e) => updateDocumentBlock(b.id, { align: e.target.value })} className="w-full px-2 py-1 border border-line bg-white text-slate-800 dark:bg-slate-900 rounded text-xs">
+                                            <option value="left">Left</option>
+                                            <option value="center">Center</option>
+                                            <option value="right">Right</option>
+                                          </select>
+                                        </div>
+                                      </div>
                                     </div>
-                                  </div>
+                                  </details>
                                 </div>
                               )}
 

@@ -84,11 +84,11 @@ export function createBlock(type: BlockType): BlockData {
   const id = Math.random().toString(36).substring(2, 9);
   switch (type) {
     case "heading":
-      return { id, type, text: "" };
+      return { id, type, text: "", textColor: "", bgColor: "", fontSize: "normal", align: "left" };
     case "subheading":
-      return { id, type, text: "" };
+      return { id, type, text: "", textColor: "", bgColor: "", fontSize: "normal", align: "left" };
     case "paragraph":
-      return { id, type, text: "" };
+      return { id, type, text: "", textColor: "", bgColor: "", fontSize: "normal", align: "left" };
     case "image":
       return { id, type, url: "", caption: "" };
     case "video":
@@ -98,7 +98,7 @@ export function createBlock(type: BlockType): BlockData {
     case "callout":
       return { id, type, title: "", points: [""] };
     case "list":
-      return { id, type, title: "", points: [""] };
+      return { id, type, title: "", points: [""], textColor: "", bgColor: "", fontSize: "normal", align: "left" };
     case "infographics":
       return {
         id, type,
@@ -192,20 +192,60 @@ export function generateHtmlFromBlocks(blocks: BlockData[]): string {
   return metaStr + blocksHtml;
 }
 
+// ─── Shared Block Style Helper ────────────────────────────────────────────────
+
+const FONT_SIZE_MAP: Record<string, string> = {
+  xs:     "0.75rem",
+  sm:     "0.875rem",
+  normal: "",
+  lg:     "1.125rem",
+  xl:     "1.25rem",
+  "2xl":  "1.5rem",
+};
+
+/**
+ * Builds an inline style string for a block's shared style fields.
+ * All values use !important to ensure they override Tailwind utility classes.
+ */
+function buildBlockStyle(b: BlockData, extra: string[] = []): string {
+  const parts: string[] = [];
+  if (b.bgColor)    parts.push(`background-color: ${b.bgColor} !important;`);
+  if (b.textColor)  parts.push(`color: ${b.textColor} !important;`);
+  if (b.fontSize && FONT_SIZE_MAP[b.fontSize]) {
+    parts.push(`font-size: ${FONT_SIZE_MAP[b.fontSize]} !important;`);
+  }
+  if (b.align && b.align !== "left") parts.push(`text-align: ${b.align} !important;`);
+  return [...parts, ...extra].filter(Boolean).join(" ");
+}
+
 function renderBlock(b: BlockData): string {
   switch (b.type) {
-    case "heading":
-      return `<div class="mt-12 mb-6 text-left">
-  <h2 class="text-2xl md:text-3xl font-extrabold text-[#10233F] tracking-tight m-0 leading-tight">${escHtml(b.text)}</h2>
+    case "heading": {
+      const hStyle = buildBlockStyle(b, [
+        b.textColor ? "" : `color: #10233F !important;`,
+      ]);
+      const hWrapStyle = b.bgColor ? `background-color: ${b.bgColor} !important; padding: 1rem 1.5rem; border-radius: 0.75rem;` : "";
+      return `<div class="mt-12 mb-6" style="text-align: ${b.align || 'left'}; ${hWrapStyle}">
+  <h2 class="text-2xl md:text-3xl font-extrabold tracking-tight m-0 leading-tight" style="${hStyle}">${escHtml(b.text)}</h2>
 </div>`;
+    }
 
-    case "subheading":
-      return `<div class="mt-8 mb-4 text-left">
-  <h3 class="text-lg md:text-xl font-bold text-[#10233F] m-0 tracking-tight">${escHtml(b.text)}</h3>
+    case "subheading": {
+      const shStyle = buildBlockStyle(b, [
+        b.textColor ? "" : `color: #10233F !important;`,
+      ]);
+      const shWrapStyle = b.bgColor ? `background-color: ${b.bgColor} !important; padding: 0.75rem 1rem; border-radius: 0.5rem;` : "";
+      return `<div class="mt-8 mb-4" style="text-align: ${b.align || 'left'}; ${shWrapStyle}">
+  <h3 class="text-lg md:text-xl font-bold m-0 tracking-tight" style="${shStyle}">${escHtml(b.text)}</h3>
 </div>`;
+    }
 
-    case "paragraph":
-      return `<div class="text-[#132238] text-[17px] md:text-[18px] leading-[1.8] font-light mb-6 tracking-wide text-left max-w-none">${b.text || ""}</div>`;
+    case "paragraph": {
+      const pStyle = buildBlockStyle(b, [
+        b.textColor ? "" : `color: #132238 !important;`,
+      ]);
+      return `<div class="leading-[1.8] font-light mb-6 tracking-wide max-w-none" style="${pStyle}; text-align: ${b.align || 'left'};">${b.text || ""}</div>`;
+    }
 
     case "image":
       return `<figure class="my-8 text-center max-w-full">
@@ -293,14 +333,22 @@ ${pts}
     }
 
     case "list": {
+      const listTextColor  = b.textColor  || "#132238";
+      const listBgColor    = b.bgColor    || "";
+      const listAlign      = b.align      || "left";
+      const listFontSize   = FONT_SIZE_MAP[b.fontSize || "normal"] || "1rem";
+      const listWrapStyle  = [
+        listBgColor ? `background-color: ${listBgColor} !important;` : "",
+        `text-align: ${listAlign} !important;`,
+      ].filter(Boolean).join(" ");
       const pts = (b.points || [])
-        .map((p: string) => `    <li class="flex items-start gap-3 text-[#132238] text-base leading-relaxed">
+        .map((p: string) => `    <li class="flex items-start gap-3 leading-relaxed" style="color: ${listTextColor} !important; font-size: ${listFontSize} !important;">
       <span class="text-[#08A88A] shrink-0 mt-1.5 text-[10px] select-none">◆</span>
       <span>${escHtml(p)}</span>
     </li>`)
         .join("\n");
-      return `<div class="my-6 text-left space-y-4">
-  ${b.title ? `<h4 class="text-[#10233F] font-bold text-base tracking-tight mb-3 mt-0">${escHtml(b.title)}</h4>` : ""}
+      return `<div class="my-6 ${listBgColor ? 'p-5 rounded-xl' : ''} space-y-4" style="${listWrapStyle}">
+  ${b.title ? `<h4 class="font-bold text-base tracking-tight mb-3 mt-0" style="color: ${listTextColor} !important;">${escHtml(b.title)}</h4>` : ""}
   <ul class="space-y-3 pl-1">
 ${pts}
   </ul>
@@ -466,18 +514,31 @@ ${trRows}
       const btBg     = b.bgColor      || "#F4F9FD";
       const btBorder = b.accentColor  || "#0E7490";
       const btLabel  = b.label        || "KEY CONCEPT";
-      // Preserve line breaks: split on \n and wrap each non-empty line in <p>
+      const btTextColor = b.textColor || "#526477";
+      const btAlign  = b.align        || "left";
+      const btFontSz = FONT_SIZE_MAP[b.fontSize || "normal"] || "0.875rem";
+      // Preserve line breaks
       const btLines  = (b.text || "").split("\n");
       const btHtml   = btLines
         .map((line: string) =>
           line.trim() === ""
             ? `<p class="mb-2">&nbsp;</p>`
-            : `<p class="text-sm text-[#526477] leading-relaxed mb-2">${escHtml(line)}</p>`
+            : `<p class="leading-relaxed mb-2" style="color: ${btTextColor} !important; font-size: ${btFontSz} !important;">${escHtml(line)}</p>`
         )
         .join("");
-      return `<div class="my-6 border border-[#DCE5E8] border-l-4 p-6 rounded-r-2xl text-left shadow-[0_4px_15px_rgba(16,35,63,0.01)]" style="background-color:${btBg};border-left-color:${btBorder};">
-  <div class="text-[10px] font-extrabold uppercase tracking-widest mb-2" style="color:${btBorder};">${escHtml(btLabel)}</div>
-  ${b.title ? `<h4 class="font-bold text-sm text-[#10233F] mb-1.5 mt-0 leading-tight">${escHtml(b.title.trim())}</h4>` : ""}
+      // Use all-inline styles to avoid Tailwind specificity overrides
+      const btWrapStyle = [
+        `background-color: ${btBg} !important;`,
+        `border: 1px solid #DCE5E8 !important;`,
+        `border-left: 4px solid ${btBorder} !important;`,
+        `border-radius: 0 1rem 1rem 0 !important;`,
+        `padding: 1.5rem !important;`,
+        `text-align: ${btAlign} !important;`,
+        `box-shadow: 0 4px 15px rgba(16,35,63,0.03) !important;`,
+      ].join(" ");
+      return `<div class="my-6" style="${btWrapStyle}">
+  <div class="text-[10px] font-extrabold uppercase tracking-widest mb-2" style="color: ${btBorder} !important;">${escHtml(btLabel)}</div>
+  ${b.title ? `<h4 class="font-bold mb-1.5 mt-0 leading-tight" style="color: #10233F; font-size: ${btFontSz};">${escHtml(b.title.trim())}</h4>` : ""}
   <div>${btHtml}</div>
 </div>`;
     }
