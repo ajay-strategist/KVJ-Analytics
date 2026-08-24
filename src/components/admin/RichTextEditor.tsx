@@ -20,6 +20,10 @@ export function RichTextEditor({ value, onChange, placeholder = "Write rich text
   const [linkTargetNew, setLinkTargetNew] = useState(false);
   const [showImgModal, setShowImgModal] = useState(false);
   const [imgUrl, setImgUrl] = useState("");
+  
+  const [imgWidth, setImgWidth] = useState("100%");
+  const [selectedImage, setSelectedImage] = useState<HTMLImageElement | null>(null);
+  const [selectedImageWidth, setSelectedImageWidth] = useState("100%");
 
   const [isBold, setIsBold] = useState(false);
   const [isItalic, setIsItalic] = useState(false);
@@ -29,6 +33,13 @@ export function RichTextEditor({ value, onChange, placeholder = "Write rich text
   const [isOrderedList, setIsOrderedList] = useState(false);
   const [alignment, setAlignment] = useState("left");
   const [formatBlock, setFormatBlock] = useState("p");
+
+  const [fontFamily, setFontFamily] = useState("Default");
+  const [fontSize, setFontSize] = useState("16");
+  const [inlineTextColor, setInlineTextColor] = useState("");
+  const [inlineBgColor, setInlineBgColor] = useState("");
+  const [blockTextColor, setBlockTextColor] = useState("");
+  const [blockBgColor, setBlockBgColor] = useState("");
 
   // Keep track of internal content to avoid cursor jumping
   useEffect(() => {
@@ -67,6 +78,54 @@ export function RichTextEditor({ value, onChange, placeholder = "Write rich text
     } catch (e) {
       setFormatBlock("p");
     }
+
+    // Read font and block styling from selected node
+    const selection = window.getSelection();
+    if (selection && selection.rangeCount > 0) {
+      let node = selection.anchorNode;
+      if (node) {
+        if (node.nodeType === Node.TEXT_NODE) {
+          node = node.parentNode;
+        }
+        if (node && node.nodeType === Node.ELEMENT_NODE) {
+          const el = node as HTMLElement;
+          setInlineTextColor(el.style.color || "");
+          setInlineBgColor(el.style.backgroundColor || "");
+          
+          const fs = el.style.fontSize;
+          if (fs) {
+            setFontSize(fs.replace("px", ""));
+          } else {
+            setFontSize("16");
+          }
+          
+          let fam = el.style.fontFamily || "Default";
+          fam = fam.replace(/['"]/g, "").split(",")[0];
+          setFontFamily(fam);
+
+          // Find block element styles
+          let blockNode: Node | null = el;
+          let foundBlock = false;
+          while (blockNode && blockNode !== editorRef.current) {
+            if (blockNode.nodeType === Node.ELEMENT_NODE) {
+              const bEl = blockNode as HTMLElement;
+              const tagName = bEl.tagName.toLowerCase();
+              if (["p", "h1", "h2", "h3", "h4", "h5", "h6", "li", "pre", "blockquote"].includes(tagName)) {
+                setBlockTextColor(bEl.style.color || "");
+                setBlockBgColor(bEl.style.backgroundColor || "");
+                foundBlock = true;
+                break;
+              }
+            }
+            blockNode = blockNode.parentNode;
+          }
+          if (!foundBlock) {
+            setBlockTextColor("");
+            setBlockBgColor("");
+          }
+        }
+      }
+    }
   };
 
   useEffect(() => {
@@ -87,10 +146,95 @@ export function RichTextEditor({ value, onChange, placeholder = "Write rich text
     };
   }, []);
 
+  // Listen to image clicks inside the editor for resizing
+  useEffect(() => {
+    const editor = editorRef.current;
+    if (!editor) return;
+
+    const handleImgClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target && target.tagName.toLowerCase() === "img") {
+        setSelectedImage(target as HTMLImageElement);
+        setSelectedImageWidth(target.style.width || target.getAttribute("width") || "100%");
+      } else {
+        setSelectedImage(null);
+      }
+    };
+
+    editor.addEventListener("click", handleImgClick);
+    return () => {
+      editor.removeEventListener("click", handleImgClick);
+    };
+  }, []);
+
+  const handleResizeSelectedImage = (w: string) => {
+    if (selectedImage) {
+      selectedImage.style.width = w;
+      selectedImage.style.height = "auto";
+      setSelectedImageWidth(w);
+      triggerChange();
+    }
+  };
+
   const execCmd = (command: string, value: string = "") => {
     document.execCommand(command, false, value);
     triggerChange();
     updateToolbarStates();
+  };
+
+  const applySpanStyle = (styleProperty: string, value: string) => {
+    if (typeof window === "undefined") return;
+    editorRef.current?.focus();
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0 || selection.isCollapsed) return;
+
+    const range = selection.getRangeAt(0);
+    const span = document.createElement("span");
+    
+    if (value === "" || value === "Default") {
+      span.style.removeProperty(styleProperty);
+    } else {
+      span.style.setProperty(styleProperty, value);
+    }
+
+    try {
+      span.appendChild(range.extractContents());
+      range.insertNode(span);
+      selection.removeAllRanges();
+      const newRange = document.createRange();
+      newRange.selectNodeContents(span);
+      selection.addRange(newRange);
+    } catch (err) {
+      document.execCommand(styleProperty === "fontSize" ? "fontSize" : "fontName", false, value);
+    }
+    triggerChange();
+    updateToolbarStates();
+  };
+
+  const applyBlockStyle = (styleProperty: string, value: string) => {
+    if (typeof window === "undefined") return;
+    editorRef.current?.focus();
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return;
+
+    let node = selection.anchorNode;
+    while (node && node !== editorRef.current) {
+      if (node.nodeType === Node.ELEMENT_NODE) {
+        const el = node as HTMLElement;
+        const tagName = el.tagName.toLowerCase();
+        if (["p", "h1", "h2", "h3", "h4", "h5", "h6", "li", "pre", "blockquote"].includes(tagName)) {
+          if (value === "transparent" || value === "" || value === undefined) {
+            el.style.removeProperty(styleProperty);
+          } else {
+            el.style.setProperty(styleProperty, value);
+          }
+          triggerChange();
+          updateToolbarStates();
+          return;
+        }
+      }
+      node = node.parentNode;
+    }
   };
 
   const triggerChange = () => {
@@ -147,9 +291,11 @@ export function RichTextEditor({ value, onChange, placeholder = "Write rich text
     if (!imgUrl) return;
 
     editorRef.current?.focus();
-    execCmd("insertImage", imgUrl);
+    const html = `<img src="${imgUrl}" style="width: ${imgWidth}; max-width: 100%; height: auto;" alt="Course image" />`;
+    insertHtmlAtCursor(html);
     
     setImgUrl("");
+    setImgWidth("100%");
     setShowImgModal(false);
   };
 
@@ -180,269 +326,370 @@ export function RichTextEditor({ value, onChange, placeholder = "Write rich text
       `}</style>
       
       {/* Editor Toolbar */}
-      <div className="flex flex-wrap gap-1.5 p-2 bg-slate-50 dark:bg-slate-900 border-b border-line items-center select-none">
+      <div className="flex flex-wrap gap-2 p-2 bg-slate-50 dark:bg-slate-900 border-b border-line items-center select-none">
         {/* Headings */}
-        <select
-          value={blockOptions.includes(formatBlock) ? formatBlock : "p"}
-          onChange={(e) => execCmd("formatBlock", `<${e.target.value}>`)}
-          className="px-2 py-1 text-xs border border-line rounded bg-white text-slate-800 dark:bg-slate-850 dark:text-slate-200 font-semibold cursor-pointer outline-none"
-        >
-          <option value="p">Paragraph</option>
-          <option value="h1">H1</option>
-          <option value="h2">H2</option>
-          <option value="h3">H3</option>
-          <option value="h4">H4</option>
-          <option value="h5">H5</option>
-          <option value="h6">H6</option>
-        </select>
-
-        <div className="h-4 w-px bg-line" />
-
-        {/* Text style formatting */}
-        <button
-          type="button"
-          onClick={() => execCmd("bold")}
-          title="Bold"
-          className={`p-1 rounded cursor-pointer transition-all ${
-            isBold
-              ? "bg-[#08A88A]/20 text-[#08A88A] ring-1 ring-[#08A88A]/40"
-              : "hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300"
-          }`}
-        >
-          <Bold className="w-4 h-4" />
-        </button>
-        <button
-          type="button"
-          onClick={() => execCmd("italic")}
-          title="Italic"
-          className={`p-1 rounded cursor-pointer transition-all ${
-            isItalic
-              ? "bg-[#08A88A]/20 text-[#08A88A] ring-1 ring-[#08A88A]/40"
-              : "hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300"
-          }`}
-        >
-          <Italic className="w-4 h-4" />
-        </button>
-        <button
-          type="button"
-          onClick={() => execCmd("underline")}
-          title="Underline"
-          className={`p-1 rounded cursor-pointer transition-all ${
-            isUnderline
-              ? "bg-[#08A88A]/20 text-[#08A88A] ring-1 ring-[#08A88A]/40"
-              : "hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300"
-          }`}
-        >
-          <Underline className="w-4 h-4" />
-        </button>
-        <button
-          type="button"
-          onClick={() => execCmd("strikeThrough")}
-          title="Strikethrough"
-          className={`p-1 rounded cursor-pointer transition-all ${
-            isStrike
-              ? "bg-[#08A88A]/20 text-[#08A88A] ring-1 ring-[#08A88A]/40"
-              : "hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300"
-          }`}
-        >
-          <Strikethrough className="w-4 h-4" />
-        </button>
-
-        <div className="h-4 w-px bg-line" />
-
-        {/* Font sizes */}
-        <select
-          onChange={(e) => execCmd("fontSize", e.target.value)}
-          className="px-2 py-1 text-xs border border-line rounded bg-white text-slate-800 dark:bg-slate-850 dark:text-slate-200 font-semibold cursor-pointer outline-none"
-          defaultValue="3"
-        >
-          <option value="1">Small</option>
-          <option value="3">Normal</option>
-          <option value="5">Large</option>
-          <option value="7">Extra Large</option>
-        </select>
-
-        <div className="h-4 w-px bg-line" />
-
-        {/* Colors Picker */}
-        <div className="flex items-center gap-1">
-          <ColorPicker
-            onChange={(color) => execCmd("foreColor", color || "#132238")}
-            defaultLabel="Default text color"
-          />
-          <ColorPicker
-            onChange={(color) => execCmd("hiliteColor", color || "transparent")}
-            defaultLabel="No highlight"
-          />
+        <div className="flex flex-col">
+          <span className="text-[8px] font-black text-slate uppercase mb-0.5 scale-90 origin-left">Heading</span>
+          <select
+            value={blockOptions.includes(formatBlock) ? formatBlock : "p"}
+            onChange={(e) => execCmd("formatBlock", `<${e.target.value}>`)}
+            className="px-2 py-1 text-xs border border-line rounded bg-white text-slate-800 dark:bg-slate-850 dark:text-slate-200 font-semibold cursor-pointer outline-none h-8"
+          >
+            <option value="p">Paragraph</option>
+            <option value="h1">H1</option>
+            <option value="h2">H2</option>
+            <option value="h3">H3</option>
+            <option value="h4">H4</option>
+            <option value="h5">H5</option>
+            <option value="h6">H6</option>
+          </select>
         </div>
 
-        <div className="h-4 w-px bg-line" />
+        {/* Font Family */}
+        <div className="flex flex-col">
+          <span className="text-[8px] font-black text-slate uppercase mb-0.5 scale-90 origin-left">Font Family</span>
+          <select
+            value={fontFamily}
+            onChange={(e) => applySpanStyle("fontFamily", e.target.value === "Default" ? "" : `'${e.target.value}', sans-serif`)}
+            className="px-2 py-1 text-xs border border-line rounded bg-white text-slate-800 dark:bg-slate-850 dark:text-slate-200 font-semibold cursor-pointer outline-none h-8"
+          >
+            <option value="Default">Default</option>
+            <option value="Inter">Inter</option>
+            <option value="Montserrat">Montserrat</option>
+            <option value="Outfit">Outfit</option>
+            <option value="Plus Jakarta Sans">Plus Jakarta Sans</option>
+            <option value="Lora">Lora</option>
+            <option value="Courier Prime">Courier Prime</option>
+          </select>
+        </div>
+
+        {/* Font Size */}
+        <div className="flex flex-col">
+          <span className="text-[8px] font-black text-slate uppercase mb-0.5 scale-90 origin-left">Size (px)</span>
+          <select
+            value={fontSize}
+            onChange={(e) => applySpanStyle("fontSize", e.target.value === "Default" ? "" : `${e.target.value}px`)}
+            className="px-2 py-1 text-xs border border-line rounded bg-white text-slate-800 dark:bg-slate-850 dark:text-slate-200 font-semibold cursor-pointer outline-none h-8"
+          >
+            <option value="Default">Default</option>
+            <option value="12">12</option>
+            <option value="14">14</option>
+            <option value="16">16</option>
+            <option value="18">18</option>
+            <option value="20">20</option>
+            <option value="24">24</option>
+            <option value="28">28</option>
+            <option value="32">32</option>
+            <option value="36">36</option>
+            <option value="48">48</option>
+          </select>
+        </div>
+
+        <div className="h-8 w-px bg-line align-middle self-end" />
+
+        {/* Text style formatting */}
+        <div className="flex items-center gap-1 self-end h-8">
+          <button
+            type="button"
+            onClick={() => execCmd("bold")}
+            title="Bold"
+            className={`p-1 rounded cursor-pointer transition-all ${
+              isBold
+                ? "bg-[#08A88A]/20 text-[#08A88A] ring-1 ring-[#08A88A]/40"
+                : "hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300"
+            }`}
+          >
+            <Bold className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => execCmd("italic")}
+            title="Italic"
+            className={`p-1 rounded cursor-pointer transition-all ${
+              isItalic
+                ? "bg-[#08A88A]/20 text-[#08A88A] ring-1 ring-[#08A88A]/40"
+                : "hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300"
+            }`}
+          >
+            <Italic className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => execCmd("underline")}
+            title="Underline"
+            className={`p-1 rounded cursor-pointer transition-all ${
+              isUnderline
+                ? "bg-[#08A88A]/20 text-[#08A88A] ring-1 ring-[#08A88A]/40"
+                : "hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300"
+            }`}
+          >
+            <Underline className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => execCmd("strikeThrough")}
+            title="Strikethrough"
+            className={`p-1 rounded cursor-pointer transition-all ${
+              isStrike
+                ? "bg-[#08A88A]/20 text-[#08A88A] ring-1 ring-[#08A88A]/40"
+                : "hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300"
+            }`}
+          >
+            <Strikethrough className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className="h-8 w-px bg-line align-middle self-end" />
+
+        {/* Colors Picker */}
+        <div className="flex items-center gap-2">
+          <div className="flex flex-col items-center">
+            <span className="text-[8px] font-black text-slate uppercase scale-90 mb-0.5">Text Color</span>
+            <ColorPicker
+              color={inlineTextColor}
+              onChange={(color) => execCmd("foreColor", color || "#132238")}
+              defaultLabel="Default text color"
+            />
+          </div>
+          <div className="flex flex-col items-center">
+            <span className="text-[8px] font-black text-slate uppercase scale-90 mb-0.5">Highlight</span>
+            <ColorPicker
+              color={inlineBgColor}
+              onChange={(color) => execCmd("hiliteColor", color || "transparent")}
+              defaultLabel="No highlight"
+            />
+          </div>
+          <div className="flex flex-col items-center">
+            <span className="text-[8px] font-black text-slate uppercase scale-90 mb-0.5">Block Text</span>
+            <ColorPicker
+              color={blockTextColor}
+              onChange={(color) => applyBlockStyle("color", color || "")}
+              defaultLabel="Default block color"
+            />
+          </div>
+          <div className="flex flex-col items-center">
+            <span className="text-[8px] font-black text-slate uppercase scale-90 mb-0.5">Block BG</span>
+            <ColorPicker
+              color={blockBgColor}
+              onChange={(color) => applyBlockStyle("backgroundColor", color || "")}
+              defaultLabel="No background"
+            />
+          </div>
+        </div>
+
+        <div className="h-8 w-px bg-line align-middle self-end" />
 
         {/* Alignment */}
-        <button
-          type="button"
-          onClick={() => execCmd("justifyLeft")}
-          title="Align Left"
-          className={`p-1 rounded cursor-pointer transition-all ${
-            alignment === "left"
-              ? "bg-[#08A88A]/20 text-[#08A88A] ring-1 ring-[#08A88A]/40"
-              : "hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300"
-          }`}
-        >
-          <AlignLeft className="w-4 h-4" />
-        </button>
-        <button
-          type="button"
-          onClick={() => execCmd("justifyCenter")}
-          title="Align Center"
-          className={`p-1 rounded cursor-pointer transition-all ${
-            alignment === "center"
-              ? "bg-[#08A88A]/20 text-[#08A88A] ring-1 ring-[#08A88A]/40"
-              : "hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300"
-          }`}
-        >
-          <AlignCenter className="w-4 h-4" />
-        </button>
-        <button
-          type="button"
-          onClick={() => execCmd("justifyRight")}
-          title="Align Right"
-          className={`p-1 rounded cursor-pointer transition-all ${
-            alignment === "right"
-              ? "bg-[#08A88A]/20 text-[#08A88A] ring-1 ring-[#08A88A]/40"
-              : "hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300"
-          }`}
-        >
-          <AlignRight className="w-4 h-4" />
-        </button>
-        <button
-          type="button"
-          onClick={() => execCmd("justifyFull")}
-          title="Justify"
-          className={`p-1 rounded cursor-pointer transition-all ${
-            alignment === "justify"
-              ? "bg-[#08A88A]/20 text-[#08A88A] ring-1 ring-[#08A88A]/40"
-              : "hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300"
-          }`}
-        >
-          <AlignJustify className="w-4 h-4" />
-        </button>
+        <div className="flex items-center gap-1 self-end h-8">
+          <button
+            type="button"
+            onClick={() => execCmd("justifyLeft")}
+            title="Align Left"
+            className={`p-1 rounded cursor-pointer transition-all ${
+              alignment === "left"
+                ? "bg-[#08A88A]/20 text-[#08A88A] ring-1 ring-[#08A88A]/40"
+                : "hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300"
+            }`}
+          >
+            <AlignLeft className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => execCmd("justifyCenter")}
+            title="Align Center"
+            className={`p-1 rounded cursor-pointer transition-all ${
+              alignment === "center"
+                ? "bg-[#08A88A]/20 text-[#08A88A] ring-1 ring-[#08A88A]/40"
+                : "hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300"
+            }`}
+          >
+            <AlignCenter className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => execCmd("justifyRight")}
+            title="Align Right"
+            className={`p-1 rounded cursor-pointer transition-all ${
+              alignment === "right"
+                ? "bg-[#08A88A]/20 text-[#08A88A] ring-1 ring-[#08A88A]/40"
+                : "hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300"
+            }`}
+          >
+            <AlignRight className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => execCmd("justifyFull")}
+            title="Justify"
+            className={`p-1 rounded cursor-pointer transition-all ${
+              alignment === "justify"
+                ? "bg-[#08A88A]/20 text-[#08A88A] ring-1 ring-[#08A88A]/40"
+                : "hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300"
+            }`}
+          >
+            <AlignJustify className="w-4 h-4" />
+          </button>
+        </div>
 
-        <div className="h-4 w-px bg-line" />
+        <div className="h-8 w-px bg-line align-middle self-end" />
 
         {/* Lists & Indenting */}
-        <button
-          type="button"
-          onClick={() => execCmd("insertUnorderedList")}
-          title="Bulleted List"
-          className={`p-1 rounded cursor-pointer transition-all ${
-            isUnorderedList
-              ? "bg-[#08A88A]/20 text-[#08A88A] ring-1 ring-[#08A88A]/40"
-              : "hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300"
-          }`}
-        >
-          <List className="w-4 h-4" />
-        </button>
-        <button
-          type="button"
-          onClick={() => execCmd("insertOrderedList")}
-          title="Numbered List"
-          className={`p-1 rounded cursor-pointer transition-all ${
-            isOrderedList
-              ? "bg-[#08A88A]/20 text-[#08A88A] ring-1 ring-[#08A88A]/40"
-              : "hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300"
-          }`}
-        >
-          <ListOrdered className="w-4 h-4" />
-        </button>
-        <button
-          type="button"
-          onClick={() => execCmd("indent")}
-          title="Indent"
-          className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300 cursor-pointer"
-        >
-          <Indent className="w-4 h-4" />
-        </button>
-        <button
-          type="button"
-          onClick={() => execCmd("outdent")}
-          title="Outdent"
-          className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300 cursor-pointer"
-        >
-          <Outdent className="w-4 h-4" />
-        </button>
+        <div className="flex items-center gap-1 self-end h-8">
+          <button
+            type="button"
+            onClick={() => execCmd("insertUnorderedList")}
+            title="Bulleted List"
+            className={`p-1 rounded cursor-pointer transition-all ${
+              isUnorderedList
+                ? "bg-[#08A88A]/20 text-[#08A88A] ring-1 ring-[#08A88A]/40"
+                : "hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300"
+            }`}
+          >
+            <List className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => execCmd("insertOrderedList")}
+            title="Numbered List"
+            className={`p-1 rounded cursor-pointer transition-all ${
+              isOrderedList
+                ? "bg-[#08A88A]/20 text-[#08A88A] ring-1 ring-[#08A88A]/40"
+                : "hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300"
+            }`}
+          >
+            <ListOrdered className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => execCmd("indent")}
+            title="Indent"
+            className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300 cursor-pointer"
+          >
+            <Indent className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => execCmd("outdent")}
+            title="Outdent"
+            className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300 cursor-pointer"
+          >
+            <Outdent className="w-4 h-4" />
+          </button>
+        </div>
 
-        <div className="h-4 w-px bg-line" />
+        <div className="h-8 w-px bg-line align-middle self-end" />
 
         {/* Insert items */}
-        <button
-          type="button"
-          onClick={() => setShowLinkModal(true)}
-          title="Insert Hyperlink"
-          className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300 cursor-pointer"
-        >
-          <Link className="w-4 h-4" />
-        </button>
-        <button
-          type="button"
-          onClick={() => setShowImgModal(true)}
-          title="Insert Image"
-          className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300 cursor-pointer"
-        >
-          <Image className="w-4 h-4" />
-        </button>
-        <button
-          type="button"
-          onClick={handleInlineCode}
-          title="Inline Code"
-          className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300 cursor-pointer"
-        >
-          <Code className="w-4 h-4" />
-        </button>
-        <button
-          type="button"
-          onClick={handleCodeBlock}
-          title="Code Block"
-          className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300 cursor-pointer"
-        >
-          <FileCode className="w-4 h-4" />
-        </button>
+        <div className="flex items-center gap-1 self-end h-8">
+          <button
+            type="button"
+            onClick={() => setShowLinkModal(true)}
+            title="Insert Hyperlink"
+            className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300 cursor-pointer"
+          >
+            <Link className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowImgModal(true)}
+            title="Insert Image"
+            className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300 cursor-pointer"
+          >
+            <Image className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            onClick={handleInlineCode}
+            title="Inline Code"
+            className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300 cursor-pointer"
+          >
+            <Code className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            onClick={handleCodeBlock}
+            title="Code Block"
+            className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300 cursor-pointer"
+          >
+            <FileCode className="w-4 h-4" />
+          </button>
+        </div>
 
-        <div className="h-4 w-px bg-line animate-pulse" />
+        <div className="h-8 w-px bg-line align-middle self-end animate-pulse" />
 
         {/* Operations */}
-        <button
-          type="button"
-          onClick={() => execCmd("undo")}
-          title="Undo"
-          className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300 cursor-pointer"
-        >
-          <Undo className="w-4 h-4" />
-        </button>
-        <button
-          type="button"
-          onClick={() => execCmd("redo")}
-          title="Redo"
-          className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300 cursor-pointer"
-        >
-          <Redo className="w-4 h-4" />
-        </button>
-        <button
-          type="button"
-          onClick={() => execCmd("removeFormat")}
-          title="Clear formatting"
-          className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300 cursor-pointer"
-        >
-          <Trash2 className="w-4 h-4" />
-        </button>
+        <div className="flex items-center gap-1 self-end h-8">
+          <button
+            type="button"
+            onClick={() => execCmd("undo")}
+            title="Undo"
+            className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300 cursor-pointer"
+          >
+            <Undo className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => execCmd("redo")}
+            title="Redo"
+            className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300 cursor-pointer"
+          >
+            <Redo className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => execCmd("removeFormat")}
+            title="Clear formatting"
+            className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300 cursor-pointer"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
       </div>
+
+      {/* Selected Image Resize Controller Floating Bar */}
+      {selectedImage && (
+        <div className="flex flex-wrap items-center gap-2 p-2 bg-brand/10 dark:bg-brand/20 border-b border-line text-xs font-bold text-slate-850 dark:text-slate-200 animate-in slide-in-from-top duration-200">
+          <span>Selected Image Width:</span>
+          {["25%", "50%", "75%", "100%"].map((preset) => (
+            <button
+              key={preset}
+              type="button"
+              onClick={() => handleResizeSelectedImage(preset)}
+              className={`px-2 py-1 rounded border border-line ${
+                selectedImageWidth === preset
+                  ? "bg-brand text-white"
+                  : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50"
+              }`}
+            >
+              {preset}
+            </button>
+          ))}
+          <div className="flex items-center gap-1 ml-2">
+            <span>Custom:</span>
+            <input
+              type="text"
+              value={selectedImageWidth}
+              onChange={(e) => handleResizeSelectedImage(e.target.value)}
+              className="w-20 px-1.5 py-0.5 border border-line rounded bg-white dark:bg-slate-900 text-center font-semibold"
+              placeholder="e.g. 350px"
+            />
+          </div>
+          <button
+            type="button"
+            onClick={() => setSelectedImage(null)}
+            className="ml-auto text-red-500 hover:underline hover:scale-105 transition-transform"
+          >
+            Deselect
+          </button>
+        </div>
+      )}
 
       {/* Editor Body */}
       <div
         ref={editorRef}
         contentEditable
         onInput={handleInput}
-        placeholder={placeholder}
+        data-placeholder={placeholder}
         className="w-full min-h-[160px] p-4 bg-white text-slate-800 dark:bg-slate-950 dark:text-slate-100 rounded-b-xl text-sm leading-relaxed overflow-y-auto focus:outline-none list-inside prose max-w-none rte-content"
         style={{ outline: "none" }}
       />
@@ -520,12 +767,26 @@ export function RichTextEditor({ value, onChange, placeholder = "Write rich text
                 className="w-full px-3 py-2 border border-line bg-white dark:bg-slate-950 text-sm rounded-lg"
               />
             </div>
+            <div className="space-y-1.5">
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">Initial Image Width</label>
+              <select
+                value={imgWidth}
+                onChange={(e) => setImgWidth(e.target.value)}
+                className="w-full px-3 py-2 border border-line bg-white dark:bg-slate-950 text-sm rounded-lg"
+              >
+                <option value="100%">100% (Full Width)</option>
+                <option value="75%">75%</option>
+                <option value="50%">50%</option>
+                <option value="25%">25%</option>
+              </select>
+            </div>
             <div className="flex justify-end gap-2 text-xs font-bold">
               <button
                 type="button"
                 onClick={() => {
                   setShowImgModal(false);
                   setImgUrl("");
+                  setImgWidth("100%");
                 }}
                 className="px-3 py-2 border border-line rounded-lg text-slate"
               >

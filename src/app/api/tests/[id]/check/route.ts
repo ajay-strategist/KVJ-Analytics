@@ -257,6 +257,9 @@ export async function POST(
       correct: isCorrect,
       correctAnswerLabel,
       explanation: config.explanation || "",
+      correctIndex: config.correctIndex,
+      correctIndexes: config.correctIndexes,
+      correctTF: config.correct,
     });
   } catch (error: any) {
     console.error("Check single answer error:", error);

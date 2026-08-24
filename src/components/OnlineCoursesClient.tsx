@@ -19,6 +19,7 @@ interface Course {
   offer_price_inr?: number | null;
   offer_label?: string | null;
   is_locked: boolean;
+  hide_pricing?: boolean;
 }
 
 interface OnlineCoursesClientProps {

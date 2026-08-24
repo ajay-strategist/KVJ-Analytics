@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { QuestionBuilder } from "@/components/admin/QuestionBuilder";
 import { ColorPicker } from "@/components/admin/ColorPicker";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
+import { TestTakingWidget } from "@/components/TestTakingWidget";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -123,11 +124,13 @@ const LessonEditor = React.memo(function LessonEditor({
   onSave,
   onCancel,
   fetchMockTests,
+  courseSlug,
 }: {
   initial: LessonValues;
   onSave: (values: LessonValues) => void;
   onCancel: () => void;
   fetchMockTests?: (courseId: string) => void;
+  courseSlug?: string;
 }) {
   const routeParams = useParams<{ id: string }>();
   const courseId = routeParams?.id as string;
@@ -2419,11 +2422,11 @@ const LessonEditor = React.memo(function LessonEditor({
               )
             ) : (
               <div className="w-full min-h-[340px] max-h-[500px] overflow-y-auto border border-[#DCE5E8] rounded-xl bg-white p-4">
-                {kind === "assessment" && linkedTest ? (
+                {((kind as string) === "assessment") && linkedTest ? (
                   <div className="p-4 bg-slate-50/50 rounded-xl">
                     <TestTakingWidget
                       testId={linkedTest.id}
-                      courseSlug={course.slug}
+                      courseSlug={courseSlug || ""}
                       adminPreview={true}
                       darkMode={false}
                       isInline={editorKind === "inline_assessment" || (linkedTest.is_inline || false)}
@@ -3584,6 +3587,7 @@ export default function AdminCourseDetailsPage() {
                                         onSave={handleSaveLesson}
                                         onCancel={() => { setEditingLessonId(null); setLessonForm({}); }}
                                         fetchMockTests={fetchMockTests}
+                                        courseSlug={course?.slug || ""}
                                       />
                                     )}
                                   </div>
@@ -3597,6 +3601,7 @@ export default function AdminCourseDetailsPage() {
                                   onSave={handleSaveLesson}
                                   onCancel={() => { setEditingLessonId(null); setLessonForm({}); }}
                                   fetchMockTests={fetchMockTests}
+                                  courseSlug={course?.slug || ""}
                                 />
                               </div>
                             )}

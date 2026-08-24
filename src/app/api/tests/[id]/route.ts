@@ -618,7 +618,6 @@ export async function POST(
           test_slug: id,
           answers: answers,
           score: earnedMarks,
-          score_percent: scorePercent,
           passed: passed,
           started_at: startedAt,
           submitted_at: new Date().toISOString()

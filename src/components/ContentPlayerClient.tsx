@@ -9,6 +9,8 @@ import {
   Circle,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   Menu,
   X,
   Loader2,
@@ -136,6 +138,35 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
   const [activeLesson, setActiveLesson] = useState<Lesson | null>(null);
   const [completedLessonIds, setCompletedLessonIds] = useState<Set<string>>(new Set());
   const [actionLoading, setActionLoading] = useState(false);
+
+  const [expandedModuleIds, setExpandedModuleIds] = useState<Set<string>>(new Set());
+
+  // Auto-expand module on activeLesson change
+  useEffect(() => {
+    if (activeLesson?.id) {
+      const parentMod = modules.find((m: any) => m.lessons.some((l: any) => l.id === activeLesson.id));
+      if (parentMod) {
+        setExpandedModuleIds((prev) => {
+          if (prev.has(parentMod.id)) return prev;
+          const next = new Set(prev);
+          next.add(parentMod.id);
+          return next;
+        });
+      }
+    }
+  }, [activeLesson?.id, modules]);
+
+  const toggleModule = (moduleId: string) => {
+    setExpandedModuleIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(moduleId)) {
+        next.delete(moduleId);
+      } else {
+        next.add(moduleId);
+      }
+      return next;
+    });
+  };
 
   // Score received from a kvjSubmit() call inside the lesson iframe.
   // Cleared whenever the active lesson changes.
@@ -553,79 +584,101 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
         </div>
 
         {/* Curriculum list */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          {enrichedModules.map((mod: any, modIdx: number) => (
-            <div key={mod.id} className="space-y-3.5">
-              <div className="flex items-center gap-2">
-                <span className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded font-mono border ${
-                  darkMode 
-                    ? "bg-[#10B981]/15 text-[#10B981] border-[#10B981]/30" 
-                    : "bg-[#F0FBF7] text-[#08A88A] border-[#DDF8F0]"
-                }`}>
-                  Mod {modIdx + 1}
-                </span>
-                <h3 className={`text-[10px] font-extrabold uppercase tracking-wider truncate font-sans ${
-                  darkMode ? "text-zinc-500" : "text-[#10233F]"
-                }`}>
-                  {mod.title}
-                </h3>
-              </div>
-              <div className="space-y-2">
-                {mod.lessons.map((les: any) => {
-                  const isActive = activeLesson?.id === les.id;
-                  const isCompleted = completedLessonIds.has(les.id);
+        <div className="flex-1 overflow-y-auto p-6 space-y-4">
+          {enrichedModules.map((mod: any, modIdx: number) => {
+            const isOpen = expandedModuleIds.has(mod.id);
+            return (
+              <div key={mod.id} className={`border rounded-2xl overflow-hidden transition-all duration-300 ${
+                isOpen 
+                  ? darkMode ? "border-brand/30 bg-zinc-900/40" : "border-brand/20 bg-[#F0FBF7]/30 shadow-[0_4px_15px_rgba(8,168,138,0.02)]"
+                  : darkMode ? "border-white/5 bg-transparent" : "border-slate-200 bg-transparent"
+              }`}>
+                {/* Module Accordion Header Trigger */}
+                <button
+                  onClick={() => toggleModule(mod.id)}
+                  className="w-full flex items-center justify-between p-4 text-left cursor-pointer hover:bg-slate-50 dark:hover:bg-zinc-800/45 transition-colors"
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded font-mono border shrink-0 ${
+                      darkMode 
+                        ? "bg-[#10B981]/15 text-[#10B981] border-[#10B981]/30" 
+                        : "bg-[#F0FBF7] text-[#08A88A] border-[#DDF8F0]"
+                    }`}>
+                      Mod {modIdx + 1}
+                    </span>
+                    <h3 className={`text-xs font-extrabold uppercase tracking-wider truncate font-sans ${
+                      darkMode ? "text-zinc-300" : "text-[#10233F]"
+                    }`}>
+                      {mod.title}
+                    </h3>
+                  </div>
+                  {isOpen ? (
+                    <ChevronUp className={`w-4 h-4 shrink-0 ${darkMode ? "text-zinc-500" : "text-slate-400"}`} />
+                  ) : (
+                    <ChevronDown className={`w-4 h-4 shrink-0 ${darkMode ? "text-zinc-500" : "text-slate-400"}`} />
+                  )}
+                </button>
 
-                  return (
-                    <button
-                      key={les.id}
-                      onClick={() => handleLessonSelect(les)}
-                      className={`w-full text-left p-3 rounded-xl flex items-center justify-between gap-3 text-xs transition-all duration-200 border transform hover:translate-x-0.5 group ${
-                        isActive
-                          ? darkMode
-                            ? "bg-[#10B981]/10 text-white font-bold border-[#10B981]/30 shadow-[0_2px_8px_rgba(16,185,129,0.05)]"
-                            : "bg-white text-[#10233F] font-bold border-[#08A88A]/60 shadow-[0_4px_12px_rgba(8,168,138,0.08)] scale-[1.01]"
-                          : darkMode
-                            ? "hover:bg-[#111814] border-transparent text-zinc-400 hover:text-zinc-200"
-                            : "hover:bg-[#F4F9FD] border-transparent text-[#526477] hover:text-[#10233F]"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5 overflow-hidden min-w-0">
-                        {isCompleted ? (
-                          <CheckCircle2 className="w-4 h-4 text-[#08A88A] shrink-0" />
-                        ) : (
-                          <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 transition-colors ${
-                            isActive
-                              ? "border-[#08A88A]"
-                              : darkMode
-                                ? "border-zinc-700 group-hover:border-zinc-650"
-                                : "border-[#DCE5E8] group-hover:border-[#08A88A]/40"
-                          }`}>
-                            <div className={`w-1.5 h-1.5 rounded-full transition-transform ${
+                {/* Module Accordion Lessons Panel */}
+                <div className={`transition-all duration-300 overflow-hidden ${
+                  isOpen ? "max-h-[1000px] border-t border-line/60 p-3 space-y-2" : "max-h-0"
+                }`}>
+                  {mod.lessons.map((les: any) => {
+                    const isActive = activeLesson?.id === les.id;
+                    const isCompleted = completedLessonIds.has(les.id);
+
+                    return (
+                      <button
+                        key={les.id}
+                        onClick={() => handleLessonSelect(les)}
+                        className={`w-full text-left p-3 rounded-xl flex items-center justify-between gap-3 text-xs transition-all duration-200 border transform hover:translate-x-0.5 group ${
+                          isActive
+                            ? darkMode
+                              ? "bg-[#10B981]/10 text-white font-bold border-[#10B981]/30 shadow-[0_2px_8px_rgba(16,185,129,0.05)]"
+                              : "bg-white text-[#10233F] font-bold border-[#08A88A]/60 shadow-[0_4px_12px_rgba(8,168,138,0.08)] scale-[1.01]"
+                            : darkMode
+                              ? "hover:bg-[#111814] border-transparent text-zinc-400 hover:text-zinc-200"
+                              : "hover:bg-[#F4F9FD] border-transparent text-[#526477] hover:text-[#10233F]"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5 overflow-hidden min-w-0">
+                          {isCompleted ? (
+                            <CheckCircle2 className="w-4 h-4 text-[#08A88A] shrink-0" />
+                          ) : (
+                            <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 transition-colors ${
                               isActive
-                                ? "bg-[#08A88A] scale-100"
-                                : "bg-transparent scale-0"
-                            }`} />
-                          </div>
+                                ? "border-[#08A88A]"
+                                : darkMode
+                                  ? "border-zinc-700 group-hover:border-zinc-650"
+                                  : "border-[#DCE5E8] group-hover:border-[#08A88A]/40"
+                            }`}>
+                              <div className={`w-1.5 h-1.5 rounded-full transition-transform ${
+                                isActive
+                                  ? "bg-[#08A88A] scale-100"
+                                  : "bg-transparent scale-0"
+                              }`} />
+                            </div>
+                          )}
+                          <span className={`truncate tracking-tight font-sans ${isActive ? "font-bold text-[#10233F]" : "font-semibold text-[#526477] group-hover:text-[#10233F]"}`}>
+                            {les.title}
+                          </span>
+                        </div>
+                        {les.video_url && (
+                          <PlayCircle className={`w-3.5 h-3.5 shrink-0 ${
+                            isActive 
+                              ? "text-[#08A88A]" 
+                              : darkMode 
+                                ? "text-zinc-600 group-hover:text-zinc-400" 
+                                : "text-[#7B8A99] group-hover:text-[#08A88A]"
+                          }`} />
                         )}
-                        <span className={`truncate tracking-tight font-sans ${isActive ? "font-bold text-[#10233F]" : "font-semibold text-[#526477] group-hover:text-[#10233F]"}`}>
-                          {les.title}
-                        </span>
-                      </div>
-                      {les.video_url && (
-                        <PlayCircle className={`w-3.5 h-3.5 shrink-0 ${
-                          isActive 
-                            ? "text-[#08A88A]" 
-                            : darkMode 
-                              ? "text-zinc-600 group-hover:text-zinc-400" 
-                              : "text-[#7B8A99] group-hover:text-[#08A88A]"
-                        }`} />
-                      )}
-                    </button>
-                  );
-                })}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 

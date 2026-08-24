@@ -16,8 +16,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Supabase client not configured." }, { status: 500 });
   }
 
-  // 1. Get access token from cookie
-  const token = req.cookies.get("sb-access-token")?.value;
+  // 1. Get access token from cookie or Authorization header
+  const authHeader = req.headers.get("authorization");
+  const bearerToken = authHeader?.startsWith("Bearer ") ? authHeader.substring(7) : null;
+  const token = req.cookies.get("sb-access-token")?.value || bearerToken;
   if (!token) {
     return NextResponse.json(
       { error: "Access denied. Please sign in to your student account." },

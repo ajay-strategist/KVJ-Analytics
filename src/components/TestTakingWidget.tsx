@@ -266,6 +266,9 @@ export function TestTakingWidget({
     correct: boolean;
     correctAnswerLabel: string;
     explanation: string;
+    correctIndex?: number;
+    correctIndexes?: number[];
+    correctTF?: boolean;
   }>>({});
 
   const checkAnswerInline = async (questionId: string) => {
@@ -291,6 +294,9 @@ export function TestTakingWidget({
           correct: data.correct,
           correctAnswerLabel: data.correctAnswerLabel,
           explanation: data.explanation,
+          correctIndex: data.correctIndex,
+          correctIndexes: data.correctIndexes,
+          correctTF: data.correctTF,
         },
       }));
     } catch (err: any) {
@@ -482,7 +488,7 @@ export function TestTakingWidget({
     if (!over || !active) return;
 
     const rightStr = active.id;
-    const leftStr = over.id.replace("slot-", "");
+    const leftStr = String(over.id).replace("slot-", "");
     const currentMatches = answers[currentQuestion.id] || [];
 
     const nextMatches = currentMatches.map((p: any) => {
@@ -505,7 +511,7 @@ export function TestTakingWidget({
     if (!over || !active) return;
 
     const dragItem = active.id;
-    const slotId = over.id.replace("slot-", "");
+    const slotId = String(over.id).replace("slot-", "");
     const currentAnswers = { ...(answers[currentQuestion.id] || {}) };
 
     // If this item was already assigned to another slot, clear it from there
@@ -632,19 +638,23 @@ export function TestTakingWidget({
               {q.config.options.map((opt: string, oIdx: number) => {
                 const isSelected = answers[q.id] === oIdx;
                 const isChecked = checkedAnswers[q.id]?.checked;
-                const isCorrect = checkedAnswers[q.id]?.correct;
+                const correctIndex = checkedAnswers[q.id]?.correctIndex;
+                const isThisCorrectOption = isChecked && correctIndex !== undefined && Number(correctIndex) === oIdx;
 
                 let borderStyle = isSelected ? "border-brand bg-brand/5" : `${colors.card} ${colors.hover}`;
-                if (isChecked && isSelected) {
-                  borderStyle = isCorrect
-                    ? "border-emerald-500 bg-emerald-500/10 dark:bg-emerald-500/5 text-emerald-400 font-bold"
-                    : "border-red-500 bg-red-500/10 dark:bg-red-500/5 text-red-400 font-bold";
+                if (isChecked) {
+                  if (isThisCorrectOption) {
+                    borderStyle = "border-emerald-500 bg-emerald-500/10 dark:bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 font-bold shadow-[0_0_10px_rgba(16,185,129,0.15)]";
+                  } else if (isSelected) {
+                    borderStyle = "border-red-500 bg-red-500/10 dark:bg-red-500/5 text-red-600 dark:text-red-400 font-bold";
+                  }
                 }
 
                 return (
                   <div
                     key={oIdx}
                     onClick={() => {
+                      if (isChecked) return; // disable change after checked
                       setAnswers((prev) => ({ ...prev, [q.id]: oIdx }));
                       setCheckedAnswers((prev) => {
                         const next = { ...prev };
@@ -656,8 +666,12 @@ export function TestTakingWidget({
                   >
                     {isInline ? (
                       <span className={`w-5 h-5 rounded-full border flex items-center justify-center text-[10px] font-bold shrink-0 transition-colors ${
-                        isChecked && isSelected
-                          ? (isCorrect ? "border-emerald-500 bg-emerald-500 text-white" : "border-red-500 bg-red-500 text-white")
+                        isChecked
+                          ? isThisCorrectOption
+                            ? "border-emerald-500 bg-emerald-500 text-white"
+                            : isSelected
+                              ? "border-red-500 bg-red-500 text-white"
+                              : "border-[#DCE5E8] text-zinc-500 dark:border-white/10"
                           : isSelected
                             ? "border-brand bg-brand text-black font-black"
                             : "border-[#DCE5E8] text-zinc-500 dark:border-white/10"
@@ -673,6 +687,12 @@ export function TestTakingWidget({
                       />
                     )}
                     <span className="text-sm font-semibold">{opt}</span>
+                    {isChecked && isThisCorrectOption && (
+                      <span className="ml-auto text-[9px] font-bold text-emerald-600 bg-emerald-100 px-1.5 py-0.5 rounded-full shrink-0">✓ Correct</span>
+                    )}
+                    {isChecked && isSelected && !isThisCorrectOption && (
+                      <span className="ml-auto text-[9px] font-bold text-red-500 bg-red-100 px-1.5 py-0.5 rounded-full shrink-0">Your Answer</span>
+                    )}
                   </div>
                 );
               })}
@@ -685,19 +705,23 @@ export function TestTakingWidget({
                 const currentVal = answers[q.id] || [];
                 const isSelected = currentVal.includes(oIdx);
                 const isChecked = checkedAnswers[q.id]?.checked;
-                const isCorrect = checkedAnswers[q.id]?.correct;
+                const correctIndexes = checkedAnswers[q.id]?.correctIndexes || [];
+                const isThisCorrectOption = isChecked && Array.isArray(correctIndexes) && correctIndexes.map(Number).includes(oIdx);
 
                 let borderStyle = isSelected ? "border-brand bg-brand/5" : `${colors.card} ${colors.hover}`;
-                if (isChecked && isSelected) {
-                  borderStyle = isCorrect
-                    ? "border-emerald-500 bg-emerald-500/10 dark:bg-emerald-500/5 text-emerald-400 font-bold"
-                    : "border-red-500 bg-red-500/10 dark:bg-red-500/5 text-red-400 font-bold";
+                if (isChecked) {
+                  if (isThisCorrectOption) {
+                    borderStyle = "border-emerald-500 bg-emerald-500/10 dark:bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 font-bold shadow-[0_0_10px_rgba(16,185,129,0.15)]";
+                  } else if (isSelected) {
+                    borderStyle = "border-red-500 bg-red-500/10 dark:bg-red-500/5 text-red-600 dark:text-red-400 font-bold";
+                  }
                 }
 
                 return (
                   <div
                     key={oIdx}
                     onClick={() => {
+                      if (isChecked) return; // disable change after checked
                       let next = [...currentVal];
                       if (isSelected) next = next.filter((x) => x !== oIdx);
                       else next.push(oIdx);
@@ -712,8 +736,12 @@ export function TestTakingWidget({
                   >
                     {isInline ? (
                       <span className={`w-5 h-5 rounded-md border flex items-center justify-center text-[10px] font-bold shrink-0 transition-colors ${
-                        isChecked && isSelected
-                          ? (isCorrect ? "border-emerald-500 bg-emerald-500 text-white" : "border-red-500 bg-red-500 text-white")
+                        isChecked
+                          ? isThisCorrectOption
+                            ? "border-emerald-500 bg-emerald-500 text-white"
+                            : isSelected
+                              ? "border-red-500 bg-red-500 text-white"
+                              : "border-[#DCE5E8] text-zinc-500 dark:border-white/10"
                           : isSelected
                             ? "border-brand bg-brand text-black font-black"
                             : "border-[#DCE5E8] text-zinc-500 dark:border-white/10"
@@ -729,6 +757,12 @@ export function TestTakingWidget({
                       />
                     )}
                     <span className="text-sm font-semibold">{opt}</span>
+                    {isChecked && isThisCorrectOption && (
+                      <span className="ml-auto text-[9px] font-bold text-emerald-600 bg-emerald-100 px-1.5 py-0.5 rounded-full shrink-0">✓ Correct</span>
+                    )}
+                    {isChecked && isSelected && !isThisCorrectOption && (
+                      <span className="ml-auto text-[9px] font-bold text-red-500 bg-red-100 px-1.5 py-0.5 rounded-full shrink-0">Your Answer</span>
+                    )}
                   </div>
                 );
               })}
@@ -740,13 +774,16 @@ export function TestTakingWidget({
               {[true, false].map((val) => {
                 const isSelected = answers[q.id] !== null && String(answers[q.id]) === String(val);
                 const isChecked = checkedAnswers[q.id]?.checked;
-                const isCorrect = checkedAnswers[q.id]?.correct;
+                const correctTF = checkedAnswers[q.id]?.correctTF;
+                const isThisCorrectOption = isChecked && correctTF !== undefined && String(correctTF) === String(val);
 
                 let borderStyle = isSelected ? "border-brand bg-brand/5 text-brand" : `${colors.card} ${colors.hover}`;
-                if (isChecked && isSelected) {
-                  borderStyle = isCorrect
-                    ? "border-emerald-500 bg-emerald-500/10 dark:bg-emerald-500/5 text-emerald-400 font-bold"
-                    : "border-red-500 bg-red-500/10 dark:bg-red-500/5 text-red-400 font-bold";
+                if (isChecked) {
+                  if (isThisCorrectOption) {
+                    borderStyle = "border-emerald-500 bg-emerald-500/10 dark:bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 font-bold shadow-[0_0_10px_rgba(16,185,129,0.15)]";
+                  } else if (isSelected) {
+                    borderStyle = "border-red-500 bg-red-500/10 dark:bg-red-500/5 text-red-600 dark:text-red-400 font-bold";
+                  }
                 }
 
                 return (
@@ -754,6 +791,7 @@ export function TestTakingWidget({
                     key={String(val)}
                     type="button"
                     onClick={() => {
+                      if (isChecked) return;
                       setAnswers((prev) => ({ ...prev, [q.id]: val }));
                       setCheckedAnswers((prev) => {
                         const next = { ...prev };
@@ -764,6 +802,8 @@ export function TestTakingWidget({
                     className={`flex-1 py-4 border rounded-xl font-bold transition-all text-center cursor-pointer ${borderStyle}`}
                   >
                     {val ? "True" : "False"}
+                    {isChecked && isThisCorrectOption && " (✓ Correct)"}
+                    {isChecked && isSelected && !isThisCorrectOption && " (Your Answer)"}
                   </button>
                 );
               })}
@@ -775,7 +815,7 @@ export function TestTakingWidget({
               const { over, active } = event;
               if (!over || !active) return;
               const dragItem = active.id;
-              const slotId = over.id.replace("slot-", "");
+              const slotId = String(over.id).replace("slot-", "");
               const currentAnswers = { ...(answers[q.id] || {}) };
               Object.keys(currentAnswers).forEach((key) => {
                 if (currentAnswers[key] === dragItem) {
@@ -861,7 +901,7 @@ export function TestTakingWidget({
               const { over, active } = event;
               if (!over || !active) return;
               const rightStr = active.id;
-              const leftStr = over.id.replace("slot-", "");
+              const leftStr = String(over.id).replace("slot-", "");
               const currentMatches = answers[q.id] || [];
               const nextMatches = currentMatches.map((p: any) => {
                 if (p[0] === leftStr) return [leftStr, rightStr];
@@ -871,6 +911,26 @@ export function TestTakingWidget({
               setAnswers((prev) => ({ ...prev, [q.id]: nextMatches }));
             }}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Column 1: Match Choices (Draggables) on the Left */}
+                <div className="space-y-3">
+                  <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate">Match Choices</h4>
+                  {(() => {
+                    const matchedRights = (answers[q.id] || []).map((p: any) => p[1]).filter(Boolean);
+                    const pool = (q.config.right || []).filter((r: string) => !matchedRights.includes(r));
+                    if (pool.length === 0) {
+                      return <p className={`text-[11px] italic ${colors.slate}`}>All choices matched.</p>;
+                    }
+                    return (
+                      <div className="flex flex-col gap-2">
+                        {pool.map((r: string) => (
+                          <DraggableItem key={r} id={r} text={r} colors={colors} />
+                        ))}
+                      </div>
+                    );
+                  })()}
+                </div>
+
+                {/* Column 2: Items to Match (Droppables) on the Right */}
                 <div className="space-y-3">
                   <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate">Items to Match</h4>
                   {(q.config.left || []).map((l: string) => {
@@ -892,23 +952,6 @@ export function TestTakingWidget({
                       />
                     );
                   })}
-                </div>
-                <div className="space-y-3">
-                  <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate">Match Choices</h4>
-                  {(() => {
-                    const matchedRights = (answers[q.id] || []).map((p: any) => p[1]).filter(Boolean);
-                    const pool = (q.config.right || []).filter((r: string) => !matchedRights.includes(r));
-                    if (pool.length === 0) {
-                      return <p className={`text-[11px] italic ${colors.slate}`}>All choices matched.</p>;
-                    }
-                    return (
-                      <div className="flex flex-wrap gap-2">
-                        {pool.map((r: string) => (
-                          <DraggableItem key={r} id={r} text={r} colors={colors} />
-                        ))}
-                      </div>
-                    );
-                  })()}
                 </div>
               </div>
             </DndContext>
