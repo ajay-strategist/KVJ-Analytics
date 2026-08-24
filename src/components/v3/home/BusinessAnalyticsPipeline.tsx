@@ -57,18 +57,6 @@ export function BusinessAnalyticsPipeline({
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           {/* Left Column: Interactive Timeline List */}
           <div className="lg:col-span-6 relative flex flex-col gap-4">
-            {/* Connecting Vertical Line */}
-            <div className="absolute left-[22px] top-6 bottom-6 w-[2px] bg-line/20 pointer-events-none" />
-            
-            {/* Active Progress Filling Line */}
-            <div 
-              className="absolute left-[22px] top-6 w-[2px] bg-gradient-to-b from-brand to-corporate transition-all duration-500 pointer-events-none"
-              style={{
-                height: `${(active / (STAGES.length - 1)) * 100}%`,
-                maxHeight: "calc(100% - 48px)"
-              }}
-            />
-
             {STAGES.map((s, i) => {
               const isActive = i === active;
               const isCompleted = i < active;
