@@ -98,25 +98,25 @@ export function BusinessAnalyticsPipeline({
             })}
           </div>
 
-          {/* Right Column: Premium Stage Dashboard Card */}
+          {/* Right Column: Premium Stage Dashboard Card (Emerald Green Glass Theme) */}
           <div className="lg:col-span-6">
             <Reveal variant="scale" className="w-full">
-              <div className="glow-ring relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a] border border-cyan-500/30 p-8 min-h-[360px] shadow-2xl flex flex-col justify-between">
-                <div className="absolute -top-16 -right-12 h-52 w-52 rounded-full bg-cyan-500/20 blur-[80px] pointer-events-none" />
+              <div className="glow-ring relative overflow-hidden rounded-3xl bg-white/75 border border-brand/15 p-8 min-h-[360px] shadow-[0_20px_50px_rgba(16,185,129,0.05)] backdrop-blur-md flex flex-col justify-between">
+                <div className="absolute -top-16 -right-12 h-52 w-52 rounded-full bg-brand/8 blur-[80px] pointer-events-none" />
                 
                 <div key={active} className="animate-fade-up relative z-10 space-y-5">
                   {/* Card Header */}
                   <div>
-                    <span className="font-mono text-[11px] font-bold text-cyan-400 tracking-widest uppercase">
+                    <span className="font-mono text-[11px] font-bold text-brand tracking-widest uppercase">
                       STAGE {String(active + 1).padStart(2, "0")} / {STAGES.length}
                     </span>
-                    <h3 className="mt-1 font-display text-2xl lg:text-3xl font-bold text-white tracking-tight">
+                    <h3 className="mt-1 font-display text-2xl lg:text-3xl font-bold text-ink tracking-tight">
                       {nameAt(active)}
                     </h3>
                   </div>
 
                   {/* Stage Rich Description */}
-                  <p className="text-slate/85 text-[15px] font-light leading-relaxed max-w-md">
+                  <p className="text-slate font-light text-[15.5px] leading-relaxed max-w-md">
                     {STAGE_DESCRIPTIONS[active]}
                   </p>
 
@@ -135,10 +135,10 @@ export function BusinessAnalyticsPipeline({
                       aria-label={`Go to Stage ${idx + 1}`}
                       className={`h-2.5 w-2.5 rounded-full transition-all duration-300 ${
                         idx === active
-                          ? "bg-cyan-400 ring-4 ring-cyan-400/30 scale-110 shadow-[0_0_12px_#22d3ee]"
+                          ? "bg-brand ring-4 ring-brand/25 scale-110 shadow-[0_0_10px_rgba(16,185,129,0.35)]"
                           : idx < active
-                          ? "bg-cyan-500/40 hover:bg-cyan-500/70"
-                          : "bg-slate-900 border border-slate-700 hover:border-slate-500"
+                          ? "bg-brand/40 hover:bg-brand/60"
+                          : "bg-slate-100 border border-slate-300 hover:border-slate-400"
                       }`}
                     />
                   ))}
@@ -152,25 +152,25 @@ export function BusinessAnalyticsPipeline({
   );
 }
 
-/* Abstract per-stage dashboard (High Visibility Slate/Cyan Theme) */
+/* Abstract per-stage dashboard (High Visibility Slate/Emerald Theme) */
 function StageViz({ variant }: { variant: number }) {
   const cls = "h-[70px] w-full max-w-sm";
   if (variant === 0)
-    return <div className="flex max-w-sm flex-wrap gap-2.5">{[...Array(9)].map((_, i) => <span key={i} className="h-3.5 w-3.5 rounded-full border border-cyan-400/40 bg-cyan-400/20 shadow-sm" style={{ opacity: 0.5 + (i % 3) * 0.25 }} />)}</div>;
+    return <div className="flex max-w-sm flex-wrap gap-2.5">{[...Array(9)].map((_, i) => <span key={i} className="h-3.5 w-3.5 rounded-full border border-brand/40 bg-brand/20 shadow-sm" style={{ opacity: 0.5 + (i % 3) * 0.25 }} />)}</div>;
   if (variant === 1)
-    return <div className="relative h-8 w-full max-w-sm overflow-hidden">{[0, 1, 2, 3].map((i) => <span key={i} className="stream-dot absolute top-1/2 h-3 w-3 -translate-y-1/2 rounded-full bg-cyan-400 shadow-[0_0_12px_#22d3ee]" style={{ animationDelay: `${i * 0.5}s` }} />)}</div>;
+    return <div className="relative h-8 w-full max-w-sm overflow-hidden">{[0, 1, 2, 3].map((i) => <span key={i} className="stream-dot absolute top-1/2 h-3 w-3 -translate-y-1/2 rounded-full bg-brand shadow-[0_0_10px_rgba(16,185,129,0.3)]" style={{ animationDelay: `${i * 0.5}s` }} />)}</div>;
   if (variant === 2)
-    return <div className="flex w-full max-w-sm items-end gap-1.5 h-[70px]">{[40, 62, 50, 78, 56, 84, 66].map((h, i) => <div key={i} className="build-line flex-1 rounded-t bg-gradient-to-t from-slate-900 to-cyan-400" style={{ height: `${h}%`, animationDelay: `${i * 0.2}s` }} />)}</div>;
+    return <div className="flex w-full max-w-sm items-end gap-1.5 h-[70px]">{[40, 62, 50, 78, 56, 84, 66].map((h, i) => <div key={i} className="build-line flex-1 rounded-t bg-gradient-to-t from-slate-200 to-brand" style={{ height: `${h}%`, animationDelay: `${i * 0.2}s` }} />)}</div>;
   if (variant === 3)
-    return <svg viewBox="0 0 240 70" className={cls} preserveAspectRatio="none"><path d="M0 56 C30 50 46 26 70 32 S120 8 150 18 S210 6 240 12" fill="none" stroke="#22d3ee" strokeWidth="3.5" strokeLinecap="round" /></svg>;
+    return <svg viewBox="0 0 240 70" className={cls} preserveAspectRatio="none"><path d="M0 56 C30 50 46 26 70 32 S120 8 150 18 S210 6 240 12" fill="none" stroke="#10B981" strokeWidth="3.5" strokeLinecap="round" /></svg>;
   if (variant === 4)
     return (
       <div className="flex items-center gap-5">
-        <svg viewBox="0 0 42 42" className="h-16 w-16 -rotate-90"><circle cx="21" cy="21" r="15.9" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="6" /><circle cx="21" cy="21" r="15.9" fill="none" stroke="#22d3ee" strokeWidth="6" strokeDasharray="64 100" strokeLinecap="round" /></svg>
-        <div className="space-y-2">{[70, 48, 32].map((w, i) => <div key={i} className="h-2.5 rounded-full bg-gradient-to-r from-cyan-400 to-teal-300" style={{ width: `${w * 1.6}px` }} />)}</div>
+        <svg viewBox="0 0 42 42" className="h-16 w-16 -rotate-90"><circle cx="21" cy="21" r="15.9" fill="none" stroke="rgba(0,0,0,0.06)" strokeWidth="6" /><circle cx="21" cy="21" r="15.9" fill="none" stroke="#10B981" strokeWidth="6" strokeDasharray="64 100" strokeLinecap="round" /></svg>
+        <div className="space-y-2">{[70, 48, 32].map((w, i) => <div key={i} className="h-2.5 rounded-full bg-gradient-to-r from-brand to-corporate" style={{ width: `${w * 1.6}px` }} />)}</div>
       </div>
     );
   if (variant === 5)
-    return <div className="w-full max-w-xs space-y-2">{[92, 76, 84, 62].map((w, i) => <div key={i} className="h-2.5 rounded-full bg-slate-900 border border-slate-700"><div className="build-line h-full rounded-full bg-gradient-to-r from-cyan-400 to-teal-300" style={{ width: `${w}%`, animationDelay: `${i * 0.4}s` }} /></div>)}</div>;
-  return <div className="flex items-end gap-1.5 h-[70px]">{[40, 52, 60, 72, 88, 100].map((h, i) => <div key={i} className="w-6 rounded-t bg-gradient-to-t from-slate-900 to-cyan-400" style={{ height: `${h}%` }} />)}</div>;
+    return <div className="w-full max-w-xs space-y-2">{[92, 76, 84, 62].map((w, i) => <div key={i} className="h-2.5 rounded-full bg-slate-100 border border-slate-200"><div className="build-line h-full rounded-full bg-gradient-to-r from-brand to-corporate" style={{ width: `${w}%`, animationDelay: `${i * 0.4}s` }} /></div>)}</div>;
+  return <div className="flex items-end gap-1.5 h-[70px]">{[40, 52, 60, 72, 88, 100].map((h, i) => <div key={i} className="w-6 rounded-t bg-gradient-to-t from-slate-200 to-brand" style={{ height: `${h}%` }} />)}</div>;
 }
