@@ -535,7 +535,6 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .beam {
   position: absolute; pointer-events: none; border-radius: 9999px;
   filter: blur(60px); mix-blend-mode: multiply; will-change: transform, opacity;
-  animation: beam-drift 16s ease-in-out infinite;
 }
 
 /* Conic glowing border ring for glass panels/cards */
@@ -573,13 +572,11 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .parallax { transition: transform .25s cubic-bezier(.22,1,.36,1); will-change: transform; }
 
 /* Animated dotted / particle field (pure CSS) */
-@keyframes drift-dots { from { background-position: 0 0, 0 0; } to { background-position: 340px 180px, -220px 260px; } }
 .particle-field {
   background-image:
     radial-gradient(rgba(5, 150, 105, 0.12) 1px, transparent 1.6px),
     radial-gradient(rgba(245, 158, 11, 0.08) 1px, transparent 1.6px);
   background-size: 46px 46px, 72px 72px;
-  animation: drift-dots 40s linear infinite;
 }
 
 /* Fine grid with radial fade, for depth backgrounds */
@@ -594,8 +591,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 }
 
 /* Animated conic aura behind the final CTA sphere */
-@keyframes aura-spin { to { transform: rotate(360deg); } }
-.aura { animation: aura-spin 22s linear infinite; will-change: transform; }
+.aura { will-change: transform; }
 
 /* SVG stroke path draw-in (timeline / connections) */
 @keyframes draw { to { stroke-dashoffset: 0; } }

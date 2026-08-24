@@ -70,7 +70,8 @@ export function BusinessAnalyticsPipeline({
     beats.current = list;
     if (reduce) { setActive(STAGES.length); return; }
 
-    let raf = 0, last = -1;
+    let last = -1;
+    let raf = 0;
     const tick = () => {
       const el = outer.current;
       if (el) {
@@ -87,10 +88,20 @@ export function BusinessAnalyticsPipeline({
         }
         if (done !== last) { last = done; setActive(done); }
       }
-      raf = requestAnimationFrame(tick);
+      raf = 0;
     };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(tick);
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    tick();
+
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
   }, []);
 
   const current = Math.min(STAGES.length - 1, Math.max(0, active === 0 ? 0 : active - 1));

@@ -199,14 +199,20 @@ export function HeroCommandCenter({
     const target = { x: 0, y: 0 };
     const current = { x: 0, y: 0 };
     let raf = 0;
+    let isVisible = false;
 
     const onMove = (e: MouseEvent) => {
+      if (!isVisible) return;
       const r = section.getBoundingClientRect();
       target.x = (e.clientX - r.left) / r.width - 0.5;
       target.y = (e.clientY - r.top) / r.height - 0.5;
     };
 
     const tick = () => {
+      if (!isVisible) {
+        raf = 0;
+        return;
+      }
       current.x += (target.x - current.x) * 0.045;
       current.y += (target.y - current.y) * 0.045;
 
@@ -222,12 +228,29 @@ export function HeroCommandCenter({
       raf = requestAnimationFrame(tick);
     };
 
-    window.addEventListener("mousemove", onMove, { passive: true });
-    raf = requestAnimationFrame(tick);
-    // Return cleanup function for the mouse tracker
-    return () => { 
-      window.removeEventListener("mousemove", onMove); 
-      cancelAnimationFrame(raf); 
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        isVisible = entry.isIntersecting;
+        if (isVisible) {
+          window.addEventListener("mousemove", onMove, { passive: true });
+          if (!raf) raf = requestAnimationFrame(tick);
+        } else {
+          window.removeEventListener("mousemove", onMove);
+          if (raf) {
+            cancelAnimationFrame(raf);
+            raf = 0;
+          }
+        }
+      },
+      { threshold: 0.05 }
+    );
+
+    observer.observe(section);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("mousemove", onMove);
+      if (raf) cancelAnimationFrame(raf);
     };
   }, []);
 
