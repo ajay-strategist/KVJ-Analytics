@@ -13,6 +13,7 @@ import {
   HelpCircle,
   GripVertical,
   FileCode,
+  Search,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import dynamic from "next/dynamic";
@@ -40,6 +41,23 @@ const QUESTION_TYPES = [
   { value: "matrix", label: "Matrix / Grid", hint: "Rows × columns" },
   { value: "code", label: "Code", hint: "Sandbox execution" },
 ];
+
+export function isImageUrl(url: string): boolean {
+  if (!url) return false;
+  const cleanUrl = url.trim().toLowerCase();
+  if (cleanUrl.includes("drive.google.com") || cleanUrl.includes("onedrive.live.com")) {
+    return true;
+  }
+  return cleanUrl.startsWith("http") && (
+    cleanUrl.endsWith(".png") ||
+    cleanUrl.endsWith(".jpg") ||
+    cleanUrl.endsWith(".jpeg") ||
+    cleanUrl.endsWith(".gif") ||
+    cleanUrl.endsWith(".svg") ||
+    cleanUrl.endsWith(".webp") ||
+    cleanUrl.match(/\.(png|jpg|jpeg|gif|svg|webp)(\?|$)/i) !== null
+  );
+}
 
 export function getDirectImageUrl(url: string): string {
   if (!url) return "";
@@ -74,6 +92,84 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
   const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null);
   const [questionForm, setQuestionForm] = useState<any>({});
   const fileId = useId();
+
+  // Question Bank States
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [bankQuestions, setBankQuestions] = useState<any[]>([]);
+  const [bankLoading, setBankLoading] = useState(false);
+  const [bankSearch, setBankSearch] = useState("");
+  const [selectedBankQuestionIds, setSelectedBankQuestionIds] = useState<Set<string>>(new Set());
+  const [importing, setImporting] = useState(false);
+
+  const fetchBankQuestions = async () => {
+    setBankLoading(true);
+    try {
+      const res = await fetch("/api/admin/question-bank");
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setBankQuestions(data.questions || []);
+    } catch (err: any) {
+      console.error("Failed to load bank questions:", err);
+    } finally {
+      setBankLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (showImportModal) {
+      fetchBankQuestions();
+    }
+  }, [showImportModal]);
+
+  const toggleSelectBankQuestion = (id: string) => {
+    setSelectedBankQuestionIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const handleImportSelected = async () => {
+    if (selectedBankQuestionIds.size === 0) return;
+    setImporting(true);
+    try {
+      const questionsToImport = bankQuestions.filter((q) => selectedBankQuestionIds.has(q.id));
+      const maxOrder = questions.reduce((max, q) => Math.max(max, q.display_order || 0), 0);
+      
+      await Promise.all(
+        questionsToImport.map(async (q, idx) => {
+          const payload = {
+            test_id: testId,
+            type: q.type,
+            stem: q.stem,
+            marks: q.marks ?? 1,
+            config: q.config,
+            image_url: q.image_url || null,
+            display_order: maxOrder + idx + 1,
+          };
+          
+          await fetch("/api/admin/questions", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+        })
+      );
+      
+      await fetchQuestions();
+      setShowImportModal(false);
+      setSelectedBankQuestionIds(new Set());
+    } catch (err: any) {
+      console.error("Failed to import questions:", err);
+      alert("Error importing questions.");
+    } finally {
+      setImporting(false);
+    }
+  };
 
   const getExtensions = (lang: string) => {
     if (lang === "python" && python) return [python()];
@@ -214,20 +310,30 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
       <div className="flex items-center justify-between border-b border-line pb-3">
         <h3 className="text-xs font-bold text-slate uppercase tracking-wider">Assessment Questions</h3>
         {!editingQuestionId && (
-          <Button
-            onClick={() => {
-              setEditingQuestionId("new");
-              setQuestionForm({
-                type: "single",
-                stem: "",
-                marks: 1,
-                config: { options: ["Option A", "Option B"], correctIndex: 0 },
-              });
-            }}
-            className="px-3 py-1.5 bg-brand text-white text-xs font-bold"
-          >
-            + Add Question
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={() => {
+                setEditingQuestionId("new");
+                setQuestionForm({
+                  type: "single",
+                  stem: "",
+                  marks: 1,
+                  config: { options: ["Option A", "Option B"], correctIndex: 0 },
+                });
+              }}
+              className="px-3 py-1.5 bg-brand text-white text-xs font-bold animate-fade-in"
+            >
+              + Add Question
+            </Button>
+            <Button
+              type="button"
+              onClick={() => setShowImportModal(true)}
+              variant="secondary"
+              className="px-3 py-1.5 text-xs font-bold"
+            >
+              Import from Question Bank
+            </Button>
+          </div>
         )}
       </div>
 
@@ -333,21 +439,33 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
                       }))}
                       className="w-4 h-4 text-brand"
                     />
-                    <input
-                      type="text"
-                      required
-                      value={opt}
-                      onChange={(e) => {
-                        const opts = [...questionForm.config.options];
-                        opts[idx] = e.target.value;
-                        setQuestionForm((prev: any) => ({
-                          ...prev,
-                          config: { ...prev.config, options: opts },
-                        }));
-                      }}
-                      placeholder={`Option ${idx + 1}`}
-                      className="flex-1 px-3 py-1.5 rounded border border-line bg-white text-sm"
-                    />
+                    <div className="flex-1 flex flex-col">
+                      <input
+                        type="text"
+                        required
+                        value={opt}
+                        onChange={(e) => {
+                          const opts = [...questionForm.config.options];
+                          opts[idx] = e.target.value;
+                          setQuestionForm((prev: any) => ({
+                            ...prev,
+                            config: { ...prev.config, options: opts },
+                          }));
+                        }}
+                        placeholder={`Option ${idx + 1}`}
+                        className="w-full px-3 py-1.5 rounded border border-line bg-white text-sm"
+                      />
+                      {isImageUrl(opt) && (
+                        <div className="mt-1">
+                          <img
+                            src={getDirectImageUrl(opt)}
+                            alt="Option preview"
+                            className="max-h-16 object-contain rounded border border-line bg-zinc-50 shadow-sm"
+                            onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }}
+                          />
+                        </div>
+                      )}
+                    </div>
                     <button
                       type="button"
                       disabled={(questionForm.config?.options || []).length <= 2}
@@ -408,21 +526,33 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
                         }}
                         className="w-4 h-4 rounded text-brand border-line"
                       />
-                      <input
-                        type="text"
-                        required
-                        value={opt}
-                        onChange={(e) => {
-                          const opts = [...questionForm.config.options];
-                          opts[idx] = e.target.value;
-                          setQuestionForm((prev: any) => ({
-                            ...prev,
-                            config: { ...prev.config, options: opts },
-                          }));
-                        }}
-                        placeholder={`Option ${idx + 1}`}
-                        className="flex-1 px-3 py-1.5 rounded border border-line bg-white text-sm"
-                      />
+                      <div className="flex-1 flex flex-col">
+                        <input
+                          type="text"
+                          required
+                          value={opt}
+                          onChange={(e) => {
+                            const opts = [...questionForm.config.options];
+                            opts[idx] = e.target.value;
+                            setQuestionForm((prev: any) => ({
+                              ...prev,
+                              config: { ...prev.config, options: opts },
+                            }));
+                          }}
+                          placeholder={`Option ${idx + 1}`}
+                          className="w-full px-3 py-1.5 rounded border border-line bg-white text-sm"
+                        />
+                        {isImageUrl(opt) && (
+                          <div className="mt-1">
+                            <img
+                              src={getDirectImageUrl(opt)}
+                              alt="Option preview"
+                              className="max-h-16 object-contain rounded border border-line bg-zinc-50 shadow-sm"
+                              onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }}
+                            />
+                          </div>
+                        )}
+                      </div>
                       <button
                         type="button"
                         disabled={(questionForm.config?.options || []).length <= 2}
@@ -1514,6 +1644,136 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
               </div>
             </div>
           ))}
+        </div>
+      )}
+      {/* Question Bank Import Modal */}
+      {showImportModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl border border-line shadow-2xl max-w-4xl w-full max-h-[85vh] flex flex-col overflow-hidden animate-scale-up">
+            
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-line flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-bold text-ink flex items-center gap-2">
+                  <span className="w-1.5 h-4 rounded-full bg-brand inline-block"></span>
+                  Question Bank
+                </h3>
+                <p className="text-[10px] text-slate mt-0.5">Select questions from previous quizzes and assessments to import</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowImportModal(false);
+                  setSelectedBankQuestionIds(new Set());
+                }}
+                className="p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
+              >
+                <X className="w-4 h-4 text-slate" />
+              </button>
+            </div>
+
+            {/* Modal Filters */}
+            <div className="px-6 py-3 bg-slate-50 border-b border-line flex items-center gap-3">
+              <div className="relative flex-1">
+                <Search className="w-4 h-4 text-slate absolute left-3 top-2.5" />
+                <input
+                  type="text"
+                  placeholder="Search questions by keyword or topic..."
+                  value={bankSearch}
+                  onChange={(e) => setBankSearch(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2 border border-line rounded-lg text-xs bg-white focus:outline-none focus:ring-1 focus:ring-brand"
+                />
+              </div>
+              <div className="text-[10px] font-bold uppercase tracking-wider text-slate shrink-0">
+                Selected: {selectedBankQuestionIds.size}
+              </div>
+            </div>
+
+            {/* Modal Content / Questions List */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-3 bg-slate-50/50">
+              {bankLoading ? (
+                <div className="py-12 flex flex-col items-center justify-center gap-2">
+                  <Loader2 className="w-8 h-8 animate-spin text-brand" />
+                  <span className="text-xs text-slate font-medium">Loading question bank...</span>
+                </div>
+              ) : bankQuestions.length === 0 ? (
+                <div className="py-16 text-center text-slate text-xs font-medium">No questions found in this course.</div>
+              ) : (() => {
+                const filtered = bankQuestions.filter((q) => {
+                  const keyword = bankSearch.toLowerCase().trim();
+                  if (!keyword) return true;
+                  return (
+                    String(q.stem || "").toLowerCase().includes(keyword) ||
+                    String(q.type || "").toLowerCase().includes(keyword)
+                  );
+                });
+
+                if (filtered.length === 0) {
+                  return <div className="py-16 text-center text-slate text-xs font-medium">No questions match your search.</div>;
+                }
+
+                return filtered.map((q) => {
+                  const isChecked = selectedBankQuestionIds.has(q.id);
+                  return (
+                    <div
+                      key={q.id}
+                      onClick={() => toggleSelectBankQuestion(q.id)}
+                      className={`p-4 border rounded-xl bg-white flex items-start gap-3 cursor-pointer transition-all hover:border-brand/40 ${
+                        isChecked ? "border-brand ring-1 ring-brand/10" : "border-line"
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        readOnly
+                        className="mt-1 w-4 h-4 text-brand rounded border-line cursor-pointer"
+                      />
+                      <div className="flex-1 min-w-0 space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[9px] font-bold text-corporate uppercase tracking-wider bg-corporate/10 border border-corporate/25 px-1.5 py-0.5 rounded">
+                            {q.type}
+                          </span>
+                          <span className="text-[9px] font-bold text-slate">
+                            {q.marks || 1} {q.marks === 1 ? "mark" : "marks"}
+                          </span>
+                        </div>
+                        <div
+                          className="text-xs text-slate font-medium truncate max-w-2xl"
+                          dangerouslySetInnerHTML={{ __html: q.stem }}
+                        />
+                      </div>
+                    </div>
+                  );
+                });
+              })()}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-6 py-4 border-t border-line flex items-center justify-end gap-2 bg-white">
+              <Button
+                type="button"
+                onClick={() => {
+                  setShowImportModal(false);
+                  setSelectedBankQuestionIds(new Set());
+                }}
+                variant="secondary"
+                disabled={importing}
+                className="px-4 py-2 text-xs"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                onClick={handleImportSelected}
+                disabled={importing || selectedBankQuestionIds.size === 0}
+                className="px-4 py-2 bg-[#10B981] hover:bg-[#00D8FF] text-black font-bold text-xs flex items-center gap-1.5"
+              >
+                {importing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                <span>Import Selected ({selectedBankQuestionIds.size})</span>
+              </Button>
+            </div>
+
+          </div>
         </div>
       )}
     </div>

@@ -40,6 +40,23 @@ if (typeof window !== "undefined") {
   sql = require("@codemirror/lang-sql").sql;
 }
 
+export function isImageUrl(url: string): boolean {
+  if (!url) return false;
+  const cleanUrl = url.trim().toLowerCase();
+  if (cleanUrl.includes("drive.google.com") || cleanUrl.includes("onedrive.live.com")) {
+    return true;
+  }
+  return cleanUrl.startsWith("http") && (
+    cleanUrl.endsWith(".png") ||
+    cleanUrl.endsWith(".jpg") ||
+    cleanUrl.endsWith(".jpeg") ||
+    cleanUrl.endsWith(".gif") ||
+    cleanUrl.endsWith(".svg") ||
+    cleanUrl.endsWith(".webp") ||
+    cleanUrl.match(/\.(png|jpg|jpeg|gif|svg|webp)(\?|$)/i) !== null
+  );
+}
+
 export function getDirectImageUrl(url: string): string {
   if (!url) return "";
   
@@ -365,15 +382,15 @@ export function TestTakingWidget({
           else if (q.type === "truefalse") defaultAnswers[q.id] = null;
           else if (q.type === "dragtable") defaultAnswers[q.id] = {};
           else if (q.type === "dragdrop") {
-            defaultAnswers[q.id] = (q.config.left || []).map((l: string) => [l, ""]);
+            defaultAnswers[q.id] = (q.config?.left || []).map((l: string) => [l, ""]);
           } else if (q.type === "sequence") {
-            defaultAnswers[q.id] = [...(q.config.items || [])];
+            defaultAnswers[q.id] = [...(q.config?.items || [])];
           } else if (q.type === "fillblank") {
-            defaultAnswers[q.id] = Array(q.config.blanks?.length || 0).fill("");
+            defaultAnswers[q.id] = Array(q.config?.blanks?.length || 0).fill("");
           } else if (q.type === "matrix") {
-            defaultAnswers[q.id] = (q.config.rows || []).map(() => []);
+            defaultAnswers[q.id] = (q.config?.rows || []).map(() => []);
           } else if (q.type === "code") {
-            defaultAnswers[q.id] = q.config.starterCode || "";
+            defaultAnswers[q.id] = q.config?.starterCode || "";
           }
         });
         setAnswers(defaultAnswers);
@@ -566,15 +583,21 @@ export function TestTakingWidget({
   }
 
   const renderQuestionWidget = (q: any, idx: number) => {
+    const wrapperClass = isInline 
+      ? "py-6 space-y-4 bg-transparent text-ink border-b border-line last:border-b-0"
+      : `p-6 shadow-soft space-y-4 ${colors.surface}`;
+
+    const Element = isInline ? "div" : Card;
+
     return (
-      <Card key={q.id} className={`p-6 shadow-soft space-y-4 ${colors.surface}`}>
+      <Element key={q.id} className={wrapperClass}>
         <div className={`flex justify-between items-center ${isInline ? "pb-3 mb-3 border-b" : "border-b pb-2 mb-2"}`}>
           <div className="flex items-center gap-2">
             {isInline ? (
               <span className={`px-2.5 py-1 rounded-lg text-xs font-extrabold tracking-wide ${
                 darkMode
                   ? "bg-brand/20 text-brand"
-                  : "bg-slate-100 text-slate-700"
+                  : "bg-zinc-100 text-zinc-700"
               }`}>
                 Q{idx + 1}
               </span>
@@ -686,7 +709,21 @@ export function TestTakingWidget({
                         className="w-4 h-4 text-brand"
                       />
                     )}
-                    <span className="text-sm font-semibold">{opt}</span>
+                    {isImageUrl(opt) ? (
+                      <div className="flex flex-col gap-2 max-w-full">
+                        <img
+                          src={getDirectImageUrl(opt)}
+                          alt={`Option ${String.fromCharCode(65 + oIdx)}`}
+                          className="max-h-32 object-contain rounded-lg border border-line bg-white shadow-sm"
+                          onError={(e) => {
+                            (e.target as HTMLElement).style.display = "none";
+                          }}
+                        />
+                        <span className="text-[10px] text-slate truncate max-w-xs">{opt}</span>
+                      </div>
+                    ) : (
+                      <span className="text-sm font-semibold">{opt}</span>
+                    )}
                     {isChecked && isThisCorrectOption && (
                       <span className="ml-auto text-[9px] font-bold text-emerald-600 bg-emerald-100 px-1.5 py-0.5 rounded-full shrink-0">✓ Correct</span>
                     )}
@@ -756,7 +793,21 @@ export function TestTakingWidget({
                         className="w-4 h-4 rounded text-brand border-line"
                       />
                     )}
-                    <span className="text-sm font-semibold">{opt}</span>
+                    {isImageUrl(opt) ? (
+                      <div className="flex flex-col gap-2 max-w-full">
+                        <img
+                          src={getDirectImageUrl(opt)}
+                          alt={`Option ${String.fromCharCode(65 + oIdx)}`}
+                          className="max-h-32 object-contain rounded-lg border border-line bg-white shadow-sm"
+                          onError={(e) => {
+                            (e.target as HTMLElement).style.display = "none";
+                          }}
+                        />
+                        <span className="text-[10px] text-slate truncate max-w-xs">{opt}</span>
+                      </div>
+                    ) : (
+                      <span className="text-sm font-semibold">{opt}</span>
+                    )}
                     {isChecked && isThisCorrectOption && (
                       <span className="ml-auto text-[9px] font-bold text-emerald-600 bg-emerald-100 px-1.5 py-0.5 rounded-full shrink-0">✓ Correct</span>
                     )}
@@ -1141,7 +1192,7 @@ export function TestTakingWidget({
               <div className={`flex justify-between items-center px-4 py-2 border-t border-x rounded-t-xl ${colors.line}`}>
                 <span className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
                   <FileCode className="w-4 h-4 text-brand" />
-                  {q.config.language} Sandbox compiler
+                  {q.config?.language || "python"} Sandbox compiler
                 </span>
               </div>
               <div className={`border rounded-b-xl overflow-hidden ${colors.line}`}>
@@ -1149,7 +1200,7 @@ export function TestTakingWidget({
                   value={answers[q.id] || ""}
                   height="320px"
                   theme={darkMode ? "dark" : "light"}
-                  extensions={getExtensions(q.config.language)}
+                  extensions={getExtensions(q.config?.language || "python")}
                   onChange={(val: string) => setAnswers((prev) => ({ ...prev, [q.id]: val }))}
                 />
               </div>
@@ -1216,11 +1267,11 @@ export function TestTakingWidget({
             )}
           </div>
         )}
-      </Card>
+      </Element>
     );
   };
 
-  if (showQuestionsList && test) {
+  if (showQuestionsList && test && !isInline) {
     return (
       <div className={`py-6 font-body ${colors.container}`}>
         <div className="max-w-4xl mx-auto space-y-6 px-4">
@@ -1742,7 +1793,21 @@ export function TestTakingWidget({
                               }`}>
                                 {String.fromCharCode(65 + oi)}
                               </span>
-                              <span className="flex-1">{opt}</span>
+                              {isImageUrl(opt) ? (
+                                <div className="flex-1 flex flex-col gap-1.5 max-w-full">
+                                  <img
+                                    src={getDirectImageUrl(opt)}
+                                    alt={`Option ${String.fromCharCode(65 + oi)}`}
+                                    className="max-h-24 object-contain rounded-lg border border-line bg-white shadow-sm"
+                                    onError={(e) => {
+                                      (e.target as HTMLElement).style.display = "none";
+                                    }}
+                                  />
+                                  <span className="text-[9px] opacity-60 truncate max-w-xs">{opt}</span>
+                                </div>
+                              ) : (
+                                <span className="flex-1">{opt}</span>
+                              )}
                               {optIcon}
                               {studentPicked && !isCorrectOption && (
                                 <span className="text-[9px] font-bold text-red-500 bg-red-100 px-1.5 py-0.5 rounded-full">Your answer</span>
@@ -1957,8 +2022,8 @@ export function TestTakingWidget({
     });
 
     return (
-      <div className={`py-4 font-body ${colors.container}`}>
-        <div className="max-w-3xl mx-auto space-y-6 px-4">
+      <div className="py-2 font-body bg-transparent text-ink">
+        <div className="space-y-6">
           {test.questions.map((q: any, idx: number) => (
             <div key={q.id}>
               {renderQuestionWidget(q, idx)}

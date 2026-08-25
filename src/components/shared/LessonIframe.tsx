@@ -129,7 +129,10 @@ h1[data-kvj-styled], h2[data-kvj-styled], h3[data-kvj-styled], h4[data-kvj-style
 [data-kvj-styled] h1, [data-kvj-styled] h2, [data-kvj-styled] h3, [data-kvj-styled] h4, [data-kvj-styled] h5, [data-kvj-styled] h6 {
   color: unset;
 }
-p, li, td, th, dt, dd, label {
+p, li, dt, dd, label {
+  color: #132238 !important;
+}
+td:not([style*="color"]), th:not([style*="color"]) {
   color: #132238 !important;
 }
 [data-kvj-styled] p, [data-kvj-styled] li {
@@ -578,7 +581,7 @@ export function LessonIframe({
 </style>
 </head>
 <body class="px-6 py-8 sm:px-10 sm:py-12 md:px-14 md:py-16">
-<div class="max-w-3xl mx-auto">
+<div class="max-w-5xl mx-auto">
 ${html}
 </div>
 <script>

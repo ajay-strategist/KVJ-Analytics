@@ -146,22 +146,15 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
     if (activeLesson?.id) {
       const parentMod = modules.find((m: any) => m.lessons.some((l: any) => l.id === activeLesson.id));
       if (parentMod) {
-        setExpandedModuleIds((prev) => {
-          if (prev.has(parentMod.id)) return prev;
-          const next = new Set(prev);
-          next.add(parentMod.id);
-          return next;
-        });
+        setExpandedModuleIds(new Set([parentMod.id]));
       }
     }
   }, [activeLesson?.id, modules]);
 
   const toggleModule = (moduleId: string) => {
     setExpandedModuleIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(moduleId)) {
-        next.delete(moduleId);
-      } else {
+      const next = new Set<string>();
+      if (!prev.has(moduleId)) {
         next.add(moduleId);
       }
       return next;
@@ -512,13 +505,6 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
 
   return (
     <div className="w-full h-screen flex flex-col overflow-hidden">
-      {/* Admin preview banner */}
-      {adminPreview && (
-        <div className="w-full shrink-0 flex items-center justify-center gap-2 bg-amber-500 px-4 py-2 text-center text-[12px] font-bold text-black border-b border-amber-600 relative z-50 shadow-sm">
-          <Award className="h-3.5 w-3.5 shrink-0" />
-          <span>ADMIN PREVIEW — this is exactly what enrolled students see. Progress isn&apos;t saved.</span>
-        </div>
-      )}
 
       <div className={`w-full flex-1 flex relative overflow-hidden transition-colors duration-300 ${
         darkMode ? "bg-[#050505] text-zinc-200" : "bg-[#F8FAFC] text-zinc-800"
@@ -526,12 +512,12 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
 
         {/* 1. Collapsible Sidebar */}
         <div
-          className={`fixed ${adminPreview ? "top-[33px]" : "top-0"} bottom-0 left-0 z-40 w-[320px] flex flex-col transition-all duration-300 transform ${
+          className={`fixed top-0 bottom-0 left-0 z-40 w-[320px] lg:w-[22%] lg:min-w-[280px] lg:max-w-[360px] flex flex-col transition-all duration-300 transform ${
             isAssessmentActive
-              ? "-translate-x-full lg:-ml-[320px] lg:hidden"
+              ? "-translate-x-full lg:-ml-[22%] lg:hidden"
               : sidebarOpen
                 ? "translate-x-0 lg:relative lg:translate-x-0"
-                : "-translate-x-full lg:-ml-[320px]"
+                : "-translate-x-full lg:-ml-[22%]"
           } ${
             darkMode 
               ? "bg-[#070E0B] border-r border-white/5" 
@@ -810,7 +796,7 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
             </div>
           ) : (
             <div className="flex-1 overflow-y-auto p-6 md:p-10 relative">
-              <div className="max-w-4xl mx-auto space-y-8">
+              <div className="max-w-5xl mx-auto space-y-8">
 
               {/* Lesson Title & Completion Toggle */}
               <div className={`flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-6 ${darkMode ? "border-white/5" : "border-line"}`}>
@@ -1002,47 +988,50 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
                 <div className={`border rounded-3xl overflow-hidden ${darkMode ? "bg-[#0A0A0C]/55 border-white/5" : "bg-white border-line shadow-soft"}`}>
                   {activeLesson.content_html ? (
                     <div className="divide-y divide-line dark:divide-white/5">
-                      {activeLesson.content_html.split(/(<div class="kvj-assessment-placeholder[^>]*><\/div>)/g).map((segment, idx) => {
-                        const match = segment.match(/data-test-id="([^"]*)"/);
-                        if (match) {
-                          const testId = match[1];
-                          const showAnswersMatch = segment.match(/data-show-answers="([^"]*)"/);
-                          const showAnswers = showAnswersMatch ? showAnswersMatch[1] === "true" : false;
-                          const isInlineMatch = segment.match(/data-is-inline="([^"]*)"/);
-                          const isInlineBlock = isInlineMatch ? isInlineMatch[1] === "true" : false;
+                      {(() => {
+                        const htmlBody = activeLesson.content_html.replace(/^<!-- KVJ_MATERIAL_METADATA:[\s\S]*?-->/g, "");
+                        const cleanedHtml = htmlBody.replace(/\\n/g, "<br/>");
+                        return cleanedHtml.split(/(<div class="kvj-assessment-placeholder[^>]*><\/div>)/g).map((segment, idx) => {
+                          const match = segment.match(/data-test-id="([^"]*)"/);
+                          if (match) {
+                            const testId = match[1];
+                            const showAnswersMatch = segment.match(/data-show-answers="([^"]*)"/);
+                            const showAnswers = showAnswersMatch ? showAnswersMatch[1] === "true" : false;
+                            const isInlineBlock = true; // Always force inline mode for embedded assessments in textbook pages
+                            return (
+                              <div key={idx} className="px-6 sm:px-10 md:px-14 py-6 bg-transparent">
+                                <TestTakingWidget
+                                  testId={testId}
+                                  courseSlug={course.slug}
+                                  adminPreview={adminPreview}
+                                  darkMode={darkMode}
+                                  isInline={isInlineBlock}
+                                  showAnswers={showAnswers}
+                                  onStart={() => {}}
+                                  onExit={() => {}}
+                                  onComplete={async (score, maxScore, passed) => {
+                                    console.log(`Embedded test ${testId} completed: ${score}/${maxScore}`);
+                                  }}
+                                />
+                              </div>
+                            );
+                          }
+
+                          if (!segment.trim() || segment === " ") return null;
+
                           return (
-                            <div key={idx} className="p-6 md:p-10 bg-slate-50/30 dark:bg-slate-900/20">
-                              <TestTakingWidget
-                                testId={testId}
-                                courseSlug={course.slug}
-                                adminPreview={adminPreview}
-                                darkMode={darkMode}
-                                isInline={isInlineBlock}
-                                showAnswers={showAnswers}
-                                onStart={() => {}}
-                                onExit={() => {}}
-                                onComplete={async (score, maxScore, passed) => {
-                                  console.log(`Embedded test ${testId} completed: ${score}/${maxScore}`);
-                                }}
-                              />
-                            </div>
+                             <div key={idx} className="p-1">
+                               <LessonIframe
+                                 html={segment}
+                                 darkMode={viewerReady ? darkMode : false}
+                                 hideSidebar={viewerReady ? hideSidebar : false}
+                                 onLightDetected={handleLightDetected}
+                                 onContentWindow={(win) => { if (win) lessonFrameWindowsRef.current.add(win); }}
+                               />
+                             </div>
                           );
-                        }
-
-                        if (!segment.trim() || segment === " ") return null;
-
-                        return (
-                          <div key={idx} className="p-1">
-                            <LessonIframe
-                              html={segment}
-                              darkMode={viewerReady ? darkMode : false}
-                              hideSidebar={viewerReady ? hideSidebar : false}
-                              onLightDetected={handleLightDetected}
-                              onContentWindow={(win) => { if (win) lessonFrameWindowsRef.current.add(win); }}
-                            />
-                          </div>
-                        );
-                      })}
+                        });
+                      })()}
                     </div>
                   ) : (
                     <p className={`italic text-sm p-8 ${darkMode ? "text-zinc-550" : "text-zinc-400"}`}>No textbook or text reference uploaded for this lesson. Use worksheets.</p>
