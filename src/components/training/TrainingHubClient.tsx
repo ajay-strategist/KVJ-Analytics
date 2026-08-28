@@ -136,8 +136,8 @@ function BentoCard({ category, className = "", icon: Icon, delay = 0, variant = 
       onMouseMove={handleMouseMove}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={handleMouseLeave}
-      className={`perspective-container relative rounded-[32px] overflow-hidden border border-line bg-white/70 backdrop-blur-xl transition-all duration-[600ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${
-        hovered ? "border-brand/40 shadow-[0_24px_60px_rgba(16,185,129,0.08)]" : "shadow-soft"
+      className={`perspective-container relative rounded-[32px] overflow-hidden border border-line bg-[#0B2A22]/85 backdrop-blur-xl transition-all duration-[600ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${
+        hovered ? "border-brand/45 shadow-[0_24px_60px_rgba(16,185,129,0.06)]" : "shadow-soft"
       } ${className}`}
       style={{
         transform: `rotateX(${rotate.x}deg) rotateY(${rotate.y}deg) scale(${hovered ? 1.012 : 1})`,
@@ -152,8 +152,8 @@ function BentoCard({ category, className = "", icon: Icon, delay = 0, variant = 
           transform: hovered ? "scale(1.05) translateZ(10px)" : "scale(1) translateZ(0)",
         }}
       />
-      {/* Cinematic light mask */}
-      <div className="absolute inset-0 bg-gradient-to-t from-white via-white/85 to-white/20 z-10 pointer-events-none" />
+      {/* Cinematic dark mask */}
+      <div className="absolute inset-0 bg-gradient-to-t from-[#050608] via-[#050608]/75 to-[#050608]/20 z-10 pointer-events-none" />
  
       {/* Custom spotlight glow */}
       <div
@@ -168,7 +168,7 @@ function BentoCard({ category, className = "", icon: Icon, delay = 0, variant = 
       <div 
         className="absolute inset-[-1px] rounded-[32px] border border-transparent z-25 pointer-events-none transition-colors duration-500" 
         style={{
-          borderColor: hovered ? "rgba(16, 185, 129, 0.25)" : "transparent"
+          borderColor: hovered ? "rgba(16, 185, 129, 0.35)" : "transparent"
         }}
       />
  
@@ -182,7 +182,7 @@ function BentoCard({ category, className = "", icon: Icon, delay = 0, variant = 
           {/* Badge & Icon header */}
           <div className="flex items-center gap-3">
             <div className={`w-10 h-10 rounded-xl flex items-center justify-center border transition-all duration-300 ${
-              hovered ? "bg-brand border-brand text-white scale-110" : "bg-[#10B981]/10 border-[#10B981]/20 text-[#10B981]"
+              hovered ? "bg-[#10B981] border-[#10B981] text-white scale-110" : "bg-[#10B981]/10 border-[#10B981]/20 text-[#10B981]"
             }`}>
               <Icon className={`w-5 h-5 ${hovered ? "rotate-12 duration-300" : ""}`} />
             </div>
@@ -193,14 +193,14 @@ function BentoCard({ category, className = "", icon: Icon, delay = 0, variant = 
  
           {/* Text content */}
           <div className="space-y-2">
-            <h3 className="text-2xl md:text-3xl font-bold font-display text-ink group-hover:text-brand transition-colors flex items-center gap-2">
+            <h3 className="text-2xl md:text-3xl font-bold font-display text-white group-hover:text-[#10B981] transition-colors flex items-center gap-2">
               {category.name}
               <ArrowRight className={`w-5 h-5 transition-all duration-300 text-brand ${
                 hovered ? "opacity-100 translate-x-1" : "opacity-0 -translate-x-1"
               }`} />
             </h3>
             <p className={`text-sm font-light leading-relaxed max-w-md transition-colors duration-300 ${
-              hovered ? "text-slate" : "text-slate/85"
+              hovered ? "text-zinc-200" : "text-zinc-400"
             }`}>
               {category.description}
             </p>
@@ -278,7 +278,7 @@ export function TrainingHubClient({ categories, hub }: TrainingHubClientProps) {
   const internships = categories.find((c) => c.slug === "internships") || categories[4];
 
   return (
-    <div className="w-full bg-base text-slate relative min-h-screen pt-28 overflow-hidden text-left">
+    <div className="w-full bg-base text-slate relative min-h-screen overflow-hidden text-left">
       {/* Custom keyframes for dashboard connections */}
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes dash {
@@ -289,31 +289,31 @@ export function TrainingHubClient({ categories, hub }: TrainingHubClientProps) {
       `}} />
 
       {/* 1. HERO SECTION — editorial, professional, text-forward (no mock UI) */}
-      <section className="relative flex items-center py-24 md:py-32 overflow-hidden border-b border-line">
+      <section className="hero-bleed hero-emerald relative flex items-center py-24 md:py-32 overflow-hidden border-b border-line">
         {/* Restrained ambient field: one soft aurora, a masked hairline grid */}
-        <div className="absolute -top-[12%] left-1/2 -translate-x-1/2 w-[900px] h-[520px] bg-[#10B981]/[0.05] rounded-full blur-[170px] pointer-events-none" />
-        <div className="absolute inset-0 bg-grid-pattern [mask-image:radial-gradient(ellipse_60%_55%_at_50%_35%,black,transparent)] pointer-events-none" />
+        <div className="absolute -top-[12%] left-1/2 -translate-x-1/2 w-[900px] h-[520px] bg-[#10B981]/[0.08] rounded-full blur-[170px] pointer-events-none" />
+        <div className="absolute inset-0 bg-grid-pattern [mask-image:radial-gradient(ellipse_60%_55%_at_50%_35%,black,transparent)] pointer-events-none opacity-20" />
 
         <Container className="relative z-10 w-full">
           <div className="max-w-4xl">
             {/* Calm eyebrow */}
             <div className="flex items-center gap-3 animate-[fade-up_1s_cubic-bezier(0.16,1,0.3,1)]">
-              <span className="h-px w-10 bg-gradient-to-r from-transparent to-brand/70" />
-              <span className="text-[11px] font-mono font-bold uppercase tracking-[0.3em] text-brand">
+              <span className="h-px w-10 bg-gradient-to-r from-transparent to-[#10B981]" />
+              <span className="text-[11px] font-mono font-bold uppercase tracking-[0.3em] text-[#10B981]">
                 {hub.eyebrow}
               </span>
             </div>
 
-            <h1 className="mt-7 font-display font-bold text-[13vw] sm:text-7xl lg:text-[92px] leading-[0.95] tracking-[-0.025em] text-ink">
+            <h1 className="mt-7 font-display font-bold text-[13vw] sm:text-7xl lg:text-[92px] leading-[0.95] tracking-[-0.025em] text-white">
               <span className="block animate-[fade-up_1.1s_cubic-bezier(0.16,1,0.3,1)_80ms_both]">
                 {hub.headingLead || "Training"}
               </span>
-              <span className="block pb-1 text-transparent bg-clip-text bg-gradient-to-r from-[#10B981] via-[#0D9488] to-brand animate-[fade-up_1.1s_cubic-bezier(0.16,1,0.3,1)_180ms_both]">
+              <span className="block pb-1 text-transparent bg-clip-text bg-gradient-to-r from-[#10B981] via-[#0D9488] to-[#34D399] animate-[fade-up_1.1s_cubic-bezier(0.16,1,0.3,1)_180ms_both]">
                 {hub.headingAccent || "Programs"}
               </span>
             </h1>
 
-            <p className="mt-7 text-slate font-light text-lg md:text-2xl leading-relaxed max-w-2xl animate-[fade-up_1.1s_cubic-bezier(0.16,1,0.3,1)_300ms_both]">
+            <p className="mt-7 text-zinc-300 font-light text-lg md:text-2xl leading-relaxed max-w-2xl animate-[fade-up_1.1s_cubic-bezier(0.16,1,0.3,1)_300ms_both]">
               {hub.intro}
             </p>
 
@@ -322,7 +322,7 @@ export function TrainingHubClient({ categories, hub }: TrainingHubClientProps) {
               <Button
                 variant="accent"
                 onClick={() => router.push("/training/online-courses")}
-                className="py-3.5 px-8 text-[15px] flex items-center justify-center gap-2 rounded-full shadow-[0_8px_28px_rgba(5,150,105,0.2)] w-full sm:w-auto hover:scale-[1.03] active:scale-95 transition-transform duration-300 font-semibold group/explore"
+                className="py-3.5 px-8 text-[15px] flex items-center justify-center gap-2 rounded-full shadow-[0_8px_28px_rgba(16,185,129,0.28)] w-full sm:w-auto hover:scale-[1.03] active:scale-95 transition-transform duration-300 font-semibold group/explore"
               >
                 <span>Explore Courses</span>
                 <ArrowRight className="w-4 h-4 group-hover/explore:translate-x-0.5 transition-transform duration-300" />
@@ -330,7 +330,7 @@ export function TrainingHubClient({ categories, hub }: TrainingHubClientProps) {
               <button
                 type="button"
                 onClick={() => router.push(user ? "/account" : "/signin?redirect=/training")}
-                className="py-3.5 px-7 text-[15px] flex items-center justify-center gap-2 rounded-full w-full sm:w-auto border border-line text-ink hover:text-brand hover:border-brand/40 hover:bg-brand/5 transition-all duration-300 font-semibold group/login cursor-pointer"
+                className="py-3.5 px-7 text-[15px] flex items-center justify-center gap-2 rounded-full w-full sm:w-auto border border-white/20 text-white hover:text-[#10B981] hover:border-[#10B981]/50 hover:bg-white/5 transition-all duration-300 font-semibold group/login cursor-pointer"
               >
                 {user ? <User className="w-4 h-4 text-brand" /> : <LogIn className="w-4 h-4 text-brand group-hover/login:rotate-12 transition-transform duration-300" />}
                 <span>{user ? "Student Dashboard" : "Student Portal Login"}</span>
@@ -338,15 +338,15 @@ export function TrainingHubClient({ categories, hub }: TrainingHubClientProps) {
             </div>
 
             {/* Curriculum strip — the real disciplines KVJ teaches (no fabricated data) */}
-            <div className="mt-14 pt-8 border-t border-line animate-[fade-up_1.1s_cubic-bezier(0.16,1,0.3,1)_560ms_both]">
-              <span className="text-[11px] font-mono font-bold uppercase tracking-[0.24em] text-slate-400">
+            <div className="mt-14 pt-8 border-t border-white/10 animate-[fade-up_1.1s_cubic-bezier(0.16,1,0.3,1)_560ms_both]">
+              <span className="text-[11px] font-mono font-bold uppercase tracking-[0.24em] text-zinc-400">
                 Core disciplines
               </span>
               <div className="mt-4 flex flex-wrap gap-2.5">
                 {["Advanced Excel", "Power BI", "Data Analytics", "Dashboards", "Report Automation", "Business Intelligence"].map((d, i) => (
                   <span
                     key={i}
-                    className="rounded-full border border-line bg-base-2 px-4 py-2 text-[13.5px] font-medium text-slate hover:border-brand/40 hover:text-brand transition-colors duration-300"
+                    className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-[13.5px] font-medium text-zinc-300 hover:border-[#10B981] hover:text-white transition-colors duration-300"
                   >
                     {d}
                   </span>
