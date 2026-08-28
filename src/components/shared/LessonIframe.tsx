@@ -183,12 +183,12 @@ export function LessonIframe({
   [align="right"] { text-align: right !important; }
   [align="justify"] { text-align: justify !important; }
 
-  button, select, input, textarea, .callout, table, code, pre {
+  button:not(.kvj-custom-html-block *), select:not(.kvj-custom-html-block *), input:not(.kvj-custom-html-block *), textarea:not(.kvj-custom-html-block *), table:not(.kvj-custom-html-block *), code:not(.kvj-custom-html-block *), pre:not(.kvj-custom-html-block *) {
     font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
   }
   
   /* Modern Editorial Typography */
-  h1, h2, h3, h4, h5, h6 {
+  h1:not(.kvj-custom-html-block *), h2:not(.kvj-custom-html-block *), h3:not(.kvj-custom-html-block *), h4:not(.kvj-custom-html-block *), h5:not(.kvj-custom-html-block *), h6:not(.kvj-custom-html-block *) {
     color: var(--color-ink);
     font-weight: 800;
     line-height: 1.35;
@@ -197,12 +197,12 @@ export function LessonIframe({
     letter-spacing: -0.02em;
     font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   }
-  h1 { font-size: 2.25rem; }
-  h2 { font-size: 1.75rem; border-b: 1px solid var(--color-line); padding-bottom: 0.5rem; }
-  h3 { font-size: 1.35rem; }
-  h4 { font-size: 1.15rem; }
+  h1:not(.kvj-custom-html-block *) { font-size: 2.25rem; }
+  h2:not(.kvj-custom-html-block *) { font-size: 1.75rem; border-b: 1px solid var(--color-line); padding-bottom: 0.5rem; }
+  h3:not(.kvj-custom-html-block *) { font-size: 1.35rem; }
+  h4:not(.kvj-custom-html-block *) { font-size: 1.15rem; }
   
-  p {
+  p:not(.kvj-custom-html-block *) {
     font-size: 1.1rem;
     margin-bottom: 1.75rem;
     color: var(--color-slate);
@@ -211,36 +211,36 @@ export function LessonIframe({
   }
   
   /* Bold links */
-  a {
+  a:not(.kvj-custom-html-block *) {
     color: var(--color-brand);
     text-decoration: none;
     font-weight: 500;
     border-bottom: 1px solid rgba(16, 185, 129, 0.2);
     transition: all 0.2s ease;
   }
-  a:hover {
+  a:not(.kvj-custom-html-block *):hover {
     color: var(--color-brand-secondary);
     border-bottom-color: var(--color-brand-secondary);
   }
   
   /* Lists */
-  ul, ol {
+  ul:not(.kvj-custom-html-block *), ol:not(.kvj-custom-html-block *) {
     margin-bottom: 1.75rem;
     padding-left: 1.5rem;
   }
-  ul { list-style-type: disc; }
-  ol { list-style-type: decimal; }
-  li {
+  ul:not(.kvj-custom-html-block *) { list-style-type: disc; }
+  ol:not(.kvj-custom-html-block *) { list-style-type: decimal; }
+  li:not(.kvj-custom-html-block *) {
     margin-bottom: 0.5rem;
     color: var(--color-slate);
     font-size: 1.05rem;
   }
-  li::marker {
+  li:not(.kvj-custom-html-block *)::marker {
     color: var(--color-brand);
   }
   
   /* Blockquotes */
-  blockquote {
+  blockquote:not(.kvj-custom-html-block *) {
     border-left: 4px solid var(--color-brand);
     background: rgba(16, 185, 129, 0.02);
     padding: 1.25rem 1.75rem;
@@ -249,7 +249,7 @@ export function LessonIframe({
     font-style: italic;
     color: var(--color-slate);
   }
-  blockquote p {
+  blockquote:not(.kvj-custom-html-block *) p {
     margin-bottom: 0;
     font-size: 1.15rem;
     color: var(--color-ink);
@@ -310,7 +310,7 @@ export function LessonIframe({
   .callout-example::before { content: "📝"; }
   
   /* Tables styling */
-  table {
+  table:not(.kvj-custom-html-block *) {
     width: 100%;
     border-collapse: separate;
     border-spacing: 0;
@@ -319,7 +319,7 @@ export function LessonIframe({
     border-radius: 0.75rem;
     overflow: hidden;
   }
-  th {
+  th:not(.kvj-custom-html-block *) {
     background-color: rgba(255, 255, 255, 0.02);
     color: var(--color-ink);
     font-weight: 600;
@@ -329,21 +329,21 @@ export function LessonIframe({
     padding: 1rem;
     border-bottom: 1px solid var(--color-line);
   }
-  td {
+  td:not(.kvj-custom-html-block *) {
     padding: 1rem;
     border-bottom: 1px solid var(--color-line);
     color: var(--color-slate);
     font-size: 0.9rem;
   }
-  tr:last-child td {
+  tr:last-child td:not(.kvj-custom-html-block *) {
     border-bottom: none;
   }
-  tr:hover td {
+  tr:hover td:not(.kvj-custom-html-block *) {
     background-color: rgba(255, 255, 255, 0.01);
   }
   
   /* Images styling */
-  img {
+  img:not(.kvj-custom-html-block *) {
     max-width: 100%;
     height: auto;
     display: block;
@@ -354,13 +354,13 @@ export function LessonIframe({
     cursor: zoom-in;
     margin: 2rem auto;
   }
-  img:hover {
+  img:not(.kvj-custom-html-block *):hover {
     transform: scale(1.005);
     box-shadow: 0 15px 40px -15px rgba(16, 185, 129, 0.15);
   }
   
   /* Code Blocks */
-  pre {
+  pre:not(.kvj-custom-html-block *) {
     background-color: #07130E !important;
     border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: 1rem;
@@ -368,19 +368,19 @@ export function LessonIframe({
     margin: 2rem 0;
     overflow-x: auto;
   }
-  code {
+  code:not(.kvj-custom-html-block *) {
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     font-size: 0.9em;
     color: #e2e8f0;
   }
-  pre code {
+  pre:not(.kvj-custom-html-block *) code:not(.kvj-custom-html-block *) {
     background: transparent;
     padding: 0;
     color: #cbd5e1;
     display: block;
     line-height: 1.6;
   }
-  :not(pre) > code {
+  :not(pre):not(.kvj-custom-html-block *) > code:not(.kvj-custom-html-block *) {
     background-color: rgba(255, 255, 255, 0.06);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 0.375rem;
@@ -451,7 +451,7 @@ export function LessonIframe({
 </head>
 <body class="px-6 py-8 sm:px-10 sm:py-12 md:px-14 md:py-16">
 <div class="max-w-5xl mx-auto">
-${cleanHtml}
+${html.includes("<!-- KVJ_MATERIAL_METADATA:") ? cleanHtml : `<div class="kvj-custom-html-block">${cleanHtml}</div>`}
 </div>
 <script>
   // Copy Code Button & Language Label

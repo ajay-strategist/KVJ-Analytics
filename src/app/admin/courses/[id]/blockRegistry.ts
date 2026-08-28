@@ -493,7 +493,7 @@ ${trRows}
     }
 
     case "html":
-      return `<div class="my-6 text-left leading-[1.8] text-[#132238] font-body">${b.html || ""}</div>`;
+      return `<div class="kvj-custom-html-block my-6 text-left">${b.html || ""}</div>`;
 
     case "activity":
       return `<div class="my-8 p-6 border border-[#DCE5E8] border-t-4 border-t-[#0E7490] bg-[#F4F9FD] rounded-2xl text-left space-y-4 shadow-[0_4px_15px_rgba(16,35,63,0.01)]">
