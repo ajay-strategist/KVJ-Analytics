@@ -161,9 +161,9 @@ export function OnlineCoursesClient({ courses, header }: OnlineCoursesClientProp
                     {/* Action buttons */}
                     <div className="grid grid-cols-2 gap-4 border-t border-line pt-5 mt-5">
                       <Link href={`/training/${course.slug}`} className="w-full">
-                        <Button variant="secondary" className="w-full text-xs py-2 bg-surface hover:bg-emerald-50 border-line text-ink">
+                        <button className="w-full text-xs py-2 bg-transparent hover:bg-white/5 border border-white/20 hover:border-brand/40 !text-white rounded-full transition-all duration-300 font-semibold cursor-pointer text-center block">
                           Details
-                        </Button>
+                        </button>
                       </Link>
                       {course.hide_pricing ? (
                         <Link href={`/training/register?course=${course.slug}`} className="w-full">
