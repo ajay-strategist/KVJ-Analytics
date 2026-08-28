@@ -12,6 +12,32 @@ import { FALLBACK_PRODUCTS_PAGE } from "@/lib/constants";
 
 export const revalidate = 3600;
 
+import { Metadata } from "next";
+import { resolveSeo, breadcrumbSchema } from "@/lib/seo";
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  let title = "Product";
+  let description = "Product solutions from KVJ Analytics.";
+
+  try {
+    const pageData = await getPageContent("products");
+    const page = mergePageContent(pageData, FALLBACK_PRODUCTS_PAGE);
+    const products = page.products && page.products.length > 0 ? page.products : FALLBACK_PRODUCTS_PAGE.products;
+    const product = products.find((p: any) => p.slug === slug);
+
+    if (product) {
+      title = product.name;
+      description = product.tagline || product.description?.substring(0, 160) || description;
+    }
+  } catch {}
+
+  return resolveSeo(`/products/${slug}`, {
+    title: `${title} | KVJ Analytics Products`,
+    description,
+  });
+}
+
 export default async function ProductDetailPage({
   params,
 }: {
@@ -35,8 +61,35 @@ export default async function ProductDetailPage({
   const isGradeScope = slug === "grade-scope";
   const demo = { ...FALLBACK_PRODUCTS_PAGE.demoCard, ...((page as any).demoCard || {}) };
 
+  const schemaProduct = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": name,
+    "description": description || tagline,
+    "offers": {
+      "@type": "Offer",
+      "priceCurrency": "INR",
+      "availability": "https://schema.org/InStock",
+      "url": `https://www.kvjanalytics.in/products/${slug}`
+    }
+  };
+
+  const schemaBreadcrumbs = breadcrumbSchema([
+    { name: "Home", item: "/" },
+    { name: "Products", item: "/products" },
+    { name: name, item: `/products/${slug}` },
+  ]);
+
   return (
     <Section background="default" className="bg-base relative overflow-hidden text-left">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaProduct) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaBreadcrumbs) }}
+      />
       <div className="absolute inset-0 bg-grid-pattern opacity-45 pointer-events-none" />
       <div className="absolute top-20 right-0 w-96 h-96 bg-[#10B981]/5 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-20 left-0 w-96 h-96 bg-[#0D9488]/5 rounded-full blur-3xl pointer-events-none" />

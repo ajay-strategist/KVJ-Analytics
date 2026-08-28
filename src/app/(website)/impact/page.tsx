@@ -14,7 +14,17 @@ import { supabase } from "@/lib/supabase";
 import { FALLBACK_IMPACT } from "@/lib/constants";
 import { GraduationCap, Briefcase, ShoppingBag, Users, Truck, Settings, TrendingUp, HelpCircle } from "lucide-react";
 
+import { Metadata } from "next";
+import { resolveSeo } from "@/lib/seo";
+
 export const revalidate = 3600;
+
+export async function generateMetadata(): Promise<Metadata> {
+  return resolveSeo("/impact", {
+    title: "Our Impact & Case Studies | KVJ Analytics",
+    description: "Discover how KVJ Analytics delivers measurable outcomes for businesses and educational institutions through Power BI, report automation, and custom dashboard development.",
+  });
+}
 
 const getIndustryIcon = (industry: string) => {
   switch (industry.toLowerCase()) {

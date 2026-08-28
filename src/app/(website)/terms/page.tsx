@@ -7,7 +7,17 @@ import { Card } from "@/components/ui/Card";
 import { getPageContent } from "@/lib/content";
 import { FALLBACK_TERMS } from "@/lib/constants";
 
+import { Metadata } from "next";
+import { resolveSeo } from "@/lib/seo";
+
 export const revalidate = 3600;
+
+export async function generateMetadata(): Promise<Metadata> {
+  return resolveSeo("/terms", {
+    title: "Terms and Conditions | KVJ Analytics",
+    description: "Read the Terms and Conditions of KVJ Analytics. Learn about the rules, responsibilities, and legal agreements governing our website, training programs, and products.",
+  });
+}
 
 export default async function TermsPage() {
   const stored = (await getPageContent("terms")) as Record<string, any> | null;

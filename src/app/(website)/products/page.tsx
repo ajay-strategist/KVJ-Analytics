@@ -7,16 +7,19 @@ import { SplitHeading, ScaleIn, Parallax } from "@/components/v3/ScrollFx";
 import { getPageContent, mergePageContent } from "@/lib/content";
 import { FALLBACK_PRODUCTS_PAGE } from "@/lib/constants";
 
-import { pageMeta } from "@/lib/seo";
+import { Metadata } from "next";
+import { resolveSeo } from "@/lib/seo";
 
 export const revalidate = 3600;
-export const metadata = pageMeta({
-  title: "EdTech Products — Grade Scope & Protrix",
-  description:
-    "Grade Scope and Protrix: KVJ Analytics' proprietary platforms for automated educational reporting, assessment automation, and institutional analytics. Request a demo.",
-  path: "/products",
-  keywords: ["Grade Scope", "Protrix", "assessment automation", "educational reporting software", "institutional analytics"],
-});
+
+export async function generateMetadata(): Promise<Metadata> {
+  return resolveSeo("/products", {
+    title: "EdTech Products — Grade Scope & Protrix",
+    description:
+      "Grade Scope and Protrix: KVJ Analytics' proprietary platforms for automated educational reporting, assessment automation, and institutional analytics. Request a demo.",
+    keywords: ["Grade Scope", "Protrix", "assessment automation", "educational reporting software", "institutional analytics"],
+  });
+}
 
 export default async function ProductsPage() {
   const pageData = await getPageContent("products");

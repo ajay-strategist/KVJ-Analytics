@@ -4,7 +4,17 @@ import { CTASection } from "@/components/ui/CTASection";
 import { getPageContent, mergePageContent } from "@/lib/content";
 import { FALLBACK_ABOUT } from "@/lib/constants";
 
+import { Metadata } from "next";
+import { resolveSeo } from "@/lib/seo";
+
 export const revalidate = 3600;
+
+export async function generateMetadata(): Promise<Metadata> {
+  return resolveSeo("/about", {
+    title: "About Us | KVJ Analytics",
+    description: "Learn about KVJ Analytics, our team, founding history, and our values in business intelligence, automation, and data analytics consulting.",
+  });
+}
 
 export default async function AboutPage() {
   const data = await getPageContent("about");

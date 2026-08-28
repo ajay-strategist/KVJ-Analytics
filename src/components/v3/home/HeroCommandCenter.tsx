@@ -250,6 +250,7 @@ export function HeroCommandCenter({
                   <img
                     src="/professional-man-laptop.png"
                     alt="Professional Consultant"
+                    fetchPriority="high"
                     className="h-full w-full object-cover object-top scale-105 contrast-[1.05] brightness-95"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-base via-transparent to-transparent opacity-85" />

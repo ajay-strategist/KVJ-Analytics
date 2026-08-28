@@ -30,12 +30,14 @@ export function ClientLogoCarousel({
         <img
           src={item.logoUrl}
           alt={`${name} Logo`}
+          loading="lazy"
           className="h-10 md:h-12 w-auto object-contain max-w-[180px] opacity-75 hover:opacity-100 transition-opacity duration-300"
         />
       ) : item.logo ? (
         <img
           src={urlFor(item.logo).width(200).height(80).url()}
           alt={`${name} Logo`}
+          loading="lazy"
           className="h-10 md:h-12 w-auto object-contain max-w-[180px] opacity-75 hover:opacity-100 transition-opacity duration-300"
         />
       ) : (

@@ -1,18 +1,21 @@
 import React from "react";
+import { Metadata } from "next";
 import { supabase } from "@/lib/supabase";
 import { getPageContent, mergePageContent } from "@/lib/content";
 import { FALLBACK_TRAINING_HUB } from "@/lib/constants";
-import { pageMeta } from "@/lib/seo";
+import { resolveSeo } from "@/lib/seo";
 import { TrainingHubClient } from "@/components/TrainingHubClient";
 
 export const revalidate = 3600;
-export const metadata = pageMeta({
-  title: "Training — Power BI, Excel, Data Analytics Courses & Programs",
-  description:
-    "Practical, placement-focused training in Advanced Excel, Power BI, Data Analytics, dashboards and automation. Online courses, corporate & college programs, one-to-one mentoring and internships.",
-  path: "/training",
-  keywords: ["Power BI training", "Excel training", "data analytics course", "corporate training", "college training", "online analytics courses", "internships"],
-});
+
+export async function generateMetadata(): Promise<Metadata> {
+  return resolveSeo("/training", {
+    title: "Training — Power BI, Excel, Data Analytics Courses & Programs",
+    description:
+      "Practical, placement-focused training in Advanced Excel, Power BI, Data Analytics, dashboards and automation. Online courses, corporate & college programs, one-to-one mentoring and internships.",
+    keywords: ["Power BI training", "Excel training", "data analytics course", "corporate training", "college training", "online analytics courses", "internships"],
+  });
+}
 
 interface Category {
   id: string;

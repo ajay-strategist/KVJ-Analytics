@@ -44,7 +44,7 @@ export function CaseStudiesSection({ items }: { items: CaseStudy[] }) {
             >
               {c.image_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={c.image_url} alt={c.title} className="h-40 w-full object-cover" />
+                <img src={c.image_url} alt={c.title} loading="lazy" className="h-40 w-full object-cover" />
               ) : (
                 <div className="h-1.5 w-full signature-gradient" />
               )}

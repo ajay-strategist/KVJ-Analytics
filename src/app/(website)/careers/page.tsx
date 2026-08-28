@@ -7,16 +7,19 @@ import { Button } from "@/components/ui/Button";
 import { supabase } from "@/lib/supabase";
 import { getPageContent, mergePageContent } from "@/lib/content";
 import { FALLBACK_CAREERS } from "@/lib/constants";
-import { pageMeta } from "@/lib/seo";
+import { Metadata } from "next";
+import { resolveSeo } from "@/lib/seo";
 
 export const revalidate = 120; // Revalidate every 2 minutes
-export const metadata = pageMeta({
-  title: "Careers — Join KVJ Analytics",
-  description:
-    "Build a career in analytics, Power BI, automation and consulting with KVJ Analytics. View open roles in Cochin and remote positions.",
-  path: "/careers",
-  keywords: ["analytics jobs Cochin", "Power BI developer jobs", "data analyst careers", "KVJ Analytics careers"],
-});
+
+export async function generateMetadata(): Promise<Metadata> {
+  return resolveSeo("/careers", {
+    title: "Careers — Join KVJ Analytics",
+    description:
+      "Build a career in analytics, Power BI, automation and consulting with KVJ Analytics. View open roles in Cochin and remote positions.",
+    keywords: ["analytics jobs Cochin", "Power BI developer jobs", "data analyst careers", "KVJ Analytics careers"],
+  });
+}
 
 interface Job {
   id: string;

@@ -6,17 +6,20 @@ import { BoldStatement } from "@/components/ui/BoldStatement";
 import { supabase } from "@/lib/supabase";
 import { getPageContent, mergePageContent } from "@/lib/content";
 import { FALLBACK_BLOG } from "@/lib/constants";
-import { pageMeta } from "@/lib/seo";
 import { BlogListClient } from "@/components/blog/BlogListClient";
+import { Metadata } from "next";
+import { resolveSeo } from "@/lib/seo";
 
 export const revalidate = 3600;
-export const metadata = pageMeta({
-  title: "Blog — Excel, Power BI, Automation & Analytics Insights",
-  description:
-    "Practical guides on Excel automation, Power BI dashboards, report automation, and data analytics for businesses and institutions — from the KVJ Analytics team.",
-  path: "/blog",
-  keywords: ["Excel tips", "Power BI blog", "report automation guide", "data analytics articles", "business intelligence blog"],
-});
+
+export async function generateMetadata(): Promise<Metadata> {
+  return resolveSeo("/blog", {
+    title: "Blog — Excel, Power BI, Automation & Analytics Insights",
+    description:
+      "Practical guides on Excel automation, Power BI dashboards, report automation, and data analytics for businesses and institutions — from the KVJ Analytics team.",
+    keywords: ["Excel tips", "Power BI blog", "report automation guide", "data analytics articles", "business intelligence blog"],
+  });
+}
 
 const FALLBACK_POSTS = [
   {

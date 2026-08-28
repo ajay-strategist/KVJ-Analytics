@@ -6,7 +6,42 @@ import { Container } from "@/components/ui/Container";
 import { CourseClientWrapper } from "@/components/CourseClientWrapper";
 import { supabase } from "@/lib/supabase";
 
+import { Metadata } from "next";
+import { resolveSeo, courseSchema, breadcrumbSchema } from "@/lib/seo";
+
 export const revalidate = 0; // dynamic
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  let title = "Course Program";
+  let description = "Professional training by KVJ Analytics.";
+  let image: string | undefined;
+
+  try {
+    const { data } = await supabase
+      .from("courses")
+      .select("title, summary, banner_url")
+      .eq("slug", slug)
+      .maybeSingle();
+
+    if (data) {
+      title = data.title;
+      description = data.summary || description;
+      image = data.banner_url || undefined;
+    } else if (FALLBACK_COURSES[slug]) {
+      const fb = FALLBACK_COURSES[slug];
+      title = fb.title;
+      description = fb.summary;
+      image = fb.banner_url;
+    }
+  } catch {}
+
+  return resolveSeo(`/training/${slug}`, {
+    title,
+    description,
+    image,
+  });
+}
 
 const FALLBACK_COURSES: Record<
   string,
@@ -187,9 +222,29 @@ export default async function CourseDetailPage({
       },
     ];
   }
+  const schemaCourse = courseSchema({
+    title,
+    description: summary,
+    slug,
+  });
+
+  const schemaBreadcrumbs = breadcrumbSchema([
+    { name: "Home", item: "/" },
+    { name: "Training", item: "/training" },
+    { name: "Online Courses", item: "/training/online-courses" },
+    { name: title, item: `/training/${slug}` },
+  ]);
 
   return (
     <div className="w-full bg-base text-slate min-h-screen pt-28 pb-24 relative overflow-hidden">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaCourse) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaBreadcrumbs) }}
+      />
       {/* Background gradients */}
       <div className="absolute top-[10%] left-[-10%] w-[500px] h-[500px] bg-[#10B981]/5 rounded-full blur-[140px] pointer-events-none" />
       <div className="absolute top-[40%] right-[-10%] w-[600px] h-[600px] bg-[#0D9488]/5 rounded-full blur-[160px] pointer-events-none" />

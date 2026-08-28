@@ -28,6 +28,7 @@ export function Footer({ siteSettings = FALLBACK_SITE_SETTINGS }: FooterProps) {
               <img
                 src="/logo-dark.png"
                 alt="KVJ Analytics"
+                loading="lazy"
                 className="h-8 md:h-9 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
               />
             </Link>

@@ -8,6 +8,37 @@ import { supabase } from "@/lib/supabase";
 
 export const revalidate = 120; // Revalidate every 2 minutes
 
+import { Metadata } from "next";
+import { resolveSeo } from "@/lib/seo";
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  let title = "Job Role";
+  let description = "Careers at KVJ Analytics.";
+
+  try {
+    const { data } = await supabase
+      .from("jobs")
+      .select("title, description")
+      .eq("slug", slug)
+      .maybeSingle();
+
+    if (data) {
+      title = data.title;
+      description = data.description?.substring(0, 160) || description;
+    } else if (FALLBACK_JOBS[slug]) {
+      const fb = FALLBACK_JOBS[slug];
+      title = fb.title;
+      description = fb.description.substring(0, 160);
+    }
+  } catch {}
+
+  return resolveSeo(`/careers/${slug}`, {
+    title: `${title} | KVJ Analytics Careers`,
+    description,
+  });
+}
+
 interface Job {
   id: string;
   slug: string;

@@ -141,6 +141,7 @@ export function BlogListClient({ posts, header }: BlogListClientProps) {
         <img
           src={post.cover_url}
           alt={post.title}
+          loading="lazy"
           className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105"
         />
       );

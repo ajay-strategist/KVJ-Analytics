@@ -8,13 +8,14 @@ import {
 import { Container } from "@/components/ui/Container";
 import { Section } from "@/components/ui/Section";
 import { supabase } from "@/lib/supabase";
-import { pageMeta, SITE_URL } from "@/lib/seo";
+import { resolveSeo, SITE_URL } from "@/lib/seo";
+import { Metadata } from "next";
 import { LessonIframe } from "@/components/shared/LessonIframe";
 import { BlogClientFurniture } from "@/components/blog/BlogClientFurniture";
 
 export const revalidate = 3600;
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   let title = "Article";
   let description = "Insights from KVJ Analytics.";
@@ -27,7 +28,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       image = data.cover_url || undefined; 
     }
   } catch {}
-  return pageMeta({ title, description, path: `/blog/${slug}`, image });
+  return resolveSeo(`/blog/${slug}`, { title, description, image });
 }
 
 const FALLBACK_POSTS: Record<string, { title: string; date: string; category: string; catSlug: string; author: string; authorSlug: string; description: string; body: string[] }> = {

@@ -68,6 +68,7 @@ export function Header({ siteSettings = FALLBACK_SITE_SETTINGS }: HeaderProps) {
           <img
             src="/logo-dark.png"
             alt="KVJ Analytics"
+            fetchPriority="high"
             className="h-8 md:h-9 w-auto object-contain transition-all duration-300 group-hover:scale-105"
           />
         </Link>

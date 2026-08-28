@@ -90,6 +90,7 @@ export function LogoWall({ heading, logos }: { heading: string; logos: string[] 
             <img
               src={item}
               alt="Client Logo"
+              loading="lazy"
               className="max-h-7 max-w-[150px] object-contain brightness-105 contrast-105"
             />
           </div>

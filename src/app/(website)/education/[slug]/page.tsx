@@ -12,6 +12,32 @@ import { FALLBACK_EDUCATION } from "@/lib/constants";
 
 export const revalidate = 3600;
 
+import { Metadata } from "next";
+import { resolveSeo, breadcrumbSchema } from "@/lib/seo";
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  let title = "Educational Solution";
+  let description = "Educational training, certification and curriculum solutions from KVJ Analytics.";
+
+  try {
+    const pageData = await getPageContent("education");
+    const page = mergePageContent(pageData, FALLBACK_EDUCATION);
+    const services = page.services && page.services.length > 0 ? page.services : FALLBACK_EDUCATION.services;
+    const service = services.find((s: any) => s.slug === slug);
+
+    if (service) {
+      title = service.title;
+      description = service.shortDescription || description;
+    }
+  } catch {}
+
+  return resolveSeo(`/education/${slug}`, {
+    title: `${title} | KVJ Analytics Solutions`,
+    description,
+  });
+}
+
 export default async function EducationalServiceDetailPage({
   params,
 }: {
@@ -38,8 +64,34 @@ export default async function EducationalServiceDetailPage({
     "Syllabus structures built in alignment with industry hiring metrics.",
   ];
 
+  const schemaService = {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "name": title,
+    "description": description,
+    "provider": {
+      "@type": "Organization",
+      "name": "KVJ Analytics",
+      "url": "https://www.kvjanalytics.in"
+    }
+  };
+
+  const schemaBreadcrumbs = breadcrumbSchema([
+    { name: "Home", item: "/" },
+    { name: "Educational Solutions", item: "/education" },
+    { name: title, item: `/education/${slug}` },
+  ]);
+
   return (
     <Section background="default" className="bg-base relative overflow-hidden">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaService) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaBreadcrumbs) }}
+      />
       <div className="absolute inset-0 bg-grid-pattern opacity-45 pointer-events-none" />
       <div className="absolute top-20 right-0 w-96 h-96 bg-brand/5 rounded-full blur-3xl pointer-events-none" />
 

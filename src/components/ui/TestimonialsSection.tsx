@@ -54,7 +54,7 @@ export function TestimonialsSection({ items }: { items: Testimonial[] }) {
                 <figcaption className="mt-5 flex items-center gap-3 border-t border-line pt-4">
                   {t.avatar_url ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={t.avatar_url} alt={t.client_name} className="h-10 w-10 rounded-full object-cover border border-line" />
+                    <img src={t.avatar_url} alt={t.client_name} loading="lazy" className="h-10 w-10 rounded-full object-cover border border-line" />
                   ) : (
                     <span className="grid h-10 w-10 place-items-center rounded-full bg-brand/10 border border-brand/25 text-[13px] font-bold text-brand">
                       {initials}

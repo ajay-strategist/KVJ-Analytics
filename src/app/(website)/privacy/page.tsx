@@ -7,7 +7,17 @@ import { Card } from "@/components/ui/Card";
 import { getPageContent } from "@/lib/content";
 import { FALLBACK_PRIVACY } from "@/lib/constants";
 
+import { Metadata } from "next";
+import { resolveSeo } from "@/lib/seo";
+
 export const revalidate = 3600;
+
+export async function generateMetadata(): Promise<Metadata> {
+  return resolveSeo("/privacy", {
+    title: "Privacy Policy | KVJ Analytics",
+    description: "Read the Privacy Policy of KVJ Analytics. Learn how we collect, process, protect, and store user information for training, products, and services.",
+  });
+}
 
 export default async function PrivacyPage() {
   const stored = (await getPageContent("privacy")) as Record<string, any> | null;
