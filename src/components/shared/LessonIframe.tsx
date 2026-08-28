@@ -13,7 +13,7 @@ interface LessonIframeProps {
 export const DARK_MODE_CSS = ``;
 
 export const LIGHT_MODE_CSS = `
-:root {
+body.light {
   --color-base: #FFFFFF;
   --color-base-2: #F8FAFC;
   --color-surface: #FFFFFF;
@@ -24,56 +24,23 @@ export const LIGHT_MODE_CSS = `
   --color-ink: #0F172A;
   --color-slate: #475569;
 }
-html, body {
-  color: #475569 !important;
-  background-color: transparent !important;
-}
-h1, h2, h3, h4, h5, h6 {
+body.light .text-white {
   color: #0f172a !important;
 }
-p {
+body.light .text-slate-350 {
   color: #475569 !important;
 }
-li {
-  color: #475569 !important;
-}
-blockquote {
-  background: rgba(13, 148, 136, 0.03) !important;
-  border-left-color: #0d9488 !important;
-  color: #0f172a !important;
-}
-blockquote p {
-  color: #0f172a !important;
-}
-table {
-  border-color: #e2e8f0 !important;
-}
-th {
-  background-color: #f8fafc !important;
-  color: #0f172a !important;
-  border-bottom-color: #e2e8f0 !important;
-}
-td {
-  color: #475569 !important;
-  border-bottom-color: #f1f5f9 !important;
-}
-.text-white {
-  color: #0f172a !important;
-}
-.text-slate-350 {
-  color: #475569 !important;
-}
-.text-slate-400 {
+body.light .text-slate-400 {
   color: #64748B !important;
 }
-.bg-card {
+body.light .bg-card {
   background-color: #f8fafc !important;
   border-color: #e2e8f0 !important;
 }
-.border-white\\/5 {
+body.light .border-white\\/5 {
   border-color: #e2e8f0 !important;
 }
-.border-white\\/10 {
+body.light .border-white\\/10 {
   border-color: #cbd5e1 !important;
 }
 `;
@@ -238,7 +205,7 @@ export function LessonIframe({
   p {
     font-size: 1.1rem;
     margin-bottom: 1.75rem;
-    color: #cbd5e1;
+    color: var(--color-slate);
     font-weight: 400;
     letter-spacing: -0.005em;
   }
@@ -265,7 +232,7 @@ export function LessonIframe({
   ol { list-style-type: decimal; }
   li {
     margin-bottom: 0.5rem;
-    color: #cbd5e1;
+    color: var(--color-slate);
     font-size: 1.05rem;
   }
   li::marker {
@@ -280,12 +247,12 @@ export function LessonIframe({
     margin: 2.5rem 0;
     border-radius: 0 1rem 1rem 0;
     font-style: italic;
-    color: #f1f5f9;
+    color: var(--color-slate);
   }
   blockquote p {
     margin-bottom: 0;
     font-size: 1.15rem;
-    color: #f8fafc;
+    color: var(--color-ink);
   }
   
   /* Premium Callout Blocks */
@@ -348,7 +315,7 @@ export function LessonIframe({
     border-collapse: separate;
     border-spacing: 0;
     margin: 2rem 0;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--color-line);
     border-radius: 0.75rem;
     overflow: hidden;
   }
@@ -360,12 +327,12 @@ export function LessonIframe({
     font-size: 0.75rem;
     letter-spacing: 0.05em;
     padding: 1rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid var(--color-line);
   }
   td {
     padding: 1rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-    color: #cbd5e1;
+    border-bottom: 1px solid var(--color-line);
+    color: var(--color-slate);
     font-size: 0.9rem;
   }
   tr:last-child td {
