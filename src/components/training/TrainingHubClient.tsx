@@ -214,20 +214,34 @@ function BentoCard({ category, className = "", icon: Icon, delay = 0, variant = 
 // ────────────────────────────────────────────────────────
 // Floating Feature Outline Card
 // ────────────────────────────────────────────────────────
-function FloatingFeatureCard({ icon: Icon, label, desc, delay = 0, floatClass = "float-a" }: any) {
+function FloatingFeatureCard({ icon: Icon, label, desc, index, onMouseMove, onMouseLeave }: any) {
   return (
-    <Reveal delay={delay} variant="scale" className="h-full">
-      <div className={`bg-[#0B2A22]/95 border border-[#10B981]/15 hover:border-brand/45 p-6 rounded-2xl flex items-start gap-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_50px_rgba(16,185,129,0.05)] text-left group h-full relative overflow-hidden ${floatClass}`}>
-        <div className="absolute inset-0 bg-gradient-to-tr from-brand/5 to-transparent pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-        <div className="w-10 h-10 rounded-xl bg-brand/10 border border-brand/20 flex items-center justify-center text-brand shrink-0 group-hover:scale-110 transition-transform duration-300">
-          <Icon className="w-5 h-5 text-brand group-hover:rotate-12 duration-300" />
-        </div>
-        <div className="space-y-1">
-          <h4 className="text-white text-base font-semibold tracking-wide font-display group-hover:text-brand transition-colors">{label}</h4>
+    <div
+      onMouseMove={onMouseMove}
+      onMouseLeave={onMouseLeave}
+      className="solution-card group light-sweep glow-ring relative h-full overflow-hidden rounded-3xl border border-[#10B981]/15 card-tone-emerald p-7 flex flex-col justify-between transition-all duration-500 hover:border-brand/45"
+      style={{
+        backgroundImage: "radial-gradient(340px circle at var(--sx,80%) var(--sy,0%), rgba(16,185,129,0.07), transparent 70%)",
+        transformStyle: "preserve-3d",
+        transition: "transform 0.4s cubic-bezier(0.03,0.98,0.52,0.99), border-color 0.5s ease",
+        background: "#0B2A22"
+      }}
+    >
+      {/* Numbered badge */}
+      <span className="absolute right-6 top-6 font-mono text-[10px] font-black text-brand/35 group-hover:text-brand transition-colors duration-500 tabular-nums">
+        {String(index + 1).padStart(2, "0")}
+      </span>
+
+      <div className="flex items-start gap-4" style={{ transform: "translateZ(30px)" }}>
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand/10 border border-brand/20 text-brand transition-transform duration-500 group-hover:scale-110 group-hover:shadow-[0_0_20px_rgba(16,185,129,0.25)]">
+          <Icon className="h-5 w-5 group-hover:rotate-12 duration-300" />
+        </span>
+        <div className="space-y-1 text-left">
+          <h3 className="font-display text-base font-bold text-white group-hover:text-brand transition-colors">{label}</h3>
           <p className="text-zinc-400 text-xs leading-relaxed font-light group-hover:text-zinc-200 transition-colors duration-300">{desc}</p>
         </div>
       </div>
-    </Reveal>
+    </div>
   );
 }
  
@@ -238,6 +252,63 @@ export function TrainingHubClient({ categories, hub }: TrainingHubClientProps) {
  
   // Timeline viewport scroll progress tracking
   const journeySectionRef = useRef<HTMLDivElement>(null);
+  const toolsGridRef = useRef<HTMLDivElement>(null);
+ 
+  // GSAP 3D entrance animation for cards
+  useEffect(() => {
+    const grid = toolsGridRef.current;
+    if (!grid || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    let ctx: ReturnType<typeof import("gsap").default.context> | null = null;
+
+    (async () => {
+      const gsapMod = await import("gsap");
+      const { ScrollTrigger } = await import("gsap/ScrollTrigger");
+      const gsap = gsapMod.default || gsapMod;
+      gsap.registerPlugin(ScrollTrigger);
+
+      ctx = gsap.context(() => {
+        const cardEls = grid.querySelectorAll(".solution-card");
+        cardEls.forEach((card, i) => {
+          const fromLeft = i % 2 === 0;
+          gsap.fromTo(
+            card,
+            {
+              x: fromLeft ? -100 : 100,
+              rotateY: fromLeft ? 20 : -20,
+              z: -200,
+              opacity: 0,
+              filter: "blur(6px)",
+            },
+            {
+              x: 0, rotateY: 0, z: 0, opacity: 1, filter: "blur(0px)",
+              duration: 1,
+              delay: i * 0.12,
+              ease: "power3.out",
+              scrollTrigger: { trigger: card, start: "top 88%", toggleActions: "play none none reverse" },
+            }
+          );
+        });
+      }, grid);
+    })();
+
+    return () => { ctx?.revert(); };
+  }, []);
+
+  const onMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const el = e.currentTarget, r = el.getBoundingClientRect();
+    el.style.setProperty("--sx", `${e.clientX - r.left}px`);
+    el.style.setProperty("--sy", `${e.clientY - r.top}px`);
+
+    // 3D tilt on hover
+    const x = (e.clientX - r.left) / r.width - 0.5;
+    const y = (e.clientY - r.top) / r.height - 0.5;
+    el.style.transform = `perspective(800px) rotateY(${x * 8}deg) rotateX(${-y * 6}deg) translateY(-4px)`;
+  };
+
+  const onLeave = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.currentTarget.style.transform = "perspective(800px) rotateY(0deg) rotateX(0deg) translateY(0)";
+  };
  
   useEffect(() => {
     const handleScroll = () => {
@@ -515,15 +586,16 @@ export function TrainingHubClient({ categories, hub }: TrainingHubClientProps) {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+          <div ref={toolsGridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
             {(((hub?.tools?.items as { label: string; desc: string; icon: string }[]) || FALLBACK_TRAINING_HUB.tools.items)).map((t, i) => (
               <FloatingFeatureCard
                 key={i}
+                index={i}
                 icon={iconOf(t.icon)}
                 label={t.label}
                 desc={t.desc}
-                delay={i * 50}
-                floatClass={["float-a", "float-b", "float-c"][i % 3]}
+                onMouseMove={onMove}
+                onMouseLeave={onLeave}
               />
             ))}
           </div>
