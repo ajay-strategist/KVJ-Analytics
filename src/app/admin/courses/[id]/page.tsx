@@ -257,6 +257,11 @@ const LessonEditor = React.memo(function LessonEditor({
       ]);
     }
 
+    setTitle(initial.title || "");
+    setKind(initial.kind || "theory");
+    setContentHtml(initial.content_html || "");
+    setMaxScore(initial.max_score ?? 100);
+
     // If it is assessment kind, let the test loader useEffect handle editorKind asynchronously
     if (initial.kind !== "assessment") {
       setEditorKind(parseKind);
@@ -3583,6 +3588,7 @@ export default function AdminCourseDetailsPage() {
                                       </div>
                                     ) : (
                                       <LessonEditor
+                                        key={les.id}
                                         initial={{ id: les.id, module_id: les.module_id, title: les.title, kind: les.kind, content_html: les.content_html, max_score: les.max_score }}
                                         onSave={handleSaveLesson}
                                         onCancel={() => { setEditingLessonId(null); setLessonForm({}); }}
@@ -3597,6 +3603,7 @@ export default function AdminCourseDetailsPage() {
                             {editingLessonId === `new-${mod.id}` && (
                               <div className="border border-brand/40 bg-brand/5 rounded-lg p-3 mt-2">
                                 <LessonEditor
+                                  key={editingLessonId}
                                   initial={{ module_id: mod.id, title: "", kind: "theory", content_html: "", max_score: 100 }}
                                   onSave={handleSaveLesson}
                                   onCancel={() => { setEditingLessonId(null); setLessonForm({}); }}

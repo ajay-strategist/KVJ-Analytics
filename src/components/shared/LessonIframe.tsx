@@ -12,7 +12,71 @@ interface LessonIframeProps {
 
 export const DARK_MODE_CSS = ``;
 
-export const LIGHT_MODE_CSS = ``;
+export const LIGHT_MODE_CSS = `
+:root {
+  --color-base: #FFFFFF;
+  --color-base-2: #F8FAFC;
+  --color-surface: #FFFFFF;
+  --color-card: #F8FAFC;
+  --color-line: #E2E8F0;
+  --color-brand: #0D9488;
+  --color-brand-secondary: #0F766E;
+  --color-ink: #0F172A;
+  --color-slate: #475569;
+}
+html, body {
+  color: #475569 !important;
+  background-color: transparent !important;
+}
+h1, h2, h3, h4, h5, h6 {
+  color: #0f172a !important;
+}
+p {
+  color: #475569 !important;
+}
+li {
+  color: #475569 !important;
+}
+blockquote {
+  background: rgba(13, 148, 136, 0.03) !important;
+  border-left-color: #0d9488 !important;
+  color: #0f172a !important;
+}
+blockquote p {
+  color: #0f172a !important;
+}
+table {
+  border-color: #e2e8f0 !important;
+}
+th {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+  border-bottom-color: #e2e8f0 !important;
+}
+td {
+  color: #475569 !important;
+  border-bottom-color: #f1f5f9 !important;
+}
+.text-white {
+  color: #0f172a !important;
+}
+.text-slate-350 {
+  color: #475569 !important;
+}
+.text-slate-400 {
+  color: #64748B !important;
+}
+.bg-card {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+.border-white\\/5 {
+  border-color: #e2e8f0 !important;
+}
+.border-white\\/10 {
+  border-color: #cbd5e1 !important;
+}
+`;
 
 export const HIDE_SIDEBAR_CSS = `
 aside,
@@ -687,7 +751,7 @@ ${cleanHtml}
       doc.body.classList.remove("light");
     } else {
       removeStyle(doc, "kvj-dark");
-      removeStyle(doc, "kvj-light");
+      injectStyle(doc, "kvj-light", LIGHT_MODE_CSS);
       doc.body.classList.add("light");
       doc.body.classList.remove("dark");
     }
