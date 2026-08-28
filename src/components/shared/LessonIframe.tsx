@@ -10,231 +10,9 @@ interface LessonIframeProps {
   onContentWindow?: (win: Window | null) => void;
 }
 
-export const DARK_MODE_CSS = `
-html, body {
-  background-color: transparent !important;
-  color: #cbd5e1 !important;
-}
-h1, h2, h3, h4, h5, h6,
-[class*="heading"], [class*="title"] {
-  color: #ffffff !important;
-}
-p, li, td, th, dt, dd, figcaption, label {
-  color: #cbd5e1 !important;
-}
-strong, b {
-  color: #f8fafc !important;
-}
-a {
-  color: #38bdf8 !important;
-}
-a:hover {
-  color: #10B981 !important;
-}
-blockquote {
-  background: rgba(16, 185, 129, 0.05) !important;
-  border-left: 4px solid #10B981 !important;
-  color: #f1f5f9 !important;
-  font-style: italic !important;
-  padding: 1rem 1.5rem !important;
-  margin: 1.5rem 0 !important;
-  border-radius: 0 12px 12px 0 !important;
-}
-blockquote p {
-  color: #f8fafc !important;
-}
+export const DARK_MODE_CSS = ``;
 
-/* Override any elements with hardcoded dark inline text colors, but EXEMPT admin-styled blocks */
-[style*="color: #0"]:not([data-kvj-styled]), [style*="color:#0"]:not([data-kvj-styled]),
-[style*="color: #1"]:not([data-kvj-styled]), [style*="color:#1"]:not([data-kvj-styled]),
-[style*="color: #2"]:not([data-kvj-styled]), [style*="color:#2"]:not([data-kvj-styled]),
-[style*="color: #3"]:not([data-kvj-styled]), [style*="color:#3"]:not([data-kvj-styled]),
-[style*="color: #4"]:not([data-kvj-styled]), [style*="color:#4"]:not([data-kvj-styled]),
-[style*="color: #5"]:not([data-kvj-styled]), [style*="color:#5"]:not([data-kvj-styled]),
-[style*="color: black"]:not([data-kvj-styled]), [style*="color:black"]:not([data-kvj-styled]),
-[style*="color: rgb(0,"]:not([data-kvj-styled]), [style*="color: rgb(1"]:not([data-kvj-styled]), [style*="color: rgb(2"]:not([data-kvj-styled]), [style*="color: rgb(3"]:not([data-kvj-styled]), [style*="color: rgb(4"]:not([data-kvj-styled]), [style*="color: rgb(5"]:not([data-kvj-styled]), [style*="color: rgb(6"]:not([data-kvj-styled]) {
-  color: #cbd5e1 !important;
-}
-
-/* Strip hardcoded light background colors from imported HTML containers, but EXEMPT admin-styled blocks */
-[style*="background-color: white"]:not([data-kvj-styled]), [style*="background-color:#fff"]:not([data-kvj-styled]), [style*="background-color: #fff"]:not([data-kvj-styled]), [style*="background-color:#ffffff"]:not([data-kvj-styled]), [style*="background-color: #ffffff"]:not([data-kvj-styled]),
-[style*="background-color: rgb(255"]:not([data-kvj-styled]), [style*="background-color: rgb(24"]:not([data-kvj-styled]), [style*="background-color: rgb(25"]:not([data-kvj-styled]),
-[style*="background: white"]:not([data-kvj-styled]), [style*="background: #fff"]:not([data-kvj-styled]), [style*="background: #ffffff"]:not([data-kvj-styled]),
-.bg-white:not([data-kvj-styled]),
-.bg-surface:not([data-kvj-styled]), .bg-base-2:not([data-kvj-styled]), .bg-slate-200:not([data-kvj-styled]),
-.bg-gray-50:not([data-kvj-styled]), .bg-gray-100:not([data-kvj-styled]), .bg-gray-200:not([data-kvj-styled]),
-.bg-zinc-50:not([data-kvj-styled]), .bg-zinc-100:not([data-kvj-styled]), .bg-zinc-200:not([data-kvj-styled]),
-.bg-neutral-50:not([data-kvj-styled]), .bg-neutral-100:not([data-kvj-styled]), .bg-neutral-200:not([data-kvj-styled]),
-[class*="bg-white"]:not([data-kvj-styled]),
-[class*="bg-surface"]:not([data-kvj-styled]), [class*="bg-base-2"]:not([data-kvj-styled]),
-[class*="bg-gray-50"]:not([data-kvj-styled]), [class*="bg-gray-100"]:not([data-kvj-styled]),
-[class*="bg-zinc-50"]:not([data-kvj-styled]), [class*="bg-zinc-100"]:not([data-kvj-styled]) {
-  background-color: transparent !important;
-}
-
-.text-black, .text-slate-800, .text-slate-900, .text-zinc-800, .text-zinc-900, .text-neutral-800, .text-neutral-900,
-[class*="text-slate-8"], [class*="text-slate-9"], [class*="text-zinc-8"], [class*="text-zinc-9"], [class*="text-neutral-8"], [class*="text-neutral-9"] {
-  color: #cbd5e1 !important;
-}
-
-/* Tables in dark mode */
-table {
-  border-color: rgba(255, 255, 255, 0.08) !important;
-}
-th {
-  background-color: rgba(255, 255, 255, 0.03) !important;
-  color: #ffffff !important;
-  border-bottom-color: rgba(255, 255, 255, 0.08) !important;
-}
-td {
-  border-bottom-color: rgba(255, 255, 255, 0.04) !important;
-  color: #cbd5e1 !important;
-}
-.borderedtext-block {
-  background-color: rgba(139, 92, 246, 0.08) !important;
-  border-left: 4px solid #a78bfa !important;
-  border-top-left-radius: 0 !important;
-  border-bottom-left-radius: 0 !important;
-}
-.borderedtext-title {
-  color: #f5f3ff !important;
-}
-.borderedtext-content {
-  color: #cbd5e1 !important;
-}
-`;
-
-export const LIGHT_MODE_CSS = `
-:root {
-  --color-base: #ffffff !important;
-  --color-base-2: #F7FAF9 !important;
-  --color-surface: #ffffff !important;
-  --color-card: #ffffff !important;
-  --color-line: #DCE5E8 !important;
-  --color-ink: #132238 !important;
-  --color-slate: #526477 !important;
-  --color-brand: #08A88A !important;
-  --color-brand-secondary: #0E7490 !important;
-}
-html, body {
-  background-color: #ffffff !important;
-  color: #132238 !important;
-  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-}
-h1, h2, h3, h4, h5, h6 {
-  color: #10233F !important;
-  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-}
-h1[data-kvj-styled], h2[data-kvj-styled], h3[data-kvj-styled], h4[data-kvj-styled], h5[data-kvj-styled], h6[data-kvj-styled],
-[data-kvj-styled] h1, [data-kvj-styled] h2, [data-kvj-styled] h3, [data-kvj-styled] h4, [data-kvj-styled] h5, [data-kvj-styled] h6 {
-  color: unset;
-}
-p, li, dt, dd, label {
-  color: #132238 !important;
-}
-td:not([style*="color"]), th:not([style*="color"]) {
-  color: #132238 !important;
-}
-[data-kvj-styled] p, [data-kvj-styled] li {
-  color: unset;
-}
-strong, b {
-  color: #10233F !important;
-}
-a {
-  color: #08A88A !important;
-  border-bottom-color: rgba(8, 168, 138, 0.2) !important;
-}
-a:hover {
-  color: #0E7490 !important;
-  border-bottom-color: #0E7490 !important;
-}
-blockquote {
-  background: #F0FBF7 !important;
-  border-left: 4px solid #08A88A !important;
-  color: #132238 !important;
-  font-style: italic !important;
-  padding: 1rem 1.5rem !important;
-  margin: 1.5rem 0 !important;
-  border-radius: 0 12px 12px 0 !important;
-}
-blockquote p {
-  color: #132238 !important;
-}
-pre {
-  background-color: #10233F !important;
-  color: #F4F9FD !important;
-}
-pre code {
-  color: #F4F9FD !important;
-}
-:not(pre) > code {
-  background-color: #F4F9FD !important;
-  border-color: #DCE5E8 !important;
-  color: #0E7490 !important;
-}
-table {
-  border-color: #DCE5E8 !important;
-}
-th {
-  background-color: #F4F9FD !important;
-  color: #10233F !important;
-  border-bottom-color: #DCE5E8 !important;
-}
-td {
-  border-bottom-color: #DCE5E8 !important;
-  color: #132238 !important;
-}
-.text-slate-355 {
-  color: #526477 !important;
-}
-[data-qidx] button {
-  background-color: #ffffff !important;
-  border-color: #DCE5E8 !important;
-  color: #132238 !important;
-}
-[data-qidx] button:hover {
-  background-color: #f8fafc !important;
-  border-color: #cbd5e1 !important;
-}
-[data-qidx] button.border-brand.bg-brand\/10 {
-  background-color: #F0FBF7 !important;
-  border-color: #08A88A !important;
-  color: #10233F !important;
-}
-[data-qidx] button[disabled] {
-  opacity: 1 !important;
-  cursor: not-allowed !important;
-}
-[data-qidx] button[disabled].border-green-500\/30,
-[data-qidx] button[disabled].text-green-400,
-[data-qidx] button[disabled].bg-green-500\/10 {
-  background-color: #E8F8F0 !important;
-  border-color: #22c55e !important;
-  color: #15803d !important;
-}
-[data-qidx] button[disabled].border-red-500\/30,
-[data-qidx] button[disabled].text-red-400,
-[data-qidx] button[disabled].bg-red-500\/10 {
-  background-color: #FFF2F4 !important;
-  border-color: #ef4444 !important;
-  color: #b91c1c !important;
-}
-.borderedtext-block {
-  background-color: #F4F9FD !important;
-  border: 1px solid #DCE5E8 !important;
-  border-left: 4px solid #0E7490 !important;
-  border-radius: 0 12px 12px 0 !important;
-  padding: 1.25rem 1.5rem !important;
-  margin: 1.5rem 0 !important;
-}
-.borderedtext-title {
-  color: #10233F !important;
-}
-.borderedtext-content {
-  color: #526477 !important;
-}
-`;
+export const LIGHT_MODE_CSS = ``;
 
 export const HIDE_SIDEBAR_CSS = `
 aside,
@@ -265,6 +43,64 @@ main,
 }
 `;
 
+export function cleanLessonHtml(html: string): string {
+  if (!html) return "";
+  let cleaned = html;
+  // 1. Remove metadata comment using a JSON-aware parser.
+  //    A simple lazy regex ([\s\S]*?-->) breaks when the lesson HTML embedded
+  //    inside the JSON string contains its own HTML comments (with -->), causing
+  //    premature truncation and leftover JSON junk rendered as plain text.
+  const META_START = "<!-- KVJ_MATERIAL_METADATA:";
+  const metaIdx = cleaned.indexOf(META_START);
+  if (metaIdx !== -1) {
+    const jsonStart = cleaned.indexOf("{", metaIdx);
+    if (jsonStart !== -1) {
+      // Walk the JSON to find the matching closing brace, respecting strings
+      let depth = 0, inString = false, escape = false, jsonEnd = -1;
+      for (let i = jsonStart; i < cleaned.length; i++) {
+        const c = cleaned[i];
+        if (escape) { escape = false; continue; }
+        if (c === "\\") { escape = true; continue; }
+        if (c === '"') { inString = !inString; continue; }
+        if (!inString) {
+          if (c === "{" || c === "[") depth++;
+          else if (c === "}" || c === "]") {
+            depth--;
+            if (depth === 0) { jsonEnd = i; break; }
+          }
+        }
+      }
+      if (jsonEnd !== -1) {
+        const closeIdx = cleaned.indexOf("-->", jsonEnd);
+        cleaned = closeIdx !== -1 ? cleaned.slice(closeIdx + 3) : cleaned.slice(jsonEnd + 1);
+      }
+    } else {
+      // No JSON object found — strip up to the first --> after META_START
+      const closeIdx = cleaned.indexOf("-->", metaIdx + META_START.length);
+      if (closeIdx !== -1) cleaned = cleaned.slice(closeIdx + 3);
+    }
+  }
+  // 2. Trim outer newlines and spaces
+  cleaned = cleaned.replace(/^(\s|\\n)+|(\s|\\n)+$/g, "");
+  // 3. Replace literal \n with <br/> and \" with " only outside of style/script tags
+  const regex = /(<style[\s\S]*?<\/style>|<script[\s\S]*?<\/script>|<[^>]+>)|(\\n)|(\\\")/g;
+  return cleaned.replace(regex, (match, tagOrHtml, literalNL, literalQuote) => {
+    if (tagOrHtml) {
+      if (tagOrHtml.startsWith("<style") || tagOrHtml.startsWith("<script")) {
+        return tagOrHtml.replace(/\\n/g, "\n");
+      }
+      return tagOrHtml.replace(/\\n/g, " ");
+    }
+    if (literalNL) {
+      return "<br/>";
+    }
+    if (literalQuote) {
+      return '"';
+    }
+    return match;
+  });
+}
+
 export function LessonIframe({
   html,
   darkMode = false,
@@ -274,6 +110,8 @@ export function LessonIframe({
 }: LessonIframeProps) {
   const frameRef = useRef<HTMLIFrameElement>(null);
   const lightDetectedRef = useRef(false);
+
+  const cleanHtml = cleanLessonHtml(html);
 
   // Build a self-contained HTML document wrapping the content.
   // Tailwind CDN is linked so that all our pre-designed premium blocks render beautifully.
@@ -582,7 +420,7 @@ export function LessonIframe({
 </head>
 <body class="px-6 py-8 sm:px-10 sm:py-12 md:px-14 md:py-16">
 <div class="max-w-5xl mx-auto">
-${html}
+${cleanHtml}
 </div>
 <script>
   // Copy Code Button & Language Label
@@ -685,14 +523,21 @@ ${html}
 
   // Smart Theme Contrast Enhancer
   const applySmartTheme = () => {
+    // Detect if there is any style tag in the body (custom-styled templates)
+    const hasCustomBodyStyles = !!document.body.querySelector('style');
+
     // Dynamically protect elements that have inline styles containing '!important' (legacy content)
+    // or if the document contains custom styles (exempt the whole page from color overrides)
     document.querySelectorAll('*').forEach(el => {
       const styleAttr = el.getAttribute('style') || '';
-      if (styleAttr.includes('!important')) {
+      const isCustomElement = hasCustomBodyStyles && !['HTML', 'HEAD', 'SCRIPT', 'STYLE', 'BODY'].includes(el.tagName);
+      if (styleAttr.includes('!important') || isCustomElement) {
         el.setAttribute('data-kvj-styled', 'true');
-        el.querySelectorAll('*').forEach(child => {
-          child.setAttribute('data-kvj-styled', 'true');
-        });
+        if (styleAttr.includes('!important')) {
+          el.querySelectorAll('*').forEach(child => {
+            child.setAttribute('data-kvj-styled', 'true');
+          });
+        }
       }
     });
 
@@ -837,12 +682,12 @@ ${html}
 
     if (darkMode) {
       removeStyle(doc, "kvj-light");
-      injectStyle(doc, "kvj-dark", DARK_MODE_CSS);
+      removeStyle(doc, "kvj-dark");
       doc.body.classList.add("dark");
       doc.body.classList.remove("light");
     } else {
       removeStyle(doc, "kvj-dark");
-      injectStyle(doc, "kvj-light", LIGHT_MODE_CSS);
+      removeStyle(doc, "kvj-light");
       doc.body.classList.add("light");
       doc.body.classList.remove("dark");
     }

@@ -26,7 +26,7 @@ import {
 import { Button } from "./ui/Button";
 import { supabase } from "@/lib/supabase";
 import { TestTakingWidget } from "@/components/TestTakingWidget";
-import { LessonIframe } from "./shared/LessonIframe";
+import { LessonIframe, cleanLessonHtml } from "./shared/LessonIframe";
 
 interface Lesson {
   id: string;
@@ -989,8 +989,7 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
                   {activeLesson.content_html ? (
                     <div className="divide-y divide-line dark:divide-white/5">
                       {(() => {
-                        const htmlBody = activeLesson.content_html.replace(/^<!-- KVJ_MATERIAL_METADATA:[\s\S]*?-->/g, "");
-                        const cleanedHtml = htmlBody.replace(/\\n/g, "<br/>");
+                        const cleanedHtml = cleanLessonHtml(activeLesson.content_html);
                         return cleanedHtml.split(/(<div class="kvj-assessment-placeholder[^>]*><\/div>)/g).map((segment, idx) => {
                           const match = segment.match(/data-test-id="([^"]*)"/);
                           if (match) {

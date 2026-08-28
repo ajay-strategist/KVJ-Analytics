@@ -205,9 +205,9 @@ const LessonEditor = React.memo(function LessonEditor({
     let parseKind: string = "document";
     let parsedMeta: any = null;
 
-    if (initial.content_html && initial.content_html.startsWith("<!-- KVJ_MATERIAL_METADATA:")) {
+    if (initial.content_html && /^\s*<!-- KVJ_MATERIAL_METADATA:/.test(initial.content_html)) {
       try {
-        const match = initial.content_html.match(/^<!-- KVJ_MATERIAL_METADATA: (\{.*?\}) -->/);
+        const match = initial.content_html.match(/^\s*<!-- KVJ_MATERIAL_METADATA:\s*([\s\S]*?)\s*-->/);
         if (match) {
           parsedMeta = JSON.parse(match[1]);
           parseKind = parsedMeta.type;
