@@ -449,7 +449,7 @@ export default function AdminBatchesPage() {
 
         {/* Add Batch Overlay / Form */}
         {showAddForm && (
-          <Card className="p-6 border-line bg-white shadow-soft max-w-xl mx-auto animate-fade-up">
+          <Card className="p-6 border-line bg-white shadow-soft max-w-xl mx-auto">
             <div className="flex items-center justify-between border-b border-line pb-3 mb-5">
               <h3 className="text-lg font-bold font-display text-ink">
                 Create College Batch Secret
@@ -784,8 +784,8 @@ export default function AdminBatchesPage() {
 
       {/* Student Roster Modal */}
       {activeBatchForStudents && (
-        <div className="fixed inset-0 z-[150] grid place-items-center bg-slate-900/40 backdrop-blur-sm p-4 animate-fade-in">
-          <div className="w-full max-w-6xl max-h-[90vh] flex flex-col rounded-2xl border border-slate-200 bg-white shadow-xl overflow-hidden animate-fade-up">
+        <div className="fixed inset-0 z-[150] grid place-items-center bg-slate-900/40 backdrop-blur-sm p-4">
+          <div className="w-full max-w-6xl max-h-[90vh] flex flex-col rounded-2xl border border-slate-200 bg-white shadow-xl overflow-hidden">
             {/* Modal Header */}
             <div className="border-b border-slate-100 p-5 flex justify-between items-center bg-slate-50/50">
               <div>

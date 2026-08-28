@@ -11,9 +11,31 @@ function getAdmin() {
   return createClient(url, key, { auth: { persistSession: false } });
 }
 
-function stripAnswers(type: string, config: any) {
+function stripAnswers(type: string, config: any, randomizeOptions: boolean = false) {
   if (!config) return {};
   const c = { ...config };
+
+  // Shuffle options for single/multiple if randomize_options is enabled.
+  // We shuffle BEFORE deleting the correct key so we can remap it first.
+  if (randomizeOptions && (type === "single" || type === "multiple") && Array.isArray(c.options)) {
+    // Build a shuffled index mapping: newPosition -> originalIndex
+    const originalOptions = [...c.options];
+    const indices = originalOptions.map((_: any, i: number) => i);
+    // Fisher-Yates shuffle on indices
+    for (let i = indices.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [indices[i], indices[j]] = [indices[j], indices[i]];
+    }
+    c.options = indices.map((origIdx: number) => originalOptions[origIdx]);
+
+    if (type === "single" && c.correctIndex !== undefined) {
+      // Find new position of the original correct index
+      c.correctIndex = indices.indexOf(Number(c.correctIndex));
+    } else if (type === "multiple" && Array.isArray(c.correctIndexes)) {
+      c.correctIndexes = c.correctIndexes.map((ci: number) => indices.indexOf(Number(ci)));
+    }
+  }
+
   if (type === "single") {
     delete c.correctIndex;
   } else if (type === "multiple") {
@@ -241,20 +263,21 @@ export async function GET(
       return NextResponse.json({ error: qErr.message }, { status: 500 });
     }
 
-    // 5. Strip correct answers from config
+    // Shuffle options if randomize_options is NOT explicitly disabled (default: ON)
+    const randomizeOpts = test.randomize_options !== false;
     const strippedQuestions = (dbQuestions || []).map((q: any) => {
       return {
         id: q.id,
         type: q.type,
         stem: q.stem,
         marks: q.marks,
-        config: stripAnswers(q.type, q.config),
+        config: stripAnswers(q.type, q.config, randomizeOpts),
       };
     });
 
-    // Shuffle questions if randomize is enabled
+    // Shuffle questions if randomize is NOT explicitly disabled (default: ON)
     let finalQuestions = [...strippedQuestions];
-    if (test.randomize) {
+    if (test.randomize !== false) {
       for (let i = finalQuestions.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [finalQuestions[i], finalQuestions[j]] = [finalQuestions[j], finalQuestions[i]];
@@ -424,21 +447,23 @@ export async function POST(
         const numPairs = correctPairs.length > 0 ? correctPairs.length : 1;
         qMarks = numPairs; // 1 mark per pair
 
+        // Build a quick lookup: leftIndex -> expected rightValue (string)
+        const expectedByLeftIdx: Record<number, string> = {};
+        for (const p of correctPairs) {
+          const lIdx = Number(p[0]);
+          expectedByLeftIdx[lIdx] = String(rightList[p[1]] ?? "").trim();
+        }
+
         let correctPairsCount = 0;
         if (Array.isArray(studentAns)) {
-          for (const pair of studentAns) {
-            if (!Array.isArray(pair) || pair.length !== 2) continue;
-            const [l, r] = pair;
-            const isPairCorrect = correctPairs.some((p: any) => {
-              if (typeof l === "string" && typeof r === "string") {
-                const correctLStr = leftList[p[0]];
-                const correctRStr = rightList[p[1]];
-                return String(l).trim() === String(correctLStr || "").trim() && String(r).trim() === String(correctRStr || "").trim();
-              }
-              return Number(p[0]) === Number(l) && Number(p[1]) === Number(r);
-            });
-            if (isPairCorrect) correctPairsCount++;
-          }
+          studentAns.forEach((pair: any, slotIdx: number) => {
+            if (!Array.isArray(pair) || pair.length !== 2) return;
+            const [, r] = pair; // left label is just for display; scoring is positional
+            const expected = expectedByLeftIdx[slotIdx];
+            if (expected !== undefined && String(r ?? "").trim() === expected) {
+              correctPairsCount++;
+            }
+          });
         }
         earned = correctPairsCount;
         isCorrect = numPairs > 0 && correctPairsCount === numPairs;

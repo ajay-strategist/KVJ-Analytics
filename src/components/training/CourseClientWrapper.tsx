@@ -16,8 +16,8 @@ import {
   Tag,
   Percent,
 } from "lucide-react";
-import { Button } from "./ui/Button";
-import { Card } from "./ui/Card";
+import { Button } from "../ui/Button";
+import { Card } from "../ui/Card";
 import { supabase } from "@/lib/supabase";
 
 interface Lesson {

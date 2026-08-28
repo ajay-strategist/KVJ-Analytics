@@ -4,9 +4,9 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Clock, Send, Lock, Unlock, Mail, Phone, User, Building, Loader2, AlertCircle, CheckCircle2, Laptop } from "lucide-react";
-import { Container } from "./ui/Container";
-import { Card } from "./ui/Card";
-import { Button } from "./ui/Button";
+import { Container } from "../ui/Container";
+import { Card } from "../ui/Card";
+import { Button } from "../ui/Button";
 import { supabase } from "@/lib/supabase";
 
 interface Course {

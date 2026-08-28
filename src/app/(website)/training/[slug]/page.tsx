@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Clock, Award, CheckCircle, BookOpen } from "lucide-react";
 import { Container } from "@/components/ui/Container";
-import { CourseClientWrapper } from "@/components/CourseClientWrapper";
+import { CourseClientWrapper } from "@/components/training/CourseClientWrapper";
 import { supabase } from "@/lib/supabase";
 
 import { Metadata } from "next";

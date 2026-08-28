@@ -648,7 +648,7 @@ export function RichTextEditor({ value, onChange, placeholder = "Write rich text
 
       {/* Selected Image Resize Controller Floating Bar */}
       {selectedImage && (
-        <div className="flex flex-wrap items-center gap-2 p-2 bg-brand/10 dark:bg-brand/20 border-b border-line text-xs font-bold text-slate-850 dark:text-slate-200 animate-in slide-in-from-top duration-200">
+        <div className="flex flex-wrap items-center gap-2 p-2 bg-brand/10 dark:bg-brand/20 border-b border-line text-xs font-bold text-slate-850 dark:text-slate-200">
           <span>Selected Image Width:</span>
           {["25%", "50%", "75%", "100%"].map((preset) => (
             <button

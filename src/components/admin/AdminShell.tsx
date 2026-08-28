@@ -266,10 +266,10 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       {showCmdK && (
         <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-[15vh]">
           {/* Overlay backdrop */}
-          <div className="fixed inset-0 bg-slate-900/35 backdrop-blur-[2px] transition-opacity animate-fade-in" onClick={() => setShowCmdK(false)} />
+          <div className="fixed inset-0 bg-slate-900/35 backdrop-blur-[2px] transition-opacity" onClick={() => setShowCmdK(false)} />
           
           {/* Palette Box */}
-          <div className="relative w-full max-w-lg overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl transition-all animate-scale-up flex flex-col max-h-[420px]">
+          <div className="relative w-full max-w-lg overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl transition-all flex flex-col max-h-[420px]">
             {/* Search Input Box */}
             <div className="flex items-center border-b border-slate-100 px-4 py-3 bg-slate-50/30">
               <Search className="h-4 w-4 text-slate-400 shrink-0 mr-3" />
@@ -371,7 +371,7 @@ function SidebarContent({ pathname, onNavigate, pinned, togglePin, collapsed }: 
       <div className="flex-1 overflow-y-auto py-3 px-3 space-y-4 scrollbar-thin">
         {/* Pinned / Favorites Section */}
         {pinnedItems.length > 0 && (
-          <div className="animate-fade-in">
+          <div>
             <div className={`mb-1.5 px-2 text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400 flex items-center justify-between ${collapsed ? "justify-center" : ""}`}>
               {!collapsed && <span>Favorites</span>}
               <Star className="h-3 w-3 text-amber-500 fill-amber-500 shrink-0" />

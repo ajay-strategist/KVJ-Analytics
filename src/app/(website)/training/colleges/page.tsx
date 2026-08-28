@@ -1,5 +1,5 @@
 import React from "react";
-import { CategoryPageClient } from "@/components/CategoryPageClient";
+import { CategoryPageClient } from "@/components/pages/CategoryPageClient";
 import { getPublicCourses } from "@/lib/courses";
 import { getPageContent, mergePageContent } from "@/lib/content";
 import { FALLBACK_CAT_COLLEGES } from "@/lib/constants";

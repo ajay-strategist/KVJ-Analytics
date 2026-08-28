@@ -3,7 +3,7 @@
 import React, { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Send, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
-import { Button } from "./ui/Button";
+import { Button } from "../ui/Button";
 
 interface ContactFormProps {
   inquiryAreas: string[];

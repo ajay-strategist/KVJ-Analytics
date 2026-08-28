@@ -116,7 +116,7 @@ export function ColorPicker({ color, onChange, label, defaultLabel = "Default/Th
       </div>
 
       {isOpen && (
-        <div className="absolute left-0 mt-1.5 w-60 bg-white dark:bg-slate-950 border border-line rounded-xl shadow-xl z-50 p-3 space-y-3 animate-in fade-in slide-in-from-top-1 duration-150">
+        <div className="absolute left-0 mt-1.5 w-60 bg-white dark:bg-slate-950 border border-line rounded-xl shadow-xl z-50 p-3 space-y-3">
           {/* Default / Reset Option */}
           <button
             type="button"

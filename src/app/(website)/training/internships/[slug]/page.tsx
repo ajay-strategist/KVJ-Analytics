@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Clock, DollarSign } from "lucide-react";
 import { Container } from "@/components/ui/Container";
-import { InternshipApplyForm } from "@/components/InternshipApplyForm";
+import { InternshipApplyForm } from "@/components/forms/InternshipApplyForm";
 import { supabase } from "@/lib/supabase";
 
 export const revalidate = 120; // Revalidate every 2 minutes

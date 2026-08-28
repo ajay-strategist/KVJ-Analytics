@@ -2,16 +2,16 @@
 
 import React, { useState, useEffect } from "react";
 import { Send, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
-import { Button } from "./ui/Button";
-import { Card } from "./ui/Card";
+import { Button } from "../ui/Button";
+import { Card } from "../ui/Card";
 import { supabase } from "@/lib/supabase";
 
-interface JobApplyFormProps {
-  jobId: string;
-  jobTitle: string;
+interface InternshipApplyFormProps {
+  internshipId: string;
+  internshipTitle: string;
 }
 
-export function JobApplyForm({ jobId, jobTitle }: JobApplyFormProps) {
+export function InternshipApplyForm({ internshipId, internshipTitle }: InternshipApplyFormProps) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -22,7 +22,7 @@ export function JobApplyForm({ jobId, jobTitle }: JobApplyFormProps) {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
-  // Prefill details if student is logged in
+  // Prefill user details if logged in
   useEffect(() => {
     const prefillUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -50,11 +50,11 @@ export function JobApplyForm({ jobId, jobTitle }: JobApplyFormProps) {
     setLoading(true);
 
     try {
-      const response = await fetch("/api/jobs/apply", {
+      const response = await fetch("/api/internships/apply", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          jobId,
+          internshipId,
           name,
           email,
           phone,
@@ -82,9 +82,9 @@ export function JobApplyForm({ jobId, jobTitle }: JobApplyFormProps) {
         <div className="w-12 h-12 rounded-full bg-emerald-500/10 text-emerald-450 border border-emerald-500/20 flex items-center justify-center mx-auto mb-4 font-bold">
           ✓
         </div>
-        <h3 className="text-xl font-bold font-display text-white mb-2">Application Received!</h3>
+        <h3 className="text-xl font-bold font-display text-white mb-2">Application Submitted!</h3>
         <p className="text-sm text-zinc-400 font-light leading-relaxed">
-          Thank you for applying to the <strong>{jobTitle}</strong> position. Our recruiting coordinator will review your profile and reach out by email.
+          Thank you for applying to the <strong>{internshipTitle}</strong>. Our consulting team will review your profile and contact you by email.
         </p>
       </Card>
     );
@@ -92,7 +92,7 @@ export function JobApplyForm({ jobId, jobTitle }: JobApplyFormProps) {
 
   return (
     <Card hoverLift={false} className="bg-[#0A0A0C]/55 border border-white/5 p-8 rounded-3xl backdrop-blur-xl">
-      <h3 className="text-xl font-bold font-display text-white mb-6">Apply for this Role</h3>
+      <h3 className="text-xl font-bold font-display text-white mb-6">Apply for Internship</h3>
 
       {error && (
         <div className="bg-rose-500/5 border border-rose-500/15 p-4 rounded-xl flex items-start space-x-3 text-rose-450 mb-6">
@@ -111,7 +111,7 @@ export function JobApplyForm({ jobId, jobTitle }: JobApplyFormProps) {
             required
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="e.g. Samuel Mathew"
+            placeholder="e.g. Aditi Sharma"
             className="w-full px-4 py-3 rounded-xl border border-white/5 text-sm bg-[#0E0E12] text-white placeholder-zinc-500 focus:outline-none focus:border-[#10B981]/40"
           />
         </div>
@@ -126,7 +126,7 @@ export function JobApplyForm({ jobId, jobTitle }: JobApplyFormProps) {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="e.g. sam@example.com"
+              placeholder="e.g. name@email.com"
               className="w-full px-4 py-3 rounded-xl border border-white/5 text-sm bg-[#0E0E12] text-white placeholder-zinc-500 focus:outline-none focus:border-[#10B981]/40"
             />
           </div>
@@ -139,7 +139,7 @@ export function JobApplyForm({ jobId, jobTitle }: JobApplyFormProps) {
               required
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              placeholder="e.g. 98450 12345"
+              placeholder="e.g. 98765 43210"
               className="w-full px-4 py-3 rounded-xl border border-white/5 text-sm bg-[#0E0E12] text-white placeholder-zinc-500 focus:outline-none focus:border-[#10B981]/40"
             />
           </div>
@@ -147,7 +147,7 @@ export function JobApplyForm({ jobId, jobTitle }: JobApplyFormProps) {
 
         <div>
           <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-2 font-mono">
-            Resume / CV Link (PDF / GDrive)
+            Resume / Portfolio Link (PDF / GDrive)
           </label>
           <input
             type="url"
@@ -161,13 +161,13 @@ export function JobApplyForm({ jobId, jobTitle }: JobApplyFormProps) {
 
         <div>
           <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-2 font-mono">
-            Cover Letter / Message
+            Statement of Purpose / Message
           </label>
           <textarea
             rows={4}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            placeholder="Describe your background and fit for the role..."
+            placeholder="Why do you want to join KVJ Analytics?"
             className="w-full px-4 py-3 rounded-xl border border-white/5 text-sm bg-[#0E0E12] text-white placeholder-zinc-500 focus:outline-none focus:border-[#10B981]/40"
           />
         </div>

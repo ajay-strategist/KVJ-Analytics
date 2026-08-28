@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, MapPin, Briefcase } from "lucide-react";
 import { Container } from "@/components/ui/Container";
-import { JobApplyForm } from "@/components/JobApplyForm";
+import { JobApplyForm } from "@/components/forms/JobApplyForm";
 import { supabase } from "@/lib/supabase";
 
 export const revalidate = 120; // Revalidate every 2 minutes

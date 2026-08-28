@@ -423,7 +423,7 @@ export default function AdminUnlockCodesPage() {
   };
 
   return (
-    <div className="mx-auto max-w-[1400px] p-4 md:p-6 lg:p-8 space-y-6 animate-fade-in font-sans">
+    <div className="mx-auto max-w-[1400px] p-4 md:p-6 lg:p-8 space-y-6 font-sans">
       
       {/* Upper header */}
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200/60 pb-5">
@@ -448,7 +448,7 @@ export default function AdminUnlockCodesPage() {
       </div>
 
       {error && (
-        <div className="bg-red-50/50 border border-red-200 p-4 rounded-xl flex items-start space-x-3 text-red-700 animate-fade-up">
+        <div className="bg-red-50/50 border border-red-200 p-4 rounded-xl flex items-start space-x-3 text-red-700">
           <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
           <span className="text-sm font-semibold">{error}</span>
         </div>
@@ -773,7 +773,7 @@ export default function AdminUnlockCodesPage() {
       {/* Access Code Generation Modal */}
       {showForm && (
         <div className="fixed inset-0 z-50 bg-slate-900/35 backdrop-blur-[2px] flex items-center justify-center p-4">
-          <div className="bg-white border border-slate-200 rounded-2xl max-w-xl w-full p-6 shadow-2xl relative overflow-y-auto max-h-[90vh] animate-scale-up">
+          <div className="bg-white border border-slate-200 rounded-2xl max-w-xl w-full p-6 shadow-2xl relative overflow-y-auto max-h-[90vh]">
             <button
               onClick={() => setShowForm(false)}
               className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 font-bold border-0 bg-transparent text-lg cursor-pointer"
@@ -844,7 +844,7 @@ export default function AdminUnlockCodesPage() {
                   </div>
 
                   {form.bulk ? (
-                    <div className="grid grid-cols-2 gap-4 animate-fade-in">
+                    <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
                           Code Prefix *
@@ -874,7 +874,7 @@ export default function AdminUnlockCodesPage() {
                       </div>
                     </div>
                   ) : (
-                    <div className="animate-fade-in">
+                    <div>
                       <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
                         Access Code *
                       </label>
@@ -905,7 +905,7 @@ export default function AdminUnlockCodesPage() {
 
               {/* Dynamic Preset Scoping Dropdowns */}
               {form.training_type === "COLLEGE" && (
-                <div className="grid grid-cols-2 gap-4 bg-blue-50/20 border border-blue-100/40 p-4 rounded-xl animate-fade-in">
+                <div className="grid grid-cols-2 gap-4 bg-blue-50/20 border border-blue-100/40 p-4 rounded-xl">
                   <div className="col-span-2">
                     <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
                       Academic Institution / College *
@@ -926,7 +926,7 @@ export default function AdminUnlockCodesPage() {
               )}
 
               {form.training_type === "CORPORATE" && (
-                <div className="grid grid-cols-2 gap-4 bg-purple-50/20 border border-purple-100/40 p-4 rounded-xl animate-fade-in">
+                <div className="grid grid-cols-2 gap-4 bg-purple-50/20 border border-purple-100/40 p-4 rounded-xl">
                   <div className="col-span-2">
                     <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
                       Corporate Partner / Organization *
@@ -1109,8 +1109,8 @@ export default function AdminUnlockCodesPage() {
 
       {/* Redemption Logs Modal */}
       {activeLogCode && (
-        <div className="fixed inset-0 z-50 bg-slate-900/35 backdrop-blur-[2px] flex items-center justify-center p-4 animate-fade-in">
-          <div className="bg-white border border-slate-200 rounded-2xl max-w-xl w-full p-6 shadow-2xl relative flex flex-col max-h-[85vh] animate-scale-up">
+        <div className="fixed inset-0 z-50 bg-slate-900/35 backdrop-blur-[2px] flex items-center justify-center p-4">
+          <div className="bg-white border border-slate-200 rounded-2xl max-w-xl w-full p-6 shadow-2xl relative flex flex-col max-h-[85vh]">
             <button
               onClick={() => setActiveLogCode(null)}
               className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 font-bold border-0 bg-transparent text-lg cursor-pointer"
@@ -1177,7 +1177,7 @@ export default function AdminUnlockCodesPage() {
       {/* Extend Validity Modal */}
       {activeExtendCode && (
         <div className="fixed inset-0 z-50 bg-slate-900/35 backdrop-blur-[2px] flex items-center justify-center p-4">
-          <div className="bg-white border border-slate-200 rounded-2xl max-w-sm w-full p-6 shadow-2xl relative animate-scale-up">
+          <div className="bg-white border border-slate-200 rounded-2xl max-w-sm w-full p-6 shadow-2xl relative">
             <button
               onClick={() => setActiveExtendCode(null)}
               className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 font-bold border-0 bg-transparent text-lg cursor-pointer"

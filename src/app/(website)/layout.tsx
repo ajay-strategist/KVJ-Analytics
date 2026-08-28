@@ -1,14 +1,14 @@
 import React from "react";
-import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
-import { ScrollProgress } from "@/components/ScrollProgress";
-import { IntroLoader } from "@/components/IntroLoader";
-import { WhatsAppFloat } from "@/components/WhatsAppFloat";
-import { AnimationProvider } from "@/components/AnimationProvider";
+import { Header } from "@/components/layout/Header";
+import { Footer } from "@/components/layout/Footer";
+import { ScrollProgress } from "@/components/effects/ScrollProgress";
+import { IntroLoader } from "@/components/effects/IntroLoader";
+import { WhatsAppFloat } from "@/components/layout/WhatsAppFloat";
+import { AnimationProvider } from "@/components/effects/AnimationProvider";
 import { getPageContent, mergePageContent } from "@/lib/content";
 import { FALLBACK_SITE_SETTINGS } from "@/lib/constants";
 
-import { UtmTracker } from "@/components/UtmTracker";
+import { UtmTracker } from "@/components/layout/UtmTracker";
 
 export const revalidate = 3600; // Cache for 1 hour, or revalidate on demand
 

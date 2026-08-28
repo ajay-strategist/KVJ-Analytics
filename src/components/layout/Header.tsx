@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X, PhoneCall } from "lucide-react";
-import { Button } from "./ui/Button";
+import { Button } from "../ui/Button";
 import { FALLBACK_SITE_SETTINGS } from "@/lib/constants";
 import { supabase } from "@/lib/supabase";
 

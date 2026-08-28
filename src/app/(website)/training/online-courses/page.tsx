@@ -1,5 +1,5 @@
 import React from "react";
-import { OnlineCoursesClient } from "@/components/OnlineCoursesClient";
+import { OnlineCoursesClient } from "@/components/pages/OnlineCoursesClient";
 import { getPublicCourses } from "@/lib/courses";
 import { getPageContent, mergePageContent } from "@/lib/content";
 import { FALLBACK_ONLINE_COURSES } from "@/lib/constants";

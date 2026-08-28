@@ -8,7 +8,7 @@ import { SplitHeading, Parallax } from "@/components/v3/ScrollFx";
 import { SolutionsExplorer } from "@/components/v3/corporate/SolutionsExplorer";
 import { getPageContent, mergePageContent } from "@/lib/content";
 import { FALLBACK_CORPORATE } from "@/lib/constants";
-import CorporateHeroGraphic from "@/components/CorporateHeroGraphic";
+import CorporateHeroGraphic from "@/components/pages/CorporateHeroGraphic";
 
 import { Metadata } from "next";
 import { resolveSeo } from "@/lib/seo";

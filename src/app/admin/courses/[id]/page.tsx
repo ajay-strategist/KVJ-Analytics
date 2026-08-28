@@ -6,7 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { QuestionBuilder } from "@/components/admin/QuestionBuilder";
 import { ColorPicker } from "@/components/admin/ColorPicker";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
-import { TestTakingWidget } from "@/components/TestTakingWidget";
+import { TestTakingWidget } from "@/components/assessment/TestTakingWidget";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -97,6 +97,7 @@ type LessonValues = {
     attempts_allowed: number;
     negative_marking: number;
     randomize: boolean;
+    randomize_options: boolean;
     publish_results: boolean;
     is_inline?: boolean;
   };
@@ -159,7 +160,8 @@ const LessonEditor = React.memo(function LessonEditor({
   const [passMark, setPassMark] = React.useState<number>(0);
   const [attemptsAllowed, setAttemptsAllowed] = React.useState<number>(0);
   const [negativeMarking, setNegativeMarking] = React.useState<number>(0);
-  const [randomize, setRandomize] = React.useState<boolean>(false);
+  const [randomize, setRandomize] = React.useState<boolean>(true);
+  const [randomizeOptions, setRandomizeOptions] = React.useState<boolean>(true);
   const [publishResults, setPublishResults] = React.useState<boolean>(true);
   const [linkedTest, setLinkedTest] = React.useState<any>(null);
   const [loadingTest, setLoadingTest] = React.useState(false);
@@ -183,7 +185,8 @@ const LessonEditor = React.memo(function LessonEditor({
             setPassMark(data.pass_mark ?? 0);
             setAttemptsAllowed(data.attempts_allowed ?? 0);
             setNegativeMarking(data.negative_marking ?? 0);
-            setRandomize(data.randomize ?? false);
+            setRandomize(data.randomize ?? true);
+            setRandomizeOptions(data.randomize_options ?? true);
             setPublishResults(data.publish_results ?? true);
             if (data.is_inline) {
               setEditorKind("inline_assessment");
@@ -461,7 +464,7 @@ const LessonEditor = React.memo(function LessonEditor({
       assessment_settings: (finalKind === "assessment" || editorKind === "inline_assessment") ? {
         duration_mins: durationMins, pass_mark: passMark,
         attempts_allowed: attemptsAllowed, negative_marking: negativeMarking,
-        randomize, publish_results: publishResults,
+        randomize, randomize_options: randomizeOptions, publish_results: publishResults,
         is_inline: editorKind === "inline_assessment",
       } : undefined,
     });
@@ -2276,7 +2279,8 @@ const LessonEditor = React.memo(function LessonEditor({
                                                 pass_mark: 84,
                                                 attempts_allowed: 0,
                                                 negative_marking: 0,
-                                                randomize: false,
+                                                randomize: true,
+                                                randomize_options: true,
                                                 publish_results: true,
                                               };
                                               const res = await fetch("/api/admin/tests", {
@@ -2615,7 +2619,19 @@ const LessonEditor = React.memo(function LessonEditor({
                   className="w-4 h-4 rounded text-brand border-line"
                 />
                 <label htmlFor="randomize-toggle" className="text-[10px] font-bold uppercase tracking-wider text-slate cursor-pointer">
-                  Randomize Questions
+                  Randomize Questions <span className="font-normal normal-case text-slate-400">(on by default)</span>
+                </label>
+              </div>
+              <div className="flex items-center gap-2 pt-2">
+                <input
+                  type="checkbox"
+                  id="randomize-options-toggle"
+                  checked={randomizeOptions}
+                  onChange={(e) => setRandomizeOptions(e.target.checked)}
+                  className="w-4 h-4 rounded text-brand border-line"
+                />
+                <label htmlFor="randomize-options-toggle" className="text-[10px] font-bold uppercase tracking-wider text-slate cursor-pointer">
+                  Randomize Options (A/B/C/D) <span className="font-normal normal-case text-slate-400">(on by default)</span>
                 </label>
               </div>
               <div className="flex items-center gap-2 pt-5">
@@ -2659,6 +2675,7 @@ const LessonEditor = React.memo(function LessonEditor({
                               attempts_allowed: attemptsAllowed,
                               negative_marking: negativeMarking,
                               randomize: randomize,
+                              randomize_options: randomizeOptions,
                               publish_results: publishResults,
                             };
                             const res = await fetch("/api/admin/tests", {
@@ -3046,7 +3063,8 @@ export default function AdminCourseDetailsPage() {
           pass_mark: assessment_settings?.pass_mark ?? 0,
           attempts_allowed: assessment_settings?.attempts_allowed ?? 0,
           negative_marking: assessment_settings?.negative_marking ?? 0,
-          randomize: assessment_settings?.randomize ?? false,
+          randomize: assessment_settings?.randomize ?? true,
+          randomize_options: assessment_settings?.randomize_options ?? true,
           publish_results: assessment_settings?.publish_results ?? true,
           is_inline: assessment_settings?.is_inline ?? false,
         };
@@ -3411,7 +3429,7 @@ export default function AdminCourseDetailsPage() {
 
                   {/* Add Module inline form */}
                   {addingModule && (
-                    <div className="bg-surface/50 border border-line p-4 rounded-xl flex items-center gap-3 animate-fade-up">
+                    <div className="bg-surface/50 border border-line p-4 rounded-xl flex items-center gap-3">
                       <input
                         type="text"
                         placeholder="Enter module title..."
@@ -3664,7 +3682,7 @@ export default function AdminCourseDetailsPage() {
 
                       {/* Add/Edit Mock Test Form */}
                       {editingTestId && (
-                        <form onSubmit={handleSaveTest} className="bg-surface/50 border border-line p-4 rounded-xl space-y-4 animate-fade-up">
+                        <form onSubmit={handleSaveTest} className="bg-surface/50 border border-line p-4 rounded-xl space-y-4">
                           <h3 className="text-xs font-bold text-ink uppercase tracking-wider">
                             {editingTestId === "new" ? "Create Mock Test" : "Edit Mock Test Settings"}
                           </h3>

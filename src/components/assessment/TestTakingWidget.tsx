@@ -960,52 +960,43 @@ export function TestTakingWidget({
             <DndContext sensors={sensors} onDragEnd={(event) => {
               const { over, active } = event;
               if (!over || !active) return;
-              const rightStr = active.id;
-              const leftStr = String(over.id).replace("slot-", "");
-              const currentMatches = answers[q.id] || [];
-              const nextMatches = currentMatches.map((p: any) => {
-                if (p[0] === leftStr) return [leftStr, rightStr];
-                if (p[1] === rightStr) return [p[0], ""];
-                return p;
-              });
-              setAnswers((prev) => ({ ...prev, [q.id]: nextMatches }));
+              const rightStr = String(active.id);
+              // Slot IDs are "slot-{index}" — extract the index
+              const slotIdStr = String(over.id);
+              if (!slotIdStr.startsWith("slot-")) return;
+              const slotIdx = parseInt(slotIdStr.replace("slot-", ""), 10);
+              if (isNaN(slotIdx)) return;
+              const currentMatches = [...(answers[q.id] || [])];
+              // Only update the target slot; do NOT clear other slots that have the same option
+              currentMatches[slotIdx] = [currentMatches[slotIdx]?.[0] ?? "", rightStr];
+              setAnswers((prev) => ({ ...prev, [q.id]: currentMatches }));
             }}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Column 1: Match Choices (Draggables) on the Left */}
+                {/* Column 1: Match Choices (Draggables) — always show all options so they can be reused */}
                 <div className="space-y-3">
                   <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate">Match Choices</h4>
-                  {(() => {
-                    const matchedRights = (answers[q.id] || []).map((p: any) => p[1]).filter(Boolean);
-                    const pool = (q.config.right || []).filter((r: string) => !matchedRights.includes(r));
-                    if (pool.length === 0) {
-                      return <p className={`text-[11px] italic ${colors.slate}`}>All choices matched.</p>;
-                    }
-                    return (
-                      <div className="flex flex-col gap-2">
-                        {pool.map((r: string) => (
-                          <DraggableItem key={r} id={r} text={r} colors={colors} />
-                        ))}
-                      </div>
-                    );
-                  })()}
+                  <p className={`text-[10px] italic mb-1 ${colors.slate}`}>Options can be reused across multiple targets.</p>
+                  <div className="flex flex-col gap-2">
+                    {(q.config.right || []).map((r: string, rIdx: number) => (
+                      <DraggableItem key={`opt-${rIdx}`} id={r} text={r} colors={colors} />
+                    ))}
+                  </div>
                 </div>
 
-                {/* Column 2: Items to Match (Droppables) on the Right */}
+                {/* Column 2: Items to Match (Droppables) */}
                 <div className="space-y-3">
                   <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate">Items to Match</h4>
-                  {(q.config.left || []).map((l: string) => {
-                    const pair = (answers[q.id] || []).find((p: any) => p[0] === l);
+                  {(q.config.left || []).map((l: string, lIdx: number) => {
+                    const pair = (answers[q.id] || [])[lIdx];
                     return (
                       <DroppableSlot
-                        key={l}
-                        id={`slot-${l}`}
+                        key={`slot-${lIdx}`}
+                        id={`slot-${lIdx}`}
                         label={l}
                         matchedItem={pair ? pair[1] : ""}
                         onClear={() => {
-                          const nextMatches = (answers[q.id] || []).map((p: any) => {
-                            if (p[0] === l) return [l, ""];
-                            return p;
-                          });
+                          const nextMatches = [...(answers[q.id] || [])];
+                          nextMatches[lIdx] = [l, ""];
                           setAnswers((prev) => ({ ...prev, [q.id]: nextMatches }));
                         }}
                         colors={colors}
@@ -1929,8 +1920,43 @@ export function TestTakingWidget({
                       </div>
                     )}
 
-                    {/* Response + Answer key for non-MCQ non-DragTable */}
-                    {q.type !== "single" && q.type !== "multiple" && q.type !== "dragtable" && (
+                    {/* Drag & Drop Pair Review */}
+                    {q.type === "dragdrop" && (
+                      <div className="space-y-2">
+                        <p className={`text-[10px] font-bold uppercase tracking-wider mb-2 ${darkMode ? "text-zinc-400" : "text-slate-400"}`}>
+                          📎 Your Matches
+                        </p>
+                        {(q.config?.left || []).map((leftLabel: string, lIdx: number) => {
+                          const pair = Array.isArray(res.studentAnswer) ? res.studentAnswer[lIdx] : null;
+                          const studentRight = pair ? pair[1] : "";
+                          // Find expected right for this slot from correctPairs
+                          const correctPairEntry = (res.config?.correctPairs || q.config?.correctPairs || []).find((p: any) => Number(p[0]) === lIdx);
+                          const rightList = res.config?.right || q.config?.right || [];
+                          const expectedRight = correctPairEntry ? (rightList[correctPairEntry[1]] ?? "") : "";
+                          const isMatch = studentRight && expectedRight && String(studentRight).trim() === String(expectedRight).trim();
+                          return (
+                            <div key={lIdx} className={`flex items-center gap-2.5 px-3 py-2 rounded-xl border text-xs font-semibold ${
+                              isMatch
+                                ? darkMode ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-300" : "border-emerald-400 bg-emerald-50 text-emerald-800"
+                                : darkMode ? "border-red-500/50 bg-red-500/10 text-red-300" : "border-red-400 bg-red-50 text-red-800"
+                            }`}>
+                              {isMatch ? <span className="shrink-0">✅</span> : <span className="shrink-0">❌</span>}
+                              <span className="font-bold shrink-0">{leftLabel}</span>
+                              <span className="opacity-60">→</span>
+                              <span>{studentRight || <em className="opacity-50">Not answered</em>}</span>
+                              {!isMatch && expectedRight && (
+                                <span className={`ml-auto text-[10px] ${darkMode ? "text-emerald-400" : "text-emerald-700"}`}>
+                                  ✓ Expected: <strong>{expectedRight}</strong>
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {/* Response + Answer key for non-MCQ non-DragTable non-DragDrop */}
+                    {q.type !== "single" && q.type !== "multiple" && q.type !== "dragtable" && q.type !== "dragdrop" && (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div className={`p-3 rounded-xl border ${darkMode ? "border-zinc-700 bg-zinc-800" : "border-slate-200 bg-white"}`}>
                           <p className={`text-[10px] font-bold uppercase tracking-wider mb-1.5 ${darkMode ? "text-zinc-400" : "text-slate-400"}`}>📝 Your Answer</p>
@@ -1977,6 +2003,17 @@ export function TestTakingWidget({
                               {tc.stdout && <pre className={`p-1 mt-1 font-mono max-h-20 overflow-y-auto ${darkMode ? "text-zinc-300" : "text-slate-600"}`}>Stdout: {tc.stdout}</pre>}
                             </div>
                           ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Explanation / Feedback */}
+                    {res.config?.explanation && (
+                      <div className={`p-3.5 rounded-xl border flex gap-3 items-start ${darkMode ? "border-amber-400/30 bg-amber-400/5" : "border-amber-300 bg-amber-50"}`}>
+                        <span className="text-lg shrink-0">💡</span>
+                        <div>
+                          <p className={`text-[10px] font-bold uppercase tracking-wider mb-1 ${darkMode ? "text-amber-400" : "text-amber-700"}`}>Explanation</p>
+                          <p className={`text-xs leading-relaxed ${darkMode ? "text-amber-200" : "text-amber-800"}`}>{res.config.explanation}</p>
                         </div>
                       </div>
                     )}

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
-import { Analytics } from "@/components/Analytics";
+import { Analytics } from "@/components/layout/Analytics";
 import { SITE_URL, organizationSchema, resolveSeo, getSiteSeoSettings } from "@/lib/seo";
 
 // Webandcrafts primary font pairing: Plus Jakarta Sans for both display and body.

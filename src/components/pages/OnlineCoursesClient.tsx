@@ -6,7 +6,7 @@ import { Laptop, Calendar, DollarSign, ArrowRight, Lock } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { Reveal } from "@/components/ui/Reveal";
-import { QuickPurchaseModal } from "@/components/QuickPurchaseModal";
+import { QuickPurchaseModal } from "@/components/forms/QuickPurchaseModal";
 
 interface Course {
   id: string;

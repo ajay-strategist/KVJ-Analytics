@@ -4,7 +4,7 @@ import { supabase } from "@/lib/supabase";
 import { getPageContent, mergePageContent } from "@/lib/content";
 import { FALLBACK_TRAINING_HUB } from "@/lib/constants";
 import { resolveSeo } from "@/lib/seo";
-import { TrainingHubClient } from "@/components/TrainingHubClient";
+import { TrainingHubClient } from "@/components/training/TrainingHubClient";
 
 export const revalidate = 3600;
 

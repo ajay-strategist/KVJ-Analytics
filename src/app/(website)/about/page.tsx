@@ -1,5 +1,5 @@
 import React from "react";
-import { AboutClientContent } from "@/components/AboutClient";
+import { AboutClientContent } from "@/components/pages/AboutClient";
 import { CTASection } from "@/components/ui/CTASection";
 import { getPageContent, mergePageContent } from "@/lib/content";
 import { FALLBACK_ABOUT } from "@/lib/constants";

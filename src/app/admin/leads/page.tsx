@@ -486,7 +486,7 @@ export default function AdminLeadsPage() {
         )}
 
         {/* Table Panel */}
-        <div className="bg-white border border-line rounded-card shadow-soft overflow-hidden animate-fade-up">
+        <div className="bg-white border border-line rounded-card shadow-soft overflow-hidden">
           {filteredLeads.length === 0 ? (
             <div className="p-12 text-center text-slate">
               <MessageSquare className="w-12 h-12 mx-auto mb-4 opacity-30 text-slate" />
@@ -626,7 +626,7 @@ export default function AdminLeadsPage() {
                         {/* Expanded Detailed Expander Panel */}
                         {isExpanded && (
                           <tr>
-                            <td colSpan={6} className="bg-surface/50 p-6 pl-8 border-b border-line animate-fade-up">
+                            <td colSpan={6} className="bg-surface/50 p-6 pl-8 border-b border-line">
                               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                 {/* Left/Center Column: Message & Details */}
                                 <div className="lg:col-span-2 space-y-4">

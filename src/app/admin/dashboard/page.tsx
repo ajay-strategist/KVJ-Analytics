@@ -36,12 +36,12 @@ export default function AdminDashboardPage() {
   const ac = data?.accessCodeStats ?? { total: 0, totalSeats: 0, seatsUsed: 0, utilizationRate: 0 };
 
   return (
-    <div className="mx-auto max-w-[1400px] p-4 md:p-6 lg:p-8 space-y-8 animate-fade-in">
+    <div className="mx-auto max-w-[1400px] p-4 md:p-6 lg:p-8 space-y-8">
       {/* Welcome Banner */}
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200/60 pb-6">
         <div>
           <h2 className="text-2xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
-            Welcome back <span className="animate-wave origin-[70%_70%] inline-block">👋</span>
+            Welcome back <span className="inline-block">👋</span>
           </h2>
           <p className="text-sm text-slate-500 mt-1">KVJ Analytics Admin Console. Manage courses, enrollments, and access codes.</p>
         </div>

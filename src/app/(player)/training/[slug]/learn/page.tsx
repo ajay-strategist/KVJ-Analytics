@@ -1,7 +1,7 @@
 import React from "react";
 import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
-import { ContentPlayerClient } from "@/components/ContentPlayerClient";
+import { ContentPlayerClient } from "@/components/assessment/ContentPlayerClient";
 import { supabase } from "@/lib/supabase";
 import { adminToken } from "@/lib/adminAuth";
 

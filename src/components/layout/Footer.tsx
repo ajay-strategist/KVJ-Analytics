@@ -1,7 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import { Mail, Phone, MapPin, ShieldAlert, FileText } from "lucide-react";
-import { Container } from "./ui/Container";
+import { Container } from "../ui/Container";
 import { FALLBACK_SITE_SETTINGS } from "@/lib/constants";
 
 interface FooterProps {

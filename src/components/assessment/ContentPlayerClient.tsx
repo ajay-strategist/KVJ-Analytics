@@ -23,10 +23,10 @@ import {
   AlertTriangle,
   HelpCircle,
 } from "lucide-react";
-import { Button } from "./ui/Button";
+import { Button } from "../ui/Button";
 import { supabase } from "@/lib/supabase";
-import { TestTakingWidget } from "@/components/TestTakingWidget";
-import { LessonIframe, cleanLessonHtml } from "./shared/LessonIframe";
+import { TestTakingWidget } from "@/components/assessment/TestTakingWidget";
+import { LessonIframe, cleanLessonHtml } from "../shared/LessonIframe";
 
 interface Lesson {
   id: string;

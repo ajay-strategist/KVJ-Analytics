@@ -2,7 +2,7 @@
 
 import React, { use } from "react";
 import { useRouter } from "next/navigation";
-import { TestTakingWidget } from "@/components/TestTakingWidget";
+import { TestTakingWidget } from "@/components/assessment/TestTakingWidget";
 
 export default function TestTakingPage({
   params: paramsPromise,

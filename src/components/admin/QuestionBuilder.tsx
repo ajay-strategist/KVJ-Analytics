@@ -361,7 +361,7 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
                   config: { options: ["Option A", "Option B"], correctIndex: 0 },
                 });
               }}
-              className="px-3 py-1.5 bg-brand text-white text-xs font-bold animate-fade-in"
+              className="px-3 py-1.5 bg-brand text-white text-xs font-bold"
             >
               + Add Question
             </Button>
@@ -379,7 +379,7 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
 
       {/* Add/Edit Question Form */}
       {editingQuestionId && (
-        <form onSubmit={handleSaveQuestion} className="bg-surface/50 border border-line p-5 rounded-xl space-y-4 animate-fade-up">
+        <form onSubmit={handleSaveQuestion} className="bg-surface/50 border border-line p-5 rounded-xl space-y-4">
           <h3 className="text-xs font-bold text-ink uppercase tracking-wider">
             {editingQuestionId === "new" ? "New Question Details" : "Edit Question Details"}
           </h3>
@@ -1665,6 +1665,24 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
             )}
           </div>
 
+          {/* Explanation / Feedback (universal for all question types) */}
+          <div className="border-t border-line/60 pt-4 mt-2">
+            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate mb-1.5">
+              💡 Explanation / Feedback
+              <span className="ml-1.5 text-slate-400 font-normal normal-case tracking-normal text-[9px]">(shown to student after answering)</span>
+            </label>
+            <textarea
+              rows={3}
+              value={questionForm.config?.explanation || ""}
+              onChange={(e) => setQuestionForm((prev: any) => ({
+                ...prev,
+                config: { ...prev.config, explanation: e.target.value },
+              }))}
+              placeholder="Explain why the correct answer is right… (optional)"
+              className="w-full px-3 py-2 rounded border border-amber-300 bg-amber-50 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400/50 resize-none"
+            />
+          </div>
+
           <div className="flex gap-2 justify-end pt-4 border-t border-line">
             <Button type="submit" className="px-4 py-2 bg-brand text-white text-xs font-bold">
               {editingQuestionId === "new" ? "Create Question" : "Save Question Details"}
@@ -1781,7 +1799,7 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
       {/* Question Bank Import Modal */}
       {showImportModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl border border-line shadow-2xl max-w-4xl w-full max-h-[85vh] flex flex-col overflow-hidden animate-scale-up">
+          <div className="bg-white rounded-2xl border border-line shadow-2xl max-w-4xl w-full max-h-[85vh] flex flex-col overflow-hidden">
             
             {/* Modal Header */}
             <div className="px-6 py-4 border-b border-line flex items-center justify-between">

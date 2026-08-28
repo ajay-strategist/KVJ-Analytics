@@ -3,7 +3,7 @@ import { Mail, Phone, MapPin, MessageSquare } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { SplitHeading } from "@/components/v3/ScrollFx";
 import { Reveal } from "@/components/ui/Reveal";
-import { ContactForm } from "@/components/ContactForm";
+import { ContactForm } from "@/components/forms/ContactForm";
 import { getPageContent, mergePageContent } from "@/lib/content";
 import { FALLBACK_CONTACT, FALLBACK_SITE_SETTINGS } from "@/lib/constants";
 import { Metadata } from "next";

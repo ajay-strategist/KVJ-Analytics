@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { LogIn, User } from "lucide-react";
-import { Button } from "./ui/Button";
+import { Button } from "../ui/Button";
 import { supabase } from "@/lib/supabase";
 
 export function TrainingLoginCTA() {

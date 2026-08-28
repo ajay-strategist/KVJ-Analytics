@@ -545,7 +545,7 @@ export function BlogForm({ id, initial }: { id?: string; initial?: BlogInitial }
     const hasButtons = ['snippet_cta', 'snippet_training'].includes(selectedBlock.id);
 
     return (
-      <div className="space-y-4 animate-fade-in text-slate-800">
+      <div className="space-y-4 text-slate-800">
         <div className="flex items-center justify-between border-b border-slate-100 pb-2">
           <button
             type="button"
@@ -698,7 +698,7 @@ export function BlogForm({ id, initial }: { id?: string; initial?: BlogInitial }
                       <img
                         src={blockOptions.mediaUrl}
                         alt="Preview"
-                        className="max-h-full max-w-full object-contain animate-fade-in"
+                        className="max-h-full max-w-full object-contain"
                         onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }}
                       />
                       <button
@@ -1743,8 +1743,8 @@ export function BlogForm({ id, initial }: { id?: string; initial?: BlogInitial }
     </div>
     {/* Insert Image Modal Dialog Overlay */}
     {showImageModal && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
-        <div className="bg-white border border-slate-200 rounded-[24px] max-w-lg w-full p-6 shadow-2xl space-y-5 animate-scale-up text-left">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+        <div className="bg-white border border-slate-200 rounded-[24px] max-w-lg w-full p-6 shadow-2xl space-y-5 text-left">
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
             <h3 className="text-base font-bold text-slate-800 flex items-center gap-1.5">
               <ImageIcon className="w-4 h-4 text-brand" /> Insert Image Component
@@ -1873,8 +1873,8 @@ export function BlogForm({ id, initial }: { id?: string; initial?: BlogInitial }
       </div>
     )}
     {showPreviewModal && selectedBlock && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in text-left">
-        <div className="bg-[#0B0F19] border border-white/10 rounded-2xl w-full max-w-4xl h-[85vh] flex flex-col shadow-2xl overflow-hidden animate-scale-up">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm text-left">
+        <div className="bg-[#0B0F19] border border-white/10 rounded-2xl w-full max-w-4xl h-[85vh] flex flex-col shadow-2xl overflow-hidden">
           {/* Modal Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-[#0e1423]">
             <div>

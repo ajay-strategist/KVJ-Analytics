@@ -74,7 +74,7 @@ export default function AdminLoginPage() {
         </div>
 
         {error && (
-          <div className="bg-rose-500/5 border border-rose-500/15 p-4 rounded-xl flex items-start space-x-3 text-rose-450 mb-6 text-xs animate-fade-up">
+          <div className="bg-rose-500/5 border border-rose-500/15 p-4 rounded-xl flex items-start space-x-3 text-rose-450 mb-6 text-xs">
             <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
             <span className="font-semibold">{error}</span>
           </div>

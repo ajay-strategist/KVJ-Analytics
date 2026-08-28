@@ -175,24 +175,25 @@ export async function POST(
       isCorrect = slotKeys.length > 0 && correctSlotsCount === slotKeys.length;
     } else if (q.type === "dragdrop") {
       const correctPairs = config.correctPairs || [];
-      const leftList = config.left || [];
       const rightList = config.right || [];
       const numPairs = correctPairs.length > 0 ? correctPairs.length : 1;
+
+      // Build positional lookup: leftIndex -> expected rightValue (string)
+      const expectedByLeftIdx: Record<number, string> = {};
+      for (const p of correctPairs) {
+        expectedByLeftIdx[Number(p[0])] = String(rightList[p[1]] ?? "").trim();
+      }
+
       let correctPairsCount = 0;
       if (Array.isArray(studentAnswer)) {
-        for (const pair of studentAnswer) {
-          if (!Array.isArray(pair) || pair.length !== 2) continue;
-          const [l, r] = pair;
-          const isPairCorrect = correctPairs.some((p: any) => {
-            if (typeof l === "string" && typeof r === "string") {
-              const correctLStr = leftList[p[0]];
-              const correctRStr = rightList[p[1]];
-              return String(l).trim() === String(correctLStr || "").trim() && String(r).trim() === String(correctRStr || "").trim();
-            }
-            return Number(p[0]) === Number(l) && Number(p[1]) === Number(r);
-          });
-          if (isPairCorrect) correctPairsCount++;
-        }
+        studentAnswer.forEach((pair: any, slotIdx: number) => {
+          if (!Array.isArray(pair) || pair.length !== 2) return;
+          const [, r] = pair;
+          const expected = expectedByLeftIdx[slotIdx];
+          if (expected !== undefined && String(r ?? "").trim() === expected) {
+            correctPairsCount++;
+          }
+        });
       }
       isCorrect = numPairs > 0 && correctPairsCount === numPairs;
     } else if (q.type === "fillblank") {
