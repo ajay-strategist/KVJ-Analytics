@@ -182,10 +182,10 @@ export function ProductCard({
             />
           )}
 
-          {/* 3D Hologram Projection at the top */}
-          {animationStyle === "custom" && customAnimationHtml
-            ? <SandboxedAnimation html={customAnimationHtml} className="h-full w-full" />
-            : renderHologram(animationStyle, isGradeScope)}
+          {/* Custom animations block if present */}
+          {animationStyle === "custom" && customAnimationHtml && (
+            <SandboxedAnimation html={customAnimationHtml} className="h-full w-full mb-6" />
+          )}
 
           <div 
             className="relative flex items-center gap-4 mb-6 text-left"

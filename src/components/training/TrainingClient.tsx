@@ -394,16 +394,6 @@ function CourseCard({ course }: { course: Course }) {
 
   return (
     <div className="bg-[#0B2A22]/72 border border-line rounded-[32px] p-6 backdrop-blur-[24px] hover:border-brand/40 shadow-soft flex flex-col h-full group transition-all duration-500 hover:-translate-y-2 text-left">
-      {/* 3D Hologram graphic header inside card */}
-      {isPython ? (
-        <PythonCourseHologram />
-      ) : isPowerBI ? (
-        <PowerBICourseHologram />
-      ) : isExcel ? (
-        <ExcelCourseHologram />
-      ) : (
-        <DefaultCourseHologram />
-      )}
 
       <h3 className="text-xl font-bold text-white mb-2 leading-snug group-hover:text-[#10B981] transition-colors duration-300">
         {course.title}
