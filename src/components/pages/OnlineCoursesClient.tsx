@@ -75,36 +75,47 @@ export function OnlineCoursesClient({ courses, header }: OnlineCoursesClientProp
                 <Reveal key={course.id} delay={idx * 85} variant="up">
                   <div className="card-tone-emerald border hover:border-[#10B981]/50 rounded-3xl p-6 flex flex-col h-full hover:shadow-soft hover:-translate-y-1 transition-all duration-300 relative group overflow-hidden">
 
-                    {/* Course Banner */}
-                    <div className="relative w-full h-44 rounded-2xl overflow-hidden bg-zinc-900 border border-line mb-5 shrink-0">
-                      {course.banner_url ? (
+                    {/* Course Banner (rendered only if banner_url is set) */}
+                    {course.banner_url ? (
+                      <div className="relative w-full h-44 rounded-2xl overflow-hidden bg-zinc-900 border border-line mb-5 shrink-0">
                         <img
                           src={course.banner_url}
                           alt={course.title}
                           loading="lazy"
                           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-103"
                         />
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-tr from-[#0D9488]/10 via-[#10B981]/5 to-[#07130E] flex items-center justify-center">
-                          <Laptop className="w-10 h-10 text-brand/30" />
+                        {/* Floating locked badge */}
+                        {course.is_locked && (
+                          <div className="absolute top-3 left-3 bg-[#050608]/85 border border-[#10B981]/35 px-2.5 py-1 rounded-lg flex items-center gap-1.5 backdrop-blur-md shadow-md">
+                            <Lock className="w-3 h-3 text-[#10B981]" />
+                            <span className="text-[10px] font-bold text-white uppercase tracking-wider">Locked</span>
+                          </div>
+                        )}
+                        {/* Floating offer label */}
+                        {!course.hide_pricing && hasOffer && course.offer_label && (
+                          <div className="absolute top-3 right-3 bg-brand/90 text-black font-extrabold text-[10px] px-2.5 py-1 rounded-lg uppercase tracking-wider shadow-md">
+                            {course.offer_label}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      /* If no banner, show tags/badges inline at the top of the card */
+                      (course.is_locked || (!course.hide_pricing && hasOffer && course.offer_label)) && (
+                        <div className="flex flex-wrap gap-2 mb-4">
+                          {course.is_locked && (
+                            <div className="bg-[#10B981]/10 border border-[#10B981]/25 px-2.5 py-1 rounded-lg flex items-center gap-1.5 backdrop-blur-sm">
+                              <Lock className="w-3 h-3 text-[#10B981]" />
+                              <span className="text-[9px] font-bold text-[#10B981] uppercase tracking-wider">Locked</span>
+                            </div>
+                          )}
+                          {!course.hide_pricing && hasOffer && course.offer_label && (
+                            <div className="bg-brand/10 border border-brand/25 text-[#10B981] font-extrabold text-[9px] px-2.5 py-1 rounded-lg uppercase tracking-wider">
+                              {course.offer_label}
+                            </div>
+                          )}
                         </div>
-                      )}
-
-                      {/* Floating locked badge */}
-                      {course.is_locked && (
-                        <div className="absolute top-3 left-3 bg-[#050608]/85 border border-[#10B981]/35 px-2.5 py-1 rounded-lg flex items-center gap-1.5 backdrop-blur-md shadow-md">
-                          <Lock className="w-3 h-3 text-[#10B981]" />
-                          <span className="text-[10px] font-bold text-white uppercase tracking-wider">Locked</span>
-                        </div>
-                      )}
-
-                      {/* Floating offer label */}
-                      {!course.hide_pricing && hasOffer && course.offer_label && (
-                        <div className="absolute top-3 right-3 bg-brand/90 text-black font-extrabold text-[10px] px-2.5 py-1 rounded-lg uppercase tracking-wider shadow-md">
-                          {course.offer_label}
-                        </div>
-                      )}
-                    </div>
+                      )
+                    )}
 
                     {/* Title & description */}
                     <div className="flex-1 flex flex-col justify-between">
