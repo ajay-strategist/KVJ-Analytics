@@ -24,23 +24,23 @@ body.light {
   --color-ink: #0F172A;
   --color-slate: #475569;
 }
-body.light .text-white {
+body.light .text-white:not(.kvj-custom-html-block *) {
   color: #0f172a !important;
 }
-body.light .text-slate-350 {
+body.light .text-slate-350:not(.kvj-custom-html-block *) {
   color: #475569 !important;
 }
-body.light .text-slate-400 {
+body.light .text-slate-400:not(.kvj-custom-html-block *) {
   color: #64748B !important;
 }
-body.light .bg-card {
+body.light .bg-card:not(.kvj-custom-html-block *) {
   background-color: #f8fafc !important;
   border-color: #e2e8f0 !important;
 }
-body.light .border-white\\/5 {
+body.light .border-white\\/5:not(.kvj-custom-html-block *) {
   border-color: #e2e8f0 !important;
 }
-body.light .border-white\\/10 {
+body.light .border-white\\/10:not(.kvj-custom-html-block *) {
   border-color: #cbd5e1 !important;
 }
 `;
@@ -560,6 +560,7 @@ ${html.includes("<!-- KVJ_MATERIAL_METADATA:") ? cleanHtml : `<div class="kvj-cu
     // Dynamically protect elements that have inline styles containing '!important' (legacy content)
     // or if the document contains custom styles (exempt the whole page from color overrides)
     document.querySelectorAll('*').forEach(el => {
+      if (el.closest('.kvj-custom-html-block')) return;
       const styleAttr = el.getAttribute('style') || '';
       const isCustomElement = hasCustomBodyStyles && !['HTML', 'HEAD', 'SCRIPT', 'STYLE', 'BODY'].includes(el.tagName);
       if (styleAttr.includes('!important') || isCustomElement) {
@@ -574,6 +575,7 @@ ${html.includes("<!-- KVJ_MATERIAL_METADATA:") ? cleanHtml : `<div class="kvj-cu
 
     const isDark = document.body.classList.contains('dark');
     document.querySelectorAll('*').forEach(el => {
+      if (el.closest('.kvj-custom-html-block')) return;
       if (['HTML', 'HEAD', 'SCRIPT', 'STYLE', 'BODY'].includes(el.tagName)) return;
       if (el.hasAttribute('data-kvj-styled') || el.closest('[data-kvj-styled]')) return;
       if (isDark) {
