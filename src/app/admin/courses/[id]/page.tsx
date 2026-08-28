@@ -207,10 +207,32 @@ const LessonEditor = React.memo(function LessonEditor({
 
     if (initial.content_html && /^\s*<!-- KVJ_MATERIAL_METADATA:/.test(initial.content_html)) {
       try {
-        const match = initial.content_html.match(/^\s*<!-- KVJ_MATERIAL_METADATA:\s*([\s\S]*?)\s*-->/);
-        if (match) {
-          parsedMeta = JSON.parse(match[1]);
-          parseKind = parsedMeta.type;
+        const cleaned = initial.content_html;
+        const META_START = "<!-- KVJ_MATERIAL_METADATA:";
+        const metaIdx = cleaned.indexOf(META_START);
+        if (metaIdx !== -1) {
+          const jsonStart = cleaned.indexOf("{", metaIdx);
+          if (jsonStart !== -1) {
+            let depth = 0, inString = false, escape = false, jsonEnd = -1;
+            for (let i = jsonStart; i < cleaned.length; i++) {
+              const c = cleaned[i];
+              if (escape) { escape = false; continue; }
+              if (c === "\\") { escape = true; continue; }
+              if (c === '"') { inString = !inString; continue; }
+              if (!inString) {
+                if (c === "{" || c === "[") depth++;
+                else if (c === "}" || c === "]") {
+                  depth--;
+                  if (depth === 0) { jsonEnd = i; break; }
+                }
+              }
+            }
+            if (jsonEnd !== -1) {
+              const jsonStr = cleaned.slice(jsonStart, jsonEnd + 1);
+              parsedMeta = JSON.parse(jsonStr);
+              parseKind = parsedMeta.type;
+            }
+          }
         }
       } catch (err) {
         console.error("Failed to parse material metadata:", err);
