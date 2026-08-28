@@ -178,6 +178,27 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
     return [];
   };
 
+  const insertHtml = (tagOpen: string, tagClose: string = "") => {
+    const textarea = document.getElementById("question-stem-textarea") as HTMLTextAreaElement;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const text = textarea.value;
+    const selected = text.substring(start, end);
+    
+    const replacement = tagOpen + selected + tagClose;
+    const newText = text.substring(0, start) + replacement + text.substring(end);
+    
+    setQuestionForm((prev: any) => ({ ...prev, stem: newText }));
+    
+    // Restore focus and selection
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(start + tagOpen.length, start + tagOpen.length + selected.length);
+    }, 0);
+  };
+
   const fetchQuestions = async () => {
     if (!testId) return;
     setLoading(true);
@@ -185,7 +206,18 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
       const res = await fetch(`/api/admin/questions?test_id=${testId}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      setQuestions(data.questions || []);
+      const parsed = (data.questions || []).map((q: any) => {
+        let config = q.config;
+        if (typeof config === "string") {
+          try {
+            config = JSON.parse(config);
+          } catch {
+            config = {};
+          }
+        }
+        return { ...q, config };
+      });
+      setQuestions(parsed);
     } catch (err: any) {
       console.error("Failed to load questions:", err);
     } finally {
@@ -242,9 +274,17 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
     if (!testId) return;
     const isNew = editingQuestionId === "new";
     const method = isNew ? "POST" : "PATCH";
+    const payload = {
+      type: questionForm.type,
+      stem: questionForm.stem,
+      marks: questionForm.marks,
+      config: questionForm.config,
+      image_url: questionForm.image_url || null,
+      display_order: questionForm.display_order,
+    };
     const body = isNew
-      ? { ...questionForm, test_id: testId, display_order: questions.length + 1 }
-      : { ...questionForm, id: editingQuestionId };
+      ? { ...payload, test_id: testId, display_order: questions.length + 1 }
+      : { ...payload, id: editingQuestionId };
 
     try {
       const res = await fetch("/api/admin/questions", {
@@ -380,8 +420,84 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
           </div>
 
           <div>
-            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate mb-1">Question Prompt / Stem (HTML Allowed)</label>
+            <div className="flex items-center justify-between mb-1.5 flex-wrap gap-2">
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">Question Prompt / Stem (HTML Allowed)</label>
+              <div className="flex flex-wrap gap-1">
+                <button
+                  type="button"
+                  onClick={() => insertHtml("<strong>", "</strong>")}
+                  className="px-2 py-0.5 text-[9px] font-bold bg-slate-100 hover:bg-slate-200 text-slate-800 rounded cursor-pointer transition-colors border border-slate-300"
+                  title="Bold"
+                >
+                  Bold
+                </button>
+                <button
+                  type="button"
+                  onClick={() => insertHtml("<em>", "</em>")}
+                  className="px-2 py-0.5 text-[9px] font-bold bg-slate-100 hover:bg-slate-200 text-slate-800 rounded cursor-pointer transition-colors border border-slate-300"
+                  title="Italic"
+                >
+                  Italic
+                </button>
+                <button
+                  type="button"
+                  onClick={() => insertHtml("<p>", "</p>")}
+                  className="px-2 py-0.5 text-[9px] font-bold bg-slate-100 hover:bg-slate-200 text-slate-800 rounded cursor-pointer transition-colors border border-slate-300"
+                  title="Paragraph"
+                >
+                  Paragraph
+                </button>
+                <button
+                  type="button"
+                  onClick={() => insertHtml("<pre><code>", "</code></pre>")}
+                  className="px-2 py-0.5 text-[9px] font-bold bg-slate-100 hover:bg-slate-200 text-slate-800 rounded cursor-pointer transition-colors border border-slate-300"
+                  title="Code Block"
+                >
+                  Code
+                </button>
+                <button
+                  type="button"
+                  onClick={() => insertHtml("<br/>")}
+                  className="px-2 py-0.5 text-[9px] font-bold bg-slate-100 hover:bg-slate-200 text-slate-800 rounded cursor-pointer transition-colors border border-slate-300"
+                  title="Line Break"
+                >
+                  BR
+                </button>
+                <button
+                  type="button"
+                  onClick={() => insertHtml('<img src="', '" alt="Image description" class="max-w-full h-auto rounded my-2 inline-block" />')}
+                  className="px-2 py-0.5 text-[9px] font-bold bg-slate-100 hover:bg-slate-200 text-slate-800 rounded cursor-pointer transition-colors border border-slate-300"
+                  title="Insert Image Tag"
+                >
+                  Image Tag
+                </button>
+                <button
+                  type="button"
+                  onClick={() => insertHtml(
+                    `<table class="min-w-full border border-slate-300 border-collapse my-2">
+  <thead>
+    <tr class="bg-slate-100">
+      <th class="border border-slate-300 p-2 text-left">Header 1</th>
+      <th class="border border-slate-300 p-2 text-left">Header 2</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="border border-slate-300 p-2">Row 1 Col 1</td>
+      <td class="border border-slate-300 p-2">Row 1 Col 2</td>
+    </tr>
+  </tbody>
+</table>`
+                  )}
+                  className="px-2.5 py-0.5 text-[9px] font-bold bg-[#10B981] hover:bg-[#10B981]/90 text-white rounded cursor-pointer transition-colors border border-[#10B981]"
+                  title="Insert Table"
+                >
+                  + Add Table
+                </button>
+              </div>
+            </div>
             <textarea
+              id="question-stem-textarea"
               rows={4}
               required
               value={questionForm.stem || ""}
@@ -1626,7 +1742,23 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
                   type="button"
                   onClick={() => {
                     setEditingQuestionId(q.id);
-                    setQuestionForm(q);
+                    let config = q.config;
+                    if (typeof config === "string") {
+                      try {
+                        config = JSON.parse(config);
+                      } catch {
+                        config = {};
+                      }
+                    }
+                    if ((q.type === "single" || q.type === "multiple") && !config?.options) {
+                      config = {
+                        ...config,
+                        options: ["Option A", "Option B"],
+                        correctIndex: config?.correctIndex ?? 0,
+                        correctIndexes: config?.correctIndexes ?? [0]
+                      };
+                    }
+                    setQuestionForm({ ...q, config });
                   }}
                   className="p-1.5 border border-line rounded hover:bg-surface cursor-pointer text-slate hover:text-ink"
                   title="Edit Question"
