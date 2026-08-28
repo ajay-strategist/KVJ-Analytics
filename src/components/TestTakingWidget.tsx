@@ -218,6 +218,7 @@ interface TestTakingWidgetProps {
   onExit?: () => void;
   isInline?: boolean;
   showAnswers?: boolean;
+  autoStart?: boolean;
 }
 
 export function TestTakingWidget({
@@ -230,6 +231,7 @@ export function TestTakingWidget({
   onExit,
   isInline = false,
   showAnswers = false,
+  autoStart = false,
 }: TestTakingWidgetProps) {
   // Theme coloring mapping
   const colors = darkMode
@@ -273,7 +275,7 @@ export function TestTakingWidget({
   const sensors = useSensors(pointerSensor, touchSensor);
 
   const [test, setTest] = useState<any>(null);
-  const [started, setStarted] = useState(isInline);
+  const [started, setStarted] = useState(isInline || autoStart);
   const [completed, setCompleted] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(0); // in seconds
   
@@ -373,6 +375,13 @@ export function TestTakingWidget({
         }
 
         setTest(testData.test);
+
+        if (autoStart && !isInline) {
+          setStarted(true);
+          setTimeRemaining(testData.test.durationMins * 60);
+          setVisitedIndexes(new Set([0]));
+          onStart?.();
+        }
 
         // Prepopulate answers configurations
         const defaultAnswers: Record<string, any> = {};

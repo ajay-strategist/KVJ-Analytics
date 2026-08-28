@@ -769,6 +769,7 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
                 courseSlug={course.slug}
                 adminPreview={adminPreview}
                 darkMode={darkMode}
+                autoStart={true}
                 onStart={() => setIsAssessmentActive(true)}
                 onExit={() => setIsAssessmentActive(false)}
                 onComplete={async (score, maxScore, passed) => {
