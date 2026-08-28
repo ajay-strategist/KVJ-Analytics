@@ -217,14 +217,14 @@ function BentoCard({ category, className = "", icon: Icon, delay = 0, variant = 
 function FloatingFeatureCard({ icon: Icon, label, desc, delay = 0, floatClass = "float-a" }: any) {
   return (
     <Reveal delay={delay} variant="scale" className="h-full">
-      <div className={`bg-white/80 border border-line hover:border-brand/35 p-6 rounded-2xl flex items-start gap-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-soft text-left group h-full relative overflow-hidden ${floatClass}`}>
+      <div className={`bg-[#0B2A22]/95 border border-[#10B981]/15 hover:border-brand/45 p-6 rounded-2xl flex items-start gap-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_50px_rgba(16,185,129,0.05)] text-left group h-full relative overflow-hidden ${floatClass}`}>
         <div className="absolute inset-0 bg-gradient-to-tr from-brand/5 to-transparent pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         <div className="w-10 h-10 rounded-xl bg-brand/10 border border-brand/20 flex items-center justify-center text-brand shrink-0 group-hover:scale-110 transition-transform duration-300">
           <Icon className="w-5 h-5 text-brand group-hover:rotate-12 duration-300" />
         </div>
         <div className="space-y-1">
-          <h4 className="text-ink text-base font-semibold tracking-wide font-display group-hover:text-brand transition-colors">{label}</h4>
-          <p className="text-slate text-xs leading-relaxed font-light">{desc}</p>
+          <h4 className="text-white text-base font-semibold tracking-wide font-display group-hover:text-brand transition-colors">{label}</h4>
+          <p className="text-zinc-400 text-xs leading-relaxed font-light group-hover:text-zinc-200 transition-colors duration-300">{desc}</p>
         </div>
       </div>
     </Reveal>
