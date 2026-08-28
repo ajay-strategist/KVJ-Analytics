@@ -12,38 +12,7 @@ interface LessonIframeProps {
 
 export const DARK_MODE_CSS = ``;
 
-export const LIGHT_MODE_CSS = `
-body.light {
-  --color-base: #FFFFFF;
-  --color-base-2: #F8FAFC;
-  --color-surface: #FFFFFF;
-  --color-card: #F8FAFC;
-  --color-line: #E2E8F0;
-  --color-brand: #0D9488;
-  --color-brand-secondary: #0F766E;
-  --color-ink: #0F172A;
-  --color-slate: #475569;
-}
-body.light .text-white:not(.kvj-custom-html-block *) {
-  color: #0f172a !important;
-}
-body.light .text-slate-350:not(.kvj-custom-html-block *) {
-  color: #475569 !important;
-}
-body.light .text-slate-400:not(.kvj-custom-html-block *) {
-  color: #64748B !important;
-}
-body.light .bg-card:not(.kvj-custom-html-block *) {
-  background-color: #f8fafc !important;
-  border-color: #e2e8f0 !important;
-}
-body.light .border-white\\/5:not(.kvj-custom-html-block *) {
-  border-color: #e2e8f0 !important;
-}
-body.light .border-white\\/10:not(.kvj-custom-html-block *) {
-  border-color: #cbd5e1 !important;
-}
-`;
+export const LIGHT_MODE_CSS = ``;
 
 export const HIDE_SIDEBAR_CSS = `
 aside,
@@ -140,7 +109,6 @@ export function LessonIframe({
   onContentWindow,
 }: LessonIframeProps) {
   const frameRef = useRef<HTMLIFrameElement>(null);
-  const lightDetectedRef = useRef(false);
 
   const cleanHtml = cleanLessonHtml(html);
 
@@ -157,15 +125,15 @@ export function LessonIframe({
 <style>
   *{box-sizing:border-box}
   :root {
-    --color-base: #050608;
-    --color-base-2: #07130E;
-    --color-surface: #07130E;
-    --color-card: #0B2A22;
-    --color-line: rgba(16, 185, 129, 0.12);
-    --color-brand: #10B981;
-    --color-brand-secondary: #34D399;
-    --color-ink: #FFFFFF;
-    --color-slate: #CBD5E1;
+    --color-base: #FFFFFF;
+    --color-base-2: #F8FAFC;
+    --color-surface: #FFFFFF;
+    --color-card: #F8FAFC;
+    --color-line: #E2E8F0;
+    --color-brand: #0D9488;
+    --color-brand-secondary: #0F766E;
+    --color-ink: #0F172A;
+    --color-slate: #475569;
   }
   html,body{
     font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -361,8 +329,8 @@ export function LessonIframe({
   
   /* Code Blocks */
   pre:not(.kvj-custom-html-block *) {
-    background-color: #07130E !important;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background-color: #F8FAFC;
+    border: 1px solid #E2E8F0;
     border-radius: 1rem;
     padding: 1.25rem;
     margin: 2rem 0;
@@ -371,21 +339,21 @@ export function LessonIframe({
   code:not(.kvj-custom-html-block *) {
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     font-size: 0.9em;
-    color: #e2e8f0;
+    color: #0F172A;
   }
   pre:not(.kvj-custom-html-block *) code:not(.kvj-custom-html-block *) {
     background: transparent;
     padding: 0;
-    color: #cbd5e1;
+    color: #475569;
     display: block;
     line-height: 1.6;
   }
   :not(pre):not(.kvj-custom-html-block *) > code:not(.kvj-custom-html-block *) {
-    background-color: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background-color: #F1F5F9;
+    border: 1px solid #E2E8F0;
     border-radius: 0.375rem;
     padding: 0.2rem 0.4rem;
-    color: #22d3ee;
+    color: #0D9488;
   }
   
   /* Theme utilities mapping */
@@ -552,94 +520,6 @@ ${html.includes("<!-- KVJ_MATERIAL_METADATA:") ? cleanHtml : `<div class="kvj-cu
     }
   });
 
-  // Smart Theme Contrast Enhancer
-  const applySmartTheme = () => {
-    // Detect if there is any style tag in the body (custom-styled templates)
-    const hasCustomBodyStyles = !!document.body.querySelector('style');
-
-    // Dynamically protect elements that have inline styles containing '!important' (legacy content)
-    // or if the document contains custom styles (exempt the whole page from color overrides)
-    document.querySelectorAll('*').forEach(el => {
-      if (el.closest('.kvj-custom-html-block')) return;
-      const styleAttr = el.getAttribute('style') || '';
-      const isCustomElement = hasCustomBodyStyles && !['HTML', 'HEAD', 'SCRIPT', 'STYLE', 'BODY'].includes(el.tagName);
-      if (styleAttr.includes('!important') || isCustomElement) {
-        el.setAttribute('data-kvj-styled', 'true');
-        if (styleAttr.includes('!important')) {
-          el.querySelectorAll('*').forEach(child => {
-            child.setAttribute('data-kvj-styled', 'true');
-          });
-        }
-      }
-    });
-
-    const isDark = document.body.classList.contains('dark');
-    document.querySelectorAll('*').forEach(el => {
-      if (el.closest('.kvj-custom-html-block')) return;
-      if (['HTML', 'HEAD', 'SCRIPT', 'STYLE', 'BODY'].includes(el.tagName)) return;
-      if (el.hasAttribute('data-kvj-styled') || el.closest('[data-kvj-styled]')) return;
-      if (isDark) {
-        if (!el.hasAttribute('data-org-bg')) {
-          el.setAttribute('data-org-bg', el.style.backgroundColor || 'NONE');
-        }
-        if (!el.hasAttribute('data-org-color')) {
-          el.setAttribute('data-org-color', el.style.color || 'NONE');
-        }
-        if (!el.hasAttribute('data-org-border')) {
-          el.setAttribute('data-org-border', el.style.borderColor || 'NONE');
-        }
-        
-        const style = window.getComputedStyle(el);
-        const bg = style.backgroundColor;
-        const m = bg.match(/[\\d.]+/g);
-        if (m && m.length >= 3) {
-          const r = Number(m[0]);
-          const g = Number(m[1]);
-          const b = Number(m[2]);
-          const a = m[3] !== undefined ? Number(m[3]) : 1;
-          if (a > 0.1) {
-            const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-            if (lum > 0.5) {
-              const isLarge = el.offsetWidth > 300 || el.offsetHeight > 300;
-              el.style.setProperty('background-color', isLarge ? 'transparent' : 'rgba(255,255,255,0.03)', 'important');
-              el.style.setProperty('border-color', 'rgba(255,255,255,0.08)', 'important');
-            }
-          }
-        }
-        const color = style.color;
-        const cm = color.match(/[\\d.]+/g);
-        if (cm && cm.length >= 3) {
-          const cr = Number(cm[0]);
-          const cg = Number(cm[1]);
-          const cb = Number(cm[2]);
-          const ca = cm[3] !== undefined ? Number(cm[3]) : 1;
-          if (ca > 0.1) {
-            const clum = (0.299 * cr + 0.587 * cg + 0.114 * cb) / 255;
-            if (clum < 0.45) {
-              el.style.setProperty('color', '#cbd5e1', 'important');
-            }
-          }
-        }
-      } else {
-        const orgBg = el.getAttribute('data-org-bg');
-        const orgColor = el.getAttribute('data-org-color');
-        const orgBorder = el.getAttribute('data-org-border');
-        if (orgBg && orgBg !== 'NONE') el.style.setProperty('background-color', orgBg);
-        else el.style.removeProperty('background-color');
-        if (orgColor && orgColor !== 'NONE') el.style.setProperty('color', orgColor);
-        else el.style.removeProperty('color');
-        if (orgBorder && orgBorder !== 'NONE') el.style.setProperty('border-color', orgBorder);
-        else el.style.removeProperty('border-color');
-      }
-    });
-  };
-
-  const themeObserver = new MutationObserver(applySmartTheme);
-  themeObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
-  applySmartTheme();
-  setTimeout(applySmartTheme, 100);
-  setTimeout(applySmartTheme, 300);
-  setTimeout(applySmartTheme, 600);
 </script>
 </body>
 </html>`;
@@ -674,56 +554,14 @@ ${html.includes("<!-- KVJ_MATERIAL_METADATA:") ? cleanHtml : `<div class="kvj-cu
     }
   }, []);
 
-  const detectLightBackground = useCallback((doc: Document) => {
-    if (lightDetectedRef.current) return;
-    try {
-      // Use the iframe's OWN window for computed styles (not the parent).
-      const win = doc.defaultView || window;
-      const parse = (bg: string) => {
-        const m = bg.match(/[\d.]+/g);
-        if (!m || m.length < 3) return null;
-        const [r, g, b, a = 1] = m.map(Number);
-        return { lum: (0.299 * r + 0.587 * g + 0.114 * b) / 255, a };
-      };
-      // The wrapper forces body{background:transparent}, so reading only <body> always looks
-      // dark. Instead sample the largest painted surfaces (inner wrappers, sections, cells) and
-      // pick the dominant background by AREA. If light surfaces win, the lesson is light-themed
-      // and should auto-convert to dark for readability.
-      const els: Element[] = [doc.body, ...Array.from(doc.querySelectorAll("div,section,main,article,header,td,th"))].slice(0, 100);
-      let lightArea = 0;
-      let darkArea = 0;
-      for (const el of els) {
-        const c = parse(win.getComputedStyle(el).backgroundColor);
-        if (!c || c.a < 0.5) continue; // ignore transparent surfaces
-        const r = (el as HTMLElement).getBoundingClientRect();
-        const area = Math.max(0, r.width) * Math.max(0, r.height);
-        if (area <= 0) continue;
-        if (c.lum > 0.6) lightArea += area;
-        else darkArea += area;
-      }
-      lightDetectedRef.current = true;
-      onLightDetected?.(lightArea > darkArea && lightArea > 0);
-    } catch {
-      // ignore
-    }
-  }, [onLightDetected]);
-
   const applyOverlays = useCallback(() => {
     const frame = frameRef.current;
     const doc = frame?.contentDocument;
     if (!doc || !doc.head) return;
 
-    if (darkMode) {
-      removeStyle(doc, "kvj-light");
-      removeStyle(doc, "kvj-dark");
-      doc.body.classList.add("dark");
-      doc.body.classList.remove("light");
-    } else {
-      removeStyle(doc, "kvj-dark");
-      injectStyle(doc, "kvj-light", LIGHT_MODE_CSS);
-      doc.body.classList.add("light");
-      doc.body.classList.remove("dark");
-    }
+    // The entire website is light-themed. Make body use light class.
+    doc.body.classList.add("light");
+    doc.body.classList.remove("dark");
 
     if (hideSidebar) {
       injectStyle(doc, "kvj-hide-sidebar", HIDE_SIDEBAR_CSS);
@@ -732,7 +570,7 @@ ${html.includes("<!-- KVJ_MATERIAL_METADATA:") ? cleanHtml : `<div class="kvj-cu
     }
 
     autoResize();
-  }, [darkMode, hideSidebar, injectStyle, removeStyle, autoResize]);
+  }, [hideSidebar, injectStyle, removeStyle, autoResize]);
 
   // Initial load handler
   const handleLoad = () => {
@@ -741,7 +579,6 @@ ${html.includes("<!-- KVJ_MATERIAL_METADATA:") ? cleanHtml : `<div class="kvj-cu
     try {
       const doc = frame.contentDocument;
       if (doc) {
-        detectLightBackground(doc);
         applyOverlays();
         onContentWindow?.(frame.contentWindow);
 
@@ -767,7 +604,6 @@ ${html.includes("<!-- KVJ_MATERIAL_METADATA:") ? cleanHtml : `<div class="kvj-cu
   };
 
   useEffect(() => {
-    lightDetectedRef.current = false;
     // Re-trigger load setup if html changes (since srcDoc forces iframe reload)
     const timer = setTimeout(handleLoad, 50);
     return () => clearTimeout(timer);
@@ -775,7 +611,7 @@ ${html.includes("<!-- KVJ_MATERIAL_METADATA:") ? cleanHtml : `<div class="kvj-cu
 
   useEffect(() => {
     applyOverlays();
-  }, [darkMode, hideSidebar, applyOverlays]);
+  }, [hideSidebar, applyOverlays]);
 
   return (
     <iframe
