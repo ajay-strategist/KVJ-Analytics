@@ -40,36 +40,70 @@ function SignUpForm() {
     setLoading(true);
 
     try {
-      // 1. Call Supabase Sign Up
-      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            name,
-          },
-        },
+      // 1. Call our custom pre-signup API check to handle pre-created accounts
+      const checkRes = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, name, phone, profession }),
       });
+      const checkData = await checkRes.json();
+      
+      if (!checkRes.ok) {
+        throw new Error(checkData.error || "Signup check failed.");
+      }
 
-      if (signUpError) throw signUpError;
+      let activeUserId = "";
 
-      const user = signUpData?.user;
-      if (user) {
-        // 2. Write extra metadata to the public.profiles table using the Supabase client
-        const { error: profileError } = await supabase
-          .from("profiles")
-          .update({
-            full_name: name,
-            name: name,
-            phone: phone,
-            profession: profession,
-            account_type: "individual",
-          })
-          .eq("id", user.id);
+      if (checkData.preCreated) {
+        // If account was pre-created by admin, login immediately with the password they just set
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
+        if (signInError) throw signInError;
+        activeUserId = signInData?.user?.id || "";
+      } else {
+        // Otherwise, run standard new user signup
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: { name },
+          },
+        });
+        if (signUpError) throw signUpError;
 
-        if (profileError) {
-          console.error("Error writing profile metadata:", profileError);
-          // Don't fail completely if only the profile update throws (e.g. trigger lag)
+        const user = signUpData?.user;
+        if (user) {
+          activeUserId = user.id;
+          // Update profile details
+          const { error: profileError } = await supabase
+            .from("profiles")
+            .update({
+              full_name: name,
+              name: name,
+              phone: phone,
+              profession: profession,
+              account_type: "individual",
+            })
+            .eq("id", user.id);
+
+          if (profileError) {
+            console.error("Error writing profile metadata:", profileError);
+          }
+        }
+      }
+
+      // 2. Claim batch roster enrollments if any matching invited records exist
+      if (activeUserId) {
+        try {
+          await fetch("/api/auth/claim-enrollments", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, user_id: activeUserId }),
+          });
+        } catch (claimErr) {
+          console.error("Error claiming batch enrollments:", claimErr);
         }
       }
 

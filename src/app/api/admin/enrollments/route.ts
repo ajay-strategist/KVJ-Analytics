@@ -135,15 +135,33 @@ export async function POST(req: NextRequest) {
     const { data: usersPage, error: userErr } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
     if (userErr) throw userErr;
 
-    const matchedUser = usersPage?.users?.find(
+    let matchedUser = usersPage?.users?.find(
       (u: any) => u.email?.toLowerCase() === user_email.toLowerCase().trim()
     );
 
     if (!matchedUser) {
-      return NextResponse.json(
-        { error: `No student account found with email: ${user_email}` },
-        { status: 404 }
-      );
+      // Create user automatically with random placeholder password
+      const tempPassword = "KVJ" + Math.random().toString(36).slice(-8) + "!";
+      const { data: created, error: createErr } = await supabaseAdmin.auth.admin.createUser({
+        email: user_email.trim(),
+        password: tempPassword,
+        email_confirm: true,
+        user_metadata: {
+          full_name: "Student",
+          account_type: "individual",
+        }
+      });
+      if (createErr) throw createErr;
+      matchedUser = created.user;
+
+      // Upsert a default profile
+      await supabaseAdmin.from("profiles").upsert({
+        id: matchedUser.id,
+        name: "Student",
+        full_name: "Student",
+        role: "student",
+        account_type: "individual"
+      });
     }
 
     // 2. Verify course exists
