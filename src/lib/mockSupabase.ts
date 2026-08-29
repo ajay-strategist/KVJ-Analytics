@@ -1544,6 +1544,9 @@ if (!globalForMockDb.mockDb) {
         title: "Module 1 Assessment",
         duration_mins: 20,
         pass_mark: 70,
+        attempts_allowed: 3,
+        negative_marking: 0,
+        instructions: "Please review all questions carefully before submitting. Make sure to complete the exam within the allotted 20 minutes.",
         randomize: true,
         is_inline: false,
         display_order: 1
@@ -1555,6 +1558,9 @@ if (!globalForMockDb.mockDb) {
         title: "Module 2 Assessment",
         duration_mins: 20,
         pass_mark: 70,
+        attempts_allowed: 3,
+        negative_marking: 0,
+        instructions: "",
         randomize: true,
         is_inline: false,
         display_order: 2
@@ -1566,6 +1572,9 @@ if (!globalForMockDb.mockDb) {
         title: "Module 3 Assessment",
         duration_mins: 20,
         pass_mark: 70,
+        attempts_allowed: 3,
+        negative_marking: 0,
+        instructions: "",
         randomize: true,
         is_inline: false,
         display_order: 3
@@ -1577,6 +1586,9 @@ if (!globalForMockDb.mockDb) {
         title: "Module 4 Assessment",
         duration_mins: 20,
         pass_mark: 70,
+        attempts_allowed: 3,
+        negative_marking: 0,
+        instructions: "",
         randomize: true,
         is_inline: false,
         display_order: 4
@@ -1588,6 +1600,9 @@ if (!globalForMockDb.mockDb) {
         title: "Module 5 Assessment",
         duration_mins: 20,
         pass_mark: 70,
+        attempts_allowed: 3,
+        negative_marking: 0,
+        instructions: "",
         randomize: true,
         is_inline: false,
         display_order: 5
@@ -1599,6 +1614,9 @@ if (!globalForMockDb.mockDb) {
         title: "Data Analytics Mock Test 1",
         duration_mins: 45,
         pass_mark: 75,
+        attempts_allowed: 0,
+        negative_marking: 0.25,
+        instructions: "Comprehensive certification practice exam. Negative marking applies (-0.25 for incorrect answers). Ensure you have a stable connection.",
         randomize: true,
         is_inline: false,
         display_order: 6
@@ -1610,6 +1628,9 @@ if (!globalForMockDb.mockDb) {
         title: "Data Analytics Mock Test 2",
         duration_mins: 45,
         pass_mark: 75,
+        attempts_allowed: 0,
+        negative_marking: 0.25,
+        instructions: "",
         randomize: true,
         is_inline: false,
         display_order: 7
@@ -1621,6 +1642,9 @@ if (!globalForMockDb.mockDb) {
         title: "Data Analytics Mock Test 3",
         duration_mins: 45,
         pass_mark: 75,
+        attempts_allowed: 0,
+        negative_marking: 0,
+        instructions: "",
         randomize: true,
         is_inline: false,
         display_order: 8

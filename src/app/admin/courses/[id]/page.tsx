@@ -160,6 +160,7 @@ const LessonEditor = React.memo(function LessonEditor({
   const [passMark, setPassMark] = React.useState<number>(0);
   const [attemptsAllowed, setAttemptsAllowed] = React.useState<number>(0);
   const [negativeMarking, setNegativeMarking] = React.useState<number>(0);
+  const [instructions, setInstructions] = React.useState<string>("");
   const [randomize, setRandomize] = React.useState<boolean>(true);
   const [randomizeOptions, setRandomizeOptions] = React.useState<boolean>(true);
   const [publishResults, setPublishResults] = React.useState<boolean>(true);
@@ -185,6 +186,7 @@ const LessonEditor = React.memo(function LessonEditor({
             setPassMark(data.pass_mark ?? 0);
             setAttemptsAllowed(data.attempts_allowed ?? 0);
             setNegativeMarking(data.negative_marking ?? 0);
+            setInstructions(data.instructions ?? "");
             setRandomize(data.randomize ?? true);
             setRandomizeOptions(data.randomize_options ?? true);
             setPublishResults(data.publish_results ?? true);
@@ -464,6 +466,7 @@ const LessonEditor = React.memo(function LessonEditor({
       assessment_settings: (finalKind === "assessment" || editorKind === "inline_assessment") ? {
         duration_mins: durationMins, pass_mark: passMark,
         attempts_allowed: attemptsAllowed, negative_marking: negativeMarking,
+        instructions: instructions,
         randomize, randomize_options: randomizeOptions, publish_results: publishResults,
         is_inline: editorKind === "inline_assessment",
       } : undefined,
@@ -2610,6 +2613,16 @@ const LessonEditor = React.memo(function LessonEditor({
                   className="w-full px-3 py-1.5 rounded border border-line bg-white text-xs"
                 />
               </div>
+              <div className="col-span-2">
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate mb-1">Custom Instructions &amp; Notes (Optional)</label>
+                <textarea
+                  rows={3}
+                  value={instructions}
+                  onChange={(e) => setInstructions(e.target.value)}
+                  className="w-full px-3 py-1.5 rounded border border-line bg-white text-xs"
+                  placeholder="e.g. Keep track of the countdown timer. Make sure you submit all answers before closing the tab."
+                />
+              </div>
               <div className="flex items-center gap-2 pt-5">
                 <input
                   type="checkbox"
@@ -2674,6 +2687,7 @@ const LessonEditor = React.memo(function LessonEditor({
                               pass_mark: passMark,
                               attempts_allowed: attemptsAllowed,
                               negative_marking: negativeMarking,
+                              instructions: instructions,
                               randomize: randomize,
                               randomize_options: randomizeOptions,
                               publish_results: publishResults,
@@ -2760,7 +2774,7 @@ export default function AdminCourseDetailsPage() {
   const [loadingTests, setLoadingTests] = useState(false);
   const [selectedTestId, setSelectedTestId] = useState<string | null>(null);
   const [editingTestId, setEditingTestId] = useState<string | null>(null);
-  const [testForm, setTestForm] = useState<{ title: string; duration_mins: number; pass_mark: number; module_id: string | null }>({ title: "", duration_mins: 30, pass_mark: 0, module_id: null });
+  const [testForm, setTestForm] = useState<{ title: string; duration_mins: number; pass_mark: number; module_id: string | null; instructions?: string }>({ title: "", duration_mins: 30, pass_mark: 0, module_id: null, instructions: "" });
 
   const fetchMockTests = async (courseId: string) => {
     setLoadingTests(true);
@@ -3063,6 +3077,7 @@ export default function AdminCourseDetailsPage() {
           pass_mark: assessment_settings?.pass_mark ?? 0,
           attempts_allowed: assessment_settings?.attempts_allowed ?? 0,
           negative_marking: assessment_settings?.negative_marking ?? 0,
+          instructions: assessment_settings?.instructions || "",
           randomize: assessment_settings?.randomize ?? true,
           randomize_options: assessment_settings?.randomize_options ?? true,
           publish_results: assessment_settings?.publish_results ?? true,
@@ -3670,7 +3685,7 @@ export default function AdminCourseDetailsPage() {
                           <Button
                             onClick={() => {
                               setEditingTestId("new");
-                              setTestForm({ title: "", duration_mins: 30, pass_mark: 0, module_id: null });
+                              setTestForm({ title: "", duration_mins: 30, pass_mark: 0, module_id: null, instructions: "" });
                             }}
                             className="px-3.5 py-1.5 bg-brand text-white text-xs font-bold flex items-center gap-1"
                           >
@@ -3721,6 +3736,16 @@ export default function AdminCourseDetailsPage() {
                                 className="w-full px-3 py-2 rounded border border-line bg-white text-sm"
                               />
                             </div>
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate mb-1">Custom Exam Instructions (Optional)</label>
+                            <textarea
+                              rows={3}
+                              value={testForm.instructions || ""}
+                              onChange={(e) => setTestForm({ ...testForm, instructions: e.target.value })}
+                              className="w-full px-3 py-2 rounded border border-line bg-white text-sm"
+                              placeholder="e.g. Total 45 minutes for all questions. Negative marking applies."
+                            />
                           </div>
                           <div className="mb-4">
                             <label className="block text-[10px] font-bold uppercase tracking-wider text-slate mb-1">Attach To</label>
@@ -3806,7 +3831,7 @@ export default function AdminCourseDetailsPage() {
                                   type="button"
                                   onClick={() => {
                                     setEditingTestId(test.id);
-                                    setTestForm({ title: test.title, duration_mins: test.duration_mins, pass_mark: test.pass_mark, module_id: test.module_id ?? null });
+                                    setTestForm({ title: test.title, duration_mins: test.duration_mins, pass_mark: test.pass_mark, module_id: test.module_id ?? null, instructions: test.instructions ?? "" });
                                   }}
                                   className="p-1.5 border border-line rounded hover:bg-surface cursor-pointer text-slate hover:text-ink"
                                   title="Edit Test Settings"

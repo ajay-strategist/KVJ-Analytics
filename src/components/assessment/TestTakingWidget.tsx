@@ -17,6 +17,7 @@ import {
   Check,
   X,
   FileCode,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -1410,6 +1411,10 @@ export function TestTakingWidget({
 
   // 1. Introduction Screen (Before Test starts)
   if (!started && !isInline) {
+    const totalMarks = test.totalPossibleMarks ?? (test.questions || []).reduce((acc: number, q: any) => acc + Number(q.marks || 1), 0);
+    const passPercent = test.passMark !== undefined && test.passMark !== null ? test.passMark : 70;
+    const requiredPassingMarks = Math.ceil((totalMarks * passPercent) / 100);
+
     return (
       <div className={`py-8 font-body flex justify-center items-center min-h-[400px] ${colors.container}`}>
         <div className="max-w-xl w-full mx-auto px-4">
@@ -1421,42 +1426,78 @@ export function TestTakingWidget({
               <h1 className="text-xl font-bold font-display mt-3">{test.title}</h1>
             </div>
 
-            <div className="space-y-4 text-xs font-medium leading-relaxed">
-              <div className={`grid grid-cols-2 gap-4 border rounded-lg p-4 bg-surface/20 ${colors.line}`}>
-                {!isInline && (
-                  <div>
-                    <span className={`${colors.slate} opacity-60 text-[10px] uppercase block`}>Duration</span>
-                    <span className="text-sm font-bold">{test.durationMins} Minutes</span>
-                  </div>
-                )}
-                <div className={isInline ? "col-span-2 text-center" : ""}>
-                  <span className={`${colors.slate} opacity-60 text-[10px] uppercase block`}>Questions</span>
+            <div className="space-y-5 text-xs font-medium leading-relaxed">
+              {/* Detailed Exam Summary Grid */}
+              <div className={`grid grid-cols-2 sm:grid-cols-3 gap-3 border rounded-xl p-4 bg-surface/20 ${colors.line}`}>
+                <div>
+                  <span className={`${colors.slate} opacity-60 text-[10px] uppercase font-bold block`}>Duration</span>
+                  <span className="text-sm font-bold">{test.durationMins} Mins</span>
+                </div>
+                <div>
+                  <span className={`${colors.slate} opacity-60 text-[10px] uppercase font-bold block`}>Questions</span>
                   <span className="text-sm font-bold">{test.questions?.length || 0} Items</span>
                 </div>
-                {!isInline && (
-                  <div className={`col-span-2 border-t pt-2 mt-2 ${colors.line}`}>
-                    <span className={`${colors.slate} opacity-60 text-[10px] uppercase block`}>Passing Standard</span>
-                    <span className="text-sm font-bold">{test.passMark || 84}% Passing Score Required</span>
+                <div>
+                  <span className={`${colors.slate} opacity-60 text-[10px] uppercase font-bold block`}>Total Marks</span>
+                  <span className="text-sm font-bold">{totalMarks} Marks</span>
+                </div>
+                <div>
+                  <span className={`${colors.slate} opacity-60 text-[10px] uppercase font-bold block`}>Passing Standard</span>
+                  <span className="text-sm font-bold">{passPercent}% ({requiredPassingMarks} Marks)</span>
+                </div>
+                <div>
+                  <span className={`${colors.slate} opacity-60 text-[10px] uppercase font-bold block`}>Allowed Attempts</span>
+                  <span className="text-sm font-bold">
+                    {test.attemptsAllowed > 0 ? `${test.attemptsAllowed}` : "Unlimited"}
+                  </span>
+                </div>
+                <div>
+                  <span className={`${colors.slate} opacity-60 text-[10px] uppercase font-bold block`}>Negative Marking</span>
+                  <span className="text-sm font-bold">
+                    {test.negativeMarking > 0 ? `-${test.negativeMarking}` : "None"}
+                  </span>
+                </div>
+              </div>
+
+              {/* Instructions & Guidelines */}
+              <div className="space-y-2">
+                <h4 className="font-bold text-sm">Instructions &amp; Safety Guidelines:</h4>
+                {test.instructions ? (
+                  <div className={`p-3 rounded-lg border bg-surface/10 space-y-2 ${colors.line}`}>
+                    <p className={`whitespace-pre-line text-xs ${colors.ink}`}>{test.instructions}</p>
+                    <ul className={`list-disc pl-5 pt-2 border-t space-y-1 text-[11px] ${colors.slate} ${colors.line}`}>
+                      <li>Countdown timer will start as soon as you click Begin Exam.</li>
+                      <li>Answers cannot be modified once submitted.</li>
+                    </ul>
                   </div>
+                ) : (
+                  <ul className={`list-disc pl-5 space-y-1.5 ${colors.slate}`}>
+                    <li>Keep track of the countdown timer ({test.durationMins} minutes) at the top of the screen.</li>
+                    {test.negativeMarking > 0 ? (
+                      <li className="text-amber-500 dark:text-amber-400 font-semibold">
+                        Negative marking enabled: {test.negativeMarking} mark(s) deducted per wrong answer.
+                      </li>
+                    ) : (
+                      <li>No negative marking for incorrect answers.</li>
+                    )}
+                    {test.attemptsAllowed > 0 && (
+                      <li>You have a limit of {test.attemptsAllowed} attempt(s) for this assessment.</li>
+                    )}
+                    <li>Leaving the page or letting the timer expire will automatically submit the test.</li>
+                    <li>Answers cannot be modified once final submission is made.</li>
+                  </ul>
                 )}
               </div>
 
-              <div className="space-y-2">
-                <h4 className="font-bold">Instructions &amp; Safety:</h4>
-                {isInline ? (
-                  <ul className={`list-disc pl-5 space-y-1.5 ${colors.slate}`}>
-                    <li>Answer the questions at your own pace.</li>
-                    <li>You can view all questions directly or step-by-step.</li>
-                    <li>Answers cannot be modified once submitted.</li>
-                  </ul>
-                ) : (
-                  <ul className={`list-disc pl-5 space-y-1.5 ${colors.slate}`}>
-                    <li>Keep track of the countdown timer at the top of the interface.</li>
-                    <li>Leaving the page or letting the timer expire will automatically submit the test.</li>
-                    <li>Coding test cases are graded using isolated server-side sandbox environments.</li>
-                    <li>Answers cannot be modified once submitted.</li>
-                  </ul>
-                )}
+              {/* Best Wishes & Encouragement Banner */}
+              <div className={`p-3 rounded-xl border bg-brand/5 border-brand/20 text-center space-y-0.5`}>
+                <p className="text-xs font-bold text-brand flex items-center justify-center gap-1.5">
+                  <Sparkles className="w-4 h-4 text-brand animate-pulse" />
+                  Best Wishes &amp; Good Luck for Your Exam!
+                </p>
+                <p className={`${colors.slate} opacity-70 text-[10px] font-medium`}>
+                  Stay calm, read each question carefully, and do your best.
+                </p>
               </div>
             </div>
 

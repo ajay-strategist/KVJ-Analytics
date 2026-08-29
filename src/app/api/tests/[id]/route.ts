@@ -284,11 +284,17 @@ export async function GET(
       }
     }
 
+    const totalPossibleMarks = finalQuestions.reduce((acc, q: any) => acc + Number(q.marks || 1), 0);
+
     const sanitizedTest = {
       id: test.id,
       title: test.title,
       durationMins: test.duration_mins,
       passMark: test.pass_mark,
+      attemptsAllowed: test.attempts_allowed ?? 0,
+      negativeMarking: test.negative_marking ?? 0,
+      instructions: test.instructions || "",
+      totalPossibleMarks: totalPossibleMarks,
       questions: finalQuestions,
       courseSlug: course?.slug || "",
     };
