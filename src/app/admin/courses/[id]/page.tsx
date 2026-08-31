@@ -463,13 +463,13 @@ const LessonEditor = React.memo(function LessonEditor({
       kind: finalKind,
       content_html: (finalKind === "assessment" || editorKind === "inline_assessment") ? "" : finalContentHtml,
       max_score: finalKind === "activity" ? maxScore : null,
-      assessment_settings: (finalKind === "assessment" || editorKind === "inline_assessment") ? {
+      assessment_settings: (finalKind === "assessment" || editorKind === "inline_assessment") ? ({
         duration_mins: durationMins, pass_mark: passMark,
         attempts_allowed: attemptsAllowed, negative_marking: negativeMarking,
         instructions: instructions,
         randomize, randomize_options: randomizeOptions, publish_results: publishResults,
         is_inline: editorKind === "inline_assessment",
-      } : undefined,
+      } as any) : undefined,
     });
   };
 

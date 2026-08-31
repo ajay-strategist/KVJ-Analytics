@@ -40,7 +40,7 @@ function SignUpForm() {
     setLoading(true);
 
     try {
-      // 1. Call our custom pre-signup API check to handle pre-created accounts
+      // 1. Call our custom auth signup API to create/update account with email_confirm: true
       const checkRes = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -49,50 +49,18 @@ function SignUpForm() {
       const checkData = await checkRes.json();
       
       if (!checkRes.ok) {
-        throw new Error(checkData.error || "Signup check failed.");
+        throw new Error(checkData.error || "Signup failed.");
       }
 
-      let activeUserId = "";
+      let activeUserId = checkData?.user?.id || "";
 
-      if (checkData.preCreated) {
-        // If account was pre-created by admin, login immediately with the password they just set
-        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-          email,
-          password
-        });
-        if (signInError) throw signInError;
-        activeUserId = signInData?.user?.id || "";
-      } else {
-        // Otherwise, run standard new user signup
-        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: { name },
-          },
-        });
-        if (signUpError) throw signUpError;
-
-        const user = signUpData?.user;
-        if (user) {
-          activeUserId = user.id;
-          // Update profile details
-          const { error: profileError } = await supabase
-            .from("profiles")
-            .update({
-              full_name: name,
-              name: name,
-              phone: phone,
-              profession: profession,
-              account_type: "individual",
-            })
-            .eq("id", user.id);
-
-          if (profileError) {
-            console.error("Error writing profile metadata:", profileError);
-          }
-        }
-      }
+      // 2. Sign in immediately with the password set (bypasses email confirmation)
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+      if (signInError) throw signInError;
+      activeUserId = signInData?.user?.id || activeUserId;
 
       // 2. Claim batch roster enrollments if any matching invited records exist
       if (activeUserId) {

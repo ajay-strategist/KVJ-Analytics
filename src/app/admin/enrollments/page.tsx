@@ -33,6 +33,7 @@ interface Enrollment {
   enrollment_method: "paid" | "college_code";
   status: "active" | "suspended" | "completed";
   created_at: string;
+  batch_name?: string;
   profiles: {
     name: string;
     organization: string;
@@ -461,6 +462,7 @@ export default function AdminEnrollmentsPage() {
                   <thead>
                     <tr className="bg-surface border-b border-line text-xs font-bold uppercase tracking-wider text-slate">
                       <th className="p-4 pl-6">Student Info</th>
+                      <th className="p-4">Batch Name</th>
                       <th className="p-4">College / Organization</th>
                       <th className="p-4">Registered Course</th>
                       <th className="p-4">Enrollment Method</th>
@@ -486,6 +488,15 @@ export default function AdminEnrollmentsPage() {
                                 {e.profiles?.phone || "N/A"}
                               </span>
                             </div>
+                          </td>
+                          <td className="p-4">
+                            {e.batch_name ? (
+                              <span className="inline-flex items-center px-2.5 py-1 rounded text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                {e.batch_name}
+                              </span>
+                            ) : (
+                              <span className="text-slate-400">—</span>
+                            )}
                           </td>
                           <td className="p-4">
                             <div className="flex items-center space-x-1.5 font-semibold text-ink">

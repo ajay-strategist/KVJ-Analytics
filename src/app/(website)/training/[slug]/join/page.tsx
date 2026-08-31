@@ -78,17 +78,45 @@ export default function CollegeJoinPage() {
           throw new Error("Email and password are required to create your student account.");
         }
         
-        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+        // Use server signup API to guarantee email_confirm: true
+        const checkRes = await fetch("/api/auth/signup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: formData.email,
+            password: formData.password,
+            name: formData.name,
+            phone: formData.phone || "",
+            profession: "student",
+          }),
+        });
+        const checkData = await checkRes.json();
+        if (!checkRes.ok) {
+          throw new Error(checkData.error || "Account creation failed.");
+        }
+
+        let { error: signInError } = await supabase.auth.signInWithPassword({
           email: formData.email,
           password: formData.password,
-          options: {
-            data: { name: formData.name },
-          },
         });
 
-        if (signUpError) throw signUpError;
-        if (!signUpData.user) throw new Error("Account creation failed.");
-        activeUserId = signUpData.user.id;
+        if (signInError && (
+          signInError.message?.toLowerCase().includes("email not confirmed") ||
+          signInError.message?.toLowerCase().includes("confirm")
+        )) {
+          await fetch("/api/auth/confirm-user", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: formData.email }),
+          });
+          const retry = await supabase.auth.signInWithPassword({
+            email: formData.email,
+            password: formData.password,
+          });
+          signInError = retry.error;
+        }
+
+        activeUserId = checkData?.user?.id;
       }
 
       const response = await fetch(`/api/courses/${slug}/join`, {

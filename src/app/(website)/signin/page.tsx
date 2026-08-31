@@ -65,7 +65,31 @@ function SignInForm() {
         signInParams = { phone: formattedPhone, password };
       }
 
-      const { error: authError } = await supabase.auth.signInWithPassword(signInParams);
+      let { error: authError } = await supabase.auth.signInWithPassword(signInParams);
+
+      if (authError && (
+        authError.message?.toLowerCase().includes("email not confirmed") ||
+        authError.message?.toLowerCase().includes("email_not_confirmed") ||
+        authError.message?.toLowerCase().includes("confirm")
+      )) {
+        try {
+          const confirmRes = await fetch("/api/auth/confirm-user", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email: isEmail ? email.trim() : undefined,
+              phone: !isEmail ? email.trim() : undefined,
+            }),
+          });
+
+          if (confirmRes.ok) {
+            const retry = await supabase.auth.signInWithPassword(signInParams);
+            authError = retry.error;
+          }
+        } catch (confirmErr) {
+          console.error("Auto confirm attempt error:", confirmErr);
+        }
+      }
 
       if (authError) throw authError;
 

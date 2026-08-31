@@ -49,6 +49,32 @@ export async function GET(req: NextRequest) {
 
     if (enrollError) throw enrollError;
 
+    const userIds = (enrollments ?? []).map((e: any) => e.user_id).filter(Boolean);
+    let batchMap: Record<string, string> = {};
+    if (userIds.length > 0) {
+      try {
+        const { data: bStudents } = await supabaseAdmin
+          .from("batch_students")
+          .select("profile_id, batches(college_name)")
+          .in("profile_id", userIds);
+
+        if (bStudents) {
+          bStudents.forEach((bs: any) => {
+            if (bs.profile_id && bs.batches?.college_name) {
+              batchMap[bs.profile_id] = bs.batches.college_name;
+            }
+          });
+        }
+      } catch (err) {
+        console.warn("Failed to resolve batch map for enrollments:", err);
+      }
+    }
+
+    const processedEnrollments = (enrollments ?? []).map((e: any) => ({
+      ...e,
+      batch_name: batchMap[e.user_id] || (e.profiles?.organization ? e.profiles.organization : null) || null,
+    }));
+
     // 2. Fetch mock test attempts with student name and organization
     const { data: attempts, error: attemptError } = await supabaseAdmin
       .from("test_attempts")
@@ -103,7 +129,7 @@ export async function GET(req: NextRequest) {
 
     if (activityError) throw activityError;
 
-    return NextResponse.json({ enrollments, attempts, orders, activityResults: activityResults || [] });
+    return NextResponse.json({ enrollments: processedEnrollments, attempts, orders, activityResults: activityResults || [] });
   } catch (error: any) {
     console.error("Failed to fetch admin learning records:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });

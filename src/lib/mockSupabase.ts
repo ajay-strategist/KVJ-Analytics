@@ -2354,6 +2354,56 @@ class MockSupabaseAuth {
           error: null,
         };
       },
+      listUsers: async (params?: any) => {
+        return {
+          data: {
+            users: mockDb.profiles.map((p) => ({
+              id: p.id,
+              email: (p as any).email || "student@kvjanalytics.in",
+              phone: (p as any).phone || "",
+              email_confirmed_at: new Date().toISOString(),
+              user_metadata: { full_name: p.name },
+            })),
+          },
+          error: null,
+        };
+      },
+      updateUserById: async (user_id: string, attributes: any) => {
+        const profile = mockDb.profiles.find((p) => p.id === user_id);
+        if (profile && attributes.user_metadata?.full_name) {
+          profile.name = attributes.user_metadata.full_name;
+        }
+        return {
+          data: {
+            user: {
+              id: user_id,
+              email: (profile as any)?.email || "student@kvjanalytics.in",
+              email_confirmed_at: new Date().toISOString(),
+              user_metadata: attributes.user_metadata || {},
+            },
+          },
+          error: null,
+        };
+      },
+      createUser: async (attributes: any) => {
+        const newId = `usr-${Math.random().toString(36).substring(2, 9)}`;
+        const user = {
+          id: newId,
+          email: attributes.email,
+          phone: attributes.phone,
+          email_confirmed_at: new Date().toISOString(),
+          user_metadata: attributes.user_metadata || {},
+        };
+        mockDb.profiles.push({
+          id: newId,
+          name: attributes.user_metadata?.full_name || "Student",
+          email: attributes.email,
+          phone: attributes.phone || "",
+          role: "student",
+          created_at: new Date().toISOString(),
+        });
+        return { data: { user }, error: null };
+      },
     };
   }
 }

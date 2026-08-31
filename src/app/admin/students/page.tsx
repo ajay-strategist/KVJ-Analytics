@@ -2,13 +2,13 @@
 
 import React, { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, KeyRound, X, Plus } from "lucide-react";
+import { Eye, KeyRound, X, Plus, BookPlus, GraduationCap, CheckCircle } from "lucide-react";
 import { DataTable, StatusBadge, AvatarCell, RowActions, formatDate, type Column } from "@/components/admin/DataTable";
 import { useAdminFetch } from "@/components/admin/hooks/useAdminFetch";
 
 interface Student {
   id: string; name: string; full_name?: string; organization?: string; phone?: string;
-  email?: string; profession?: string; account_type?: string; enrollment_count: number; created_at: string;
+  email?: string; profession?: string; account_type?: string; batch_name?: string; enrollment_count: number; created_at: string;
 }
 interface StudentList { students: Student[]; total: number }
 
@@ -26,12 +26,21 @@ export default function AdminStudentsPage() {
   const [resetError, setResetError] = useState("");
   const [resetSuccess, setResetSuccess] = useState(false);
 
+  // Direct Enroll modal state
+  const [enrollStudent, setEnrollStudent] = useState<Student | null>(null);
+  const [enrollCourseId, setEnrollCourseId] = useState("");
+  const [enrollBatchId, setEnrollBatchId] = useState("");
+  const [enrollLoading, setEnrollLoading] = useState(false);
+  const [enrollError, setEnrollError] = useState("");
+  const [enrollSuccess, setEnrollSuccess] = useState("");
+
   const [showAddModal, setShowAddModal] = useState(false);
   const [addLoading, setAddLoading] = useState(false);
   const [addError, setAddError] = useState("");
-  const [courses, setCourses] = useState<{id: string, title: string}[]>([]);
+  const [courses, setCourses] = useState<{id: string, title: string, slug: string}[]>([]);
+  const [batches, setBatches] = useState<{id: string, college_name: string, course_slug: string}[]>([]);
   const [addForm, setAddForm] = useState({
-    name: "", email: "", phone: "", password: "", account_type: "individual", course_id: ""
+    name: "", email: "", phone: "", password: "", account_type: "individual", course_id: "", batch_id: ""
   });
 
   const url = useMemo(() => {
@@ -43,13 +52,22 @@ export default function AdminStudentsPage() {
 
   const { data, loading, error, reload } = useAdminFetch<StudentList>(url, { onUnauthorized: () => router.push("/admin") });
 
-  const loadCourses = async () => {
+  const loadCoursesAndBatches = async () => {
     try {
-      const res = await fetch("/api/admin/courses");
-      const d = await res.json();
-      if (d.courses) setCourses(d.courses);
+      const [cRes, bRes] = await Promise.all([
+        fetch("/api/admin/courses"),
+        fetch("/api/admin/batches")
+      ]);
+      if (cRes.ok) {
+        const cData = await cRes.json();
+        if (cData.courses) setCourses(cData.courses);
+      }
+      if (bRes.ok) {
+        const bData = await bRes.json();
+        if (bData.batches) setBatches(bData.batches);
+      }
     } catch (e) {
-      console.error(e);
+      console.error("Failed to load options:", e);
     }
   };
 
@@ -66,12 +84,46 @@ export default function AdminStudentsPage() {
       const d = await res.json();
       if (!res.ok) throw new Error(d.error || "Failed to add student");
       setShowAddModal(false);
-      setAddForm({ name: "", email: "", phone: "", password: "", account_type: "individual", course_id: "" });
+      setAddForm({ name: "", email: "", phone: "", password: "", account_type: "individual", course_id: "", batch_id: "" });
       reload();
     } catch (err: any) {
       setAddError(err.message);
     } finally {
       setAddLoading(false);
+    }
+  };
+
+  const handleDirectEnrollSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!enrollStudent || !enrollCourseId) return;
+    setEnrollLoading(true);
+    setEnrollError("");
+    setEnrollSuccess("");
+
+    try {
+      const res = await fetch("/api/admin/students/enroll", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: enrollStudent.id,
+          course_id: enrollCourseId,
+          batch_id: enrollBatchId || undefined,
+        })
+      });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d.error || "Failed to enroll student.");
+      setEnrollSuccess(d.message || "Student successfully enrolled!");
+      setTimeout(() => {
+        setEnrollStudent(null);
+        setEnrollCourseId("");
+        setEnrollBatchId("");
+        setEnrollSuccess("");
+        reload();
+      }, 1500);
+    } catch (err: any) {
+      setEnrollError(err.message);
+    } finally {
+      setEnrollLoading(false);
     }
   };
 
@@ -108,7 +160,14 @@ export default function AdminStudentsPage() {
       key: "name", header: "Student", sortable: true, sortValue: (r) => r.name, searchText: (r) => `${r.name} ${r.full_name ?? ""}`,
       cell: (r) => <AvatarCell name={r.full_name || r.name} sub={r.phone || r.email} />,
     },
-    { key: "organization", header: "Organization", sortable: true, cell: (r) => r.organization || "—" },
+    { key: "batch_name", header: "Batch Name", sortable: true, cell: (r) => (
+      r.batch_name ? (
+        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/60">
+          <GraduationCap className="w-3.5 h-3.5" /> {r.batch_name}
+        </span>
+      ) : <span className="text-slate-400">—</span>
+    )},
+    { key: "organization", header: "Organization / College", sortable: true, cell: (r) => r.organization || "—" },
     { key: "profession", header: "Profession", cell: (r) => r.profession ? r.profession.replace("_", " ") : "—" },
     { key: "account_type", header: "Account", sortable: true, cell: (r) => <StatusBadge label={r.account_type || "individual"} tone={r.account_type === "corporate" ? "blue" : r.account_type === "college" ? "cyan" : r.account_type === "one_to_one" ? "purple" : "slate"} /> },
     { key: "enrollment_count", header: "Enrollments", align: "center", cell: (r) => <span className="font-semibold text-slate-700">{r.enrollment_count}</span> },
@@ -123,7 +182,7 @@ export default function AdminStudentsPage() {
           <p className="text-sm text-slate-500">Every enrolled learner, synced from Supabase Auth profiles.</p>
         </div>
         <button
-          onClick={() => { setShowAddModal(true); loadCourses(); }}
+          onClick={() => { setShowAddModal(true); loadCoursesAndBatches(); }}
           className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
         >
           <Plus className="w-4 h-4" />
@@ -145,16 +204,102 @@ export default function AdminStudentsPage() {
         onPageChange={setPage}
         onQueryChange={(q) => { setQuery(q); setPage(1); }}
         onSortChange={(s) => { setSort(s); setPage(1); }}
-        searchPlaceholder="Search name, organization, phone…"
+        searchPlaceholder="Search name, organization, batch, phone…"
         emptyTitle="No students yet"
         emptyDescription="Students appear here once they sign up on the site."
         rowActions={(r) => (
           <RowActions actions={[
             { label: "View enrollments", icon: Eye, onClick: () => router.push(`/admin/enrollments`) },
+            { label: "Enroll in Course", icon: BookPlus, onClick: () => { setEnrollStudent(r); loadCoursesAndBatches(); setEnrollError(""); setEnrollSuccess(""); } },
             { label: "Reset password", icon: KeyRound, onClick: () => { setResetStudent(r); setNewPassword(""); setResetError(""); setResetSuccess(false); } },
           ]} />
         )}
       />
+
+      {/* Direct Course Enrollment Modal */}
+      {enrollStudent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200">
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+              <h3 className="font-semibold text-slate-800 flex items-center gap-2">
+                <BookPlus className="w-5 h-5 text-blue-600" />
+                Enroll Student in Course
+              </h3>
+              <button onClick={() => setEnrollStudent(null)} className="text-slate-400 hover:text-slate-600">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={handleDirectEnrollSubmit} className="p-6">
+              <p className="text-sm text-slate-600 mb-4">
+                Enrolling <strong>{enrollStudent.full_name || enrollStudent.name}</strong> ({enrollStudent.email || enrollStudent.phone || "Student"}).
+              </p>
+
+              {enrollError && (
+                <div className="text-sm text-rose-600 bg-rose-50 p-3 rounded-lg border border-rose-100 mb-4">
+                  {enrollError}
+                </div>
+              )}
+              {enrollSuccess && (
+                <div className="text-sm text-emerald-600 bg-emerald-50 p-3 rounded-lg border border-emerald-100 mb-4 flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4" /> {enrollSuccess}
+                </div>
+              )}
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                    Select Course *
+                  </label>
+                  <select
+                    required
+                    value={enrollCourseId}
+                    onChange={(e) => setEnrollCourseId(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                  >
+                    <option value="">-- Choose Course --</option>
+                    {courses.map((c) => (
+                      <option key={c.id} value={c.id}>{c.title}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                    Associate with Batch (Optional)
+                  </label>
+                  <select
+                    value={enrollBatchId}
+                    onChange={(e) => setEnrollBatchId(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                  >
+                    <option value="">-- No Batch Association --</option>
+                    {batches.map((b) => (
+                      <option key={b.id} value={b.id}>{b.college_name} ({b.course_slug})</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="mt-6 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setEnrollStudent(null)}
+                  className="px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={enrollLoading || !enrollCourseId || !!enrollSuccess}
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-lg transition-colors flex items-center gap-2"
+                >
+                  {enrollLoading ? "Enrolling..." : "Enroll Student"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
@@ -197,6 +342,13 @@ export default function AdminStudentsPage() {
                   <select value={addForm.course_id} onChange={e => setAddForm({...addForm, course_id: e.target.value})} className="w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
                     <option value="">-- No Course Enrollment --</option>
                     {courses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Assign to Batch (Optional)</label>
+                  <select value={addForm.batch_id} onChange={e => setAddForm({...addForm, batch_id: e.target.value})} className="w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+                    <option value="">-- No Batch --</option>
+                    {batches.map(b => <option key={b.id} value={b.id}>{b.college_name} ({b.course_slug})</option>)}
                   </select>
                 </div>
 
@@ -280,3 +432,4 @@ export default function AdminStudentsPage() {
     </div>
   );
 }
+

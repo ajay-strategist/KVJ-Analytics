@@ -39,9 +39,33 @@ export async function GET(req: NextRequest) {
   const { data, error, count } = await query;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
+  const studentIds = (data ?? []).map((s: any) => s.id).filter(Boolean);
+  let batchMap: Record<string, string> = {};
+
+  if (studentIds.length > 0) {
+    try {
+      const { data: bStudents } = await db
+        .from("batch_students")
+        .select("profile_id, email, batch_id, batches(college_name, course_slug)")
+        .in("profile_id", studentIds);
+
+      if (bStudents) {
+        bStudents.forEach((bs: any) => {
+          const bName = bs.batches?.college_name ? `${bs.batches.college_name}` : "";
+          if (bs.profile_id && bName) batchMap[bs.profile_id] = bName;
+          if (bs.email && bName) batchMap[bs.email.toLowerCase()] = bName;
+        });
+      }
+    } catch (err) {
+      console.warn("Failed to resolve student batch names:", err);
+    }
+  }
+
   const students = (data ?? []).map((s: any) => ({
     ...s,
     enrollment_count: Array.isArray(s.enrollments) ? (s.enrollments[0]?.count ?? 0) : 0,
+    batch_name: batchMap[s.id] || (s.email ? batchMap[s.email.toLowerCase()] : null) || (s.account_type === "college" && s.organization ? s.organization : null) || null,
   }));
   return NextResponse.json({ students, total: count ?? students.length });
 }
+

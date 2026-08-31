@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { name, email, phone, password, account_type, course_id } = body;
+    const { name, email, phone, password, account_type, course_id, batch_id } = body;
 
     if (!name || !email || !password || !account_type) {
       return NextResponse.json({ error: "Missing required fields." }, { status: 400 });
@@ -74,8 +74,28 @@ export async function POST(req: NextRequest) {
           user_id: userId,
           course_slug: courseData.slug,
           status: "active",
-          enrollment_method: account_type === "college" ? "college_code" : "admin_manual"
+          enrollment_method: account_type === "college" || batch_id ? "college_code" : "admin_manual"
         });
+      }
+    }
+
+    // 4. Associate with batch if selected
+    if (batch_id) {
+      const { data: batch } = await db.from("batches").select("college_name").eq("id", batch_id).single();
+      if (batch) {
+        await db.from("batch_students").insert({
+          batch_id,
+          profile_id: userId,
+          name,
+          email,
+          phone: formattedPhone,
+          status: "JOINED"
+        });
+
+        await db.from("profiles").update({
+          organization: batch.college_name,
+          account_type: "college"
+        }).eq("id", userId);
       }
     }
 
