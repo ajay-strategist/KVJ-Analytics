@@ -53,45 +53,70 @@ function SignInForm() {
       }
 
       // Normal student login via Supabase.
-      // Check if input is email or phone number
       const isEmail = email.includes("@");
+      const cleanInput = email.trim();
       
-      let signInParams;
+      let signInParams: any;
       if (isEmail) {
-        signInParams = { email, password };
+        signInParams = { email: cleanInput, password };
       } else {
-        // Format as phone number (assuming +91 if no + is provided)
-        const formattedPhone = email.startsWith("+") ? email : `+91${email.replace(/\D/g, "")}`;
+        const formattedPhone = cleanInput.startsWith("+") ? cleanInput : `+91${cleanInput.replace(/\D/g, "")}`;
         signInParams = { phone: formattedPhone, password };
       }
 
       let { error: authError } = await supabase.auth.signInWithPassword(signInParams);
 
-      if (authError && (
-        authError.message?.toLowerCase().includes("email not confirmed") ||
-        authError.message?.toLowerCase().includes("email_not_confirmed") ||
-        authError.message?.toLowerCase().includes("confirm")
-      )) {
-        try {
-          const confirmRes = await fetch("/api/auth/confirm-user", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              email: isEmail ? email.trim() : undefined,
-              phone: !isEmail ? email.trim() : undefined,
-            }),
-          });
+      if (authError) {
+        const errMsg = (authError.message || "").toLowerCase();
+        const isConfirmIssue =
+          errMsg.includes("email not confirmed") ||
+          errMsg.includes("email_not_confirmed") ||
+          errMsg.includes("confirm") ||
+          errMsg.includes("unconfirmed");
 
-          if (confirmRes.ok) {
+        if (isConfirmIssue) {
+          try {
+            const confirmRes = await fetch("/api/auth/confirm-user", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                email: isEmail ? cleanInput : undefined,
+                phone: !isEmail ? cleanInput : undefined,
+                password: password,
+              }),
+            });
+
+            const confirmData = await confirmRes.json();
+
+            // If backend returned a valid session token, set it on the client directly
+            if (confirmData?.session?.access_token && confirmData?.session?.refresh_token) {
+              const { error: sessionError } = await supabase.auth.setSession({
+                access_token: confirmData.session.access_token,
+                refresh_token: confirmData.session.refresh_token,
+              });
+              if (!sessionError) {
+                router.push(redirect);
+                router.refresh();
+                return;
+              }
+            }
+
+            // Retry sign in
             const retry = await supabase.auth.signInWithPassword(signInParams);
             authError = retry.error;
+          } catch (confirmErr) {
+            console.error("Auto confirm attempt error:", confirmErr);
           }
-        } catch (confirmErr) {
-          console.error("Auto confirm attempt error:", confirmErr);
         }
       }
 
-      if (authError) throw authError;
+      if (authError) {
+        let finalMessage = authError.message || "Failed to sign in. Please check your credentials.";
+        if (finalMessage.toLowerCase().includes("email not confirmed")) {
+          finalMessage = "Account auto-confirmed. Please click Sign In again.";
+        }
+        throw new Error(finalMessage);
+      }
 
       router.push(redirect);
       router.refresh();
