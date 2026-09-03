@@ -90,6 +90,23 @@ export function getDirectImageUrl(url: string): string {
   return trimmed;
 }
 
+/**
+ * Converts plain-text stem (with \n newlines) to HTML suitable for dangerouslySetInnerHTML.
+ * If the stem already contains HTML tags (e.g. <br>, <p>, <table>) it is returned as-is.
+ * Otherwise every \n is converted to a <br /> so multiline question text renders correctly.
+ */
+export function formatStemHtml(stem: string): string {
+  if (!stem) return "";
+  const hasHtmlTags = /<\/?[a-z][\s\S]*>/i.test(stem);
+  if (hasHtmlTags) return stem;
+  // Escape any stray < > & characters that aren't HTML tags, then convert \n -> <br />
+  const escaped = stem
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+  return escaped.replace(/\n/g, "<br />");
+}
+
 export const handleGoogleDriveImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
   const target = e.currentTarget;
   const currentSrc = target.src;
@@ -745,7 +762,7 @@ export function TestTakingWidget({
 
         {/* Question stem */}
         <div className="text-sm font-medium leading-relaxed space-y-4">
-          <div dangerouslySetInnerHTML={{ __html: q.stem }} className={`prose text-sm max-w-none ${darkMode ? "prose-invert text-zinc-300" : "text-ink"}`} />
+          <div dangerouslySetInnerHTML={{ __html: formatStemHtml(q.stem || "") }} className={`prose text-sm max-w-none ${darkMode ? "prose-invert text-zinc-300" : "text-ink"}`} />
           {q.image_url && (
             <div className="max-w-2xl mx-auto rounded-2xl overflow-hidden border border-line shadow-sm bg-white p-2">
               <img
@@ -2018,7 +2035,7 @@ export function TestTakingWidget({
                     {/* Question stem */}
                     <div>
                       <p className={`text-[10px] font-bold uppercase tracking-wider mb-1.5 ${darkMode ? "text-zinc-400" : "text-slate-400"}`}>Question</p>
-                      <div dangerouslySetInnerHTML={{ __html: q.stem }} className={`prose prose-sm max-w-none text-xs leading-relaxed ${darkMode ? "prose-invert text-zinc-300" : "text-ink"}`} />
+                      <div dangerouslySetInnerHTML={{ __html: formatStemHtml(q.stem || "") }} className={`prose prose-sm max-w-none text-xs leading-relaxed ${darkMode ? "prose-invert text-zinc-300" : "text-ink"}`} />
                       {q.image_url && (
                         <div className="mt-2 max-w-sm rounded-xl overflow-hidden border border-line shadow-sm bg-white p-1.5">
                           <img

@@ -19,6 +19,7 @@ import {
   Link2,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { formatStemHtml } from "@/components/assessment/TestTakingWidget";
 import dynamic from "next/dynamic";
 import { python } from "@codemirror/lang-python";
 import { javascript } from "@codemirror/lang-javascript";
@@ -2884,7 +2885,7 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
                   )}
                   <div
                     className="text-xs text-slate font-medium truncate max-w-xl"
-                    dangerouslySetInnerHTML={{ __html: q.stem || "" }}
+                    dangerouslySetInnerHTML={{ __html: formatStemHtml(q.stem || "") }}
                   />
                 </div>
               </div>
@@ -3023,7 +3024,7 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
                         </div>
                         <div
                           className="text-xs text-slate font-medium truncate max-w-2xl"
-                          dangerouslySetInnerHTML={{ __html: q.stem }}
+                          dangerouslySetInnerHTML={{ __html: formatStemHtml(q.stem || "") }}
                         />
                       </div>
                     </div>
