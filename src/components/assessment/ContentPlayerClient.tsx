@@ -315,13 +315,16 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
         setAttemptsCount(0);
         setHighestAttempt(null);
         try {
-          const { data: testData, error: testError } = await supabase
+          const { data: testsData, error: testError } = await supabase
             .from("mock_tests")
             .select("*")
             .eq("lesson_id", activeLesson.id)
-            .maybeSingle();
+            .order("created_at", { ascending: false });
 
-          if (testError) throw testError;
+          if (testError) {
+            console.error("Failed to load test:", testError);
+          }
+          const testData = testsData?.[0];
           if (testData) {
             setActiveTest(testData);
 

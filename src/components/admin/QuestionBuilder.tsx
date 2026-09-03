@@ -20,18 +20,11 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import dynamic from "next/dynamic";
+import { python } from "@codemirror/lang-python";
+import { javascript } from "@codemirror/lang-javascript";
+import { sql } from "@codemirror/lang-sql";
 
 const CodeMirror = dynamic(() => import("@uiw/react-codemirror"), { ssr: false });
-
-let python: any;
-let javascript: any;
-let sql: any;
-
-if (typeof window !== "undefined") {
-  python = require("@codemirror/lang-python").python;
-  javascript = require("@codemirror/lang-javascript").javascript;
-  sql = require("@codemirror/lang-sql").sql;
-}
 
 const QUESTION_TYPES = [
   { value: "single", label: "Single Choice", hint: "One correct (radio)" },
@@ -250,9 +243,13 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
   };
 
   const getExtensions = (lang: string) => {
-    if (lang === "python" && python) return [python()];
-    if ((lang === "javascript" || lang === "js") && javascript) return [javascript()];
-    if (lang === "sql" && sql) return [sql()];
+    try {
+      if (lang === "python" && typeof python === "function") return [python()];
+      if ((lang === "javascript" || lang === "js") && typeof javascript === "function") return [javascript()];
+      if (lang === "sql" && typeof sql === "function") return [sql()];
+    } catch (e) {
+      console.error("CodeMirror extension error:", e);
+    }
     return [];
   };
 
@@ -2037,7 +2034,7 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
                   )}
                   <div
                     className="text-xs text-slate font-medium truncate max-w-xl"
-                    dangerouslySetInnerHTML={{ __html: q.stem }}
+                    dangerouslySetInnerHTML={{ __html: q.stem || "" }}
                   />
                 </div>
               </div>

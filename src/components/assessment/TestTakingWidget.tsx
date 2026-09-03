@@ -28,18 +28,11 @@ import { SortableContext, verticalListSortingStrategy, useSortable } from "@dnd-
 import { CSS } from "@dnd-kit/utilities";
 
 import dynamic from "next/dynamic";
+import { python } from "@codemirror/lang-python";
+import { javascript } from "@codemirror/lang-javascript";
+import { sql } from "@codemirror/lang-sql";
 
 const CodeMirror = dynamic(() => import("@uiw/react-codemirror"), { ssr: false });
-
-let python: any;
-let javascript: any;
-let sql: any;
-
-if (typeof window !== "undefined") {
-  python = require("@codemirror/lang-python").python;
-  javascript = require("@codemirror/lang-javascript").javascript;
-  sql = require("@codemirror/lang-sql").sql;
-}
 
 export function isImageUrl(url: string): boolean {
   if (!url) return false;
@@ -371,36 +364,42 @@ export function TestTakingWidget({
         const resTest = await fetch(`/api/tests/${testId}${adminPreview ? "?preview=1" : ""}`);
         const testData = await resTest.json();
 
-        if (!resTest.ok) {
-          throw new Error(testData.error || "Mock test data unavailable.");
+        const testObj = testData?.test;
+        if (!testObj) {
+          throw new Error(testData?.error || "Mock test data unavailable.");
         }
 
-        setTest(testData.test);
+        setTest(testObj);
 
+        const duration = Number(testObj.durationMins ?? testObj.duration_mins ?? 30);
         if (autoStart && !isInline) {
           setStarted(true);
-          setTimeRemaining(testData.test.durationMins * 60);
+          setTimeRemaining(duration * 60);
           setVisitedIndexes(new Set([0]));
           onStart?.();
         }
 
         // Prepopulate answers configurations
         const defaultAnswers: Record<string, any> = {};
-        testData.test.questions.forEach((q: any) => {
+        (testObj.questions || []).forEach((q: any) => {
+          let config = q.config;
+          if (typeof config === "string") {
+            try { config = JSON.parse(config); } catch { config = {}; }
+          }
           if (q.type === "single") defaultAnswers[q.id] = null;
           else if (q.type === "multiple") defaultAnswers[q.id] = [];
           else if (q.type === "truefalse") defaultAnswers[q.id] = null;
           else if (q.type === "dragtable") defaultAnswers[q.id] = {};
           else if (q.type === "dragdrop") {
-            defaultAnswers[q.id] = (q.config?.left || []).map((l: string) => [l, ""]);
+            defaultAnswers[q.id] = (config?.left || []).map((l: string) => [l, ""]);
           } else if (q.type === "sequence") {
-            defaultAnswers[q.id] = [...(q.config?.items || [])];
+            defaultAnswers[q.id] = [...(config?.items || [])];
           } else if (q.type === "fillblank") {
-            defaultAnswers[q.id] = Array(q.config?.blanks?.length || 0).fill("");
+            defaultAnswers[q.id] = Array(config?.blanks?.length || 0).fill("");
           } else if (q.type === "matrix") {
-            defaultAnswers[q.id] = (q.config?.rows || []).map(() => []);
+            defaultAnswers[q.id] = (config?.rows || []).map(() => []);
           } else if (q.type === "code") {
-            defaultAnswers[q.id] = q.config?.starterCode || "";
+            defaultAnswers[q.id] = config?.starterCode || "";
           }
         });
         setAnswers(defaultAnswers);
@@ -496,9 +495,13 @@ export function TestTakingWidget({
   };
 
   const getExtensions = (lang: string) => {
-    if (lang === "python" && python) return [python()];
-    if ((lang === "javascript" || lang === "js") && javascript) return [javascript()];
-    if (lang === "sql" && sql) return [sql()];
+    try {
+      if (lang === "python" && typeof python === "function") return [python()];
+      if ((lang === "javascript" || lang === "js") && typeof javascript === "function") return [javascript()];
+      if (lang === "sql" && typeof sql === "function") return [sql()];
+    } catch (e) {
+      console.error("CodeMirror extension error:", e);
+    }
     return [];
   };
 

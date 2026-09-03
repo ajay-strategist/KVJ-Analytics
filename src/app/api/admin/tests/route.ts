@@ -65,11 +65,13 @@ export async function POST(req: NextRequest) {
 
     // If lesson_id is specified, check if a mock_test already exists for this lesson to prevent duplicates
     if (body.lesson_id) {
-      const { data: existing } = await db
+      const { data: existingList } = await db
         .from("mock_tests")
         .select("*")
         .eq("lesson_id", body.lesson_id)
-        .maybeSingle();
+        .order("created_at", { ascending: false });
+
+      const existing = existingList?.[0];
 
       if (existing) {
         const { id: _, ...updates } = body;
