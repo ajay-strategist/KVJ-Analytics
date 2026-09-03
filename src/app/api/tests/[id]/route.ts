@@ -51,6 +51,11 @@ function stripAnswers(type: string, config: any, randomizeOptions: boolean = fal
     if (c.draggables) {
       c.draggables = [...c.draggables].sort(() => Math.random() - 0.5);
     }
+  } else if (type === "pivot_table") {
+    delete c.correct;
+    if (c.labels) {
+      c.labels = [...c.labels].sort(() => Math.random() - 0.5);
+    }
   } else if (type === "dragdrop") {
     delete c.correctPairs;
     // Shuffle the right side items to present them randomly to the student
@@ -103,7 +108,7 @@ function getCorrectAnswerLabel(type: string, config: any) {
     return labels.join(", ");
   }
   if (type === "truefalse") return config.correct ? "True" : "False";
-  if (type === "dragtable") {
+  if (type === "dragtable" || type === "pivot_table") {
     const correct = config.correct || {};
     return Object.entries(correct)
       .map(([slot, val]) => `${slot} = ${val}`)
@@ -449,7 +454,7 @@ export async function POST(
       let feedback = "";
       let codeResults: any = null;
 
-      if (q.type === "dragtable") {
+      if (q.type === "dragtable" || q.type === "pivot_table") {
         const correct = config.correct || {};
         const slotKeys = Object.keys(correct);
         const numSlots = slotKeys.length > 0 ? slotKeys.length : 1;
@@ -460,7 +465,7 @@ export async function POST(
           for (const key of slotKeys) {
             const studentVal = String(studentAns[key] || "").trim();
             const expectedVal = String(correct[key] || "").trim();
-            if (studentVal.length > 0 && studentVal === expectedVal) {
+            if (studentVal.length > 0 && studentVal.toLowerCase() === expectedVal.toLowerCase()) {
               correctSlotsCount++;
             }
           }
@@ -468,8 +473,8 @@ export async function POST(
         earned = correctSlotsCount; // 1 mark per correct option
         isCorrect = slotKeys.length > 0 && correctSlotsCount === slotKeys.length;
         feedback = isCorrect
-          ? "All table slots matched correctly."
-          : `${correctSlotsCount}/${numSlots} table slots correct (+${correctSlotsCount} marks).`;
+          ? `All ${q.type === "pivot_table" ? "pivot table" : "table"} slots matched correctly.`
+          : `${correctSlotsCount}/${numSlots} slots correct (+${correctSlotsCount} marks).`;
       } else if (q.type === "dragdrop") {
         const correctPairs = config.correctPairs || [];
         const leftList = config.left || [];

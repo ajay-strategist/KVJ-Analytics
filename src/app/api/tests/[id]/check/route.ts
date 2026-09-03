@@ -29,7 +29,7 @@ function getCorrectAnswerLabel(type: string, config: any) {
     return labels.join(", ");
   }
   if (type === "truefalse") return config.correct ? "True" : "False";
-  if (type === "dragtable") {
+  if (type === "dragtable" || type === "pivot_table") {
     const correct = config.correct || {};
     return Object.entries(correct)
       .map(([slot, val]) => `${slot} = ${val}`)
@@ -170,7 +170,7 @@ export async function POST(
 
     if (studentAnswer === undefined || studentAnswer === null) {
       isCorrect = false;
-    } else if (q.type === "dragtable") {
+    } else if (q.type === "dragtable" || q.type === "pivot_table") {
       const correct = config.correct || {};
       const slotKeys = Object.keys(correct);
       let correctSlotsCount = 0;
@@ -178,7 +178,7 @@ export async function POST(
         for (const key of slotKeys) {
           const studentVal = String(studentAnswer[key] || "").trim();
           const expectedVal = String(correct[key] || "").trim();
-          if (studentVal.length > 0 && studentVal === expectedVal) {
+          if (studentVal.length > 0 && studentVal.toLowerCase() === expectedVal.toLowerCase()) {
             correctSlotsCount++;
           }
         }

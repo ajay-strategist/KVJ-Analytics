@@ -228,6 +228,55 @@ function TableDroppableSlot({
   );
 }
 
+function PivotDroppableSlot({
+  id,
+  slotId,
+  matchedItem,
+  onClear,
+  colors,
+}: {
+  id: string;
+  slotId: string;
+  matchedItem?: string;
+  onClear: () => void;
+  colors: any;
+}) {
+  const { isOver, setNodeRef } = useDroppable({ id });
+  return (
+    <div
+      ref={setNodeRef}
+      className={`p-2 border rounded-lg min-h-[42px] min-w-[100px] flex items-center justify-between text-xs font-semibold transition-all relative ${
+        isOver
+          ? "border-brand bg-brand/10 border-dashed ring-2 ring-brand/30"
+          : matchedItem
+          ? "border-emerald-500/40 bg-emerald-50 text-emerald-900 shadow-xs"
+          : "border-dashed border-slate-300 bg-slate-50/70 text-slate-500 hover:border-slate-400"
+      }`}
+    >
+      {matchedItem ? (
+        <>
+          <span className="truncate pr-1 select-none font-bold text-xs text-emerald-900">{matchedItem}</span>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onClear();
+            }}
+            className="text-error hover:bg-red-100/80 rounded-full font-bold text-xs cursor-pointer p-0.5 ml-auto shrink-0 transition-colors"
+            title="Remove label"
+          >
+            ✕
+          </button>
+        </>
+      ) : (
+        <span className="text-[11px] font-semibold text-slate-500 text-center w-full select-none pointer-events-none">
+          {slotId}
+        </span>
+      )}
+    </div>
+  );
+}
+
 // Sortable Item for Sequence Ordering
 function SortableSeqItem({ id, text, colors }: { id: string; text: string; colors: any }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
@@ -436,7 +485,7 @@ export function TestTakingWidget({
           if (q.type === "single") defaultAnswers[q.id] = null;
           else if (q.type === "multiple") defaultAnswers[q.id] = [];
           else if (q.type === "truefalse") defaultAnswers[q.id] = null;
-          else if (q.type === "dragtable") defaultAnswers[q.id] = {};
+          else if (q.type === "dragtable" || q.type === "pivot_table") defaultAnswers[q.id] = {};
           else if (q.type === "dragdrop") {
             defaultAnswers[q.id] = (config?.left || []).map((l: string) => [l, ""]);
           } else if (q.type === "sequence") {
@@ -996,6 +1045,136 @@ export function TestTakingWidget({
                               }
                               return (
                                 <td key={cIdx} className="p-3 text-xs font-semibold text-ink select-none">
+                                  {cell}
+                                </td>
+                              );
+                            })}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </DndContext>
+          )}
+
+          {q.type === "pivot_table" && (
+            <DndContext
+              sensors={sensors}
+              onDragEnd={(event) => {
+                const { over, active } = event;
+                if (!over || !active) return;
+                const dragItem = String(active.id);
+                const slotId = String(over.id).replace("pivot-slot-", "");
+                const currentAnswers = { ...(answers[q.id] || {}) };
+                currentAnswers[slotId] = dragItem;
+                setAnswers((prev) => ({ ...prev, [q.id]: currentAnswers }));
+              }}
+            >
+              <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
+                {/* 1. Source Reference Table (Left - 5 cols) */}
+                <div className="xl:col-span-5 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate">Source Data Table</h4>
+                  </div>
+                  {q.config?.sourceImage ? (
+                    <div className="border border-line rounded-xl p-2 bg-white overflow-hidden shadow-soft">
+                      <img
+                        src={getDirectImageUrl(q.config.sourceImage)}
+                        alt="Source Data Table"
+                        referrerPolicy="no-referrer"
+                        onError={handleGoogleDriveImageError}
+                        className="w-full object-contain max-h-96 rounded-lg"
+                      />
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto border border-line rounded-xl bg-white shadow-soft">
+                      <table className="w-full text-left border-collapse text-xs">
+                        <thead>
+                          <tr className="bg-slate-900 text-white border-b border-slate-700">
+                            {(q.config?.sourceTable?.headers || []).map((h: string, hIdx: number) => (
+                              <th key={hIdx} className="p-2.5 font-bold text-[10px] uppercase tracking-wider select-none">
+                                {h}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {(q.config?.sourceTable?.rows || []).map((row: string[], rIdx: number) => (
+                            <tr
+                              key={rIdx}
+                              className={`border-b border-line/60 last:border-0 ${
+                                rIdx % 2 === 1 ? "bg-slate-50/80" : "bg-white"
+                              } hover:bg-brand/5`}
+                            >
+                              {row.map((cell: string, cIdx: number) => (
+                                <td key={cIdx} className="p-2 text-xs font-medium text-slate-800 select-none">
+                                  {cell}
+                                </td>
+                              ))}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+
+                {/* 2. Draggable Labels Pool (Middle - 3 cols) */}
+                <div className="xl:col-span-3 space-y-3">
+                  <div>
+                    <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate">Labels</h4>
+                    <p className={`text-[10px] italic mt-0.5 ${colors.slate}`}>
+                      Drag labels to target locations on the right.
+                    </p>
+                  </div>
+                  <div className="flex flex-col gap-2 p-3 rounded-2xl border border-line bg-surface/50">
+                    {(q.config?.labels || []).map((label: string, lIdx: number) => (
+                      <DraggableItem key={`pivot-lbl-${lIdx}`} id={label} text={label} colors={colors} />
+                    ))}
+                  </div>
+                </div>
+
+                {/* 3. Target Pivot Table (Right - 4 cols) */}
+                <div className="xl:col-span-4 space-y-3">
+                  <div>
+                    <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate">Pivot Table</h4>
+                    <p className={`text-[10px] italic mt-0.5 ${colors.slate}`}>
+                      Drop appropriate labels into the target cells.
+                    </p>
+                  </div>
+                  <div className="overflow-x-auto border-2 border-slate-300 rounded-xl bg-white shadow-soft p-1">
+                    <table className="w-full text-left border-collapse">
+                      <tbody>
+                        {(q.config?.targetTable?.rows || []).map((row: string[], rIdx: number) => (
+                          <tr key={rIdx} className="border-b border-slate-200 last:border-0">
+                            {row.map((cell: string, cIdx: number) => {
+                              const isPlaceholder = cell.startsWith("{{") && cell.endsWith("}}");
+                              if (isPlaceholder) {
+                                const slotId = cell.replace("{{", "").replace("}}", "").trim();
+                                const matchedItem = (answers[q.id] || {})[slotId] || "";
+                                return (
+                                  <td key={cIdx} className="p-1.5 border-r border-slate-200 last:border-0 align-middle">
+                                    <PivotDroppableSlot
+                                      id={`pivot-slot-${slotId}`}
+                                      slotId={slotId}
+                                      matchedItem={matchedItem}
+                                      onClear={() => {
+                                        const nextAnswers = { ...(answers[q.id] || {}) };
+                                        delete nextAnswers[slotId];
+                                        setAnswers((prev) => ({ ...prev, [q.id]: nextAnswers }));
+                                      }}
+                                      colors={colors}
+                                    />
+                                  </td>
+                                );
+                              }
+                              return (
+                                <td
+                                  key={cIdx}
+                                  className="p-3 text-xs font-semibold text-ink border-r border-slate-200 last:border-0 select-none text-center bg-slate-50/40"
+                                >
                                   {cell}
                                 </td>
                               );
@@ -2029,6 +2208,116 @@ export function TestTakingWidget({
                       </div>
                     )}
 
+                    {/* Pivot Table Detailed Review */}
+                    {q.type === "pivot_table" && (
+                      <div className="space-y-4">
+                        {/* If source table exists, show it */}
+                        {(res.config?.sourceTable || q.config?.sourceTable) && (
+                          <div className={`p-4 rounded-2xl border ${darkMode ? "border-zinc-700 bg-zinc-800/50" : "border-slate-200 bg-slate-50/50"}`}>
+                            <p className={`text-[10px] font-bold uppercase tracking-wider mb-2 ${darkMode ? "text-zinc-400" : "text-slate-500"}`}>
+                              📊 Source Reference Data
+                            </p>
+                            <div className="overflow-x-auto border border-line rounded-xl bg-white max-h-56">
+                              <table className="w-full text-left text-xs border-collapse">
+                                <thead>
+                                  <tr className="bg-slate-900 text-white border-b border-slate-700">
+                                    {((res.config?.sourceTable || q.config?.sourceTable)?.headers || []).map((h: string, i: number) => (
+                                      <th key={i} className="p-2.5 font-bold text-[10px] uppercase tracking-wider">{h}</th>
+                                    ))}
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {((res.config?.sourceTable || q.config?.sourceTable)?.rows || []).map((row: string[], rIdx: number) => (
+                                    <tr key={rIdx} className="border-b border-line/60 last:border-0 hover:bg-slate-50">
+                                      {row.map((cell: string, cIdx: number) => (
+                                        <td key={cIdx} className="p-2 font-medium text-slate-700">{cell}</td>
+                                      ))}
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {/* Student's Answer Table */}
+                          <div className={`p-4 rounded-2xl border ${darkMode ? "border-zinc-700 bg-zinc-800/80" : "border-slate-200 bg-white shadow-soft"}`}>
+                            <div className="flex items-center justify-between mb-2">
+                              <p className={`text-[10px] font-bold uppercase tracking-wider ${darkMode ? "text-zinc-400" : "text-slate-500"}`}>📝 Your Pivot Table</p>
+                              <span className="text-[10px] font-bold text-slate-500">{res.earned}/{res.marks} pts</span>
+                            </div>
+                            <div className="overflow-x-auto border border-line rounded-xl">
+                              <table className="w-full text-left text-xs border-collapse">
+                                <tbody>
+                                  {((res.config?.targetTable || q.config?.targetTable)?.rows || []).map((row: string[], rIdx: number) => (
+                                    <tr key={rIdx} className={darkMode ? "border-b border-zinc-800 last:border-0" : "border-b border-slate-100 last:border-0"}>
+                                      {row.map((cell: string, cIdx: number) => {
+                                        const isPlaceholder = cell.startsWith("{{") && cell.endsWith("}}");
+                                        if (isPlaceholder) {
+                                          const slotId = cell.replace("{{", "").replace("}}", "").trim();
+                                          const sVal = String((res.studentAnswer || {})[slotId] || "").trim();
+                                          const cVal = String((res.config?.correct || q.config?.correct || {})[slotId] || "").trim();
+                                          const isMatch = sVal.length > 0 && sVal.toLowerCase() === cVal.toLowerCase();
+
+                                          return (
+                                            <td key={cIdx} className="p-2 font-semibold">
+                                              {sVal ? (
+                                                <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg border text-xs font-bold ${
+                                                  isMatch
+                                                    ? darkMode ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-300" : "border-emerald-300 bg-emerald-50 text-emerald-700"
+                                                    : darkMode ? "border-red-500/40 bg-red-500/10 text-red-300" : "border-red-300 bg-red-50 text-red-700"
+                                                }`}>
+                                                  {isMatch ? "✅" : "❌"} {sVal}
+                                                </span>
+                                              ) : (
+                                                <span className="text-[10px] italic opacity-50 text-slate-400">({slotId}: empty)</span>
+                                              )}
+                                            </td>
+                                          );
+                                        }
+                                        return <td key={cIdx} className={`p-2.5 font-semibold ${darkMode ? "text-zinc-300" : "text-slate-700"}`}>{cell}</td>;
+                                      })}
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+
+                          {/* Correct Answer Table */}
+                          <div className={`p-4 rounded-2xl border ${darkMode ? "border-emerald-500/30 bg-emerald-500/5" : "border-emerald-200 bg-emerald-50/60 shadow-soft"}`}>
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 mb-2">✅ Correct Pivot Table</p>
+                            <div className="overflow-x-auto border border-emerald-200 rounded-xl bg-white">
+                              <table className="w-full text-left text-xs border-collapse">
+                                <tbody>
+                                  {((res.config?.targetTable || q.config?.targetTable)?.rows || []).map((row: string[], rIdx: number) => (
+                                    <tr key={rIdx} className="border-b border-emerald-100 last:border-0">
+                                      {row.map((cell: string, cIdx: number) => {
+                                        const isPlaceholder = cell.startsWith("{{") && cell.endsWith("}}");
+                                        if (isPlaceholder) {
+                                          const slotId = cell.replace("{{", "").replace("}}", "").trim();
+                                          const cVal = String((res.config?.correct || q.config?.correct || {})[slotId] || "").trim();
+                                          return (
+                                            <td key={cIdx} className="p-2 font-semibold">
+                                              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg border border-emerald-400 bg-emerald-100 text-emerald-800 text-xs font-bold">
+                                                ✓ {cVal}
+                                              </span>
+                                            </td>
+                                          );
+                                        }
+                                        return <td key={cIdx} className="p-2.5 font-semibold text-slate-800">{cell}</td>;
+                                      })}
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Drag & Drop Pair Review */}
                     {q.type === "dragdrop" && (
                       <div className="space-y-2">
@@ -2064,8 +2353,8 @@ export function TestTakingWidget({
                       </div>
                     )}
 
-                    {/* Response + Answer key for non-MCQ non-DragTable non-DragDrop */}
-                    {q.type !== "single" && q.type !== "multiple" && q.type !== "dragtable" && q.type !== "dragdrop" && (
+                    {/* Response + Answer key for non-MCQ non-DragTable non-DragDrop non-PivotTable */}
+                    {q.type !== "single" && q.type !== "multiple" && q.type !== "dragtable" && q.type !== "dragdrop" && q.type !== "pivot_table" && (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div className={`p-3 rounded-xl border ${darkMode ? "border-zinc-700 bg-zinc-800" : "border-slate-200 bg-white"}`}>
                           <p className={`text-[10px] font-bold uppercase tracking-wider mb-1.5 ${darkMode ? "text-zinc-400" : "text-slate-400"}`}>📝 Your Answer</p>
@@ -2273,7 +2562,7 @@ export function TestTakingWidget({
                     isAnswered = Array.isArray(ans) && ans.length > 0;
                   } else if (q.type === "dragdrop") {
                     isAnswered = Array.isArray(ans) && ans.some((p: any) => p && p[1] && String(p[1]).trim() !== "");
-                  } else if (q.type === "dragtable") {
+                  } else if (q.type === "dragtable" || q.type === "pivot_table") {
                     isAnswered = ans && typeof ans === "object" && Object.values(ans).some((v: any) => v && String(v).trim() !== "");
                   } else if (q.type === "fillblank") {
                     isAnswered = Array.isArray(ans) && ans.some((s: string) => s.trim().length > 0);

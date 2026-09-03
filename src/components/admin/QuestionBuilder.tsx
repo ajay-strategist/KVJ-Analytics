@@ -33,6 +33,7 @@ const QUESTION_TYPES = [
   { value: "fillblank", label: "Fill in the Blank", hint: "Text / dropdown" },
   { value: "dragdrop", label: "Drag & Drop", hint: "Matching pairs" },
   { value: "dragtable", label: "Drag & Drop to Table", hint: "Drag items directly into table cells" },
+  { value: "pivot_table", label: "Pivot Table", hint: "Source table + Draggable labels to Target Pivot Table" },
   { value: "sequence", label: "Sequence", hint: "Reorder steps" },
   { value: "matrix", label: "Matrix / Grid", hint: "Rows × columns" },
   { value: "code", label: "Code", hint: "Sandbox execution" },
@@ -123,6 +124,7 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
   const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null);
   const [questionForm, setQuestionForm] = useState<any>({});
   const [uploadingOptionIdx, setUploadingOptionIdx] = useState<number | null>(null);
+  const [csvInput, setCsvInput] = useState("");
   const fileId = useId();
 
   const handleUploadOptionImage = async (file: File, idx: number) => {
@@ -362,6 +364,38 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
         correct: {
           "drop_0": "Average"
         }
+      };
+    } else if (type === "pivot_table") {
+      defaultConfig = {
+        sourceMode: "table",
+        sourceTable: {
+          headers: ["School", "Class", "Format", "Certified teacher"],
+          rows: [
+            ["School A", "Networking", "In Person", "6"],
+            ["School A", "Networking", "Virtual", "5"],
+            ["School A", "Data Analytics", "In Person", "2"],
+            ["School A", "Data Analytics", "Virtual", "3"],
+            ["School B", "Networking", "In Person", "9"],
+            ["School B", "Networking", "Virtual", "7"],
+            ["School B", "Data Analytics", "In Person", "2"],
+            ["School B", "Data Analytics", "Virtual", "4"],
+          ],
+        },
+        sourceImage: "",
+        labels: ["Data Analytics", "Networking", "In-Person", "Virtual", "School A", "School B"],
+        targetTable: {
+          rows: [
+            ["", "{{Label 1}}", "{{Label 2}}"],
+            ["{{Label 3}}", "11", "5"],
+            ["{{Label 4}}", "16", "6"],
+          ],
+        },
+        correct: {
+          "Label 1": "Networking",
+          "Label 2": "Data Analytics",
+          "Label 3": "School A",
+          "Label 4": "School B",
+        },
       };
     } else if (type === "sequence") {
       defaultConfig = { items: ["Item 1", "Item 2"], correctOrder: [0, 1] };
@@ -1582,6 +1616,623 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
               </div>
             )}
 
+            {questionForm.type === "pivot_table" && (
+              <div className="space-y-6">
+                {/* 1. Source Reference Data */}
+                <div className="border border-line/60 p-4 rounded-xl space-y-4 bg-white">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-line pb-3">
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">
+                        1. Source Reference Data (Left Panel)
+                      </label>
+                      <p className="text-[11px] text-slate-500">
+                        The dataset students will analyze. You can edit the table, paste CSV/TSV, or provide an image.
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1 bg-surface p-1 rounded-lg border border-line shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setQuestionForm((prev: any) => ({
+                            ...prev,
+                            config: { ...prev.config, sourceMode: "table" },
+                          }));
+                        }}
+                        className={`px-2.5 py-1 text-xs font-bold rounded-md transition-colors cursor-pointer ${
+                          (questionForm.config?.sourceMode || "table") === "table"
+                            ? "bg-brand text-white shadow-xs"
+                            : "text-slate hover:text-ink"
+                        }`}
+                      >
+                        Table Builder
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setQuestionForm((prev: any) => ({
+                            ...prev,
+                            config: { ...prev.config, sourceMode: "csv" },
+                          }));
+                        }}
+                        className={`px-2.5 py-1 text-xs font-bold rounded-md transition-colors cursor-pointer ${
+                          questionForm.config?.sourceMode === "csv"
+                            ? "bg-brand text-white shadow-xs"
+                            : "text-slate hover:text-ink"
+                        }`}
+                      >
+                        Paste CSV / TSV
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setQuestionForm((prev: any) => ({
+                            ...prev,
+                            config: { ...prev.config, sourceMode: "image" },
+                          }));
+                        }}
+                        className={`px-2.5 py-1 text-xs font-bold rounded-md transition-colors cursor-pointer ${
+                          questionForm.config?.sourceMode === "image"
+                            ? "bg-brand text-white shadow-xs"
+                            : "text-slate hover:text-ink"
+                        }`}
+                      >
+                        Image URL
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Mode: Paste CSV */}
+                  {questionForm.config?.sourceMode === "csv" && (
+                    <div className="space-y-3 bg-surface/40 p-3 rounded-lg border border-line">
+                      <label className="block text-[11px] font-bold text-slate">Paste Tab-Separated (TSV) or Comma-Separated (CSV) Data</label>
+                      <p className="text-[10px] text-slate-500">Copy table cells directly from Excel, Google Sheets, or CSV file and paste here.</p>
+                      <textarea
+                        rows={6}
+                        value={csvInput}
+                        onChange={(e) => setCsvInput(e.target.value)}
+                        placeholder="School	Class	Format	Certified teacher&#10;School A	Networking	In Person	6&#10;School A	Networking	Virtual	5"
+                        className="w-full text-xs font-mono p-2.5 border border-line rounded-lg bg-white"
+                      />
+                      <div className="flex items-center gap-2">
+                        <Button
+                          type="button"
+                          onClick={() => {
+                            if (!csvInput.trim()) return;
+                            const lines = csvInput.trim().split(/\r?\n/).filter((l) => l.trim().length > 0);
+                            if (lines.length === 0) return;
+                            // Detect delimiter: tab or comma
+                            const firstLine = lines[0];
+                            const delimiter = firstLine.includes("\t") ? "\t" : ",";
+                            const parsedHeaders = lines[0].split(delimiter).map((c) => c.trim());
+                            const parsedRows = lines.slice(1).map((line) => {
+                              const cells = line.split(delimiter).map((c) => c.trim());
+                              while (cells.length < parsedHeaders.length) cells.push("");
+                              return cells.slice(0, parsedHeaders.length);
+                            });
+                            setQuestionForm((prev: any) => ({
+                              ...prev,
+                              config: {
+                                ...prev.config,
+                                sourceMode: "table",
+                                sourceTable: {
+                                  headers: parsedHeaders,
+                                  rows: parsedRows,
+                                },
+                              },
+                            }));
+                            setCsvInput("");
+                          }}
+                          className="text-xs bg-brand text-white font-bold"
+                        >
+                          Apply to Source Table
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          onClick={() => {
+                            setQuestionForm((prev: any) => ({
+                              ...prev,
+                              config: { ...prev.config, sourceMode: "table" },
+                            }));
+                          }}
+                          className="text-xs"
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Mode: Image URL */}
+                  {questionForm.config?.sourceMode === "image" && (
+                    <div className="space-y-3 bg-surface/40 p-3 rounded-lg border border-line">
+                      <label className="block text-[11px] font-bold text-slate">Source Table Image URL</label>
+                      <input
+                        type="url"
+                        value={questionForm.config?.sourceImage || ""}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setQuestionForm((prev: any) => ({
+                            ...prev,
+                            config: { ...prev.config, sourceImage: val },
+                          }));
+                        }}
+                        placeholder="https://drive.google.com/file/d/... or direct image link"
+                        className="w-full text-xs p-2 border border-line rounded-lg bg-white"
+                      />
+                      {questionForm.config?.sourceImage && (
+                        <div className="p-2 border border-line rounded bg-white max-w-md">
+                          <p className="text-[10px] font-bold text-slate uppercase mb-1">Image Preview:</p>
+                          <img
+                            src={getDirectImageUrl(questionForm.config.sourceImage)}
+                            alt="Source Table Preview"
+                            referrerPolicy="no-referrer"
+                            onError={handleGoogleDriveImageError}
+                            className="max-h-48 rounded object-contain"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Mode: Table Builder (Default) */}
+                  {(questionForm.config?.sourceMode === "table" || !questionForm.config?.sourceMode) && (() => {
+                    const sourceTable = questionForm.config?.sourceTable || {
+                      headers: ["School", "Class", "Format", "Certified teacher"],
+                      rows: [],
+                    };
+                    const headers = sourceTable.headers || [];
+                    const rows = sourceTable.rows || [];
+
+                    return (
+                      <div className="space-y-3">
+                        {/* Headers */}
+                        <div className="space-y-2">
+                          <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">Columns / Headers</label>
+                          <div className="flex flex-wrap gap-2">
+                            {headers.map((h: string, idx: number) => (
+                              <div key={idx} className="flex items-center gap-1.5 bg-slate-900 text-white px-2.5 py-1 rounded-lg">
+                                <input
+                                  type="text"
+                                  value={h}
+                                  onChange={(e) => {
+                                    const newHeaders = [...headers];
+                                    newHeaders[idx] = e.target.value;
+                                    setQuestionForm((prev: any) => ({
+                                      ...prev,
+                                      config: {
+                                        ...prev.config,
+                                        sourceTable: { ...sourceTable, headers: newHeaders },
+                                      },
+                                    }));
+                                  }}
+                                  className="bg-transparent border-0 font-bold text-xs text-white focus:ring-0 w-28 p-0"
+                                />
+                                <button
+                                  type="button"
+                                  disabled={headers.length <= 1}
+                                  onClick={() => {
+                                    const newHeaders = [...headers];
+                                    newHeaders.splice(idx, 1);
+                                    const newRows = rows.map((r: string[]) => {
+                                      const nr = [...r];
+                                      nr.splice(idx, 1);
+                                      return nr;
+                                    });
+                                    setQuestionForm((prev: any) => ({
+                                      ...prev,
+                                      config: {
+                                        ...prev.config,
+                                        sourceTable: { headers: newHeaders, rows: newRows },
+                                      },
+                                    }));
+                                  }}
+                                  className="text-red-400 hover:text-red-300 font-bold text-xs disabled:opacity-30 cursor-pointer"
+                                >
+                                  ✕
+                                </button>
+                              </div>
+                            ))}
+                            <Button
+                              type="button"
+                              onClick={() => {
+                                const newHeaders = [...headers, `Column ${headers.length + 1}`];
+                                const newRows = rows.map((r: string[]) => [...r, ""]);
+                                setQuestionForm((prev: any) => ({
+                                  ...prev,
+                                  config: {
+                                    ...prev.config,
+                                    sourceTable: { headers: newHeaders, rows: newRows },
+                                  },
+                                }));
+                              }}
+                              variant="secondary"
+                              className="py-1 px-3 text-xs"
+                            >
+                              + Add Column
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Rows */}
+                        <div className="space-y-2">
+                          <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">Table Data Rows</label>
+                          <div className="overflow-x-auto border border-line rounded-lg bg-surface/20 max-h-72 overflow-y-auto">
+                            <table className="w-full text-left border-collapse min-w-[500px]">
+                              <thead>
+                                <tr className="bg-slate-900 text-white border-b border-slate-700">
+                                  {headers.map((h: string, idx: number) => (
+                                    <th key={idx} className="p-2 text-[10px] font-bold uppercase tracking-wider">
+                                      {h}
+                                    </th>
+                                  ))}
+                                  <th className="p-2 w-16"></th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {rows.map((row: string[], rIdx: number) => (
+                                  <tr key={rIdx} className="border-b border-line last:border-0 hover:bg-slate-50/50">
+                                    {row.map((cell: string, cIdx: number) => (
+                                      <td key={cIdx} className="p-1.5">
+                                        <input
+                                          type="text"
+                                          value={cell}
+                                          onChange={(e) => {
+                                            const newRows = rows.map((r: string[]) => [...r]);
+                                            newRows[rIdx][cIdx] = e.target.value;
+                                            setQuestionForm((prev: any) => ({
+                                              ...prev,
+                                              config: {
+                                                ...prev.config,
+                                                sourceTable: { ...sourceTable, rows: newRows },
+                                              },
+                                            }));
+                                          }}
+                                          className="w-full px-2 py-1 rounded border border-line bg-white text-xs font-medium"
+                                        />
+                                      </td>
+                                    ))}
+                                    <td className="p-1.5 text-right">
+                                      <button
+                                        type="button"
+                                        disabled={rows.length <= 1}
+                                        onClick={() => {
+                                          const newRows = [...rows];
+                                          newRows.splice(rIdx, 1);
+                                          setQuestionForm((prev: any) => ({
+                                            ...prev,
+                                            config: {
+                                              ...prev.config,
+                                              sourceTable: { ...sourceTable, rows: newRows },
+                                            },
+                                          }));
+                                        }}
+                                        className="text-error text-[11px] hover:underline disabled:opacity-30 cursor-pointer"
+                                      >
+                                        Remove
+                                      </button>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                          <Button
+                            type="button"
+                            onClick={() => {
+                              const newRow = Array(headers.length).fill("");
+                              setQuestionForm((prev: any) => ({
+                                ...prev,
+                                config: {
+                                  ...prev.config,
+                                  sourceTable: { ...sourceTable, rows: [...rows, newRow] },
+                                },
+                              }));
+                            }}
+                            variant="secondary"
+                            className="py-1 px-3 text-xs mt-1"
+                          >
+                            + Add Data Row
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+
+                {/* 2. Draggable Labels Pool */}
+                <div className="border border-line/60 p-4 rounded-xl space-y-3 bg-white">
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">
+                      2. Draggable Labels Pool (Center Panel)
+                    </label>
+                    <p className="text-[11px] text-slate-500">
+                      Options available for the student to drag into target pivot slots. Can include correct choices and decoys.
+                    </p>
+                  </div>
+                  {(() => {
+                    const labels = questionForm.config?.labels || [];
+                    const correct = questionForm.config?.correct || {};
+
+                    return (
+                      <div className="space-y-2">
+                        {labels.map((label: string, idx: number) => (
+                          <div key={idx} className="flex gap-2 items-center">
+                            <input
+                              type="text"
+                              required
+                              placeholder={`Label ${idx + 1}`}
+                              value={label}
+                              onChange={(e) => {
+                                const oldVal = label;
+                                const newVal = e.target.value;
+                                const newLabels = [...labels];
+                                newLabels[idx] = newVal;
+
+                                // Sync correct answers mapping if this label was used
+                                const newCorrect = { ...correct };
+                                Object.keys(newCorrect).forEach((k) => {
+                                  if (newCorrect[k] === oldVal) {
+                                    newCorrect[k] = newVal;
+                                  }
+                                });
+
+                                setQuestionForm((prev: any) => ({
+                                  ...prev,
+                                  config: { ...prev.config, labels: newLabels, correct: newCorrect },
+                                }));
+                              }}
+                              className="flex-1 px-3 py-1.5 rounded border border-line bg-white text-xs font-semibold"
+                            />
+                            <button
+                              type="button"
+                              disabled={labels.length <= 1}
+                              onClick={() => {
+                                const newLabels = [...labels];
+                                newLabels.splice(idx, 1);
+                                setQuestionForm((prev: any) => ({
+                                  ...prev,
+                                  config: { ...prev.config, labels: newLabels },
+                                }));
+                              }}
+                              className="text-error text-xs hover:underline shrink-0 disabled:opacity-30 cursor-pointer"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        ))}
+                        <Button
+                          type="button"
+                          onClick={() => {
+                            const newLabels = [...labels, `New Label ${labels.length + 1}`];
+                            setQuestionForm((prev: any) => ({
+                              ...prev,
+                              config: { ...prev.config, labels: newLabels },
+                            }));
+                          }}
+                          variant="secondary"
+                          className="py-1 px-3 text-xs mt-1"
+                        >
+                          + Add Draggable Label
+                        </Button>
+                      </div>
+                    );
+                  })()}
+                </div>
+
+                {/* 3. Target Pivot Table Builder */}
+                <div className="border border-line/60 p-4 rounded-xl space-y-4 bg-white">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-line pb-3">
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">
+                        3. Target Pivot Table Builder (Right Panel)
+                      </label>
+                      <p className="text-[11px] text-slate-500">
+                        Design the target pivot table. Any cell (header, row label, or value) can be toggled into a Droppable Target Slot.
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        className="py-1 px-2.5 text-xs"
+                        onClick={() => {
+                          const curRows = questionForm.config?.targetTable?.rows || [[""]];
+                          const newRows = curRows.map((r: string[]) => [...r, ""]);
+                          setQuestionForm((prev: any) => ({
+                            ...prev,
+                            config: {
+                              ...prev.config,
+                              targetTable: { rows: newRows },
+                            },
+                          }));
+                        }}
+                      >
+                        + Add Column
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        className="py-1 px-2.5 text-xs"
+                        onClick={() => {
+                          const curRows = questionForm.config?.targetTable?.rows || [[""]];
+                          const colCount = curRows[0]?.length || 1;
+                          const newRow = Array(colCount).fill("");
+                          setQuestionForm((prev: any) => ({
+                            ...prev,
+                            config: {
+                              ...prev.config,
+                              targetTable: { rows: [...curRows, newRow] },
+                            },
+                          }));
+                        }}
+                      >
+                        + Add Row
+                      </Button>
+                    </div>
+                  </div>
+
+                  {(() => {
+                    const targetTable = questionForm.config?.targetTable || { rows: [[""]] };
+                    const targetRows = targetTable.rows || [[""]];
+                    const labels = questionForm.config?.labels || [];
+                    const correct = questionForm.config?.correct || {};
+
+                    return (
+                      <div className="space-y-3">
+                        <div className="overflow-x-auto border border-line rounded-lg bg-surface/20">
+                          <table className="w-full text-left border-collapse min-w-[550px]">
+                            <tbody>
+                              {targetRows.map((row: string[], rIdx: number) => (
+                                <tr key={rIdx} className="border-b border-line last:border-0 hover:bg-slate-50/50">
+                                  {row.map((cell: string, cIdx: number) => {
+                                    const isPlaceholder = cell.startsWith("{{") && cell.endsWith("}}");
+                                    if (isPlaceholder) {
+                                      const slotId = cell.replace("{{", "").replace("}}", "").trim();
+                                      const matchedVal = correct[slotId] || "";
+
+                                      return (
+                                        <td key={cIdx} className="p-2 align-top">
+                                          <div className="p-2 border-2 border-dashed border-emerald-500 bg-emerald-50/70 rounded-lg space-y-1.5 shadow-xs">
+                                            <div className="flex items-center justify-between">
+                                              <span className="text-[10px] font-bold text-emerald-900 uppercase tracking-wider">
+                                                🎯 {slotId}
+                                              </span>
+                                              <button
+                                                type="button"
+                                                onClick={() => {
+                                                  const newRows = targetRows.map((r: string[]) => [...r]);
+                                                  newRows[rIdx][cIdx] = "";
+                                                  const newCorrect = { ...correct };
+                                                  delete newCorrect[slotId];
+                                                  setQuestionForm((prev: any) => ({
+                                                    ...prev,
+                                                    config: {
+                                                      ...prev.config,
+                                                      targetTable: { rows: newRows },
+                                                      correct: newCorrect,
+                                                    },
+                                                  }));
+                                                }}
+                                                className="text-red-500 hover:text-red-700 text-[10px] font-bold cursor-pointer"
+                                                title="Convert back to text cell"
+                                              >
+                                                ✕ Text
+                                              </button>
+                                            </div>
+                                            <select
+                                              value={matchedVal}
+                                              onChange={(e) => {
+                                                const newCorrect = { ...correct };
+                                                newCorrect[slotId] = e.target.value;
+                                                setQuestionForm((prev: any) => ({
+                                                  ...prev,
+                                                  config: { ...prev.config, correct: newCorrect },
+                                                }));
+                                              }}
+                                              className="w-full text-xs p-1 border border-emerald-400 rounded bg-white font-semibold text-emerald-900"
+                                            >
+                                              <option value="">-- Correct Match --</option>
+                                              {labels.map((l: string, lIdx: number) => (
+                                                <option key={lIdx} value={l}>
+                                                  {l}
+                                                </option>
+                                              ))}
+                                            </select>
+                                          </div>
+                                        </td>
+                                      );
+                                    }
+
+                                    return (
+                                      <td key={cIdx} className="p-2 align-top">
+                                        <div className="flex items-center gap-1.5">
+                                          <input
+                                            type="text"
+                                            value={cell}
+                                            placeholder={rIdx === 0 && cIdx === 0 ? "(empty corner)" : "Text / Value"}
+                                            onChange={(e) => {
+                                              const newRows = targetRows.map((r: string[]) => [...r]);
+                                              newRows[rIdx][cIdx] = e.target.value;
+                                              setQuestionForm((prev: any) => ({
+                                                ...prev,
+                                                config: {
+                                                  ...prev.config,
+                                                  targetTable: { rows: newRows },
+                                                },
+                                              }));
+                                            }}
+                                            className="flex-1 text-xs p-1.5 border border-line rounded bg-white font-semibold"
+                                          />
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              let nextSlotNum = 1;
+                                              const allRowsStr = JSON.stringify(targetRows);
+                                              const slotRegex = /Label\s*(\d+)/g;
+                                              let match;
+                                              const existingNums: number[] = [];
+                                              while ((match = slotRegex.exec(allRowsStr)) !== null) {
+                                                existingNums.push(Number(match[1]));
+                                              }
+                                              if (existingNums.length > 0) {
+                                                nextSlotNum = Math.max(...existingNums) + 1;
+                                              }
+                                              const slotId = `Label ${nextSlotNum}`;
+                                              const newRows = targetRows.map((r: string[]) => [...r]);
+                                              newRows[rIdx][cIdx] = `{{${slotId}}}`;
+                                              const newCorrect = { ...correct };
+                                              newCorrect[slotId] = labels[0] || "";
+                                              setQuestionForm((prev: any) => ({
+                                                ...prev,
+                                                config: {
+                                                  ...prev.config,
+                                                  targetTable: { rows: newRows },
+                                                  correct: newCorrect,
+                                                },
+                                              }));
+                                            }}
+                                            className="px-2 py-1.5 rounded border border-brand/25 bg-brand/5 text-brand text-[10px] font-bold hover:bg-brand/10 shrink-0 cursor-pointer"
+                                            title="Convert this cell to a droppable target slot"
+                                          >
+                                            🎯 Slot
+                                          </button>
+                                        </div>
+                                      </td>
+                                    );
+                                  })}
+                                  <td className="p-2 text-right align-middle">
+                                    <button
+                                      type="button"
+                                      disabled={targetRows.length <= 1}
+                                      onClick={() => {
+                                        const newRows = [...targetRows];
+                                        newRows.splice(rIdx, 1);
+                                        setQuestionForm((prev: any) => ({
+                                          ...prev,
+                                          config: {
+                                            ...prev.config,
+                                            targetTable: { rows: newRows },
+                                          },
+                                        }));
+                                      }}
+                                      className="text-error text-xs hover:underline disabled:opacity-30 cursor-pointer"
+                                    >
+                                      Remove
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              </div>
+            )}
+
             {questionForm.type === "sequence" && (
               <div>
                 <label className="block text-[10px] font-bold uppercase tracking-wider text-slate mb-1">Sequence Items (In Correct Order)</label>
@@ -2169,6 +2820,39 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
                         language: config?.language || "python",
                         starterCode: config?.starterCode ?? "# Write your Python code here\n",
                         testCases: Array.isArray(config?.testCases) ? config.testCases : [],
+                        ...config,
+                      };
+                    } else if (q.type === "pivot_table") {
+                      config = {
+                        sourceMode: config?.sourceMode || "table",
+                        sourceTable: config?.sourceTable || {
+                          headers: ["School", "Class", "Format", "Certified teacher"],
+                          rows: [
+                            ["School A", "Networking", "In Person", "6"],
+                            ["School A", "Networking", "Virtual", "5"],
+                            ["School A", "Data Analytics", "In Person", "2"],
+                            ["School A", "Data Analytics", "Virtual", "3"],
+                            ["School B", "Networking", "In Person", "9"],
+                            ["School B", "Networking", "Virtual", "7"],
+                            ["School B", "Data Analytics", "In Person", "2"],
+                            ["School B", "Data Analytics", "Virtual", "4"],
+                          ],
+                        },
+                        sourceImage: config?.sourceImage || "",
+                        labels: Array.isArray(config?.labels) ? config.labels : ["Data Analytics", "Networking", "In-Person", "Virtual", "School A", "School B"],
+                        targetTable: config?.targetTable || {
+                          rows: [
+                            ["", "{{Label 1}}", "{{Label 2}}"],
+                            ["{{Label 3}}", "11", "5"],
+                            ["{{Label 4}}", "16", "6"],
+                          ],
+                        },
+                        correct: config?.correct || {
+                          "Label 1": "Networking",
+                          "Label 2": "Data Analytics",
+                          "Label 3": "School A",
+                          "Label 4": "School B",
+                        },
                         ...config,
                       };
                     }
