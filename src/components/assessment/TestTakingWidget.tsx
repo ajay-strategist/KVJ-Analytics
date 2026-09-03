@@ -146,29 +146,37 @@ function DroppableSlot({
   const { isOver, setNodeRef } = useDroppable({ id });
   return (
     <div className="flex items-center gap-3">
-      <div className={`w-1/2 p-3 border rounded-lg text-xs font-semibold ${colors.card}`}>
+      <div className={`w-1/2 p-3 border rounded-lg text-xs font-semibold select-none ${colors.card}`}>
         {label}
       </div>
-      <div className={`${colors.slate} font-bold text-xs`}>⇌</div>
+      <div className={`${colors.slate} font-bold text-xs select-none`}>⇌</div>
       <div
         ref={setNodeRef}
         className={`w-1/2 p-3 border rounded-lg min-h-[46px] flex items-center justify-between text-xs font-semibold transition-all relative ${
-          isOver ? "border-brand bg-brand/5 border-dashed" : `${colors.card}`
+          isOver 
+            ? "border-brand bg-brand/10 border-dashed ring-2 ring-brand/30" 
+            : matchedItem 
+            ? "border-emerald-500/40 bg-emerald-50 text-emerald-900 shadow-xs" 
+            : `${colors.card} border-dashed`
         }`}
       >
         {matchedItem ? (
           <>
-            <span className={colors.ink}>{matchedItem}</span>
+            <span className="truncate select-none font-semibold text-xs text-emerald-900 pr-1">{matchedItem}</span>
             <button
               type="button"
-              onClick={onClear}
-              className="text-error font-bold text-xs hover:underline cursor-pointer bg-transparent border-none p-1"
+              onClick={(e) => {
+                e.stopPropagation();
+                onClear();
+              }}
+              className="text-error hover:bg-red-100/80 rounded-full font-bold text-xs cursor-pointer p-1 ml-auto shrink-0 transition-colors"
+              title="Remove match"
             >
               ✕
             </button>
           </>
         ) : (
-          <span className={`${colors.slate} opacity-40 italic`}>Drop match here</span>
+          <span className={`${colors.slate} opacity-40 italic select-none pointer-events-none`}>Drop match here</span>
         )}
       </div>
     </div>
@@ -192,25 +200,29 @@ function TableDroppableSlot({
       ref={setNodeRef}
       className={`p-2 border rounded-lg min-h-[38px] flex items-center justify-between text-xs font-semibold transition-all relative ${
         isOver
-          ? "border-brand bg-brand/5 border-dashed"
+          ? "border-brand bg-brand/10 border-dashed ring-2 ring-brand/30"
           : matchedItem
-          ? "border-emerald-500/30 bg-emerald-500/5 text-emerald-600"
-          : "border-dashed border-slate-300 bg-slate-50/50 text-slate-400"
+          ? "border-emerald-500/40 bg-emerald-50 text-emerald-900 shadow-xs"
+          : "border-dashed border-slate-300 bg-slate-50/70 text-slate-400 hover:border-slate-400"
       }`}
     >
       {matchedItem ? (
         <>
-          <span>{matchedItem}</span>
+          <span className="truncate pr-1 select-none font-semibold text-xs text-emerald-900">{matchedItem}</span>
           <button
             type="button"
-            onClick={onClear}
-            className="text-error font-bold text-xs hover:underline cursor-pointer bg-transparent border-none p-0.5 ml-2"
+            onClick={(e) => {
+              e.stopPropagation();
+              onClear();
+            }}
+            className="text-error hover:bg-red-100/80 rounded-full font-bold text-xs cursor-pointer p-0.5 ml-auto shrink-0 transition-colors"
+            title="Remove item"
           >
             ✕
           </button>
         </>
       ) : (
-        <span className="text-[10px] italic opacity-60 text-center w-full">Drop here</span>
+        <span className="text-[10px] italic opacity-60 text-center w-full select-none pointer-events-none">Drop here</span>
       )}
     </div>
   );
@@ -552,13 +564,13 @@ export function TestTakingWidget({
     const { over, active } = event;
     if (!over || !active) return;
 
-    const rightStr = active.id;
+    const rightStr = String(active.id);
     const leftStr = String(over.id).replace("slot-", "");
     const currentMatches = answers[currentQuestion.id] || [];
 
+    // Allow the same right choice to be assigned to multiple targets
     const nextMatches = currentMatches.map((p: any) => {
       if (p[0] === leftStr) return [leftStr, rightStr];
-      if (p[1] === rightStr) return [p[0], ""];
       return p;
     });
 
@@ -575,17 +587,11 @@ export function TestTakingWidget({
     const { over, active } = event;
     if (!over || !active) return;
 
-    const dragItem = active.id;
+    const dragItem = String(active.id);
     const slotId = String(over.id).replace("slot-", "");
     const currentAnswers = { ...(answers[currentQuestion.id] || {}) };
 
-    // If this item was already assigned to another slot, clear it from there
-    Object.keys(currentAnswers).forEach((key) => {
-      if (currentAnswers[key] === dragItem) {
-        delete currentAnswers[key];
-      }
-    });
-
+    // Allow assigning the same draggable item to multiple table slots
     currentAnswers[slotId] = dragItem;
     setAnswers((prev) => ({ ...prev, [currentQuestion.id]: currentAnswers }));
   };
@@ -933,35 +939,24 @@ export function TestTakingWidget({
             <DndContext sensors={sensors} onDragEnd={(event) => {
               const { over, active } = event;
               if (!over || !active) return;
-              const dragItem = active.id;
+              const dragItem = String(active.id);
               const slotId = String(over.id).replace("slot-", "");
               const currentAnswers = { ...(answers[q.id] || {}) };
-              Object.keys(currentAnswers).forEach((key) => {
-                if (currentAnswers[key] === dragItem) {
-                  delete currentAnswers[key];
-                }
-              });
+              // Allow assigning same option to multiple table slots
               currentAnswers[slotId] = dragItem;
               setAnswers((prev) => ({ ...prev, [q.id]: currentAnswers }));
             }}>
               <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
                 <div className="lg:col-span-1 border border-line p-4 rounded-2xl bg-surface/50 space-y-4">
-                  <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate">Draggable Options</h4>
-                  {(() => {
-                    const currentAnswers = answers[q.id] || {};
-                    const matchedOptions = Object.values(currentAnswers);
-                    const pool = (q.config.draggables || []).filter((d: string) => !matchedOptions.includes(d));
-                    if (pool.length === 0) {
-                      return <p className={`text-[11px] italic ${colors.slate}`}>All options matching.</p>;
-                    }
-                    return (
-                      <div className="flex flex-col gap-2.5">
-                        {pool.map((d: string) => (
-                          <DraggableItem key={d} id={d} text={d} colors={colors} />
-                        ))}
-                      </div>
-                    );
-                  })()}
+                  <div>
+                    <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate">Draggable Options</h4>
+                    <p className={`text-[10px] italic mt-0.5 ${colors.slate}`}>Options can be reused across multiple cells.</p>
+                  </div>
+                  <div className="flex flex-col gap-2.5">
+                    {(q.config.draggables || []).map((d: string, dIdx: number) => (
+                      <DraggableItem key={`dragtable-opt-${dIdx}`} id={d} text={d} colors={colors} />
+                    ))}
+                  </div>
                 </div>
                 <div className="lg:col-span-3 space-y-4">
                   <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate">Fill in the Answer Area</h4>
@@ -2274,8 +2269,12 @@ export function TestTakingWidget({
                   let isAnswered = false;
                   if (q.type === "single" || q.type === "truefalse") {
                     isAnswered = ans !== null && ans !== undefined;
-                  } else if (q.type === "multiple" || q.type === "dragdrop" || q.type === "sequence") {
+                  } else if (q.type === "multiple" || q.type === "sequence") {
                     isAnswered = Array.isArray(ans) && ans.length > 0;
+                  } else if (q.type === "dragdrop") {
+                    isAnswered = Array.isArray(ans) && ans.some((p: any) => p && p[1] && String(p[1]).trim() !== "");
+                  } else if (q.type === "dragtable") {
+                    isAnswered = ans && typeof ans === "object" && Object.values(ans).some((v: any) => v && String(v).trim() !== "");
                   } else if (q.type === "fillblank") {
                     isAnswered = Array.isArray(ans) && ans.some((s: string) => s.trim().length > 0);
                   } else if (q.type === "matrix") {
