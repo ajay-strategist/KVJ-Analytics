@@ -502,6 +502,48 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
     }
   };
 
+  const handleMarkCompleteAndNext = async () => {
+    if (!activeLesson) return;
+
+    const isCurrentlyCompleted = completedLessonIds.has(activeLesson.id);
+
+    if (!isCurrentlyCompleted) {
+      setActionLoading(true);
+      try {
+        if (!adminPreview && user) {
+          const response = await fetch("/api/activity-result", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              lessonId: activeLesson.id,
+              score: 100,
+              maxScore: 100,
+              courseSlug: course.slug,
+            }),
+          });
+
+          if (!response.ok) {
+            const errData = await response.json();
+            throw new Error(errData.error || "Failed to submit completion.");
+          }
+        }
+        setCompletedLessonIds((prev) => new Set([...prev, activeLesson.id]));
+      } catch (err: any) {
+        alert(err.message || "Failed to update completion status.");
+        setActionLoading(false);
+        return;
+      } finally {
+        setActionLoading(false);
+      }
+    }
+
+    if (nextLesson) {
+      handleLessonSelect(nextLesson);
+    } else {
+      router.push(`/training/${course.slug}`);
+    }
+  };
+
   const totalLessons = allLessons.length;
   const completedLessonsCount = completedLessonIds.size;
   const percentComplete = totalLessons > 0 ? Math.round((completedLessonsCount / totalLessons) * 100) : 0;
@@ -802,7 +844,7 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
             <div className="flex-1 overflow-y-auto p-6 md:p-10 relative">
               <div className="max-w-5xl mx-auto space-y-8">
 
-              {/* Lesson Title & Completion Toggle */}
+              {/* Lesson Title & Header */}
               <div className={`flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-6 ${darkMode ? "border-white/5" : "border-line"}`}>
                 <div>
                   <h1 className={`text-2xl md:text-3xl font-bold font-display tracking-tight ${darkMode ? "text-white" : "text-slate-900"}`}>
@@ -810,48 +852,15 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
                   </h1>
                 </div>
 
-                {activeLesson.kind === "assessment" ? (
-                  completedLessonIds.has(activeLesson.id) ? (
-                    <span className={`py-2 px-5 font-bold text-xs flex items-center gap-2 border rounded-lg ${
-                      darkMode
-                        ? "bg-emerald-500/10 text-emerald-450 border-emerald-500/25"
-                        : "bg-emerald-50 text-brand border-brand/20"
-                    }`}>
-                      <CheckCircle2 className="w-4 h-4" />
-                      <span>Passed / Completed</span>
-                    </span>
-                  ) : (
-                    <span className={`py-2 px-5 font-bold text-xs flex items-center gap-2 border rounded-lg ${
-                      darkMode
-                        ? "bg-zinc-500/10 text-zinc-400 border-zinc-700"
-                        : "bg-zinc-150/60 text-zinc-650 border-zinc-250/80"
-                    }`}>
-                      <span>Must Pass to Complete</span>
-                    </span>
-                  )
-                ) : (
-                  <Button
-                    onClick={handleMarkComplete}
-                    disabled={actionLoading}
-                    className={`py-2 px-5 font-bold text-xs flex items-center gap-2 border ${
-                      completedLessonIds.has(activeLesson.id)
-                        ? darkMode
-                          ? "bg-emerald-500/10 text-emerald-450 hover:bg-emerald-500/15 border-emerald-500/25"
-                          : "bg-emerald-50 text-brand hover:bg-emerald-100/80 border-brand/20"
-                        : "bg-[#10B981] text-black hover:bg-[#00D8FF] border-none shadow-[0_0_15px_rgba(16,185,129,0.1)]"
-                    }`}
-                  >
-                    {actionLoading ? (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    ) : completedLessonIds.has(activeLesson.id) ? (
-                      <>
-                        <CheckCircle2 className="w-4 h-4" />
-                        <span>Completed</span>
-                      </>
-                    ) : (
-                      <span>Mark Complete</span>
-                    )}
-                  </Button>
+                {completedLessonIds.has(activeLesson.id) && (
+                  <span className={`py-1.5 px-4 font-semibold text-xs flex items-center gap-1.5 border rounded-full ${
+                    darkMode
+                      ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/25"
+                      : "bg-emerald-50 text-[#08A88A] border-[#08A88A]/20"
+                  }`}>
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>Completed</span>
+                  </span>
                 )}
               </div>
 
@@ -1062,21 +1071,59 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
                     {activeIndex + 1} of {totalLessons}
                   </span>
 
-                  {nextLesson ? (
-                    <button
-                      type="button"
-                      onClick={() => activeLesson && handleLessonSelect(nextLesson!)}
-                      className="py-2 px-5 bg-[#10B981] hover:bg-[#0D9488] text-white text-sm font-semibold flex items-center gap-1.5 rounded-xl border-none transition-all shadow-[0_4px_15px_rgba(16,185,129,0.15)]"
-                    >
-                      Next Lesson <ChevronRight className="w-4 h-4" />
-                    </button>
+                  {activeLesson.kind === "assessment" ? (
+                    nextLesson ? (
+                      <button
+                        type="button"
+                        onClick={() => activeLesson && handleLessonSelect(nextLesson!)}
+                        className="py-2.5 px-6 bg-[#08A88A] hover:bg-[#068A72] text-white text-sm font-semibold flex items-center gap-1.5 rounded-xl border-none transition-all shadow-[0_4px_15px_rgba(8,168,138,0.2)]"
+                      >
+                        Next Lesson <ChevronRight className="w-4 h-4" />
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => router.push(`/training/${course.slug}`)}
+                        className="py-2.5 px-6 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold flex items-center gap-1.5 rounded-xl border-none transition-all shadow-[0_4px_15px_rgba(16,185,129,0.2)]"
+                      >
+                        Finish Course <CheckCircle2 className="w-4 h-4" />
+                      </button>
+                    )
                   ) : (
                     <button
                       type="button"
-                      onClick={() => router.push(`/training/${course.slug}`)}
-                      className="py-2 px-5 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold flex items-center gap-1.5 rounded-xl border-none transition-all shadow-[0_4px_15px_rgba(16,185,129,0.2)]"
+                      disabled={actionLoading}
+                      onClick={handleMarkCompleteAndNext}
+                      className="py-2.5 px-6 bg-[#08A88A] hover:bg-[#068A72] active:scale-[0.98] text-white text-sm font-bold flex items-center gap-2 rounded-xl border-none transition-all shadow-[0_4px_15px_rgba(8,168,138,0.25)]"
                     >
-                      Finish Course <CheckCircle2 className="w-4 h-4" />
+                      {actionLoading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>Saving...</span>
+                        </>
+                      ) : completedLessonIds.has(activeLesson.id) ? (
+                        nextLesson ? (
+                          <>
+                            <span>Next Lesson</span>
+                            <ChevronRight className="w-4 h-4" />
+                          </>
+                        ) : (
+                          <>
+                            <span>Finish Course</span>
+                            <CheckCircle2 className="w-4 h-4" />
+                          </>
+                        )
+                      ) : nextLesson ? (
+                        <>
+                          <span>Mark Complete & Next Lesson</span>
+                          <ChevronRight className="w-4 h-4" />
+                        </>
+                      ) : (
+                        <>
+                          <span>Mark Complete & Finish Course</span>
+                          <CheckCircle2 className="w-4 h-4" />
+                        </>
+                      )}
                     </button>
                   )}
                 </div>
