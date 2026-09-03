@@ -41,7 +41,13 @@ const QUESTION_TYPES = [
 export function isImageUrl(url: string): boolean {
   if (!url) return false;
   const cleanUrl = url.trim().toLowerCase();
-  if (cleanUrl.includes("drive.google.com") || cleanUrl.includes("onedrive.live.com")) {
+  if (
+    cleanUrl.includes("drive.google.com") ||
+    cleanUrl.includes("googleusercontent.com") ||
+    cleanUrl.includes("docs.google.com") ||
+    cleanUrl.includes("onedrive.live.com") ||
+    cleanUrl.includes("dropbox.com")
+  ) {
     return true;
   }
   return cleanUrl.startsWith("http") && (
@@ -57,26 +63,55 @@ export function isImageUrl(url: string): boolean {
 
 export function getDirectImageUrl(url: string): string {
   if (!url) return "";
-  
-  // 1. Google Drive
-  const gdRegex1 = /drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/;
-  const gdMatch1 = url.match(gdRegex1);
-  if (gdMatch1 && gdMatch1[1]) {
-    return `https://drive.google.com/uc?export=download&id=${gdMatch1[1]}`;
+  const trimmed = url.trim();
+
+  // 1. Google Drive (file/d/ID, open?id=ID, uc?id=ID, thumbnail?id=ID, etc.)
+  if (
+    trimmed.includes("drive.google.com") ||
+    trimmed.includes("docs.google.com") ||
+    trimmed.includes("googleusercontent.com")
+  ) {
+    const matchD = trimmed.match(/\/d\/([a-zA-Z0-9_-]+)/);
+    if (matchD && matchD[1]) {
+      return `https://lh3.googleusercontent.com/d/${matchD[1]}`;
+    }
+    const matchId = trimmed.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+    if (matchId && matchId[1]) {
+      return `https://lh3.googleusercontent.com/d/${matchId[1]}`;
+    }
   }
-  const gdRegex2 = /drive\.google\.com\/open\?id=([a-zA-Z0-9_-]+)/;
-  const gdMatch2 = url.match(gdRegex2);
-  if (gdMatch2 && gdMatch2[1]) {
-    return `https://drive.google.com/uc?export=download&id=${gdMatch2[1]}`;
-  }
-  
+
   // 2. OneDrive
-  if (url.includes("onedrive.live.com") && url.includes("/redir?")) {
-    return url.replace("/redir?", "/download?");
+  if (trimmed.includes("onedrive.live.com") && trimmed.includes("/redir?")) {
+    return trimmed.replace("/redir?", "/download?");
   }
-  
-  return url;
+
+  // 3. Dropbox
+  if (trimmed.includes("dropbox.com")) {
+    return trimmed.replace("?dl=0", "?raw=1").replace("&dl=0", "&raw=1");
+  }
+
+  return trimmed;
 }
+
+export const handleGoogleDriveImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+  const target = e.currentTarget;
+  const currentSrc = target.src;
+  if (currentSrc.includes("lh3.googleusercontent.com/d/")) {
+    const fileId = currentSrc.split("/d/")[1]?.split("?")[0]?.split("/")[0];
+    if (fileId) {
+      target.src = `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
+      return;
+    }
+  } else if (currentSrc.includes("drive.google.com/thumbnail?id=")) {
+    const match = currentSrc.match(/id=([a-zA-Z0-9_-]+)/);
+    if (match && match[1]) {
+      target.src = `https://drive.google.com/uc?export=view&id=${match[1]}`;
+      return;
+    }
+  }
+  target.style.display = "none";
+};
 
 interface QuestionBuilderProps {
   testId: string;
@@ -617,9 +652,18 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
                   src={getDirectImageUrl(questionForm.image_url)}
                   alt="Question Preview"
                   className="max-h-40 w-auto object-contain rounded"
+                  referrerPolicy="no-referrer"
                   onError={(e) => {
-                    (e.target as HTMLElement).style.display = "none";
-                    const nextSibling = (e.target as HTMLElement).nextElementSibling;
+                    const target = e.currentTarget;
+                    if (target.src.includes("lh3.googleusercontent.com/d/")) {
+                      const fileId = target.src.split("/d/")[1]?.split("?")[0]?.split("/")[0];
+                      if (fileId) {
+                        target.src = `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
+                        return;
+                      }
+                    }
+                    target.style.display = "none";
+                    const nextSibling = target.nextElementSibling;
                     if (nextSibling) (nextSibling as HTMLElement).style.display = "block";
                   }}
                 />
@@ -777,9 +821,24 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
                                 src={getDirectImageUrl(optImage)}
                                 alt={`Option ${idx + 1} preview`}
                                 className="max-h-32 max-w-[240px] object-contain rounded-lg border border-line bg-white shadow-xs p-1"
+                                referrerPolicy="no-referrer"
                                 onError={(e) => {
-                                  (e.target as HTMLElement).style.display = "none";
-                                  const parent = (e.target as HTMLElement).parentElement;
+                                  const target = e.currentTarget;
+                                  if (target.src.includes("lh3.googleusercontent.com/d/")) {
+                                    const fileId = target.src.split("/d/")[1]?.split("?")[0]?.split("/")[0];
+                                    if (fileId) {
+                                      target.src = `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
+                                      return;
+                                    }
+                                  } else if (target.src.includes("drive.google.com/thumbnail?id=")) {
+                                    const match = target.src.match(/id=([a-zA-Z0-9_-]+)/);
+                                    if (match && match[1]) {
+                                      target.src = `https://drive.google.com/uc?export=view&id=${match[1]}`;
+                                      return;
+                                    }
+                                  }
+                                  target.style.display = "none";
+                                  const parent = target.parentElement;
                                   if (parent) {
                                     const errMsg = parent.querySelector(".img-err");
                                     if (errMsg) (errMsg as HTMLElement).style.display = "block";
@@ -956,9 +1015,24 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
                                 src={getDirectImageUrl(optImage)}
                                 alt={`Option ${idx + 1} preview`}
                                 className="max-h-32 max-w-[240px] object-contain rounded-lg border border-line bg-white shadow-xs p-1"
+                                referrerPolicy="no-referrer"
                                 onError={(e) => {
-                                  (e.target as HTMLElement).style.display = "none";
-                                  const parent = (e.target as HTMLElement).parentElement;
+                                  const target = e.currentTarget;
+                                  if (target.src.includes("lh3.googleusercontent.com/d/")) {
+                                    const fileId = target.src.split("/d/")[1]?.split("?")[0]?.split("/")[0];
+                                    if (fileId) {
+                                      target.src = `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
+                                      return;
+                                    }
+                                  } else if (target.src.includes("drive.google.com/thumbnail?id=")) {
+                                    const match = target.src.match(/id=([a-zA-Z0-9_-]+)/);
+                                    if (match && match[1]) {
+                                      target.src = `https://drive.google.com/uc?export=view&id=${match[1]}`;
+                                      return;
+                                    }
+                                  }
+                                  target.style.display = "none";
+                                  const parent = target.parentElement;
                                   if (parent) {
                                     const errMsg = parent.querySelector(".img-err");
                                     if (errMsg) (errMsg as HTMLElement).style.display = "block";
@@ -2029,6 +2103,8 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
                     <img
                       src={getDirectImageUrl(q.image_url)}
                       alt="Thumbnail"
+                      referrerPolicy="no-referrer"
+                      onError={handleGoogleDriveImageError}
                       className="w-10 h-10 object-contain rounded border border-line bg-surface shrink-0"
                     />
                   )}

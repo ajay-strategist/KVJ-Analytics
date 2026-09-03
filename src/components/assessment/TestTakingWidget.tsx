@@ -37,7 +37,13 @@ const CodeMirror = dynamic(() => import("@uiw/react-codemirror"), { ssr: false }
 export function isImageUrl(url: string): boolean {
   if (!url) return false;
   const cleanUrl = url.trim().toLowerCase();
-  if (cleanUrl.includes("drive.google.com") || cleanUrl.includes("onedrive.live.com")) {
+  if (
+    cleanUrl.includes("drive.google.com") ||
+    cleanUrl.includes("googleusercontent.com") ||
+    cleanUrl.includes("docs.google.com") ||
+    cleanUrl.includes("onedrive.live.com") ||
+    cleanUrl.includes("dropbox.com")
+  ) {
     return true;
   }
   return cleanUrl.startsWith("http") && (
@@ -53,26 +59,55 @@ export function isImageUrl(url: string): boolean {
 
 export function getDirectImageUrl(url: string): string {
   if (!url) return "";
-  
-  // 1. Google Drive
-  const gdRegex1 = /drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/;
-  const gdMatch1 = url.match(gdRegex1);
-  if (gdMatch1 && gdMatch1[1]) {
-    return `https://drive.google.com/uc?export=download&id=${gdMatch1[1]}`;
+  const trimmed = url.trim();
+
+  // 1. Google Drive (file/d/ID, open?id=ID, uc?id=ID, thumbnail?id=ID, etc.)
+  if (
+    trimmed.includes("drive.google.com") ||
+    trimmed.includes("docs.google.com") ||
+    trimmed.includes("googleusercontent.com")
+  ) {
+    const matchD = trimmed.match(/\/d\/([a-zA-Z0-9_-]+)/);
+    if (matchD && matchD[1]) {
+      return `https://lh3.googleusercontent.com/d/${matchD[1]}`;
+    }
+    const matchId = trimmed.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+    if (matchId && matchId[1]) {
+      return `https://lh3.googleusercontent.com/d/${matchId[1]}`;
+    }
   }
-  const gdRegex2 = /drive\.google\.com\/open\?id=([a-zA-Z0-9_-]+)/;
-  const gdMatch2 = url.match(gdRegex2);
-  if (gdMatch2 && gdMatch2[1]) {
-    return `https://drive.google.com/uc?export=download&id=${gdMatch2[1]}`;
-  }
-  
+
   // 2. OneDrive
-  if (url.includes("onedrive.live.com") && url.includes("/redir?")) {
-    return url.replace("/redir?", "/download?");
+  if (trimmed.includes("onedrive.live.com") && trimmed.includes("/redir?")) {
+    return trimmed.replace("/redir?", "/download?");
   }
-  
-  return url;
+
+  // 3. Dropbox
+  if (trimmed.includes("dropbox.com")) {
+    return trimmed.replace("?dl=0", "?raw=1").replace("&dl=0", "&raw=1");
+  }
+
+  return trimmed;
 }
+
+export const handleGoogleDriveImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+  const target = e.currentTarget;
+  const currentSrc = target.src;
+  if (currentSrc.includes("lh3.googleusercontent.com/d/")) {
+    const fileId = currentSrc.split("/d/")[1]?.split("?")[0]?.split("/")[0];
+    if (fileId) {
+      target.src = `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
+      return;
+    }
+  } else if (currentSrc.includes("drive.google.com/thumbnail?id=")) {
+    const match = currentSrc.match(/id=([a-zA-Z0-9_-]+)/);
+    if (match && match[1]) {
+      target.src = `https://drive.google.com/uc?export=view&id=${match[1]}`;
+      return;
+    }
+  }
+  target.style.display = "none";
+};
 
 // Draggable Right Item for DragDrop Matching
 function DraggableItem({ id, text, colors }: { id: string; text: string; colors: any }) {
@@ -661,6 +696,8 @@ export function TestTakingWidget({
               <img
                 src={getDirectImageUrl(q.image_url)}
                 alt="Question attachment"
+                referrerPolicy="no-referrer"
+                onError={handleGoogleDriveImageError}
                 className="max-h-96 w-auto mx-auto object-contain rounded-xl"
               />
             </div>
@@ -738,9 +775,8 @@ export function TestTakingWidget({
                             src={getDirectImageUrl(optImage)}
                             alt={optLabel || `Option ${String.fromCharCode(65 + oIdx)}`}
                             className="max-h-52 w-auto object-contain mx-auto rounded"
-                            onError={(e) => {
-                              (e.target as HTMLElement).style.display = "none";
-                            }}
+                            referrerPolicy="no-referrer"
+                            onError={handleGoogleDriveImageError}
                           />
                         </div>
                       </div>
@@ -832,9 +868,8 @@ export function TestTakingWidget({
                             src={getDirectImageUrl(optImage)}
                             alt={optLabel || `Option ${String.fromCharCode(65 + oIdx)}`}
                             className="max-h-52 w-auto object-contain mx-auto rounded"
-                            onError={(e) => {
-                              (e.target as HTMLElement).style.display = "none";
-                            }}
+                            referrerPolicy="no-referrer"
+                            onError={handleGoogleDriveImageError}
                           />
                         </div>
                       </div>
@@ -1812,7 +1847,13 @@ export function TestTakingWidget({
                       <div dangerouslySetInnerHTML={{ __html: q.stem }} className={`prose prose-sm max-w-none text-xs leading-relaxed ${darkMode ? "prose-invert text-zinc-300" : "text-ink"}`} />
                       {q.image_url && (
                         <div className="mt-2 max-w-sm rounded-xl overflow-hidden border border-line shadow-sm bg-white p-1.5">
-                          <img src={getDirectImageUrl(q.image_url)} alt="Question attachment" className="max-h-48 w-auto object-contain rounded-lg" />
+                          <img
+                            src={getDirectImageUrl(q.image_url)}
+                            alt="Question attachment"
+                            referrerPolicy="no-referrer"
+                            onError={handleGoogleDriveImageError}
+                            className="max-h-48 w-auto object-contain rounded-lg"
+                          />
                         </div>
                       )}
                     </div>
@@ -1873,9 +1914,8 @@ export function TestTakingWidget({
                                       src={getDirectImageUrl(optImage)}
                                       alt={optLabel || `Option ${String.fromCharCode(65 + oi)}`}
                                       className="max-h-28 w-auto object-contain mx-auto rounded"
-                                      onError={(e) => {
-                                        (e.target as HTMLElement).style.display = "none";
-                                      }}
+                                      referrerPolicy="no-referrer"
+                                      onError={handleGoogleDriveImageError}
                                     />
                                   </div>
                                 </div>
