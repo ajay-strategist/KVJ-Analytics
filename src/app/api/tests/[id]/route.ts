@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { adminToken } from "@/lib/adminAuth";
+import { evaluateStudentCode } from "@/lib/codeEvaluator";
 
 function getAdmin() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -577,46 +578,12 @@ export async function POST(
             });
           }
         } else if (q.type === "code") {
-          const testCases = config.testCases || [];
-          if (testCases.length === 0) {
-            // Open coding question without automated test cases -> mark pending manual review
-            pending = true;
-            isCorrect = false;
-            feedback = "Code submitted. Pending instructor review.";
-          } else if (!process.env.JUDGE0_URL) {
-            pending = true;
-            isCorrect = false;
-            feedback = "Pending manual grading (Code execution sandbox offline).";
-          } else {
-            let passedCases = 0;
-            const testCaseResults = [];
-
-            for (const tc of testCases) {
-              const run = await runCode(studentAns, config.language, tc.stdin);
-              if (run.err) {
-                testCaseResults.push({ passed: false, stdout: "", expected: tc.expectedOutput, error: run.err });
-              } else {
-                const cleanStdout = run.stdout.trim().replace(/\r/g, "");
-                const cleanExpected = tc.expectedOutput.trim().replace(/\r/g, "");
-                const isPass = cleanStdout === cleanExpected;
-                if (isPass) passedCases++;
-                testCaseResults.push({
-                  passed: isPass,
-                  stdout: run.stdout,
-                  stderr: run.stderr,
-                  expected: tc.expectedOutput
-                });
-              }
-            }
-
-            isCorrect = testCases.length > 0 && passedCases === testCases.length;
-            codeResults = testCaseResults;
-            feedback = isCorrect
-              ? "All test cases passed."
-              : `${passedCases}/${testCases.length} test cases passed.`;
-          }
+          const evalRes = await evaluateStudentCode(studentAns, config);
+          isCorrect = evalRes.isCorrect;
+          earned = Math.round(qMarks * evalRes.scoreRatio * 100) / 100;
+          codeResults = evalRes.testCaseResults;
+          feedback = evalRes.feedback;
         }
-        earned = isCorrect ? qMarks : 0;
       }
 
       totalPossibleMarks += qMarks;

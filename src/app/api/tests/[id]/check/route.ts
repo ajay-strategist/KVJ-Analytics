@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { adminToken } from "@/lib/adminAuth";
+import { evaluateStudentCode } from "@/lib/codeEvaluator";
 
 function getAdmin() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -262,10 +263,13 @@ export async function POST(
         });
       }
     } else if (q.type === "code") {
-      const studentCode = String(studentAnswer || "").trim();
-      const starterCode = String(config.starterCode || "").trim();
-      // If code was entered and differs from empty / default starter code
-      isCorrect = studentCode.length > 0 && studentCode !== starterCode;
+      const evalRes = await evaluateStudentCode(studentAnswer, config);
+      return NextResponse.json({
+        correct: evalRes.isCorrect,
+        correctAnswerLabel: evalRes.feedback,
+        explanation: config.explanation || evalRes.feedback,
+        codeResults: evalRes.testCaseResults,
+      });
     }
 
     const correctAnswerLabel = getCorrectAnswerLabel(q.type, config);
