@@ -126,12 +126,14 @@ const LessonEditor = React.memo(function LessonEditor({
   onCancel,
   fetchMockTests,
   courseSlug,
+  mockTests,
 }: {
   initial: LessonValues;
   onSave: (values: LessonValues) => void;
   onCancel: () => void;
   fetchMockTests?: (courseId: string) => void;
   courseSlug?: string;
+  mockTests?: any[];
 }) {
   const routeParams = useParams<{ id: string }>();
   const courseId = routeParams?.id as string;
@@ -157,7 +159,7 @@ const LessonEditor = React.memo(function LessonEditor({
   const [showBlockPicker, setShowBlockPicker] = React.useState(false);
 
   const [durationMins, setDurationMins] = React.useState<number>(30);
-  const [passMark, setPassMark] = React.useState<number>(0);
+  const [passMark, setPassMark] = React.useState<number>(84);
   const [attemptsAllowed, setAttemptsAllowed] = React.useState<number>(0);
   const [negativeMarking, setNegativeMarking] = React.useState<number>(0);
   const [instructions, setInstructions] = React.useState<string>("");
@@ -170,20 +172,23 @@ const LessonEditor = React.memo(function LessonEditor({
   const [uploadedImages, setUploadedImages] = React.useState<string[]>([]);
 
   React.useEffect(() => {
-    if (initial.id && initial.kind === "assessment") {
+    if (initial.id && (initial.kind === "assessment" || editorKind === "assessment" || editorKind === "inline_assessment")) {
       const loadTestDetails = async () => {
         setLoadingTest(true);
         try {
-          const { data, error } = await supabase
-            .from("mock_tests")
-            .select("*")
-            .eq("lesson_id", initial.id)
-            .maybeSingle();
-          if (error) throw error;
+          // Check mockTests prop first, then fall back to authenticated admin API
+          let data = mockTests?.find((t: any) => t.lesson_id === initial.id);
+          if (!data) {
+            const res = await fetch(`/api/admin/tests?lesson_id=${initial.id}`);
+            if (res.ok) {
+              const resData = await res.json();
+              data = resData.mock_tests?.[0];
+            }
+          }
           if (data) {
             setLinkedTest(data);
             setDurationMins(data.duration_mins ?? 30);
-            setPassMark(data.pass_mark ?? 0);
+            setPassMark(data.pass_mark ?? 84);
             setAttemptsAllowed(data.attempts_allowed ?? 0);
             setNegativeMarking(data.negative_marking ?? 0);
             setInstructions(data.instructions ?? "");
@@ -195,16 +200,19 @@ const LessonEditor = React.memo(function LessonEditor({
             } else {
               setEditorKind("assessment");
             }
+          } else {
+            setEditorKind(initial.kind === "assessment" ? "assessment" : "inline_assessment");
           }
         } catch (err) {
           console.error("Error loading linked test:", err);
+          setEditorKind("assessment");
         } finally {
           setLoadingTest(false);
         }
       };
       loadTestDetails();
     }
-  }, [initial.id, initial.kind]);
+  }, [initial.id, initial.kind, mockTests]);
 
   React.useEffect(() => {
     let parseKind: string = "document";
@@ -289,8 +297,9 @@ const LessonEditor = React.memo(function LessonEditor({
     setContentHtml(initial.content_html || "");
     setMaxScore(initial.max_score ?? 100);
 
-    // If it is assessment kind, let the test loader useEffect handle editorKind asynchronously
-    if (initial.kind !== "assessment") {
+    if (initial.kind === "assessment") {
+      setEditorKind("assessment");
+    } else {
       setEditorKind(parseKind);
     }
   }, [initial]);
@@ -446,14 +455,20 @@ const LessonEditor = React.memo(function LessonEditor({
 
   const handleSave = () => {
     if (!title.trim()) { alert("Lesson title is required."); return; }
-    let finalKind = kind;
+    let finalKind = initial.kind || kind;
     let finalContentHtml = contentHtml;
 
     if (editorKind === "document") {
       finalKind = "theory";
-      finalContentHtml = generateHtmlFromBlocks(documentBlocks);
-    } else if (editorKind === "inline_assessment") {
+      if (documentBlocks && documentBlocks.length > 0) {
+        finalContentHtml = generateHtmlFromBlocks(documentBlocks);
+      }
+    } else if (editorKind === "inline_assessment" || editorKind === "assessment" || initial.kind === "assessment") {
       finalKind = "assessment";
+    } else if (editorKind === "activity" || initial.kind === "activity") {
+      finalKind = "activity";
+    } else if (editorKind === "theory") {
+      finalKind = "theory";
     }
 
     onSave({
@@ -2866,24 +2881,22 @@ export default function AdminCourseDetailsPage() {
     const targetIdx = index + direction;
     if (targetIdx < 0 || targetIdx >= mockTests.length) return;
     const listCopy = [...mockTests];
-    const temp = listCopy[index].display_order;
-    listCopy[index].display_order = listCopy[targetIdx].display_order;
-    listCopy[targetIdx].display_order = temp;
+    const [moved] = listCopy.splice(index, 1);
+    listCopy.splice(targetIdx, 0, moved);
 
-    setMockTests(listCopy);
+    const updates = listCopy.map((t, idx) => ({ id: t.id, display_order: idx + 1 }));
+    setMockTests(listCopy.map((t, idx) => ({ ...t, display_order: idx + 1 })));
+
     try {
-      await Promise.all([
-        fetch("/api/admin/tests", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: listCopy[index].id, display_order: listCopy[index].display_order }),
-        }),
-        fetch("/api/admin/tests", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: listCopy[targetIdx].id, display_order: listCopy[targetIdx].display_order }),
-        }),
-      ]);
+      await Promise.all(
+        updates.map((u) =>
+          fetch("/api/admin/tests", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(u),
+          })
+        )
+      );
       if (course) fetchMockTests(course.id);
     } catch (err) {
       console.error("Failed to move test:", err);
@@ -2956,21 +2969,78 @@ export default function AdminCourseDetailsPage() {
     }
   };
 
-  const handleRenameModule = async (moduleId: string, newTitle: string) => {
-    if (!newTitle.trim()) return;
+  const handleUpdateModuleTitleLocal = (moduleId: string, newTitle: string) => {
+    setCurriculum((prev) =>
+      prev.map((mod) => (mod.id === moduleId ? { ...mod, title: newTitle } : mod))
+    );
+  };
+
+  const handleSaveModuleTitle = async (moduleId: string, newTitle: string) => {
+    if (!newTitle.trim()) {
+      fetchCourseDetails();
+      return;
+    }
     try {
       const res = await fetch("/api/admin/modules", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: moduleId, title: newTitle }),
+        body: JSON.stringify({ id: moduleId, title: newTitle.trim() }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      setCurriculum((prev) =>
-        prev.map((mod) => (mod.id === moduleId ? { ...mod, title: newTitle } : mod))
-      );
+      if (!res.ok) throw new Error(data.error || "Failed to update module");
     } catch (err: any) {
-      alert(err.message || "Rename failed.");
+      alert(err.message || "Module rename failed.");
+      fetchCourseDetails();
+    }
+  };
+
+  const handleRenameModule = handleSaveModuleTitle;
+
+  const handleUpdateLessonTitleLocal = (moduleId: string, lessonId: string, newTitle: string) => {
+    setCurriculum((prev) =>
+      prev.map((mod) => {
+        if (mod.id !== moduleId) return mod;
+        return {
+          ...mod,
+          lessons: mod.lessons.map((l) => (l.id === lessonId ? { ...l, title: newTitle } : l)),
+        };
+      })
+    );
+  };
+
+  const handleSaveLessonTitle = async (moduleId: string, lessonId: string, newTitle: string) => {
+    if (!newTitle?.trim()) {
+      fetchCourseDetails();
+      return;
+    }
+    try {
+      const res = await fetch("/api/admin/lessons", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: lessonId, title: newTitle.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to rename lesson");
+
+      // If this lesson is linked to a mock test, also update the test's title
+      const { data: existingTest } = await supabase
+        .from("mock_tests")
+        .select("id")
+        .eq("lesson_id", lessonId)
+        .maybeSingle();
+
+      if (existingTest?.id) {
+        await fetch("/api/admin/tests", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: existingTest.id, title: newTitle.trim() }),
+        });
+        if (course) fetchMockTests(course.id);
+      }
+    } catch (err: any) {
+      console.error("Rename lesson failed:", err);
+      alert(err.message || "Failed to rename lesson.");
+      fetchCourseDetails();
     }
   };
 
@@ -3060,12 +3130,19 @@ export default function AdminCourseDetailsPage() {
       const savedLesson = data.lesson;
 
       if (values.kind === "assessment" && savedLesson) {
-        // Upsert mock test
-        const { data: existingTest } = await supabase
-          .from("mock_tests")
-          .select("id")
-          .eq("lesson_id", savedLesson.id)
-          .maybeSingle();
+        // Look up existing test in mockTests or fetch via authenticated admin API
+        let existingTest = mockTests.find((t) => t.lesson_id === savedLesson.id);
+        if (!existingTest) {
+          try {
+            const res = await fetch(`/api/admin/tests?lesson_id=${savedLesson.id}`);
+            if (res.ok) {
+              const resData = await res.json();
+              existingTest = resData.mock_tests?.[0];
+            }
+          } catch {
+            // fallback
+          }
+        }
 
         const testBody = {
           id: existingTest?.id,
@@ -3074,7 +3151,7 @@ export default function AdminCourseDetailsPage() {
           lesson_id: savedLesson.id,
           title: savedLesson.title,
           duration_mins: assessment_settings?.duration_mins ?? 30,
-          pass_mark: assessment_settings?.pass_mark ?? 0,
+          pass_mark: assessment_settings?.pass_mark ?? 84,
           attempts_allowed: assessment_settings?.attempts_allowed ?? 0,
           negative_marking: assessment_settings?.negative_marking ?? 0,
           instructions: assessment_settings?.instructions || "",
@@ -3492,7 +3569,13 @@ export default function AdminCourseDetailsPage() {
                               <input
                                 type="text"
                                 value={mod.title}
-                                onChange={(e) => handleRenameModule(mod.id, e.target.value)}
+                                onChange={(e) => handleUpdateModuleTitleLocal(mod.id, e.target.value)}
+                                onBlur={(e) => handleSaveModuleTitle(mod.id, e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") {
+                                    (e.target as HTMLInputElement).blur();
+                                  }
+                                }}
                                 className="bg-transparent border-b border-transparent hover:border-slate/30 focus:border-brand focus:outline-none font-bold text-ink text-sm flex-1 min-w-0 py-0.5"
                               />
                             </div>
@@ -3599,9 +3682,20 @@ export default function AdminCourseDetailsPage() {
                                           >
                                             {les.kind}
                                           </span>
-                                          <span className="font-semibold text-ink truncate text-sm">
-                                            {les.title}
-                                          </span>
+                                          <input
+                                            type="text"
+                                            value={les.title}
+                                            onChange={(e) => handleUpdateLessonTitleLocal(mod.id, les.id, e.target.value)}
+                                            onBlur={(e) => handleSaveLessonTitle(mod.id, les.id, e.target.value)}
+                                            onKeyDown={(e) => {
+                                              if (e.key === "Enter") {
+                                                (e.target as HTMLInputElement).blur();
+                                              }
+                                            }}
+                                            placeholder="Lesson title"
+                                            title="Click to rename lesson (press Enter or click away to save)"
+                                            className="bg-transparent border-b border-transparent hover:border-slate/30 focus:border-brand focus:bg-white focus:px-1.5 focus:rounded focus:outline-none font-semibold text-ink text-sm flex-1 min-w-0 py-0.5 transition-all"
+                                          />
                                           {isActivity && les.max_score && (
                                             <span className="text-[10px] text-slate font-semibold shrink-0">
                                               (Max Score: {les.max_score})
@@ -3649,6 +3743,7 @@ export default function AdminCourseDetailsPage() {
                                         onCancel={() => { setEditingLessonId(null); setLessonForm({}); }}
                                         fetchMockTests={fetchMockTests}
                                         courseSlug={course?.slug || ""}
+                                        mockTests={mockTests}
                                       />
                                     )}
                                   </div>
@@ -3664,6 +3759,7 @@ export default function AdminCourseDetailsPage() {
                                   onCancel={() => { setEditingLessonId(null); setLessonForm({}); }}
                                   fetchMockTests={fetchMockTests}
                                   courseSlug={course?.slug || ""}
+                                  mockTests={mockTests}
                                 />
                               </div>
                             )}

@@ -2109,15 +2109,17 @@ class MockSupabaseQueryBuilder {
           filtered = filtered.filter(filterFn);
         }
 
-        // Order
-        for (const ord of this.orderFields) {
+        // Order: composite multi-column sort
+        if (this.orderFields.length > 0) {
           filtered.sort((a, b) => {
-            const av = a[ord.column];
-            const bv = b[ord.column];
-            if (av == null && bv != null) return ord.ascending ? -1 : 1;
-            if (bv == null && av != null) return ord.ascending ? 1 : -1;
-            if (av < bv) return ord.ascending ? -1 : 1;
-            if (av > bv) return ord.ascending ? 1 : -1;
+            for (const ord of this.orderFields) {
+              const av = a[ord.column];
+              const bv = b[ord.column];
+              if (av == null && bv != null) return ord.ascending ? -1 : 1;
+              if (bv == null && av != null) return ord.ascending ? 1 : -1;
+              if (av < bv) return ord.ascending ? -1 : 1;
+              if (av > bv) return ord.ascending ? 1 : -1;
+            }
             return 0;
           });
         }

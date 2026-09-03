@@ -14,6 +14,9 @@ import {
   GripVertical,
   FileCode,
   Search,
+  Upload,
+  Image as ImageIcon,
+  Link2,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import dynamic from "next/dynamic";
@@ -91,7 +94,82 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
   const [loading, setLoading] = useState(false);
   const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null);
   const [questionForm, setQuestionForm] = useState<any>({});
+  const [uploadingOptionIdx, setUploadingOptionIdx] = useState<number | null>(null);
   const fileId = useId();
+
+  const handleUploadOptionImage = async (file: File, idx: number) => {
+    if (!file) return;
+    setUploadingOptionIdx(idx);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Upload failed");
+
+      setQuestionForm((prev: any) => {
+        const currentOptions = [...(prev.config?.options || [])];
+        const currentOptionImages = [...(prev.config?.optionImages || [])];
+        while (currentOptionImages.length < currentOptions.length) {
+          currentOptionImages.push("");
+        }
+        currentOptionImages[idx] = data.url;
+        if (!currentOptions[idx]?.trim()) {
+          currentOptions[idx] = `Option ${idx + 1}`;
+        }
+        return {
+          ...prev,
+          config: {
+            ...prev.config,
+            options: currentOptions,
+            optionImages: currentOptionImages,
+          },
+        };
+      });
+    } catch (err: any) {
+      alert("Option image upload failed: " + (err.message || String(err)));
+    } finally {
+      setUploadingOptionIdx(null);
+    }
+  };
+
+  const handleSetOptionImageUrl = (url: string, idx: number) => {
+    setQuestionForm((prev: any) => {
+      const currentOptions = [...(prev.config?.options || [])];
+      const currentOptionImages = [...(prev.config?.optionImages || [])];
+      while (currentOptionImages.length < currentOptions.length) {
+        currentOptionImages.push("");
+      }
+      currentOptionImages[idx] = url;
+      if (url && !currentOptions[idx]?.trim()) {
+        currentOptions[idx] = `Option ${idx + 1}`;
+      }
+      return {
+        ...prev,
+        config: {
+          ...prev.config,
+          options: currentOptions,
+          optionImages: currentOptionImages,
+        },
+      };
+    });
+  };
+
+  const handleRemoveOptionImage = (idx: number) => {
+    setQuestionForm((prev: any) => {
+      const currentOptionImages = [...(prev.config?.optionImages || [])];
+      if (currentOptionImages[idx] !== undefined) {
+        currentOptionImages[idx] = "";
+      }
+      return {
+        ...prev,
+        config: {
+          ...prev.config,
+          optionImages: currentOptionImages,
+        },
+      };
+    });
+  };
 
   // Question Bank States
   const [showImportModal, setShowImportModal] = useState(false);
@@ -235,9 +313,9 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
   const handleTypeChange = (type: string) => {
     let defaultConfig: any = {};
     if (type === "single") {
-      defaultConfig = { options: ["Option A", "Option B"], correctIndex: 0 };
+      defaultConfig = { options: ["Option 1", "Option 2"], optionImages: ["", ""], correctIndex: 0 };
     } else if (type === "multiple") {
-      defaultConfig = { options: ["Option A", "Option B"], correctIndexes: [0] };
+      defaultConfig = { options: ["Option 1", "Option 2"], optionImages: ["", ""], correctIndexes: [0] };
     } else if (type === "truefalse") {
       defaultConfig = { correct: true };
     } else if (type === "dragdrop") {
@@ -260,7 +338,7 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
     } else if (type === "matrix") {
       defaultConfig = { rows: ["Row 1", "Row 2"], columns: ["Column A", "Column B"], multiple: false, correct: [[0], [1]] };
     } else if (type === "code") {
-      defaultConfig = { language: "python", starterCode: "# Write your Python code here\n", testCases: [{ stdin: "", expectedOutput: "" }] };
+      defaultConfig = { language: "python", starterCode: "# Write your Python code here\n", testCases: [] };
     }
     setQuestionForm((prev: any) => ({
       ...prev,
@@ -274,16 +352,35 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
     if (!testId) return;
     const isNew = editingQuestionId === "new";
     const method = isNew ? "POST" : "PATCH";
+
+    let processedConfig = questionForm.config;
+    if (questionForm.type === "code") {
+      const cleanTestCases = (questionForm.config?.testCases || [])
+        .filter((tc: any) => (tc.stdin && tc.stdin.trim()) || (tc.expectedOutput && tc.expectedOutput.trim()))
+        .map((tc: any) => ({
+          stdin: tc.stdin || "",
+          expectedOutput: tc.expectedOutput || "",
+        }));
+      processedConfig = {
+        ...questionForm.config,
+        language: questionForm.config?.language || "python",
+        starterCode: questionForm.config?.starterCode ?? "# Write your Python code here\n",
+        testCases: cleanTestCases,
+      };
+    }
+
     const payload = {
       type: questionForm.type,
       stem: questionForm.stem,
       marks: questionForm.marks,
-      config: questionForm.config,
+      config: processedConfig,
       image_url: questionForm.image_url || null,
       display_order: questionForm.display_order,
     };
+
+    const nextOrder = questions.reduce((max, q) => Math.max(max, q.display_order || 0), 0) + 1;
     const body = isNew
-      ? { ...payload, test_id: testId, display_order: questions.length + 1 }
+      ? { ...payload, test_id: testId, display_order: nextOrder }
       : { ...payload, id: editingQuestionId };
 
     try {
@@ -321,24 +418,22 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
     const targetIdx = index + direction;
     if (targetIdx < 0 || targetIdx >= questions.length) return;
     const listCopy = [...questions];
-    const temp = listCopy[index].display_order;
-    listCopy[index].display_order = listCopy[targetIdx].display_order;
-    listCopy[targetIdx].display_order = temp;
+    const [moved] = listCopy.splice(index, 1);
+    listCopy.splice(targetIdx, 0, moved);
 
-    setQuestions(listCopy);
+    const updates = listCopy.map((q, idx) => ({ id: q.id, display_order: idx + 1 }));
+    setQuestions(listCopy.map((q, idx) => ({ ...q, display_order: idx + 1 })));
+
     try {
-      await Promise.all([
-        fetch("/api/admin/questions", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: listCopy[index].id, display_order: listCopy[index].display_order }),
-        }),
-        fetch("/api/admin/questions", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: listCopy[targetIdx].id, display_order: listCopy[targetIdx].display_order }),
-        }),
-      ]);
+      await Promise.all(
+        updates.map((u) =>
+          fetch("/api/admin/questions", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(u),
+          })
+        )
+      );
       fetchQuestions();
     } catch (err) {
       console.error("Failed to move question:", err);
@@ -358,7 +453,7 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
                   type: "single",
                   stem: "",
                   marks: 1,
-                  config: { options: ["Option A", "Option B"], correctIndex: 0 },
+                  config: { options: ["Option 1", "Option 2"], optionImages: ["", ""], correctIndex: 0 },
                 });
               }}
               className="px-3 py-1.5 bg-brand text-white text-xs font-bold"
@@ -542,165 +637,351 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
           <div className="border-t border-line/60 pt-4 mt-4 space-y-4">
             {questionForm.type === "single" && (
               <div className="space-y-3">
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate mb-1">Answer Options (Select correct option index)</label>
-                {(questionForm.config?.options || []).map((opt: string, idx: number) => (
-                  <div key={idx} className="flex items-center gap-2">
-                    <input
-                      type="radio"
-                      name="correctIndex"
-                      checked={Number(questionForm.config?.correctIndex) === idx}
-                      onChange={() => setQuestionForm((prev: any) => ({
-                        ...prev,
-                        config: { ...prev.config, correctIndex: idx },
-                      }))}
-                      className="w-4 h-4 text-brand"
-                    />
-                    <div className="flex-1 flex flex-col">
-                      <input
-                        type="text"
-                        required
-                        value={opt}
-                        onChange={(e) => {
-                          const opts = [...questionForm.config.options];
-                          opts[idx] = e.target.value;
-                          setQuestionForm((prev: any) => ({
-                            ...prev,
-                            config: { ...prev.config, options: opts },
-                          }));
-                        }}
-                        placeholder={`Option ${idx + 1}`}
-                        className="w-full px-3 py-1.5 rounded border border-line bg-white text-sm"
-                      />
-                      {isImageUrl(opt) && (
-                        <div className="mt-1">
-                          <img
-                            src={getDirectImageUrl(opt)}
-                            alt="Option preview"
-                            className="max-h-16 object-contain rounded border border-line bg-zinc-50 shadow-sm"
-                            onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }}
-                          />
-                        </div>
-                      )}
-                    </div>
-                    <button
-                      type="button"
-                      disabled={(questionForm.config?.options || []).length <= 2}
-                      onClick={() => {
-                        const opts = [...questionForm.config.options];
-                        opts.splice(idx, 1);
-                        let newCorrectIndex = questionForm.config.correctIndex;
-                        if (newCorrectIndex >= opts.length) {
-                          newCorrectIndex = Math.max(0, opts.length - 1);
-                        }
-                        setQuestionForm((prev: any) => ({
-                          ...prev,
-                          config: { ...prev.config, options: opts, correctIndex: newCorrectIndex },
-                        }));
-                      }}
-                      className="text-error text-xs hover:underline disabled:opacity-30 cursor-pointer"
-                    >
-                      Remove
-                    </button>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">
+                      Answer Options (Select the correct option)
+                    </label>
+                    <p className="text-[10px] text-slate-500">
+                      Options can have text labels, chart/diagram images, or both.
+                    </p>
                   </div>
-                ))}
-                <Button
-                  type="button"
-                  onClick={() => setQuestionForm((prev: any) => ({
-                    ...prev,
-                    config: { ...prev.config, options: [...(prev.config.options || []), ""] },
-                  }))}
-                  variant="secondary"
-                  className="py-1 px-3 text-xs mt-2"
-                >
-                  + Add Option
-                </Button>
+                  <Button
+                    type="button"
+                    onClick={() => setQuestionForm((prev: any) => ({
+                      ...prev,
+                      config: {
+                        ...prev.config,
+                        options: [...(prev.config?.options || []), `Option ${(prev.config?.options || []).length + 1}`],
+                        optionImages: [...(prev.config?.optionImages || []), ""],
+                      },
+                    }))}
+                    variant="secondary"
+                    className="py-1 px-3 text-xs"
+                  >
+                    + Add Option
+                  </Button>
+                </div>
+
+                <div className="space-y-3">
+                  {(questionForm.config?.options || []).map((opt: string, idx: number) => {
+                    const optImage = questionForm.config?.optionImages?.[idx] || (isImageUrl(opt) ? opt : "");
+                    const hasImage = Boolean(optImage);
+                    const isUploading = uploadingOptionIdx === idx;
+
+                    return (
+                      <div
+                        key={idx}
+                        className="p-3 rounded-xl border border-line bg-white shadow-xs space-y-2.5 transition-all"
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <label className="flex items-center gap-1.5 cursor-pointer shrink-0" title="Select as correct answer">
+                            <input
+                              type="radio"
+                              name="correctIndex"
+                              checked={Number(questionForm.config?.correctIndex) === idx}
+                              onChange={() => setQuestionForm((prev: any) => ({
+                                ...prev,
+                                config: { ...prev.config, correctIndex: idx },
+                              }))}
+                              className="w-4 h-4 text-brand"
+                            />
+                            <span className="text-xs font-bold text-slate-700">Option {idx + 1}</span>
+                          </label>
+
+                          <div className="flex-1 min-w-0">
+                            <input
+                              type="text"
+                              required={!hasImage}
+                              value={opt}
+                              onChange={(e) => {
+                                const opts = [...questionForm.config.options];
+                                opts[idx] = e.target.value;
+                                setQuestionForm((prev: any) => ({
+                                  ...prev,
+                                  config: { ...prev.config, options: opts },
+                                }));
+                              }}
+                              placeholder={`Option ${idx + 1} label (e.g. Option ${idx + 1} or Chart Name)`}
+                              className="w-full px-3 py-1.5 rounded-lg border border-line bg-surface/30 text-sm focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand"
+                            />
+                          </div>
+
+                          {/* Image upload button */}
+                          <label className="px-2.5 py-1.5 border border-line rounded-lg text-xs font-medium text-slate hover:text-ink hover:bg-surface cursor-pointer flex items-center gap-1.5 shrink-0 transition-colors">
+                            {isUploading ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin text-brand" />
+                            ) : (
+                              <Upload className="w-3.5 h-3.5 text-slate-500" />
+                            )}
+                            <span className="hidden sm:inline">{optImage ? "Change Image" : "Upload Image"}</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              disabled={isUploading}
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) handleUploadOptionImage(file, idx);
+                                e.target.value = "";
+                              }}
+                            />
+                          </label>
+
+                          <button
+                            type="button"
+                            disabled={(questionForm.config?.options || []).length <= 2}
+                            onClick={() => {
+                              const opts = [...questionForm.config.options];
+                              opts.splice(idx, 1);
+                              const optImgs = [...(questionForm.config?.optionImages || [])];
+                              if (optImgs.length > idx) optImgs.splice(idx, 1);
+                              let newCorrectIndex = questionForm.config.correctIndex;
+                              if (newCorrectIndex >= opts.length) {
+                                newCorrectIndex = Math.max(0, opts.length - 1);
+                              }
+                              setQuestionForm((prev: any) => ({
+                                ...prev,
+                                config: { ...prev.config, options: opts, optionImages: optImgs, correctIndex: newCorrectIndex },
+                              }));
+                            }}
+                            className="p-1.5 text-error hover:bg-error/10 rounded-lg disabled:opacity-30 cursor-pointer shrink-0"
+                            title="Remove Option"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+
+                        {/* Image URL input & live preview */}
+                        <div className="pl-6 space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Link2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                            <input
+                              type="url"
+                              value={optImage}
+                              onChange={(e) => handleSetOptionImageUrl(e.target.value, idx)}
+                              placeholder="Or paste chart/image URL (Google Drive, OneDrive, or web image link)"
+                              className="w-full px-2.5 py-1 text-xs rounded-lg border border-line/70 bg-surface/20 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand"
+                            />
+                            {optImage && (
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveOptionImage(idx)}
+                                className="text-[11px] text-error hover:underline shrink-0 font-medium"
+                              >
+                                Remove Image
+                              </button>
+                            )}
+                          </div>
+
+                          {optImage && (
+                            <div className="flex items-start gap-3 p-2.5 rounded-xl border border-line bg-slate-50/80">
+                              <img
+                                src={getDirectImageUrl(optImage)}
+                                alt={`Option ${idx + 1} preview`}
+                                className="max-h-32 max-w-[240px] object-contain rounded-lg border border-line bg-white shadow-xs p-1"
+                                onError={(e) => {
+                                  (e.target as HTMLElement).style.display = "none";
+                                  const parent = (e.target as HTMLElement).parentElement;
+                                  if (parent) {
+                                    const errMsg = parent.querySelector(".img-err");
+                                    if (errMsg) (errMsg as HTMLElement).style.display = "block";
+                                  }
+                                }}
+                              />
+                              <div className="text-[11px] text-slate-500 space-y-1 min-w-0 flex-1">
+                                <span className="font-bold text-ink block">Chart / Option Preview</span>
+                                <span className="text-[10px] text-slate-400 block truncate">{optImage}</span>
+                                <p className="img-err text-[10px] text-error font-medium hidden">
+                                  ⚠️ Failed to load image. Ensure it is a valid public shareable link.
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             )}
 
             {questionForm.type === "multiple" && (
               <div className="space-y-3">
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate mb-1">Answer Options (Check all correct option indices)</label>
-                {(questionForm.config?.options || []).map((opt: string, idx: number) => {
-                  const currentIndexes = questionForm.config?.correctIndexes || [];
-                  const isChecked = currentIndexes.includes(idx);
-                  return (
-                    <div key={idx} className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={isChecked}
-                        onChange={(e) => {
-                          let nextIndexes = [...currentIndexes];
-                          if (e.target.checked) {
-                            nextIndexes.push(idx);
-                          } else {
-                            nextIndexes = nextIndexes.filter((x) => x !== idx);
-                          }
-                          setQuestionForm((prev: any) => ({
-                            ...prev,
-                            config: { ...prev.config, correctIndexes: nextIndexes },
-                          }));
-                        }}
-                        className="w-4 h-4 rounded text-brand border-line"
-                      />
-                      <div className="flex-1 flex flex-col">
-                        <input
-                          type="text"
-                          required
-                          value={opt}
-                          onChange={(e) => {
-                            const opts = [...questionForm.config.options];
-                            opts[idx] = e.target.value;
-                            setQuestionForm((prev: any) => ({
-                              ...prev,
-                              config: { ...prev.config, options: opts },
-                            }));
-                          }}
-                          placeholder={`Option ${idx + 1}`}
-                          className="w-full px-3 py-1.5 rounded border border-line bg-white text-sm"
-                        />
-                        {isImageUrl(opt) && (
-                          <div className="mt-1">
-                            <img
-                              src={getDirectImageUrl(opt)}
-                              alt="Option preview"
-                              className="max-h-16 object-contain rounded border border-line bg-zinc-50 shadow-sm"
-                              onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">
+                      Answer Options (Check all correct options)
+                    </label>
+                    <p className="text-[10px] text-slate-500">
+                      Options can have text labels, chart/diagram images, or both.
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    onClick={() => setQuestionForm((prev: any) => ({
+                      ...prev,
+                      config: {
+                        ...prev.config,
+                        options: [...(prev.config?.options || []), `Option ${(prev.config?.options || []).length + 1}`],
+                        optionImages: [...(prev.config?.optionImages || []), ""],
+                      },
+                    }))}
+                    variant="secondary"
+                    className="py-1 px-3 text-xs"
+                  >
+                    + Add Option
+                  </Button>
+                </div>
+
+                <div className="space-y-3">
+                  {(questionForm.config?.options || []).map((opt: string, idx: number) => {
+                    const currentIndexes = questionForm.config?.correctIndexes || [];
+                    const isChecked = currentIndexes.includes(idx);
+                    const optImage = questionForm.config?.optionImages?.[idx] || (isImageUrl(opt) ? opt : "");
+                    const hasImage = Boolean(optImage);
+                    const isUploading = uploadingOptionIdx === idx;
+
+                    return (
+                      <div
+                        key={idx}
+                        className="p-3 rounded-xl border border-line bg-white shadow-xs space-y-2.5 transition-all"
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <label className="flex items-center gap-1.5 cursor-pointer shrink-0" title="Check if correct">
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={(e) => {
+                                let nextIndexes = [...currentIndexes];
+                                if (e.target.checked) {
+                                  nextIndexes.push(idx);
+                                } else {
+                                  nextIndexes = nextIndexes.filter((x) => x !== idx);
+                                }
+                                setQuestionForm((prev: any) => ({
+                                  ...prev,
+                                  config: { ...prev.config, correctIndexes: nextIndexes },
+                                }));
+                              }}
+                              className="w-4 h-4 rounded text-brand border-line"
+                            />
+                            <span className="text-xs font-bold text-slate-700">Option {idx + 1}</span>
+                          </label>
+
+                          <div className="flex-1 min-w-0">
+                            <input
+                              type="text"
+                              required={!hasImage}
+                              value={opt}
+                              onChange={(e) => {
+                                const opts = [...questionForm.config.options];
+                                opts[idx] = e.target.value;
+                                setQuestionForm((prev: any) => ({
+                                  ...prev,
+                                  config: { ...prev.config, options: opts },
+                                }));
+                              }}
+                              placeholder={`Option ${idx + 1} label (e.g. Option ${idx + 1} or Chart Name)`}
+                              className="w-full px-3 py-1.5 rounded-lg border border-line bg-surface/30 text-sm focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand"
                             />
                           </div>
-                        )}
+
+                          {/* Image upload button */}
+                          <label className="px-2.5 py-1.5 border border-line rounded-lg text-xs font-medium text-slate hover:text-ink hover:bg-surface cursor-pointer flex items-center gap-1.5 shrink-0 transition-colors">
+                            {isUploading ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin text-brand" />
+                            ) : (
+                              <Upload className="w-3.5 h-3.5 text-slate-500" />
+                            )}
+                            <span className="hidden sm:inline">{optImage ? "Change Image" : "Upload Image"}</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              disabled={isUploading}
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) handleUploadOptionImage(file, idx);
+                                e.target.value = "";
+                              }}
+                            />
+                          </label>
+
+                          <button
+                            type="button"
+                            disabled={(questionForm.config?.options || []).length <= 2}
+                            onClick={() => {
+                              const opts = [...questionForm.config.options];
+                              opts.splice(idx, 1);
+                              const optImgs = [...(questionForm.config?.optionImages || [])];
+                              if (optImgs.length > idx) optImgs.splice(idx, 1);
+                              const nextIndexes = currentIndexes
+                                .map((x: number) => (x > idx ? x - 1 : x))
+                                .filter((x: number) => x < opts.length && x !== idx);
+                              setQuestionForm((prev: any) => ({
+                                ...prev,
+                                config: { ...prev.config, options: opts, optionImages: optImgs, correctIndexes: nextIndexes },
+                              }));
+                            }}
+                            className="p-1.5 text-error hover:bg-error/10 rounded-lg disabled:opacity-30 cursor-pointer shrink-0"
+                            title="Remove Option"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+
+                        {/* Image URL input & live preview */}
+                        <div className="pl-6 space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Link2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                            <input
+                              type="url"
+                              value={optImage}
+                              onChange={(e) => handleSetOptionImageUrl(e.target.value, idx)}
+                              placeholder="Or paste chart/image URL (Google Drive, OneDrive, or web image link)"
+                              className="w-full px-2.5 py-1 text-xs rounded-lg border border-line/70 bg-surface/20 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand"
+                            />
+                            {optImage && (
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveOptionImage(idx)}
+                                className="text-[11px] text-error hover:underline shrink-0 font-medium"
+                              >
+                                Remove Image
+                              </button>
+                            )}
+                          </div>
+
+                          {optImage && (
+                            <div className="flex items-start gap-3 p-2.5 rounded-xl border border-line bg-slate-50/80">
+                              <img
+                                src={getDirectImageUrl(optImage)}
+                                alt={`Option ${idx + 1} preview`}
+                                className="max-h-32 max-w-[240px] object-contain rounded-lg border border-line bg-white shadow-xs p-1"
+                                onError={(e) => {
+                                  (e.target as HTMLElement).style.display = "none";
+                                  const parent = (e.target as HTMLElement).parentElement;
+                                  if (parent) {
+                                    const errMsg = parent.querySelector(".img-err");
+                                    if (errMsg) (errMsg as HTMLElement).style.display = "block";
+                                  }
+                                }}
+                              />
+                              <div className="text-[11px] text-slate-500 space-y-1 min-w-0 flex-1">
+                                <span className="font-bold text-ink block">Chart / Option Preview</span>
+                                <span className="text-[10px] text-slate-400 block truncate">{optImage}</span>
+                                <p className="img-err text-[10px] text-error font-medium hidden">
+                                  ⚠️ Failed to load image. Ensure it is a valid public shareable link.
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      <button
-                        type="button"
-                        disabled={(questionForm.config?.options || []).length <= 2}
-                        onClick={() => {
-                          const opts = [...questionForm.config.options];
-                          opts.splice(idx, 1);
-                          const nextIndexes = currentIndexes
-                            .map((x: number) => (x > idx ? x - 1 : x))
-                            .filter((x: number) => x < opts.length && x !== idx);
-                          setQuestionForm((prev: any) => ({
-                            ...prev,
-                            config: { ...prev.config, options: opts, correctIndexes: nextIndexes },
-                          }));
-                        }}
-                        className="text-error text-xs hover:underline disabled:opacity-30 cursor-pointer"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  );
-                })}
-                <Button
-                  type="button"
-                  onClick={() => setQuestionForm((prev: any) => ({
-                    ...prev,
-                    config: { ...prev.config, options: [...(prev.config.options || []), ""] },
-                  }))}
-                  variant="secondary"
-                  className="py-1 px-3 text-xs mt-2"
-                >
-                  + Add Option
-                </Button>
+                    );
+                  })}
+                </div>
               </div>
             )}
 
@@ -1588,14 +1869,17 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
 
                 <div>
                   <div className="flex justify-between items-center mb-1">
-                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">Grading Test Cases</label>
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">Grading Test Cases (Optional)</label>
+                      <span className="text-[10px] text-slate-400">Add automated stdin/stdout test cases if you want automated code execution grading</span>
+                    </div>
                     <Button
                       type="button"
                       onClick={() => setQuestionForm((prev: any) => ({
                         ...prev,
                         config: {
                           ...prev.config,
-                          testCases: [...(prev.config.testCases || []), { stdin: "", expectedOutput: "" }],
+                          testCases: [...(prev.config?.testCases || []), { stdin: "", expectedOutput: "" }],
                         },
                       }))}
                       variant="secondary"
@@ -1604,6 +1888,13 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
                       + Add Test Case
                     </Button>
                   </div>
+
+                  {(!questionForm.config?.testCases || questionForm.config.testCases.length === 0) && (
+                    <div className="text-[11px] text-slate-500 bg-surface/40 border border-dashed border-line rounded-lg p-3 text-center my-2">
+                      💡 No automated test cases configured. Students will practice and run code in the sandbox. Click <strong>+ Add Test Case</strong> above to test code against inputs and expected outputs.
+                    </div>
+                  )}
+
                   {(questionForm.config?.testCases || []).map((tc: any, tcIdx: number) => (
                     <div key={tcIdx} className="border border-line rounded-lg p-3 mb-3 bg-surface/20 space-y-2 text-xs">
                       <div className="flex justify-between items-center">
@@ -1629,6 +1920,7 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
                         <input
                           type="text"
                           value={tc.stdin || ""}
+                          placeholder="e.g. 5"
                           onChange={(e) => {
                             const cases = [...questionForm.config.testCases];
                             cases[tcIdx] = { ...tc, stdin: e.target.value };
@@ -1637,7 +1929,7 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
                               config: { ...prev.config, testCases: cases },
                             }));
                           }}
-                          className="w-full px-3 py-1.5 rounded border border-line bg-white"
+                          className="w-full px-3 py-1.5 rounded border border-line bg-white text-xs"
                         />
                       </div>
 
@@ -1645,8 +1937,8 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
                         <label className="block font-bold text-slate mb-1">Expected Output (Must match stdout exactly)</label>
                         <textarea
                           rows={2}
-                          required
                           value={tc.expectedOutput || ""}
+                          placeholder="e.g. 120"
                           onChange={(e) => {
                             const cases = [...questionForm.config.testCases];
                             cases[tcIdx] = { ...tc, expectedOutput: e.target.value };
@@ -1655,7 +1947,7 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
                               config: { ...prev.config, testCases: cases },
                             }));
                           }}
-                          className="w-full px-3 py-1.5 rounded border border-line bg-white font-mono"
+                          className="w-full px-3 py-1.5 rounded border border-line bg-white font-mono text-xs"
                         />
                       </div>
                     </div>
@@ -1714,7 +2006,7 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
           {questions.map((q, qIdx) => (
             <div key={q.id} className="border border-line rounded-xl p-4 bg-white hover:border-line-hover transition-all flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="space-y-1 flex-1 min-w-0">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <span className="w-5 h-5 rounded bg-brand/10 text-brand text-[10px] font-bold flex items-center justify-center shrink-0">
                     Q{qIdx + 1}
                   </span>
@@ -1724,6 +2016,16 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
                   <span className="text-xs font-bold text-slate">
                     {q.marks} {q.marks === 1 ? "mark" : "marks"}
                   </span>
+                  {(() => {
+                    const cfg = typeof q.config === "string" ? (() => { try { return JSON.parse(q.config); } catch { return {}; } })() : (q.config || {});
+                    const hasOptionImages = (q.type === "single" || q.type === "multiple") && Array.isArray(cfg.optionImages) && cfg.optionImages.some(Boolean);
+                    if (!hasOptionImages) return null;
+                    return (
+                      <span className="text-[10px] font-bold text-amber-700 bg-amber-100/80 border border-amber-300 px-1.5 py-0.5 rounded shrink-0 flex items-center gap-1">
+                        <ImageIcon className="w-3 h-3" /> Image Options
+                      </span>
+                    );
+                  })()}
                 </div>
                 <div className="flex gap-3 items-start mt-1.5">
                   {q.image_url && (
@@ -1768,12 +2070,33 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
                         config = {};
                       }
                     }
-                    if ((q.type === "single" || q.type === "multiple") && !config?.options) {
+                    if (q.type === "single" || q.type === "multiple") {
+                      if (!config?.options) {
+                        config = {
+                          ...config,
+                          options: ["Option 1", "Option 2"],
+                          optionImages: ["", ""],
+                          correctIndex: config?.correctIndex ?? 0,
+                          correctIndexes: config?.correctIndexes ?? [0]
+                        };
+                      } else {
+                        const optImgs = Array.isArray(config.optionImages)
+                          ? [...config.optionImages]
+                          : config.options.map((opt: string) => isImageUrl(opt) ? opt : "");
+                        while (optImgs.length < config.options.length) {
+                          optImgs.push("");
+                        }
+                        config = {
+                          ...config,
+                          optionImages: optImgs,
+                        };
+                      }
+                    } else if (q.type === "code") {
                       config = {
+                        language: config?.language || "python",
+                        starterCode: config?.starterCode ?? "# Write your Python code here\n",
+                        testCases: Array.isArray(config?.testCases) ? config.testCases : [],
                         ...config,
-                        options: ["Option A", "Option B"],
-                        correctIndex: config?.correctIndex ?? 0,
-                        correctIndexes: config?.correctIndexes ?? [0]
                       };
                     }
                     setQuestionForm({ ...q, config });

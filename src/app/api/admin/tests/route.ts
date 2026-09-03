@@ -29,13 +29,22 @@ export async function GET(req: NextRequest) {
 
   const url = new URL(req.url);
   const courseId = url.searchParams.get("course_id");
-  if (!courseId) return NextResponse.json({ error: "course_id query param is required" }, { status: 400 });
+  const lessonId = url.searchParams.get("lesson_id");
+  const testId = url.searchParams.get("id");
 
   try {
-    const { data, error } = await db
-      .from("mock_tests")
-      .select("*")
-      .eq("course_id", courseId)
+    let query = db.from("mock_tests").select("*");
+    if (testId) {
+      query = query.eq("id", testId);
+    } else if (lessonId) {
+      query = query.eq("lesson_id", lessonId);
+    } else if (courseId) {
+      query = query.eq("course_id", courseId);
+    } else {
+      return NextResponse.json({ error: "course_id, lesson_id, or id query param is required" }, { status: 400 });
+    }
+
+    const { data, error } = await query
       .order("display_order", { ascending: true })
       .order("created_at", { ascending: true });
 
@@ -53,6 +62,29 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
+
+    // If lesson_id is specified, check if a mock_test already exists for this lesson to prevent duplicates
+    if (body.lesson_id) {
+      const { data: existing } = await db
+        .from("mock_tests")
+        .select("*")
+        .eq("lesson_id", body.lesson_id)
+        .maybeSingle();
+
+      if (existing) {
+        const { id: _, ...updates } = body;
+        const { data: updated, error: updateErr } = await db
+          .from("mock_tests")
+          .update(updates)
+          .eq("id", existing.id)
+          .select()
+          .single();
+
+        if (updateErr) return NextResponse.json({ error: updateErr.message }, { status: 500 });
+        return NextResponse.json({ mock_test: updated });
+      }
+    }
+
     const { data, error } = await db.from("mock_tests").insert([body]).select().single();
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ mock_test: data });

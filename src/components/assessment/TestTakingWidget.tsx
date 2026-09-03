@@ -674,7 +674,11 @@ export function TestTakingWidget({
                 const correctIndex = checkedAnswers[q.id]?.correctIndex;
                 const isThisCorrectOption = isChecked && correctIndex !== undefined && Number(correctIndex) === oIdx;
 
-                let borderStyle = isSelected ? "border-brand bg-brand/5" : `${colors.card} ${colors.hover}`;
+                const optImage = q.config?.optionImages?.[oIdx] || (isImageUrl(opt) ? opt : "");
+                const hasImage = Boolean(optImage);
+                const optLabel = q.config?.optionImages?.[oIdx] ? opt : (isImageUrl(opt) ? "" : opt);
+
+                let borderStyle = isSelected ? "border-brand bg-brand/5 shadow-sm" : `${colors.card} ${colors.hover}`;
                 if (isChecked) {
                   if (isThisCorrectOption) {
                     borderStyle = "border-emerald-500 bg-emerald-500/10 dark:bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 font-bold shadow-[0_0_10px_rgba(16,185,129,0.15)]";
@@ -695,10 +699,10 @@ export function TestTakingWidget({
                         return next;
                       });
                     }}
-                    className={`p-4 border rounded-xl cursor-pointer transition-all flex items-center gap-3 ${borderStyle}`}
+                    className={`p-4 border rounded-xl cursor-pointer transition-all flex ${hasImage ? "items-start gap-3.5" : "items-center gap-3"} ${borderStyle}`}
                   >
                     {isInline ? (
-                      <span className={`w-5 h-5 rounded-full border flex items-center justify-center text-[10px] font-bold shrink-0 transition-colors ${
+                      <span className={`w-5 h-5 rounded-full border flex items-center justify-center text-[10px] font-bold shrink-0 transition-colors ${hasImage ? "mt-0.5" : ""} ${
                         isChecked
                           ? isThisCorrectOption
                             ? "border-emerald-500 bg-emerald-500 text-white"
@@ -716,20 +720,26 @@ export function TestTakingWidget({
                         type="radio"
                         checked={isSelected}
                         readOnly
-                        className="w-4 h-4 text-brand"
+                        className={`w-4 h-4 text-brand ${hasImage ? "mt-1" : ""}`}
                       />
                     )}
-                    {isImageUrl(opt) ? (
-                      <div className="flex flex-col gap-2 max-w-full">
-                        <img
-                          src={getDirectImageUrl(opt)}
-                          alt={`Option ${String.fromCharCode(65 + oIdx)}`}
-                          className="max-h-32 object-contain rounded-lg border border-line bg-white shadow-sm"
-                          onError={(e) => {
-                            (e.target as HTMLElement).style.display = "none";
-                          }}
-                        />
-                        <span className="text-[10px] text-slate truncate max-w-xs">{opt}</span>
+                    {hasImage ? (
+                      <div className="flex-1 flex flex-col gap-2 min-w-0">
+                        {optLabel ? (
+                          <span className="text-sm font-semibold">{optLabel}</span>
+                        ) : (
+                          <span className="text-xs font-semibold text-slate">Option {String.fromCharCode(65 + oIdx)}</span>
+                        )}
+                        <div className="rounded-xl border border-line/80 bg-white p-2.5 shadow-sm max-w-md w-full overflow-hidden">
+                          <img
+                            src={getDirectImageUrl(optImage)}
+                            alt={optLabel || `Option ${String.fromCharCode(65 + oIdx)}`}
+                            className="max-h-52 w-auto object-contain mx-auto rounded"
+                            onError={(e) => {
+                              (e.target as HTMLElement).style.display = "none";
+                            }}
+                          />
+                        </div>
                       </div>
                     ) : (
                       <span className="text-sm font-semibold">{opt}</span>
@@ -755,7 +765,11 @@ export function TestTakingWidget({
                 const correctIndexes = checkedAnswers[q.id]?.correctIndexes || [];
                 const isThisCorrectOption = isChecked && Array.isArray(correctIndexes) && correctIndexes.map(Number).includes(oIdx);
 
-                let borderStyle = isSelected ? "border-brand bg-brand/5" : `${colors.card} ${colors.hover}`;
+                const optImage = q.config?.optionImages?.[oIdx] || (isImageUrl(opt) ? opt : "");
+                const hasImage = Boolean(optImage);
+                const optLabel = q.config?.optionImages?.[oIdx] ? opt : (isImageUrl(opt) ? "" : opt);
+
+                let borderStyle = isSelected ? "border-brand bg-brand/5 shadow-sm" : `${colors.card} ${colors.hover}`;
                 if (isChecked) {
                   if (isThisCorrectOption) {
                     borderStyle = "border-emerald-500 bg-emerald-500/10 dark:bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 font-bold shadow-[0_0_10px_rgba(16,185,129,0.15)]";
@@ -779,10 +793,10 @@ export function TestTakingWidget({
                         return next;
                       });
                     }}
-                    className={`p-4 border rounded-xl cursor-pointer transition-all flex items-center gap-3 ${borderStyle}`}
+                    className={`p-4 border rounded-xl cursor-pointer transition-all flex ${hasImage ? "items-start gap-3.5" : "items-center gap-3"} ${borderStyle}`}
                   >
                     {isInline ? (
-                      <span className={`w-5 h-5 rounded-md border flex items-center justify-center text-[10px] font-bold shrink-0 transition-colors ${
+                      <span className={`w-5 h-5 rounded-md border flex items-center justify-center text-[10px] font-bold shrink-0 transition-colors ${hasImage ? "mt-0.5" : ""} ${
                         isChecked
                           ? isThisCorrectOption
                             ? "border-emerald-500 bg-emerald-500 text-white"
@@ -800,20 +814,26 @@ export function TestTakingWidget({
                         type="checkbox"
                         checked={isSelected}
                         readOnly
-                        className="w-4 h-4 rounded text-brand border-line"
+                        className={`w-4 h-4 rounded text-brand border-line ${hasImage ? "mt-1" : ""}`}
                       />
                     )}
-                    {isImageUrl(opt) ? (
-                      <div className="flex flex-col gap-2 max-w-full">
-                        <img
-                          src={getDirectImageUrl(opt)}
-                          alt={`Option ${String.fromCharCode(65 + oIdx)}`}
-                          className="max-h-32 object-contain rounded-lg border border-line bg-white shadow-sm"
-                          onError={(e) => {
-                            (e.target as HTMLElement).style.display = "none";
-                          }}
-                        />
-                        <span className="text-[10px] text-slate truncate max-w-xs">{opt}</span>
+                    {hasImage ? (
+                      <div className="flex-1 flex flex-col gap-2 min-w-0">
+                        {optLabel ? (
+                          <span className="text-sm font-semibold">{optLabel}</span>
+                        ) : (
+                          <span className="text-xs font-semibold text-slate">Option {String.fromCharCode(65 + oIdx)}</span>
+                        )}
+                        <div className="rounded-xl border border-line/80 bg-white p-2.5 shadow-sm max-w-md w-full overflow-hidden">
+                          <img
+                            src={getDirectImageUrl(optImage)}
+                            alt={optLabel || `Option ${String.fromCharCode(65 + oIdx)}`}
+                            className="max-h-52 w-auto object-contain mx-auto rounded"
+                            onError={(e) => {
+                              (e.target as HTMLElement).style.display = "none";
+                            }}
+                          />
+                        </div>
                       </div>
                     ) : (
                       <span className="text-sm font-semibold">{opt}</span>
@@ -1825,29 +1845,39 @@ export function TestTakingWidget({
                             optIcon = <XCircle className="w-4 h-4 text-red-500 shrink-0" />;
                           }
 
+                          const optImage = res.config?.optionImages?.[oi] ?? q.config?.optionImages?.[oi] ?? (isImageUrl(opt) ? opt : "");
+                          const hasImage = Boolean(optImage);
+                          const optLabel = (res.config?.optionImages?.[oi] ?? q.config?.optionImages?.[oi]) ? opt : (isImageUrl(opt) ? "" : opt);
+
                           return (
-                            <div key={oi} className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl border text-xs transition-all ${optStyle}`}>
-                              <span className={`w-5 h-5 rounded-full border-2 flex items-center justify-center text-[9px] font-black shrink-0 ${
+                            <div key={oi} className={`flex ${hasImage ? "items-start gap-3" : "items-center gap-2.5"} px-3 py-2.5 rounded-xl border text-xs transition-all ${optStyle}`}>
+                              <span className={`w-5 h-5 rounded-full border-2 flex items-center justify-center text-[9px] font-black shrink-0 ${hasImage ? "mt-0.5" : ""} ${
                                 isCorrectOption ? "border-emerald-500 bg-emerald-500 text-white"
                                 : studentPicked ? "border-red-500 bg-red-500 text-white"
                                 : "border-current opacity-40"
                               }`}>
                                 {String.fromCharCode(65 + oi)}
                               </span>
-                              {isImageUrl(opt) ? (
+                              {hasImage ? (
                                 <div className="flex-1 flex flex-col gap-1.5 max-w-full">
-                                  <img
-                                    src={getDirectImageUrl(opt)}
-                                    alt={`Option ${String.fromCharCode(65 + oi)}`}
-                                    className="max-h-24 object-contain rounded-lg border border-line bg-white shadow-sm"
-                                    onError={(e) => {
-                                      (e.target as HTMLElement).style.display = "none";
-                                    }}
-                                  />
-                                  <span className="text-[9px] opacity-60 truncate max-w-xs">{opt}</span>
+                                  {optLabel ? (
+                                    <span className="font-semibold text-xs">{optLabel}</span>
+                                  ) : (
+                                    <span className="text-[11px] opacity-75">Option {String.fromCharCode(65 + oi)}</span>
+                                  )}
+                                  <div className="rounded-lg border border-line bg-white p-2 max-w-xs shadow-xs">
+                                    <img
+                                      src={getDirectImageUrl(optImage)}
+                                      alt={optLabel || `Option ${String.fromCharCode(65 + oi)}`}
+                                      className="max-h-28 w-auto object-contain mx-auto rounded"
+                                      onError={(e) => {
+                                        (e.target as HTMLElement).style.display = "none";
+                                      }}
+                                    />
+                                  </div>
                                 </div>
                               ) : (
-                                <span className="flex-1">{opt}</span>
+                                <span className="flex-1 font-medium">{opt}</span>
                               )}
                               {optIcon}
                               {studentPicked && !isCorrectOption && (
@@ -2208,7 +2238,8 @@ export function TestTakingWidget({
                   } else if (q.type === "matrix") {
                     isAnswered = Array.isArray(ans) && ans.some((row: any) => Array.isArray(row) && row.length > 0);
                   } else if (q.type === "code") {
-                    isAnswered = typeof ans === "string" && ans.trim().length > 0;
+                    const starter = (q.config?.starterCode || "").trim();
+                    isAnswered = typeof ans === "string" && ans.trim().length > 0 && ans.trim() !== starter;
                   }
 
                   const isCurrent = idx === currentQuestionIndex;

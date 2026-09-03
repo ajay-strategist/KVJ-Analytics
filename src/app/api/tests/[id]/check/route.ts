@@ -15,12 +15,16 @@ function getCorrectAnswerLabel(type: string, config: any) {
   if (!config) return "";
   if (type === "single") {
     const optText = config.options?.[config.correctIndex];
-    return optText ? `Option ${String.fromCharCode(65 + config.correctIndex)}: ${optText}` : `Option index: ${config.correctIndex}`;
+    const hasImage = Boolean(config.optionImages?.[config.correctIndex]);
+    const label = optText ? optText : hasImage ? "(Image Option)" : `Option ${String.fromCharCode(65 + config.correctIndex)}`;
+    return `Option ${String.fromCharCode(65 + config.correctIndex)}: ${label}`;
   }
   if (type === "multiple") {
     const labels = (config.correctIndexes || []).map((idx: number) => {
       const txt = config.options?.[idx];
-      return txt ? `Option ${String.fromCharCode(65 + idx)}: ${txt}` : `Option ${String.fromCharCode(65 + idx)}`;
+      const hasImage = Boolean(config.optionImages?.[idx]);
+      const label = txt ? txt : hasImage ? "(Image Option)" : `Option ${String.fromCharCode(65 + idx)}`;
+      return `Option ${String.fromCharCode(65 + idx)}: ${label}`;
     });
     return labels.join(", ");
   }
@@ -154,7 +158,14 @@ export async function POST(
       return NextResponse.json({ error: "Failed to fetch question." }, { status: 404 });
     }
 
-    const config = q.config || {};
+    let config = q.config || {};
+    if (typeof config === "string") {
+      try {
+        config = JSON.parse(config);
+      } catch {
+        config = {};
+      }
+    }
     let isCorrect = false;
 
     if (studentAnswer === undefined || studentAnswer === null) {
@@ -250,6 +261,11 @@ export async function POST(
           return Number(x) === Number(correctOrder[i]);
         });
       }
+    } else if (q.type === "code") {
+      const studentCode = String(studentAnswer || "").trim();
+      const starterCode = String(config.starterCode || "").trim();
+      // If code was entered and differs from empty / default starter code
+      isCorrect = studentCode.length > 0 && studentCode !== starterCode;
     }
 
     const correctAnswerLabel = getCorrectAnswerLabel(q.type, config);

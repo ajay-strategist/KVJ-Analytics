@@ -20,6 +20,7 @@ function stripAnswers(type: string, config: any, randomizeOptions: boolean = fal
   if (randomizeOptions && (type === "single" || type === "multiple") && Array.isArray(c.options)) {
     // Build a shuffled index mapping: newPosition -> originalIndex
     const originalOptions = [...c.options];
+    const originalOptionImages = Array.isArray(c.optionImages) ? [...c.optionImages] : null;
     const indices = originalOptions.map((_: any, i: number) => i);
     // Fisher-Yates shuffle on indices
     for (let i = indices.length - 1; i > 0; i--) {
@@ -27,6 +28,9 @@ function stripAnswers(type: string, config: any, randomizeOptions: boolean = fal
       [indices[i], indices[j]] = [indices[j], indices[i]];
     }
     c.options = indices.map((origIdx: number) => originalOptions[origIdx]);
+    if (originalOptionImages) {
+      c.optionImages = indices.map((origIdx: number) => originalOptionImages[origIdx] || "");
+    }
 
     if (type === "single" && c.correctIndex !== undefined) {
       // Find new position of the original correct index
@@ -85,12 +89,16 @@ function getCorrectAnswerLabel(type: string, config: any) {
   if (!config) return "";
   if (type === "single") {
     const optText = config.options?.[config.correctIndex];
-    return optText ? `Option ${config.correctIndex + 1}: ${optText}` : `Option index: ${config.correctIndex}`;
+    const hasImage = Boolean(config.optionImages?.[config.correctIndex]);
+    const label = optText ? optText : hasImage ? "(Image Option)" : `Option ${config.correctIndex + 1}`;
+    return `Option ${config.correctIndex + 1}: ${label}`;
   }
   if (type === "multiple") {
     const labels = (config.correctIndexes || []).map((idx: number) => {
       const txt = config.options?.[idx];
-      return txt ? `Option ${idx + 1}: ${txt}` : `Option ${idx + 1}`;
+      const hasImage = Boolean(config.optionImages?.[idx]);
+      const label = txt ? txt : hasImage ? "(Image Option)" : `Option ${idx + 1}`;
+      return `Option ${idx + 1}: ${label}`;
     });
     return labels.join(", ");
   }
@@ -266,12 +274,21 @@ export async function GET(
     // Shuffle options if randomize_options is NOT explicitly disabled (default: ON)
     const randomizeOpts = test.randomize_options !== false;
     const strippedQuestions = (dbQuestions || []).map((q: any) => {
+      let config = q.config;
+      if (typeof config === "string") {
+        try {
+          config = JSON.parse(config);
+        } catch {
+          config = {};
+        }
+      }
       return {
         id: q.id,
         type: q.type,
         stem: q.stem,
         marks: q.marks,
-        config: stripAnswers(q.type, q.config, randomizeOpts),
+        image_url: q.image_url,
+        config: stripAnswers(q.type, config, randomizeOpts),
       };
     });
 
@@ -415,7 +432,14 @@ export async function POST(
 
     for (const q of questions) {
       const qId = q.id;
-      const config = q.config || {};
+      let config = q.config || {};
+      if (typeof config === "string") {
+        try {
+          config = JSON.parse(config);
+        } catch {
+          config = {};
+        }
+      }
       const studentAns = answers[qId];
 
       let qMarks = Number(q.marks) || 1;
@@ -548,14 +572,19 @@ export async function POST(
             });
           }
         } else if (q.type === "code") {
-          if (!process.env.JUDGE0_URL) {
+          const testCases = config.testCases || [];
+          if (testCases.length === 0) {
+            // Open coding question without automated test cases -> mark pending manual review
+            pending = true;
+            isCorrect = false;
+            feedback = "Code submitted. Pending instructor review.";
+          } else if (!process.env.JUDGE0_URL) {
             pending = true;
             isCorrect = false;
             feedback = "Pending manual grading (Code execution sandbox offline).";
           } else {
             let passedCases = 0;
             const testCaseResults = [];
-            const testCases = config.testCases || [];
 
             for (const tc of testCases) {
               const run = await runCode(studentAns, config.language, tc.stdin);
