@@ -2764,7 +2764,7 @@ export default function AdminCourseDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [savingCourse, setSavingCourse] = useState(false);
-  const [showSettings, setShowSettings] = useState(true);
+  const [showSettings, setShowSettings] = useState(false);
 
 
   // Form states for modules

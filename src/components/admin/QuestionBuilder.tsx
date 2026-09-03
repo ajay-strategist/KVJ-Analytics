@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useId } from "react";
+import React, { useEffect, useState, useId, useRef } from "react";
 import {
   Plus,
   Pencil,
@@ -114,6 +114,122 @@ export const handleGoogleDriveImageError = (e: React.SyntheticEvent<HTMLImageEle
   target.style.display = "none";
 };
 
+export function normalizeQuestionConfig(q: any) {
+  let config = q.config;
+  if (typeof config === "string") {
+    try {
+      config = JSON.parse(config);
+    } catch {
+      config = {};
+    }
+  }
+  config = config || {};
+
+  if (q.type === "single" || q.type === "multiple") {
+    if (!config?.options || !Array.isArray(config.options) || config.options.length === 0) {
+      config = {
+        ...config,
+        options: ["Option 1", "Option 2"],
+        optionImages: ["", ""],
+        correctIndex: config?.correctIndex ?? 0,
+        correctIndexes: config?.correctIndexes ?? [0],
+      };
+    } else {
+      const optImgs = Array.isArray(config.optionImages)
+        ? [...config.optionImages]
+        : config.options.map((opt: string) => isImageUrl(opt) ? opt : "");
+      while (optImgs.length < config.options.length) {
+        optImgs.push("");
+      }
+      config = {
+        ...config,
+        optionImages: optImgs,
+        correctIndex: config?.correctIndex ?? 0,
+        correctIndexes: config?.correctIndexes ?? [0],
+      };
+    }
+  } else if (q.type === "truefalse") {
+    config = {
+      correct: config?.correct ?? true,
+      explanation: config?.explanation || "",
+      ...config,
+    };
+  } else if (q.type === "fillblank") {
+    config = {
+      blanks: Array.isArray(config?.blanks) && config.blanks.length > 0 ? config.blanks : ["Answer 1"],
+      ...config,
+    };
+  } else if (q.type === "dragdrop") {
+    config = {
+      left: Array.isArray(config?.left) && config.left.length > 0 ? config.left : ["Left Item A"],
+      right: Array.isArray(config?.right) && config.right.length > 0 ? config.right : ["Right Item A"],
+      correctPairs: Array.isArray(config?.correctPairs) ? config.correctPairs : [[0, 0]],
+      ...config,
+    };
+  } else if (q.type === "dragtable") {
+    config = {
+      headers: Array.isArray(config?.headers) && config.headers.length > 0 ? config.headers : ["Region", "Quarter 1", "Answer area"],
+      rows: Array.isArray(config?.rows) && config.rows.length > 0 ? config.rows : [["North", "100", "{{Label 1}}"]],
+      correct: config?.correct || { "Label 1": "200" },
+      labels: Array.isArray(config?.labels) ? config.labels : ["200", "300"],
+      ...config,
+    };
+  } else if (q.type === "sequence") {
+    config = {
+      items: Array.isArray(config?.items) && config.items.length > 0 ? config.items : ["First Step", "Second Step"],
+      ...config,
+    };
+  } else if (q.type === "matrix") {
+    config = {
+      rows: Array.isArray(config?.rows) && config.rows.length > 0 ? config.rows : ["Row 1"],
+      columns: Array.isArray(config?.columns) && config.columns.length > 0 ? config.columns : ["Col 1"],
+      correct: config?.correct || { 0: 0 },
+      ...config,
+    };
+  } else if (q.type === "code") {
+    config = {
+      language: config?.language || "python",
+      starterCode: config?.starterCode ?? "# Write your Python code here\n",
+      testCases: Array.isArray(config?.testCases) ? config.testCases : [],
+      ...config,
+    };
+  } else if (q.type === "pivot_table") {
+    config = {
+      sourceMode: config?.sourceMode || "table",
+      sourceTable: config?.sourceTable || {
+        headers: ["School", "Class", "Format", "Certified teacher"],
+        rows: [
+          ["School A", "Networking", "In Person", "6"],
+          ["School A", "Networking", "Virtual", "5"],
+          ["School A", "Data Analytics", "In Person", "2"],
+          ["School A", "Data Analytics", "Virtual", "3"],
+          ["School B", "Networking", "In Person", "9"],
+          ["School B", "Networking", "Virtual", "7"],
+          ["School B", "Data Analytics", "In Person", "2"],
+          ["School B", "Data Analytics", "Virtual", "4"],
+        ],
+      },
+      sourceImage: config?.sourceImage || "",
+      labels: Array.isArray(config?.labels) ? config.labels : ["Data Analytics", "Networking", "In-Person", "Virtual", "School A", "School B"],
+      targetTable: config?.targetTable || {
+        rows: [
+          ["", "{{Label 1}}", "{{Label 2}}"],
+          ["{{Label 3}}", "11", "5"],
+          ["{{Label 4}}", "16", "6"],
+        ],
+      },
+      correct: config?.correct || {
+        "Label 1": "Networking",
+        "Label 2": "Data Analytics",
+        "Label 3": "School A",
+        "Label 4": "School B",
+      },
+      ...config,
+    };
+  }
+  return config;
+}
+
 interface QuestionBuilderProps {
   testId: string;
 }
@@ -126,6 +242,13 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
   const [uploadingOptionIdx, setUploadingOptionIdx] = useState<number | null>(null);
   const [csvInput, setCsvInput] = useState("");
   const fileId = useId();
+  const formRef = useRef<HTMLFormElement | null>(null);
+
+  useEffect(() => {
+    if (editingQuestionId && formRef.current) {
+      formRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [editingQuestionId]);
 
   const handleUploadOptionImage = async (file: File, idx: number) => {
     if (!file) return;
@@ -540,7 +663,7 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
 
       {/* Add/Edit Question Form */}
       {editingQuestionId && (
-        <form onSubmit={handleSaveQuestion} className="bg-surface/50 border border-line p-5 rounded-xl space-y-4">
+        <form ref={formRef} onSubmit={handleSaveQuestion} className="bg-surface/50 border border-line p-5 rounded-xl space-y-4">
           <h3 className="text-xs font-bold text-ink uppercase tracking-wider">
             {editingQuestionId === "new" ? "New Question Details" : "Edit Question Details"}
           </h3>
@@ -2786,77 +2909,8 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
                   type="button"
                   onClick={() => {
                     setEditingQuestionId(q.id);
-                    let config = q.config;
-                    if (typeof config === "string") {
-                      try {
-                        config = JSON.parse(config);
-                      } catch {
-                        config = {};
-                      }
-                    }
-                    if (q.type === "single" || q.type === "multiple") {
-                      if (!config?.options) {
-                        config = {
-                          ...config,
-                          options: ["Option 1", "Option 2"],
-                          optionImages: ["", ""],
-                          correctIndex: config?.correctIndex ?? 0,
-                          correctIndexes: config?.correctIndexes ?? [0]
-                        };
-                      } else {
-                        const optImgs = Array.isArray(config.optionImages)
-                          ? [...config.optionImages]
-                          : config.options.map((opt: string) => isImageUrl(opt) ? opt : "");
-                        while (optImgs.length < config.options.length) {
-                          optImgs.push("");
-                        }
-                        config = {
-                          ...config,
-                          optionImages: optImgs,
-                        };
-                      }
-                    } else if (q.type === "code") {
-                      config = {
-                        language: config?.language || "python",
-                        starterCode: config?.starterCode ?? "# Write your Python code here\n",
-                        testCases: Array.isArray(config?.testCases) ? config.testCases : [],
-                        ...config,
-                      };
-                    } else if (q.type === "pivot_table") {
-                      config = {
-                        sourceMode: config?.sourceMode || "table",
-                        sourceTable: config?.sourceTable || {
-                          headers: ["School", "Class", "Format", "Certified teacher"],
-                          rows: [
-                            ["School A", "Networking", "In Person", "6"],
-                            ["School A", "Networking", "Virtual", "5"],
-                            ["School A", "Data Analytics", "In Person", "2"],
-                            ["School A", "Data Analytics", "Virtual", "3"],
-                            ["School B", "Networking", "In Person", "9"],
-                            ["School B", "Networking", "Virtual", "7"],
-                            ["School B", "Data Analytics", "In Person", "2"],
-                            ["School B", "Data Analytics", "Virtual", "4"],
-                          ],
-                        },
-                        sourceImage: config?.sourceImage || "",
-                        labels: Array.isArray(config?.labels) ? config.labels : ["Data Analytics", "Networking", "In-Person", "Virtual", "School A", "School B"],
-                        targetTable: config?.targetTable || {
-                          rows: [
-                            ["", "{{Label 1}}", "{{Label 2}}"],
-                            ["{{Label 3}}", "11", "5"],
-                            ["{{Label 4}}", "16", "6"],
-                          ],
-                        },
-                        correct: config?.correct || {
-                          "Label 1": "Networking",
-                          "Label 2": "Data Analytics",
-                          "Label 3": "School A",
-                          "Label 4": "School B",
-                        },
-                        ...config,
-                      };
-                    }
-                    setQuestionForm({ ...q, config });
+                    const normalizedConfig = normalizeQuestionConfig(q);
+                    setQuestionForm({ ...q, config: normalizedConfig });
                   }}
                   className="p-1.5 border border-line rounded hover:bg-surface cursor-pointer text-slate hover:text-ink"
                   title="Edit Question"
