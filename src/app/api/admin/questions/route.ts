@@ -22,6 +22,19 @@ function notConfigured() {
   return NextResponse.json({ error: "Supabase not configured." }, { status: 500 });
 }
 
+function normalizeQuestionRecord(q: any) {
+  if (!q) return q;
+  const copy = { ...q };
+  let config = copy.config;
+  if (typeof config === "string") {
+    try { config = JSON.parse(config); } catch { config = {}; }
+  }
+  if (copy.type === "dragtable" && (config?.isPivotTable || config?.sourceTable || config?.sourceMode)) {
+    copy.type = "pivot_table";
+  }
+  return copy;
+}
+
 export async function GET(req: NextRequest) {
   if (!isAuthenticated(req)) return unauthorized();
   const db = getAdmin();
@@ -37,10 +50,11 @@ export async function GET(req: NextRequest) {
       .select("*")
       .eq("test_id", testId)
       .order("display_order", { ascending: true })
-      .order("id", { ascending: true }); // Fallback sorting just in case
+      .order("id", { ascending: true });
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    return NextResponse.json({ questions: data });
+    const formatted = (data || []).map(normalizeQuestionRecord);
+    return NextResponse.json({ questions: formatted });
   } catch (err: any) {
     return NextResponse.json({ error: err.message || "Invalid request" }, { status: 400 });
   }
@@ -52,10 +66,28 @@ export async function POST(req: NextRequest) {
   if (!db) return notConfigured();
 
   try {
-    const body = await req.json();
-    const { data, error } = await db.from("questions").insert([body]).select().single();
+    let body = await req.json();
+    
+    // First try inserting as-is
+    let { data, error } = await db.from("questions").insert([body]).select().single();
+
+    // If check constraint questions_type_check failed for pivot_table, fallback to dragtable with isPivotTable flag
+    if (error && body.type === "pivot_table" && (error.message.includes("questions_type_check") || error.message.includes("check constraint"))) {
+      const fallbackBody = {
+        ...body,
+        type: "dragtable",
+        config: {
+          ...(typeof body.config === "object" ? body.config : {}),
+          isPivotTable: true,
+        },
+      };
+      const retry = await db.from("questions").insert([fallbackBody]).select().single();
+      data = retry.data;
+      error = retry.error;
+    }
+
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    return NextResponse.json({ question: data });
+    return NextResponse.json({ question: normalizeQuestionRecord(data) });
   } catch (err: any) {
     return NextResponse.json({ error: err.message || "Invalid request body" }, { status: 400 });
   }
@@ -67,18 +99,39 @@ export async function PATCH(req: NextRequest) {
   if (!db) return notConfigured();
 
   try {
-    const { id, ...updates } = await req.json();
+    const body = await req.json();
+    const { id, ...updates } = body;
     if (!id) return NextResponse.json({ error: "Question ID is required" }, { status: 400 });
 
-    const { data, error } = await db
+    let { data, error } = await db
       .from("questions")
       .update(updates)
       .eq("id", id)
       .select()
       .single();
 
+    // Fallback if pivot_table check constraint fails
+    if (error && updates.type === "pivot_table" && (error.message.includes("questions_type_check") || error.message.includes("check constraint"))) {
+      const fallbackUpdates = {
+        ...updates,
+        type: "dragtable",
+        config: {
+          ...(typeof updates.config === "object" ? updates.config : {}),
+          isPivotTable: true,
+        },
+      };
+      const retry = await db
+        .from("questions")
+        .update(fallbackUpdates)
+        .eq("id", id)
+        .select()
+        .single();
+      data = retry.data;
+      error = retry.error;
+    }
+
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    return NextResponse.json({ question: data });
+    return NextResponse.json({ question: normalizeQuestionRecord(data) });
   } catch (err: any) {
     return NextResponse.json({ error: err.message || "Invalid request body" }, { status: 400 });
   }

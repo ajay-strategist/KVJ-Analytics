@@ -35,10 +35,22 @@ export async function GET(req: NextRequest) {
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
+    const formatted = (data || []).map((q: any) => {
+      const copy = { ...q };
+      let config = copy.config;
+      if (typeof config === "string") {
+        try { config = JSON.parse(config); } catch { config = {}; }
+      }
+      if (copy.type === "dragtable" && (config?.isPivotTable || config?.sourceTable || config?.sourceMode)) {
+        copy.type = "pivot_table";
+      }
+      return copy;
+    });
+
     // Deduplicate by stem to present a clean question bank list
     const uniqueQuestions: any[] = [];
     const stems = new Set<string>();
-    (data || []).forEach((q: any) => {
+    formatted.forEach((q: any) => {
       const cleanStem = String(q.stem || "").trim().toLowerCase();
       if (cleanStem && !stems.has(cleanStem)) {
         stems.add(cleanStem);

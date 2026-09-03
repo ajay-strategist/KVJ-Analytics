@@ -288,9 +288,13 @@ export async function GET(
           config = {};
         }
       }
+      let type = q.type;
+      if (type === "dragtable" && (config?.isPivotTable || config?.sourceTable || config?.sourceMode)) {
+        type = "pivot_table";
+      }
       return {
         id: q.id,
-        type: q.type,
+        type: type,
         stem: q.stem,
         marks: q.marks,
         image_url: q.image_url,
