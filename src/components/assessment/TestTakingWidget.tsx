@@ -92,19 +92,71 @@ export function getDirectImageUrl(url: string): string {
 
 /**
  * Converts plain-text stem (with \n newlines) to HTML suitable for dangerouslySetInnerHTML.
- * If the stem already contains HTML tags (e.g. <br>, <p>, <table>) it is returned as-is.
- * Otherwise every \n is converted to a <br /> so multiline question text renders correctly.
+ * Handles:
+ *  - Existing HTML tags → returned as-is (backward compatible)
+ *  - Lines starting with "- ", "* ", "• " → converted to <ul><li> bullet lists
+ *  - Lines starting with "1. ", "2. " etc. → converted to <ol><li> numbered lists
+ *  - Plain text with newlines → converts \n to <br />
  */
 export function formatStemHtml(stem: string): string {
   if (!stem) return "";
+
+  // If already contains HTML tags, return as-is
   const hasHtmlTags = /<\/?[a-z][\s\S]*>/i.test(stem);
   if (hasHtmlTags) return stem;
-  // Escape any stray < > & characters that aren't HTML tags, then convert \n -> <br />
-  const escaped = stem
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-  return escaped.replace(/\n/g, "<br />");
+
+  // Escape raw HTML special chars
+  const escape = (s: string) =>
+    s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+  const lines = stem.split("\n");
+  const result: string[] = [];
+  let inUl = false;
+  let inOl = false;
+
+  const closeUl = () => { if (inUl) { result.push("</ul>"); inUl = false; } };
+  const closeOl = () => { if (inOl) { result.push("</ol>"); inOl = false; } };
+
+  for (const rawLine of lines) {
+    const line = rawLine;
+
+    // Unordered bullet: "- text", "* text", "• text"
+    const ulMatch = line.match(/^(\s*)([-*•])\s+(.+)$/);
+    if (ulMatch) {
+      closeOl();
+      if (!inUl) { result.push('<ul style="margin:4px 0 4px 1.25em;padding:0;list-style-type:disc;">'); inUl = true; }
+      result.push(`<li style="margin:2px 0;">${escape(ulMatch[3])}</li>`);
+      continue;
+    }
+
+    // Ordered list: "1. text", "2) text"
+    const olMatch = line.match(/^(\s*)\d+[.)]\s+(.+)$/);
+    if (olMatch) {
+      closeUl();
+      if (!inOl) { result.push('<ol style="margin:4px 0 4px 1.25em;padding:0;list-style-type:decimal;">'); inOl = true; }
+      result.push(`<li style="margin:2px 0;">${escape(olMatch[2])}</li>`);
+      continue;
+    }
+
+    // Plain line — close any open list first
+    closeUl();
+    closeOl();
+
+    if (line.trim() === "") {
+      result.push("<br />");
+    } else {
+      result.push(escape(line) + "<br />");
+    }
+  }
+
+  closeUl();
+  closeOl();
+
+  // Trim trailing <br /> added after last line
+  let html = result.join("");
+  html = html.replace(/(<br \/>)+$/, "");
+
+  return html;
 }
 
 export const handleGoogleDriveImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
