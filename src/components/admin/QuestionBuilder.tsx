@@ -528,7 +528,7 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
     } else if (type === "matrix") {
       defaultConfig = { rows: ["Row 1", "Row 2"], columns: ["Column A", "Column B"], multiple: false, correct: [[0], [1]] };
     } else if (type === "code") {
-      defaultConfig = { language: "python", starterCode: "# Write your Python code here\n", testCases: [] };
+      defaultConfig = { language: "python", starterCode: "# Write your Python code here\n", correctAnswer: "", testCases: [] };
     }
     setQuestionForm((prev: any) => ({
       ...prev,
@@ -546,15 +546,16 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
     let processedConfig = questionForm.config;
     if (questionForm.type === "code") {
       const cleanTestCases = (questionForm.config?.testCases || [])
-        .filter((tc: any) => (tc.stdin && tc.stdin.trim()) || (tc.expectedOutput && tc.expectedOutput.trim()))
+        .filter((tc: any) => tc.expectedOutput && tc.expectedOutput.trim())
         .map((tc: any) => ({
-          stdin: tc.stdin || "",
+          stdin: "",
           expectedOutput: tc.expectedOutput || "",
         }));
       processedConfig = {
         ...questionForm.config,
         language: questionForm.config?.language || "python",
         starterCode: questionForm.config?.starterCode ?? "# Write your Python code here\n",
+        correctAnswer: questionForm.config?.correctAnswer || "",
         testCases: cleanTestCases,
       };
     }
@@ -2682,8 +2683,14 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
 
             {questionForm.type === "code" && (
               <div className="space-y-4">
+
+                {/* Info banner */}
+                <div className="text-[11px] bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 text-blue-700">
+                  📝 <strong>Text Comparison Mode</strong> — The student&apos;s entered code/text is compared directly against the correct answer you define below. No code execution takes place.
+                </div>
+
                 <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate mb-1">Programming Language</label>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate mb-1">Language (display only — for syntax highlighting)</label>
                   <select
                     value={questionForm.config?.language || "python"}
                     onChange={(e) => setQuestionForm((prev: any) => ({
@@ -2695,15 +2702,16 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
                     <option value="python">Python</option>
                     <option value="javascript">JavaScript / Node.js</option>
                     <option value="sql">SQL / SQLite</option>
+                    <option value="text">Plain Text</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate mb-1">Starter Code (Initial layout for student)</label>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate mb-1">Starter Code / Template (shown to student)</label>
                   <div className="border border-line rounded-lg overflow-hidden mt-1 bg-white">
                     <CodeMirror
                       value={questionForm.config?.starterCode || ""}
-                      height="180px"
+                      height="160px"
                       extensions={getExtensions(questionForm.config?.language || "python")}
                       onChange={(val: string) => setQuestionForm((prev: any) => ({
                         ...prev,
@@ -2711,13 +2719,34 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
                       }))}
                     />
                   </div>
+                  <p className="text-[10px] text-slate-400 mt-1">Leave the starter code or blank lines that students must complete.</p>
                 </div>
 
+                {/* ── Correct Answer (primary) ── */}
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate mb-1">
+                    ✅ Correct Answer <span className="font-normal text-slate-400 normal-case tracking-normal">(student entry must match this exactly)</span>
+                  </label>
+                  <div className="border border-line rounded-lg overflow-hidden mt-1 bg-white">
+                    <CodeMirror
+                      value={questionForm.config?.correctAnswer || ""}
+                      height="160px"
+                      extensions={getExtensions(questionForm.config?.language || "python")}
+                      onChange={(val: string) => setQuestionForm((prev: any) => ({
+                        ...prev,
+                        config: { ...prev.config, correctAnswer: val },
+                      }))}
+                    />
+                  </div>
+                  <p className="text-[10px] text-slate-400 mt-1">Comparison is case-insensitive and ignores leading/trailing whitespace.</p>
+                </div>
+
+                {/* ── Multiple accepted answers (optional) ── */}
                 <div>
                   <div className="flex justify-between items-center mb-1">
                     <div>
-                      <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">Grading Test Cases (Optional)</label>
-                      <span className="text-[10px] text-slate-400">Add automated stdin/stdout test cases if you want automated code execution grading</span>
+                      <label className="block text-[10px] font-bold uppercase tracking-wider text-slate">Alternative Accepted Answers (Optional)</label>
+                      <span className="text-[10px] text-slate-400">Add more accepted answers if there are multiple correct forms</span>
                     </div>
                     <Button
                       type="button"
@@ -2731,20 +2760,14 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
                       variant="secondary"
                       className="py-0.5 px-2 text-[10px]"
                     >
-                      + Add Test Case
+                      + Add Alternative
                     </Button>
                   </div>
-
-                  {(!questionForm.config?.testCases || questionForm.config.testCases.length === 0) && (
-                    <div className="text-[11px] text-slate-500 bg-surface/40 border border-dashed border-line rounded-lg p-3 text-center my-2">
-                      💡 No automated test cases configured. Students will practice and run code in the sandbox. Click <strong>+ Add Test Case</strong> above to test code against inputs and expected outputs.
-                    </div>
-                  )}
 
                   {(questionForm.config?.testCases || []).map((tc: any, tcIdx: number) => (
                     <div key={tcIdx} className="border border-line rounded-lg p-3 mb-3 bg-surface/20 space-y-2 text-xs">
                       <div className="flex justify-between items-center">
-                        <span className="font-bold text-slate">Test Case #{tcIdx + 1}</span>
+                        <span className="font-bold text-slate">Alternative Answer #{tcIdx + 1}</span>
                         <button
                           type="button"
                           onClick={() => {
@@ -2760,31 +2783,12 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
                           Remove
                         </button>
                       </div>
-
                       <div>
-                        <label className="block font-bold text-slate mb-1">Stdin Input (optional)</label>
-                        <input
-                          type="text"
-                          value={tc.stdin || ""}
-                          placeholder="e.g. 5"
-                          onChange={(e) => {
-                            const cases = [...questionForm.config.testCases];
-                            cases[tcIdx] = { ...tc, stdin: e.target.value };
-                            setQuestionForm((prev: any) => ({
-                              ...prev,
-                              config: { ...prev.config, testCases: cases },
-                            }));
-                          }}
-                          className="w-full px-3 py-1.5 rounded border border-line bg-white text-xs"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block font-bold text-slate mb-1">Expected Output (Must match stdout exactly)</label>
+                        <label className="block font-bold text-slate mb-1">Accepted Answer Text</label>
                         <textarea
-                          rows={2}
+                          rows={3}
                           value={tc.expectedOutput || ""}
-                          placeholder="e.g. 120"
+                          placeholder="Another valid answer the student could enter..."
                           onChange={(e) => {
                             const cases = [...questionForm.config.testCases];
                             cases[tcIdx] = { ...tc, expectedOutput: e.target.value };
