@@ -7,6 +7,8 @@ import {
   List, ListOrdered, Indent, Outdent, Link, Image, Code, FileCode, Undo, Redo, Trash2
 } from "lucide-react";
 
+import { toDirectImageUrl } from "@/lib/mediaUrl";
+
 interface RichTextEditorProps {
   value: string;
   onChange: (val: string) => void;
@@ -290,8 +292,9 @@ export function RichTextEditor({ value, onChange, placeholder = "Write rich text
     e.preventDefault();
     if (!imgUrl) return;
 
+    const directUrl = toDirectImageUrl(imgUrl);
     editorRef.current?.focus();
-    const html = `<img src="${imgUrl}" style="width: ${imgWidth}; max-width: 100%; height: auto;" alt="Course image" />`;
+    const html = `<img src="${directUrl}" referrerpolicy="no-referrer" style="width: ${imgWidth}; max-width: 100%; height: auto;" alt="Course image" />`;
     insertHtmlAtCursor(html);
     
     setImgUrl("");

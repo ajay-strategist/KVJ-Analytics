@@ -34,6 +34,8 @@ import { sql } from "@codemirror/lang-sql";
 
 const CodeMirror = dynamic(() => import("@uiw/react-codemirror"), { ssr: false });
 
+import { toDirectImageUrl } from "@/lib/mediaUrl";
+
 export function isImageUrl(url: string): boolean {
   if (!url) return false;
   const cleanUrl = url.trim().toLowerCase();
@@ -42,6 +44,7 @@ export function isImageUrl(url: string): boolean {
     cleanUrl.includes("googleusercontent.com") ||
     cleanUrl.includes("docs.google.com") ||
     cleanUrl.includes("onedrive.live.com") ||
+    cleanUrl.includes("1drv.ms") ||
     cleanUrl.includes("dropbox.com")
   ) {
     return true;
@@ -58,42 +61,15 @@ export function isImageUrl(url: string): boolean {
 }
 
 export function getDirectImageUrl(url: string): string {
-  if (!url) return "";
-  const trimmed = url.trim();
-
-  // 1. Google Drive (file/d/ID, open?id=ID, uc?id=ID, thumbnail?id=ID, etc.)
-  if (
-    trimmed.includes("drive.google.com") ||
-    trimmed.includes("docs.google.com") ||
-    trimmed.includes("googleusercontent.com")
-  ) {
-    const matchD = trimmed.match(/\/d\/([a-zA-Z0-9_-]+)/);
-    if (matchD && matchD[1]) {
-      return `https://lh3.googleusercontent.com/d/${matchD[1]}`;
-    }
-    const matchId = trimmed.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-    if (matchId && matchId[1]) {
-      return `https://lh3.googleusercontent.com/d/${matchId[1]}`;
-    }
-  }
-
-  // 2. OneDrive
-  if (trimmed.includes("onedrive.live.com") && trimmed.includes("/redir?")) {
-    return trimmed.replace("/redir?", "/download?");
-  }
-
-  // 3. Dropbox
-  if (trimmed.includes("dropbox.com")) {
-    return trimmed.replace("?dl=0", "?raw=1").replace("&dl=0", "&raw=1");
-  }
-
-  return trimmed;
+  return toDirectImageUrl(url);
 }
 
 /**
  * Converts plain-text stem (with \n newlines) to HTML suitable for dangerouslySetInnerHTML.
  * Handles:
- *  - Existing HTML tags → returned as-is (backward compatible)
+ *  - Existing HTML tags & <img> tags → converts image src to direct renderable image URLs
+ *  - Markdown images ![alt](url) → rendered as <img> elements
+ *  - Standalone image URLs & Google Drive share links in paragraphs → rendered as <img> elements
  *  - Lines starting with "- ", "* ", "• " → converted to <ul><li> bullet lists
  *  - Lines starting with "1. ", "2. " etc. → converted to <ol><li> numbered lists
  *  - Plain text with newlines → converts \n to <br />
@@ -101,15 +77,25 @@ export function getDirectImageUrl(url: string): string {
 export function formatStemHtml(stem: string): string {
   if (!stem) return "";
 
-  // If already contains HTML tags, return as-is
-  const hasHtmlTags = /<\/?[a-z][\s\S]*>/i.test(stem);
-  if (hasHtmlTags) return stem;
+  // 1. Process any <img> tags in HTML or text to convert Google Drive / OneDrive share links to direct renderable image URLs
+  let processedStem = stem.replace(/<img\s+([^>]*?)src=["']([^"']+)["']([^>]*?)>/gi, (match, prefix, src, suffix) => {
+    const directSrc = toDirectImageUrl(src);
+    const hasReferrer = /referrerpolicy/i.test(match);
+    const hasOnError = /onerror/i.test(match);
+    const referrerAttr = hasReferrer ? '' : ' referrerpolicy="no-referrer"';
+    const onErrorAttr = hasOnError ? '' : ' onerror="if(this.src.includes(\'lh3.googleusercontent.com/d/\')){var id=this.src.split(\'/d/\')[1].split(\'?\')[0];this.src=\'https://drive.google.com/thumbnail?id=\'+id+\'&sz=w1000\';}"';
+    return `<img ${prefix}src="${directSrc}"${referrerAttr}${onErrorAttr}${suffix}>`;
+  });
+
+  // If already contains HTML tags, return the processed HTML with direct image URLs
+  const hasHtmlTags = /<\/?[a-z][\s\S]*>/i.test(processedStem);
+  if (hasHtmlTags) return processedStem;
 
   // Escape raw HTML special chars
   const escape = (s: string) =>
     s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
-  const lines = stem.split("\n");
+  const lines = processedStem.split("\n");
   const result: string[] = [];
   let inUl = false;
   let inOl = false;
@@ -119,6 +105,25 @@ export function formatStemHtml(stem: string): string {
 
   for (const rawLine of lines) {
     const line = rawLine;
+    const trimmed = line.trim();
+
+    // Check if line is a markdown image ![alt](url)
+    const mdImgMatch = trimmed.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
+    if (mdImgMatch) {
+      closeUl(); closeOl();
+      const alt = escape(mdImgMatch[1] || "Image");
+      const url = toDirectImageUrl(mdImgMatch[2]);
+      result.push(`<div class="my-3 text-center"><img src="${url}" alt="${alt}" referrerpolicy="no-referrer" onerror="if(this.src.includes('lh3.googleusercontent.com/d/')){var id=this.src.split('/d/')[1].split('?')[0];this.src='https://drive.google.com/thumbnail?id='+id+'&sz=w1000';}" class="max-h-96 mx-auto rounded-xl border border-line shadow-sm object-contain" /></div>`);
+      continue;
+    }
+
+    // Check if line is a standalone image URL or Google Drive link
+    if (isImageUrl(trimmed) || (trimmed.startsWith("http") && (trimmed.includes("drive.google.com") || trimmed.includes("1drv.ms") || trimmed.includes("onedrive")))) {
+      closeUl(); closeOl();
+      const url = toDirectImageUrl(trimmed);
+      result.push(`<div class="my-3 text-center"><img src="${url}" alt="Attachment" referrerpolicy="no-referrer" onerror="if(this.src.includes('lh3.googleusercontent.com/d/')){var id=this.src.split('/d/')[1].split('?')[0];this.src='https://drive.google.com/thumbnail?id='+id+'&sz=w1000';}" class="max-h-96 mx-auto rounded-xl border border-line shadow-sm object-contain" /></div>`);
+      continue;
+    }
 
     // Unordered bullet: "- text", "* text", "• text"
     const ulMatch = line.match(/^(\s*)([-*•])\s+(.+)$/);
@@ -142,7 +147,7 @@ export function formatStemHtml(stem: string): string {
     closeUl();
     closeOl();
 
-    if (line.trim() === "") {
+    if (trimmed === "") {
       result.push("<br />");
     } else {
       result.push(escape(line) + "<br />");
@@ -152,11 +157,10 @@ export function formatStemHtml(stem: string): string {
   closeUl();
   closeOl();
 
-  // Trim trailing <br /> added after last line
-  let html = result.join("");
-  html = html.replace(/(<br \/>)+$/, "");
+  let htmlResult = result.join("");
+  htmlResult = htmlResult.replace(/(<br \/>)+$/, "");
 
-  return html;
+  return htmlResult;
 }
 
 export const handleGoogleDriveImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {

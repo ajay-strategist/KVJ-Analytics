@@ -79,6 +79,11 @@ export function toDirectImageUrl(input: string): string {
     return url + (url.includes("?") ? "&" : "?") + "download=1";
   }
 
+  // ---- Dropbox --------------------------------------------------------------
+  if (/dropbox\.com/i.test(url)) {
+    return url.replace("?dl=0", "?raw=1").replace("&dl=0", "&raw=1");
+  }
+
   // Anything else (Supabase CDN, Unsplash, a normal .jpg URL, …) — unchanged.
   return url;
 }

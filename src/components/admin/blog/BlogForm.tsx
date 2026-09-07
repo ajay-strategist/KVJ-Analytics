@@ -460,7 +460,8 @@ export function BlogForm({ id, initial }: { id?: string; initial?: BlogInitial }
       setModalErr("Please enter a valid image URL.");
       return;
     }
-    const imgTag = `\n<img src="${modalLink}" alt="${modalAlt || "Article Image"}" class="rounded-2xl my-6 w-full object-cover shadow-md" />\n`;
+    const directUrl = toDirectImageUrl(modalLink);
+    const imgTag = `\n<img src="${directUrl}" alt="${modalAlt || "Article Image"}" referrerpolicy="no-referrer" onerror="if(this.src.includes('lh3.googleusercontent.com/d/')){var id=this.src.split('/d/')[1].split('?')[0];this.src='https://drive.google.com/thumbnail?id='+id+'&sz=w1000';}" class="rounded-2xl my-6 w-full object-cover shadow-md" />\n`;
     insertContent(imgTag);
     setShowImageModal(false);
     setModalLink("");
@@ -662,8 +663,8 @@ export function BlogForm({ id, initial }: { id?: string; initial?: BlogInitial }
                     <input
                       type="text"
                       value={blockOptions.mediaUrl || ''}
-                      onChange={(e) => setBlockOptions({ ...blockOptions, mediaUrl: e.target.value })}
-                      placeholder="Paste image URL here..."
+                      onChange={(e) => setBlockOptions({ ...blockOptions, mediaUrl: toDirectImageUrl(e.target.value) })}
+                      placeholder="Paste image URL here (Google Drive, OneDrive, etc.)..."
                       className="flex-1 px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none"
                     />
                     <label className="cursor-pointer px-2 py-1 bg-white border border-slate-200 hover:border-slate-350 text-slate-650 hover:text-slate-905 text-[10px] font-bold rounded-lg flex items-center justify-center shrink-0 shadow-sm transition-colors">
@@ -696,10 +697,21 @@ export function BlogForm({ id, initial }: { id?: string; initial?: BlogInitial }
                     <div className="relative mt-2 h-28 w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-1 flex items-center justify-center group">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
-                        src={blockOptions.mediaUrl}
+                        src={toDirectImageUrl(blockOptions.mediaUrl)}
                         alt="Preview"
+                        referrerPolicy="no-referrer"
                         className="max-h-full max-w-full object-contain"
-                        onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }}
+                        onError={(e) => {
+                          const target = e.currentTarget;
+                          if (target.src.includes("lh3.googleusercontent.com/d/")) {
+                            const fileId = target.src.split("/d/")[1]?.split("?")[0]?.split("/")[0];
+                            if (fileId) {
+                              target.src = `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
+                              return;
+                            }
+                          }
+                          target.style.display = 'none';
+                        }}
                       />
                       <button
                         type="button"

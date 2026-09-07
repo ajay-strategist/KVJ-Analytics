@@ -1,3 +1,5 @@
+import { toDirectImageUrl } from '../mediaUrl';
+
 export interface BlockStyleOptions {
   // General styles
   bgType: 'default' | 'transparent' | 'slate' | 'blue' | 'emerald' | 'amber' | 'rose' | 'brand' | 'custom';
@@ -614,7 +616,8 @@ export function generateCustomBlock(blockId: string, options: BlockStyleOptions)
     case 'text_paragraph_image': {
       const p1 = options.col1Text || 'First paragraph of content goes here. Write introductory text before the visual asset.';
       const p2 = options.col2Text || 'Second paragraph of content goes here. Write follow-up explanation or conclusions.';
-      const imgUrl = options.mediaUrl || 'https://picsum.photos/800/400?random=4';
+      const rawUrl = options.mediaUrl || 'https://picsum.photos/800/400?random=4';
+      const imgUrl = toDirectImageUrl(rawUrl);
       const altText = options.headingText || 'Paragraph Image';
 
       const bgClass = options.bgType === 'default' ? '' : '';
@@ -623,7 +626,7 @@ export function generateCustomBlock(blockId: string, options: BlockStyleOptions)
       return `<div ${wrapperStyle} class="my-6 p-6 rounded-2xl ${bgClass} ${borderClass}">
   <p data-kvj-styled="true" style="margin-bottom: 1.5rem !important; color: #cbd5e1 !important; ${customFont}">${p1}</p>
   <div class="my-6 text-center">
-    <img src="${imgUrl}" alt="${altText}" class="rounded-2xl mx-auto shadow-md max-w-full" style="margin: 0 auto !important;" />
+    <img src="${imgUrl}" alt="${altText}" referrerpolicy="no-referrer" onerror="if(this.src.includes('lh3.googleusercontent.com/d/')){var id=this.src.split('/d/')[1].split('?')[0];this.src='https://drive.google.com/thumbnail?id='+id+'&sz=w1000';}" class="rounded-2xl mx-auto shadow-md max-w-full" style="margin: 0 auto !important;" />
     ${options.headingText ? `<span class="block text-center text-xs text-slate-400 mt-2 italic" style="${customFont}">${options.headingText}</span>` : ''}
   </div>
   <p data-kvj-styled="true" style="margin-top: 1.5rem !important; margin-bottom: 0 !important; color: #cbd5e1 !important; ${customFont}">${p2}</p>

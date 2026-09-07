@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useRef, useState, useEffect, useCallback } from "react";
+import { toDirectImageUrl } from "@/lib/mediaUrl";
 
 interface LessonIframeProps {
   html: string;
@@ -84,7 +85,7 @@ export function cleanLessonHtml(html: string): string {
   cleaned = cleaned.replace(/^(\s|\\n)+|(\s|\\n)+$/g, "");
   // 3. Replace literal \n with <br/> and \" with " only outside of style/script tags
   const regex = /(<style[\s\S]*?<\/style>|<script[\s\S]*?<\/script>|<[^>]+>)|(\\n)|(\\\")/g;
-  return cleaned.replace(regex, (match, tagOrHtml, literalNL, literalQuote) => {
+  cleaned = cleaned.replace(regex, (match, tagOrHtml, literalNL, literalQuote) => {
     if (tagOrHtml) {
       if (tagOrHtml.startsWith("<style") || tagOrHtml.startsWith("<script")) {
         return tagOrHtml.replace(/\\n/g, "\n");
@@ -99,6 +100,18 @@ export function cleanLessonHtml(html: string): string {
     }
     return match;
   });
+
+  // 4. Transform <img> tags to convert Google Drive / OneDrive share links into direct renderable image URLs
+  cleaned = cleaned.replace(/<img\s+([^>]*?)src=["']([^"']+)["']([^>]*?)>/gi, (match, prefix, src, suffix) => {
+    const directSrc = toDirectImageUrl(src);
+    const hasReferrer = /referrerpolicy/i.test(match);
+    const hasOnError = /onerror/i.test(match);
+    const referrerAttr = hasReferrer ? '' : ' referrerpolicy="no-referrer"';
+    const onErrorAttr = hasOnError ? '' : ' onerror="if(this.src.includes(\'lh3.googleusercontent.com/d/\')){var id=this.src.split(\'/d/\')[1].split(\'?\')[0];this.src=\'https://drive.google.com/thumbnail?id=\'+id+\'&sz=w1000\';}"';
+    return `<img ${prefix}src="${directSrc}"${referrerAttr}${onErrorAttr}${suffix}>`;
+  });
+
+  return cleaned;
 }
 
 export function LessonIframe({
