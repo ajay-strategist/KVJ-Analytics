@@ -409,12 +409,12 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
         .eq("course_slug", course.slug);
 
       if (results) {
+        // Count any lesson that has an activity_result record as attended/completed.
+        // For material/activity lessons: they submit score=100/max=100 (always passed).
+        // For assessment lessons: we count the attempt regardless of pass/fail so
+        // that course progress reflects actual engagement, not just passing grade.
         setCompletedLessonIds(
-          new Set(
-            results
-              .filter((r: any) => r.passed !== false)
-              .map((r: any) => r.lesson_id)
-          )
+          new Set(results.map((r: any) => r.lesson_id))
         );
       }
 
@@ -831,7 +831,9 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
                         passed,
                       }),
                     });
-                    if (res.ok && passed) {
+                    // Mark lesson as attended in sidebar progress regardless of pass/fail.
+                    // Passing vs failing is shown in the result screen; progress tracks engagement.
+                    if (res.ok) {
                       setCompletedLessonIds((prev) => new Set([...prev, activeLesson.id]));
                     }
                   } catch (err) {
@@ -986,7 +988,9 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
                                 passed,
                               }),
                             });
-                            if (res.ok && passed) {
+                            // Mark lesson as attended in sidebar progress regardless of pass/fail.
+                            // Passing vs failing is shown in the result screen; progress tracks engagement.
+                            if (res.ok) {
                               setCompletedLessonIds((prev) => new Set([...prev, activeLesson.id]));
                             }
                           } catch (err) {

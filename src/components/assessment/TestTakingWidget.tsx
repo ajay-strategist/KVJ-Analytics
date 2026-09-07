@@ -2480,7 +2480,7 @@ export function TestTakingWidget({
                         <span className="text-lg shrink-0">💡</span>
                         <div>
                           <p className={`text-[10px] font-bold uppercase tracking-wider mb-1 ${darkMode ? "text-amber-400" : "text-amber-700"}`}>Explanation</p>
-                          <p className={`text-xs leading-relaxed ${darkMode ? "text-amber-200" : "text-amber-800"}`}>{res.config.explanation}</p>
+                          <p className={`text-xs leading-relaxed ${darkMode ? "text-amber-200" : "text-amber-800"}`} style={{ whiteSpace: "pre-wrap" }}>{res.config.explanation}</p>
                         </div>
                       </div>
                     )}

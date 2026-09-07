@@ -590,6 +590,20 @@ export async function POST(
         }
       }
 
+      // For standard question types (single, multiple, truefalse, sequence),
+      // earned = full marks when correct. Partial-mark types (dragtable, pivot_table,
+      // dragdrop, fillblank, matrix, code) already set their own earned value above.
+      if (
+        q.type !== "code" &&
+        q.type !== "dragtable" &&
+        q.type !== "pivot_table" &&
+        q.type !== "dragdrop" &&
+        q.type !== "fillblank" &&
+        q.type !== "matrix"
+      ) {
+        earned = isCorrect ? qMarks : 0;
+      }
+
       totalPossibleMarks += qMarks;
       if (!pending) {
         earnedMarks += earned;
