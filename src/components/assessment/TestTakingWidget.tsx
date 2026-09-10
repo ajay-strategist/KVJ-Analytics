@@ -11,6 +11,7 @@ import {
   GripVertical,
   Loader2,
   AlertTriangle,
+  AlertCircle,
   ArrowLeft,
   ArrowRight,
   Bookmark,
@@ -62,6 +63,35 @@ export function isImageUrl(url: string): boolean {
 
 export function getDirectImageUrl(url: string): string {
   return toDirectImageUrl(url);
+}
+
+export function isQuestionAnswered(qType: string, studentAnswer: any): boolean {
+  if (studentAnswer === undefined || studentAnswer === null) return false;
+  if (qType === "single" || qType === "truefalse") {
+    return studentAnswer !== "";
+  }
+  if (qType === "multiple") {
+    return Array.isArray(studentAnswer) && studentAnswer.length > 0;
+  }
+  if (qType === "fillblank") {
+    return Array.isArray(studentAnswer) && studentAnswer.some((x: any) => String(x || "").trim().length > 0);
+  }
+  if (qType === "dragtable" || qType === "pivot_table") {
+    return typeof studentAnswer === "object" && studentAnswer !== null && Object.values(studentAnswer).some((v: any) => String(v || "").trim().length > 0);
+  }
+  if (qType === "dragdrop") {
+    return Array.isArray(studentAnswer) && studentAnswer.some((pair: any) => Array.isArray(pair) && String(pair[1] || "").trim().length > 0);
+  }
+  if (qType === "sequence") {
+    return Array.isArray(studentAnswer) && studentAnswer.length > 0;
+  }
+  if (qType === "matrix") {
+    return Array.isArray(studentAnswer) && studentAnswer.some((row: any) => Array.isArray(row) && row.length > 0);
+  }
+  if (qType === "code") {
+    return typeof studentAnswer === "string" && studentAnswer.trim().length > 0;
+  }
+  return String(studentAnswer).trim().length > 0;
 }
 
 /**
@@ -1843,7 +1873,14 @@ export function TestTakingWidget({
     const isPreviewMode = adminPreview || gradedResult.isPreview;
     const totalQ = test.questions.length;
     const correctCount = test.questions.filter((q: any) => gradedResult.gradedQuestions[q.id]?.isCorrect).length;
-    const wrongCount = test.questions.filter((q: any) => gradedResult.gradedQuestions[q.id] && !gradedResult.gradedQuestions[q.id]?.isCorrect && !gradedResult.gradedQuestions[q.id]?.pending).length;
+    const wrongCount = test.questions.filter((q: any) => {
+      const res = gradedResult.gradedQuestions[q.id];
+      return res && !res.isCorrect && !res.pending && isQuestionAnswered(q.type, res.studentAnswer);
+    }).length;
+    const unansweredCount = test.questions.filter((q: any) => {
+      const res = gradedResult.gradedQuestions[q.id];
+      return res && !res.isCorrect && !res.pending && !isQuestionAnswered(q.type, res.studentAnswer);
+    }).length;
     const pendingCount = test.questions.filter((q: any) => gradedResult.gradedQuestions[q.id]?.pending).length;
 
     // Scorecard accent colors
@@ -1976,7 +2013,7 @@ export function TestTakingWidget({
               </div>
 
               {/* Stats row */}
-              <div className="result-card-anim-delay grid grid-cols-3 gap-3 max-w-sm mx-auto">
+              <div className="result-card-anim-delay grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-lg mx-auto">
                 <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-3 border border-white/10">
                   <div className="text-2xl font-black text-emerald-300">{correctCount}</div>
                   <div className="text-[10px] font-bold text-white/60 uppercase tracking-wider mt-0.5">Correct ✅</div>
@@ -1986,7 +2023,11 @@ export function TestTakingWidget({
                   <div className="text-[10px] font-bold text-white/60 uppercase tracking-wider mt-0.5">Wrong ❌</div>
                 </div>
                 <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-3 border border-white/10">
-                  <div className="text-2xl font-black text-amber-300">{totalQ}</div>
+                  <div className="text-2xl font-black text-amber-300">{unansweredCount}</div>
+                  <div className="text-[10px] font-bold text-white/60 uppercase tracking-wider mt-0.5">Unanswered ⚠️</div>
+                </div>
+                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-3 border border-white/10">
+                  <div className="text-2xl font-black text-blue-300">{totalQ}</div>
                   <div className="text-[10px] font-bold text-white/60 uppercase tracking-wider mt-0.5">Total 📝</div>
                 </div>
               </div>
@@ -2034,6 +2075,7 @@ export function TestTakingWidget({
               const res = gradedResult.gradedQuestions[q.id];
               if (!res) return null;
 
+              const isAnswered = isQuestionAnswered(q.type, res.studentAnswer);
               const qCorrect = res.isCorrect;
               const qPending = res.pending;
 
@@ -2045,7 +2087,9 @@ export function TestTakingWidget({
                       ? (darkMode ? "border-amber-500/30 bg-zinc-900" : "border-amber-300 bg-amber-50/30")
                       : qCorrect
                         ? (darkMode ? "border-emerald-500/30 bg-zinc-900" : "border-emerald-300 bg-emerald-50/20")
-                        : (darkMode ? "border-red-500/30 bg-zinc-900" : "border-red-300 bg-red-50/20")
+                        : !isAnswered
+                          ? (darkMode ? "border-amber-500/30 bg-zinc-900" : "border-amber-300 bg-amber-50/30")
+                          : (darkMode ? "border-red-500/30 bg-zinc-900" : "border-red-300 bg-red-50/20")
                   }`}
                   style={{ animation: `fadeSlideUp 0.4s ease ${idx * 0.07}s both` }}
                 >
@@ -2055,11 +2099,13 @@ export function TestTakingWidget({
                       ? (darkMode ? "bg-amber-500/10 border-amber-500/20" : "bg-amber-100/60 border-amber-200")
                       : qCorrect
                         ? (darkMode ? "bg-emerald-500/10 border-emerald-500/20" : "bg-emerald-100/60 border-emerald-200")
-                        : (darkMode ? "bg-red-500/10 border-red-500/20" : "bg-red-100/60 border-red-200")
+                        : !isAnswered
+                          ? (darkMode ? "bg-amber-500/10 border-amber-500/20" : "bg-amber-100/60 border-amber-200")
+                          : (darkMode ? "bg-red-500/10 border-red-500/20" : "bg-red-100/60 border-red-200")
                   }`}>
                     <div className="flex items-center gap-2.5">
                       <span className={`w-7 h-7 rounded-lg text-xs font-black flex items-center justify-center ${
-                        qCorrect ? "bg-emerald-500 text-white" : qPending ? "bg-amber-400 text-white" : "bg-red-500 text-white"
+                        qCorrect ? "bg-emerald-500 text-white" : qPending ? "bg-amber-400 text-white" : !isAnswered ? "bg-amber-500 text-white" : "bg-red-500 text-white"
                       }`}>
                         {idx + 1}
                       </span>
@@ -2075,12 +2121,16 @@ export function TestTakingWidget({
                         ? "bg-amber-400/20 text-amber-500"
                         : qCorrect
                           ? "bg-emerald-500/20 text-emerald-500"
-                          : "bg-red-500/20 text-red-500"
+                          : !isAnswered
+                            ? "bg-amber-500/20 text-amber-600"
+                            : "bg-red-500/20 text-red-500"
                     }`}>
                       {qPending ? (
                         <><HelpCircle className="w-3.5 h-3.5" /> Pending Review</>
                       ) : qCorrect ? (
                         <><CheckCircle2 className="w-3.5 h-3.5" /> ✅ Correct</>
+                      ) : !isAnswered ? (
+                        <><AlertCircle className="w-3.5 h-3.5" /> ⚠️ Unanswered</>
                       ) : (
                         <><XCircle className="w-3.5 h-3.5" /> ❌ Incorrect</>
                       )}
@@ -2115,9 +2165,12 @@ export function TestTakingWidget({
                             ? Number(correctKey) === oi
                             : Array.isArray(correctKey) && correctKey.map(Number).includes(oi);
                           const studentAns = res.studentAnswer;
-                          const studentPicked = q.type === "single"
-                            ? Number(studentAns) === oi
-                            : Array.isArray(studentAns) && studentAns.map(Number).includes(oi);
+                          const hasStudentAns = isQuestionAnswered(q.type, studentAns);
+                          const studentPicked = hasStudentAns && (
+                            q.type === "single"
+                              ? Number(studentAns) === oi
+                              : Array.isArray(studentAns) && studentAns.map(Number).includes(oi)
+                          );
 
                           let optStyle = darkMode
                             ? "border-zinc-700 bg-zinc-800 text-zinc-300"
@@ -2179,6 +2232,14 @@ export function TestTakingWidget({
                             </div>
                           );
                         })}
+                        {!isAnswered && (
+                          <div className={`mt-2 text-xs font-semibold px-3 py-2 rounded-xl flex items-center gap-2 ${
+                            darkMode ? "bg-amber-500/10 text-amber-300 border border-amber-500/20" : "bg-amber-50 text-amber-700 border border-amber-200"
+                          }`}>
+                            <AlertCircle className="w-4 h-4 text-amber-500 shrink-0" />
+                            <span>Question was not answered.</span>
+                          </div>
+                        )}
                       </div>
                     )}
 
@@ -2440,7 +2501,9 @@ export function TestTakingWidget({
                               ))}
                             </div>
                           ) : (
-                            <p className={`text-xs font-semibold ${darkMode ? "text-zinc-300" : "text-slate-700"}`}>{String(res.studentAnswer ?? "Not answered.")}</p>
+                            <p className={`text-xs font-semibold ${darkMode ? "text-zinc-300" : "text-slate-700"}`}>
+                              {isAnswered ? String(res.studentAnswer) : "Not answered."}
+                            </p>
                           )}
                         </div>
 
