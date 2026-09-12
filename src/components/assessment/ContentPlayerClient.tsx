@@ -1125,7 +1125,7 @@ export function ContentPlayerClient({ course, modules, adminPreview = false, ini
                           if (!segment.trim() || segment === " ") return null;
 
                           return (
-                             <div key={idx} className="p-1">
+                             <div key={idx} className="w-full">
                                <LessonIframe
                                  html={segment}
                                  darkMode={viewerReady ? darkMode : false}

@@ -41,8 +41,8 @@ main,
   max-width: 100% !important;
   margin-left: 0 !important;
   margin-right: 0 !important;
-  padding-left: 0.5rem !important;
-  padding-right: 0.5rem !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
 }
 `;
 
@@ -439,10 +439,17 @@ export function LessonIframe({
     border-color: #ef4444 !important;
     color: #f87171 !important;
   }
+  
+  /* Reset top margin on the first element so banners and headers sit right at the top */
+  body > div > *:first-child,
+  body > div > .kvj-custom-html-block > *:first-child,
+  .kvj-custom-html-block > *:first-child {
+    margin-top: 0 !important;
+  }
 </style>
 </head>
-<body class="px-6 py-8 sm:px-10 sm:py-12 md:px-14 md:py-16">
-<div class="max-w-5xl mx-auto">
+<body class="px-2 py-2 sm:px-4 sm:py-3 md:px-5 md:py-4">
+<div class="w-full max-w-none">
 ${html.includes("<!-- KVJ_MATERIAL_METADATA:") ? cleanHtml : `<div class="kvj-custom-html-block">${cleanHtml}</div>`}
 </div>
 <script>
