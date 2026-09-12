@@ -31,18 +31,18 @@ header:first-of-type,
 [class*="navbar" i]:first-of-type,
 [class*="exit" i] { display: none !important; }
 
-main,
-[role="main"],
-[class*="content" i]:not([class*="table-of-contents" i]),
-[class*="main" i],
-[id*="content" i],
-[id*="main" i] {
+/* Only target top-level layout main/article containers, preserving card & component paddings */
+body > main,
+body > [role="main"],
+body > article,
+body > div > main,
+body > div > [role="main"],
+body > div > article,
+.notion-page-content {
   width: 100% !important;
   max-width: 100% !important;
   margin-left: 0 !important;
   margin-right: 0 !important;
-  padding-left: 0 !important;
-  padding-right: 0 !important;
 }
 `;
 
@@ -448,7 +448,7 @@ export function LessonIframe({
   }
 </style>
 </head>
-<body class="px-2 py-2 sm:px-4 sm:py-3 md:px-5 md:py-4">
+<body class="px-5 py-6 sm:px-8 sm:py-8">
 <div class="w-full max-w-none">
 ${html.includes("<!-- KVJ_MATERIAL_METADATA:") ? cleanHtml : `<div class="kvj-custom-html-block">${cleanHtml}</div>`}
 </div>
