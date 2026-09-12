@@ -141,6 +141,7 @@ export function ContentPlayerClient({ course, modules, adminPreview = false, ini
   const [actionLoading, setActionLoading] = useState(false);
 
   const [expandedModuleIds, setExpandedModuleIds] = useState<Set<string>>(new Set());
+  const mainScrollRef = useRef<HTMLDivElement | null>(null);
 
   // Auto-expand module and scroll into view on activeLesson change
   useEffect(() => {
@@ -158,6 +159,18 @@ export function ContentPlayerClient({ course, modules, adminPreview = false, ini
       return () => clearTimeout(timer);
     }
   }, [activeLesson?.id, modules]);
+
+  // Reset main content scroll position to the very top on active lesson change
+  useEffect(() => {
+    if (activeLesson?.id) {
+      if (mainScrollRef.current) {
+        mainScrollRef.current.scrollTop = 0;
+      }
+      if (typeof window !== "undefined") {
+        window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+      }
+    }
+  }, [activeLesson?.id]);
 
   const toggleModule = (moduleId: string) => {
     setExpandedModuleIds((prev) => {
@@ -493,8 +506,12 @@ export function ContentPlayerClient({ course, modules, adminPreview = false, ini
   const handleLessonSelect = (lesson: Lesson) => {
     setIsAssessmentActive(false);
     setActiveLesson(lesson);
+    if (mainScrollRef.current) {
+      mainScrollRef.current.scrollTop = 0;
+    }
     if (typeof window !== "undefined") {
       try {
+        window.scrollTo({ top: 0, left: 0, behavior: "instant" });
         if (user?.id) {
           localStorage.setItem(`kvj_last_lesson_${course.slug}_${user.id}`, lesson.id);
         }
@@ -867,7 +884,7 @@ export function ContentPlayerClient({ course, modules, adminPreview = false, ini
         {/* Player Content Body */}
         {activeLesson ? (
           isAssessmentActive && activeTest ? (
-            <div className="flex-1 overflow-y-auto p-0 relative bg-[#F8FAFC]">
+            <div ref={mainScrollRef} className="flex-1 overflow-y-auto p-0 relative bg-[#F8FAFC]">
               <TestTakingWidget
                 testId={activeTest.id}
                 courseSlug={course.slug}
@@ -902,7 +919,7 @@ export function ContentPlayerClient({ course, modules, adminPreview = false, ini
               />
             </div>
           ) : (
-            <div className="flex-1 overflow-y-auto p-6 md:p-10 relative">
+            <div ref={mainScrollRef} className="flex-1 overflow-y-auto p-6 md:p-10 relative">
               <div className="max-w-5xl mx-auto space-y-8">
 
               {/* Lesson Title & Header */}
