@@ -12,34 +12,9 @@ function getAdmin() {
   return createClient(url, key, { auth: { persistSession: false } });
 }
 
-function stripAnswers(type: string, config: any, randomizeOptions: boolean = false) {
+function stripAnswers(type: string, config: any) {
   if (!config) return {};
   const c = { ...config };
-
-  // Shuffle options for single/multiple if randomize_options is enabled.
-  // We shuffle BEFORE deleting the correct key so we can remap it first.
-  if (randomizeOptions && (type === "single" || type === "multiple") && Array.isArray(c.options)) {
-    // Build a shuffled index mapping: newPosition -> originalIndex
-    const originalOptions = [...c.options];
-    const originalOptionImages = Array.isArray(c.optionImages) ? [...c.optionImages] : null;
-    const indices = originalOptions.map((_: any, i: number) => i);
-    // Fisher-Yates shuffle on indices
-    for (let i = indices.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [indices[i], indices[j]] = [indices[j], indices[i]];
-    }
-    c.options = indices.map((origIdx: number) => originalOptions[origIdx]);
-    if (originalOptionImages) {
-      c.optionImages = indices.map((origIdx: number) => originalOptionImages[origIdx] || "");
-    }
-
-    if (type === "single" && c.correctIndex !== undefined) {
-      // Find new position of the original correct index
-      c.correctIndex = indices.indexOf(Number(c.correctIndex));
-    } else if (type === "multiple" && Array.isArray(c.correctIndexes)) {
-      c.correctIndexes = c.correctIndexes.map((ci: number) => indices.indexOf(Number(ci)));
-    }
-  }
 
   if (type === "single") {
     delete c.correctIndex;
@@ -277,8 +252,6 @@ export async function GET(
       return NextResponse.json({ error: qErr.message }, { status: 500 });
     }
 
-    // Shuffle options if randomize_options is NOT explicitly disabled (default: ON)
-    const randomizeOpts = test.randomize_options !== false;
     const strippedQuestions = (dbQuestions || []).map((q: any) => {
       let config = q.config;
       if (typeof config === "string") {
@@ -298,18 +271,11 @@ export async function GET(
         stem: q.stem,
         marks: q.marks,
         image_url: q.image_url,
-        config: stripAnswers(q.type, config, randomizeOpts),
+        config: stripAnswers(type, config),
       };
     });
 
-    // Shuffle questions if randomize is NOT explicitly disabled (default: ON)
-    let finalQuestions = [...strippedQuestions];
-    if (test.randomize !== false) {
-      for (let i = finalQuestions.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [finalQuestions[i], finalQuestions[j]] = [finalQuestions[j], finalQuestions[i]];
-      }
-    }
+    const finalQuestions = strippedQuestions;
 
     const totalPossibleMarks = finalQuestions.reduce((acc, q: any) => acc + Number(q.marks || 1), 0);
 

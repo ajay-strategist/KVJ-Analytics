@@ -164,8 +164,8 @@ const LessonEditor = React.memo(function LessonEditor({
   const [attemptsAllowed, setAttemptsAllowed] = React.useState<number>(0);
   const [negativeMarking, setNegativeMarking] = React.useState<number>(0);
   const [instructions, setInstructions] = React.useState<string>("");
-  const [randomize, setRandomize] = React.useState<boolean>(true);
-  const [randomizeOptions, setRandomizeOptions] = React.useState<boolean>(true);
+  const [randomize, setRandomize] = React.useState<boolean>(false);
+  const [randomizeOptions, setRandomizeOptions] = React.useState<boolean>(false);
   const [publishResults, setPublishResults] = React.useState<boolean>(true);
   const [linkedTest, setLinkedTest] = React.useState<any>(null);
   const [loadingTest, setLoadingTest] = React.useState(false);
@@ -193,8 +193,8 @@ const LessonEditor = React.memo(function LessonEditor({
             setAttemptsAllowed(data.attempts_allowed ?? 0);
             setNegativeMarking(data.negative_marking ?? 0);
             setInstructions(data.instructions ?? "");
-            setRandomize(data.randomize ?? true);
-            setRandomizeOptions(data.randomize_options ?? true);
+            setRandomize(data.randomize ?? false);
+            setRandomizeOptions(data.randomize_options ?? false);
             setPublishResults(data.publish_results ?? true);
             if (data.is_inline) {
               setEditorKind("inline_assessment");
@@ -2313,8 +2313,8 @@ const LessonEditor = React.memo(function LessonEditor({
                                                 pass_mark: 84,
                                                 attempts_allowed: 0,
                                                 negative_marking: 0,
-                                                randomize: true,
-                                                randomize_options: true,
+                                                randomize: false,
+                                                randomize_options: false,
                                                 publish_results: true,
                                               };
                                               const res = await fetch("/api/admin/tests", {
@@ -3171,8 +3171,8 @@ export default function AdminCourseDetailsPage() {
           attempts_allowed: assessment_settings?.attempts_allowed ?? 0,
           negative_marking: assessment_settings?.negative_marking ?? 0,
           instructions: assessment_settings?.instructions || "",
-          randomize: assessment_settings?.randomize ?? true,
-          randomize_options: assessment_settings?.randomize_options ?? true,
+          randomize: assessment_settings?.randomize ?? false,
+          randomize_options: assessment_settings?.randomize_options ?? false,
           publish_results: assessment_settings?.publish_results ?? true,
           is_inline: assessment_settings?.is_inline ?? false,
         };
