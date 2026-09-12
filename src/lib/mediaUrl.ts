@@ -24,15 +24,34 @@ function base64(input: string): string {
 }
 
 /** Extract a Google Drive file id from any of its link shapes. */
-function googleDriveId(url: string): string | null {
-  // https://drive.google.com/file/d/<id>/view?usp=sharing
-  // https://drive.google.com/open?id=<id>
-  // https://drive.google.com/uc?export=view&id=<id>
-  // https://docs.google.com/uc?id=<id>
-  const m =
-    url.match(/\/file\/d\/([A-Za-z0-9_-]{10,})/) ||
-    url.match(/[?&]id=([A-Za-z0-9_-]{10,})/);
-  return m ? m[1] : null;
+export function googleDriveId(inputUrl: string): string | null {
+  if (!inputUrl) return null;
+  // Decode HTML entities like &amp; to &
+  const url = inputUrl.replace(/&amp;/g, "&");
+
+  // 1. /file/d/<id> or /file/u/0/d/<id> or /u/1/d/<id>
+  const fileMatch = url.match(/\/(?:file|u\/\d+)\/(?:u\/\d+\/)?d\/([A-Za-z0-9_-]{10,})/i) ||
+                    url.match(/\/file\/d\/([A-Za-z0-9_-]{10,})/i);
+  if (fileMatch) return fileMatch[1];
+
+  // 2. Query param: id=<id>
+  const queryMatch = url.match(/[?&]id=([A-Za-z0-9_-]{10,})/i);
+  if (queryMatch) return queryMatch[1];
+
+  // 3. lh3.googleusercontent.com/d/<id>
+  const lh3Match = url.match(/googleusercontent\.com\/(?:u\/\d+\/)?d\/([A-Za-z0-9_-]{10,})/i);
+  if (lh3Match) return lh3Match[1];
+
+  return null;
+}
+
+/** Get fallback URLs in order of preference for a Google Drive file id */
+export function getGoogleDriveFallbackUrls(id: string): string[] {
+  return [
+    `https://lh3.googleusercontent.com/d/${id}`,
+    `https://drive.google.com/thumbnail?id=${id}&sz=w1600`,
+    `/api/media-proxy?id=${id}`,
+  ];
 }
 
 /**
@@ -47,19 +66,15 @@ export function toDirectImageUrl(input: string): string {
   if (!/^https?:\/\//i.test(url)) return url;
 
   // ---- Google Drive ---------------------------------------------------------
-  if (/(?:drive|docs)\.google\.com/i.test(url)) {
+  if (/(?:drive|docs)\.google\.com|googleusercontent\.com/i.test(url)) {
     const id = googleDriveId(url);
     if (id) {
       // lh3.googleusercontent.com/d/<id> is the most reliable hotlink target —
-      // it serves the raw bytes with no "virus scan" interstitial and supports
-      // on-the-fly sizing (append =w1600 etc. if ever needed).
+      // it serves the raw bytes with no "virus scan" interstitial.
       return `https://lh3.googleusercontent.com/d/${id}`;
     }
     return url;
   }
-
-  // Already a Google user-content link — leave as-is.
-  if (/googleusercontent\.com/i.test(url)) return url;
 
   // ---- OneDrive (personal) & 1drv.ms short links ----------------------------
   // The OneDrive "shares" API renders any sharing URL as its raw content when

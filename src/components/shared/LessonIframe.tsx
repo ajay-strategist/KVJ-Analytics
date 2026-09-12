@@ -90,7 +90,7 @@ export function cleanLessonHtml(html: string): string {
       if (tagOrHtml.startsWith("<style") || tagOrHtml.startsWith("<script")) {
         return tagOrHtml.replace(/\\n/g, "\n");
       }
-      return tagOrHtml.replace(/\\n/g, " ");
+      return tagOrHtml.replace(/\\n/g, " ").replace(/\\"/g, '"');
     }
     if (literalNL) {
       return "<br/>";
@@ -102,12 +102,21 @@ export function cleanLessonHtml(html: string): string {
   });
 
   // 4. Transform <img> tags to convert Google Drive / OneDrive share links into direct renderable image URLs
-  cleaned = cleaned.replace(/<img\s+([^>]*?)src=["']([^"']+)["']([^>]*?)>/gi, (match, prefix, src, suffix) => {
+  cleaned = cleaned.replace(/<img\s+([^>]*?)src=["']?([^"'\s>]+)["']?([^>]*?)>/gi, (match, prefix, rawSrc, suffix) => {
+    const src = rawSrc.replace(/^\\?["']|\\?["']$/g, "").trim();
     const directSrc = toDirectImageUrl(src);
     const hasReferrer = /referrerpolicy/i.test(match);
     const hasOnError = /onerror/i.test(match);
     const referrerAttr = hasReferrer ? '' : ' referrerpolicy="no-referrer"';
-    const onErrorAttr = hasOnError ? '' : ' onerror="if(this.src.includes(\'lh3.googleusercontent.com/d/\')){var id=this.src.split(\'/d/\')[1].split(\'?\')[0];this.src=\'https://drive.google.com/thumbnail?id=\'+id+\'&sz=w1000\';}"';
+    
+    // Multi-tier cascade onError fallback:
+    // Tier 1 (initial directSrc): https://lh3.googleusercontent.com/d/<id>
+    // Tier 2: https://drive.google.com/thumbnail?id=<id>&sz=w1600
+    // Tier 3: /api/media-proxy?id=<id> (server-side streaming proxy)
+    const onErrorAttr = hasOnError
+      ? ''
+      : ' onerror="var s=this.src;if(s.indexOf(\'lh3.googleusercontent.com/d/\')!==-1){var id=s.split(\'/d/\')[1].split(\'?\')[0].split(\'=\')[0];this.src=\'https://drive.google.com/thumbnail?id=\'+id+\'&sz=w1600\';}else if(s.indexOf(\'drive.google.com/thumbnail\')!==-1){var m=s.match(/id=([a-zA-Z0-9_-]+)/);if(m){this.src=\'/api/media-proxy?id=\'+m[1];}}else if(s.indexOf(\'/api/media-proxy\')===-1){var m2=s.match(/([a-zA-Z0-9_-]{15,})/);if(m2){this.src=\'/api/media-proxy?id=\'+m2[1];}};"';
+
     return `<img ${prefix}src="${directSrc}"${referrerAttr}${onErrorAttr}${suffix}>`;
   });
 

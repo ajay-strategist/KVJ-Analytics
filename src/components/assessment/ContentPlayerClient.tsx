@@ -56,6 +56,7 @@ interface ContentPlayerClientProps {
    *  login + enrollment gate so an admin can review the materials exactly as a student sees
    *  them, without paying or enrolling. Progress is never saved in this mode. */
   adminPreview?: boolean;
+  initialLessonId?: string | null;
 }
 
 // ─── Viewer Controls Toggle Button ──────────────────────────────────────────
@@ -111,7 +112,7 @@ function cleanModuleTitle(title: string, index: number): string {
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 
-export function ContentPlayerClient({ course, modules, adminPreview = false }: ContentPlayerClientProps) {
+export function ContentPlayerClient({ course, modules, adminPreview = false, initialLessonId = null }: ContentPlayerClientProps) {
   const router = useRouter();
 
   const enrichedModules = React.useMemo(() => {
@@ -141,13 +142,20 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
 
   const [expandedModuleIds, setExpandedModuleIds] = useState<Set<string>>(new Set());
 
-  // Auto-expand module on activeLesson change
+  // Auto-expand module and scroll into view on activeLesson change
   useEffect(() => {
     if (activeLesson?.id) {
       const parentMod = modules.find((m: any) => m.lessons.some((l: any) => l.id === activeLesson.id));
       if (parentMod) {
         setExpandedModuleIds(new Set([parentMod.id]));
       }
+      const timer = setTimeout(() => {
+        const el = document.getElementById(`lesson-nav-${activeLesson.id}`);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        }
+      }, 150);
+      return () => clearTimeout(timer);
     }
   }, [activeLesson?.id, modules]);
 
@@ -364,10 +372,21 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
 
   useEffect(() => {
     const initPlayer = async () => {
+      // 1. Resolve target lesson id from prop or URL param
+      let targetLessonId = initialLessonId;
+      if (!targetLessonId && typeof window !== "undefined") {
+        const urlParams = new URLSearchParams(window.location.search);
+        targetLessonId = urlParams.get("lesson");
+      }
+
       // Admin preview: access was already verified server-side via the admin session cookie,
       // so skip the student login + enrollment gate. No progress is saved in this mode.
       if (adminPreview) {
-        if (allLessons.length > 0) setActiveLesson(allLessons[0]);
+        let initialLesson = targetLessonId ? allLessons.find((l: any) => l.id === targetLessonId) : null;
+        if (!initialLesson && allLessons.length > 0) {
+          initialLesson = allLessons[0];
+        }
+        if (initialLesson) setActiveLesson(initialLesson);
         setLoading(false);
         return;
       }
@@ -408,26 +427,53 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
         .eq("user_id", session.user.id)
         .eq("course_slug", course.slug);
 
-      if (results) {
-        // Count any lesson that has an activity_result record as attended/completed.
-        // For material/activity lessons: they submit score=100/max=100 (always passed).
-        // For assessment lessons: we count the attempt regardless of pass/fail so
-        // that course progress reflects actual engagement, not just passing grade.
-        setCompletedLessonIds(
-          new Set(results.map((r: any) => r.lesson_id))
-        );
+      const completedSet = new Set<string>(results ? results.map((r: any) => r.lesson_id) : []);
+      setCompletedLessonIds(completedSet);
+
+      // 4. Resume Lesson Determination:
+      // Priority 1: URL search param ?lesson=<id> or initialLessonId
+      let chosenLesson: any = null;
+      if (targetLessonId) {
+        chosenLesson = allLessons.find((l: any) => l.id === targetLessonId);
       }
 
-      // 4. Set first lesson as active by default
-      if (allLessons.length > 0) {
-        setActiveLesson(allLessons[0]);
+      // Priority 2: localStorage last visited lesson for this user & course
+      if (!chosenLesson && typeof window !== "undefined") {
+        const lastSavedId = localStorage.getItem(`kvj_last_lesson_${course.slug}_${session.user.id}`);
+        if (lastSavedId) {
+          chosenLesson = allLessons.find((l: any) => l.id === lastSavedId);
+        }
+      }
+
+      // Priority 3: Progress evaluation from activity_results (first uncompleted lesson)
+      if (!chosenLesson && allLessons.length > 0) {
+        chosenLesson = allLessons.find((l: any) => !completedSet.has(l.id));
+      }
+
+      // Priority 4: Default to first lesson if all completed or none matched
+      if (!chosenLesson && allLessons.length > 0) {
+        chosenLesson = allLessons[0];
+      }
+
+      if (chosenLesson) {
+        setActiveLesson(chosenLesson);
+        if (typeof window !== "undefined") {
+          try {
+            localStorage.setItem(`kvj_last_lesson_${course.slug}_${session.user.id}`, chosenLesson.id);
+            const url = new URL(window.location.href);
+            if (url.searchParams.get("lesson") !== chosenLesson.id) {
+              url.searchParams.set("lesson", chosenLesson.id);
+              window.history.replaceState(null, "", url.toString());
+            }
+          } catch {}
+        }
       }
 
       setLoading(false);
     };
 
     initPlayer();
-  }, [course.slug]);
+  }, [course.slug, initialLessonId]);
 
   if (loading) {
     return (
@@ -447,6 +493,18 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
   const handleLessonSelect = (lesson: Lesson) => {
     setIsAssessmentActive(false);
     setActiveLesson(lesson);
+    if (typeof window !== "undefined") {
+      try {
+        if (user?.id) {
+          localStorage.setItem(`kvj_last_lesson_${course.slug}_${user.id}`, lesson.id);
+        }
+        const url = new URL(window.location.href);
+        if (url.searchParams.get("lesson") !== lesson.id) {
+          url.searchParams.set("lesson", lesson.id);
+          window.history.replaceState(null, "", url.toString());
+        }
+      } catch {}
+    }
     // Close sidebar on mobile
     if (window.innerWidth < 1024) {
       setSidebarOpen(false);
@@ -661,6 +719,7 @@ export function ContentPlayerClient({ course, modules, adminPreview = false }: C
                     return (
                       <button
                         key={les.id}
+                        id={`lesson-nav-${les.id}`}
                         onClick={() => handleLessonSelect(les)}
                         className={`w-full text-left p-3 rounded-xl flex items-center justify-between gap-3 text-xs transition-all duration-200 border transform hover:translate-x-0.5 group ${
                           isActive

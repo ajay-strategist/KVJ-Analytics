@@ -10,6 +10,8 @@
  * - convertYoutubeUrl(): normalises YouTube/Vimeo share URLs to embed URLs
  */
 
+import { toDirectImageUrl } from "@/lib/mediaUrl";
+
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 export type BlockType =
@@ -247,13 +249,16 @@ function renderBlock(b: BlockData): string {
       return `<div class="leading-[1.8] font-light mb-6 tracking-wide max-w-none" data-kvj-styled="true" style="${pStyle}; text-align: ${b.align || 'left'};">${b.text || ""}</div>`;
     }
 
-    case "image":
+    case "image": {
+      const directUrl = toDirectImageUrl(b.url || "");
+      const onErrorFallback = `var s=this.src;if(s.indexOf('lh3.googleusercontent.com/d/')!==-1){var id=s.split('/d/')[1].split('?')[0].split('=')[0];this.src='https://drive.google.com/thumbnail?id='+id+'&sz=w1600';}else if(s.indexOf('drive.google.com/thumbnail')!==-1){var m=s.match(/id=([a-zA-Z0-9_-]+)/);if(m){this.src='/api/media-proxy?id='+m[1];}};`;
       return `<figure class="my-8 text-center max-w-full">
   <div class="rounded-2xl overflow-hidden border border-[#DCE5E8] shadow-[0_8px_30px_rgba(16,35,63,0.03)] bg-white p-2">
-    <img src="${b.url}" alt="${escAttr(b.caption || "Image")}" class="rounded-xl max-w-full mx-auto object-contain" />
+    <img src="${directUrl}" alt="${escAttr(b.caption || "Image")}" referrerpolicy="no-referrer" onerror="${onErrorFallback}" class="rounded-xl max-w-full mx-auto object-contain" />
   </div>
   ${b.caption ? `<figcaption class="text-xs text-[#7B8A99] mt-3 font-semibold font-sans tracking-wide uppercase">${escHtml(b.caption)}</figcaption>` : ""}
 </figure>`;
+    }
 
     case "video": {
       const embedUrl = convertToEmbedUrl(b.url || "");

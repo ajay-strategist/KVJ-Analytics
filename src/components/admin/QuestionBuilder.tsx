@@ -100,15 +100,15 @@ export const handleGoogleDriveImageError = (e: React.SyntheticEvent<HTMLImageEle
   const target = e.currentTarget;
   const currentSrc = target.src;
   if (currentSrc.includes("lh3.googleusercontent.com/d/")) {
-    const fileId = currentSrc.split("/d/")[1]?.split("?")[0]?.split("/")[0];
+    const fileId = currentSrc.split("/d/")[1]?.split("?")[0]?.split("/")[0]?.split("=")[0];
     if (fileId) {
-      target.src = `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
+      target.src = `https://drive.google.com/thumbnail?id=${fileId}&sz=w1600`;
       return;
     }
-  } else if (currentSrc.includes("drive.google.com/thumbnail?id=")) {
+  } else if (currentSrc.includes("drive.google.com/thumbnail")) {
     const match = currentSrc.match(/id=([a-zA-Z0-9_-]+)/);
     if (match && match[1]) {
-      target.src = `https://drive.google.com/uc?export=view&id=${match[1]}`;
+      target.src = `/api/media-proxy?id=${match[1]}`;
       return;
     }
   }
@@ -815,9 +815,15 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
                   onError={(e) => {
                     const target = e.currentTarget;
                     if (target.src.includes("lh3.googleusercontent.com/d/")) {
-                      const fileId = target.src.split("/d/")[1]?.split("?")[0]?.split("/")[0];
+                      const fileId = target.src.split("/d/")[1]?.split("?")[0]?.split("/")[0]?.split("=")[0];
                       if (fileId) {
-                        target.src = `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
+                        target.src = `https://drive.google.com/thumbnail?id=${fileId}&sz=w1600`;
+                        return;
+                      }
+                    } else if (target.src.includes("drive.google.com/thumbnail")) {
+                      const match = target.src.match(/id=([a-zA-Z0-9_-]+)/);
+                      if (match && match[1]) {
+                        target.src = `/api/media-proxy?id=${match[1]}`;
                         return;
                       }
                     }
@@ -992,7 +998,7 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
                                   } else if (target.src.includes("drive.google.com/thumbnail?id=")) {
                                     const match = target.src.match(/id=([a-zA-Z0-9_-]+)/);
                                     if (match && match[1]) {
-                                      target.src = `https://drive.google.com/uc?export=view&id=${match[1]}`;
+                                      target.src = `/api/media-proxy?id=${match[1]}`;
                                       return;
                                     }
                                   }
@@ -1186,7 +1192,7 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
                                   } else if (target.src.includes("drive.google.com/thumbnail?id=")) {
                                     const match = target.src.match(/id=([a-zA-Z0-9_-]+)/);
                                     if (match && match[1]) {
-                                      target.src = `https://drive.google.com/uc?export=view&id=${match[1]}`;
+                                      target.src = `/api/media-proxy?id=${match[1]}`;
                                       return;
                                     }
                                   }

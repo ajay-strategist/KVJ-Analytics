@@ -37,6 +37,7 @@ import {
 import { Button } from "@/components/ui/Button";
 import { LessonIframe } from "@/components/shared/LessonIframe";
 import { ImageField } from "@/components/admin/ImageField";
+import { toDirectImageUrl } from "@/lib/mediaUrl";
 import dynamic from "next/dynamic";
 const CodeMirror = dynamic(() => import("@uiw/react-codemirror"), { ssr: false });
 import { python } from "@codemirror/lang-python";
@@ -1166,7 +1167,7 @@ const LessonEditor = React.memo(function LessonEditor({
                                       <input
                                         type="text"
                                         value={b.url || ""}
-                                        onChange={(e) => updateDocumentBlock(b.id, { url: e.target.value })}
+                                        onChange={(e) => updateDocumentBlock(b.id, { url: toDirectImageUrl(e.target.value) })}
                                         placeholder="Paste image URL..."
                                         className="w-full px-3 py-2 border border-line bg-white text-slate-800 dark:text-slate-100 dark:bg-slate-900 rounded-lg text-sm"
                                       />
@@ -1188,7 +1189,22 @@ const LessonEditor = React.memo(function LessonEditor({
                                     <div className="text-xs text-slate-500">
                                       {b.url ? (
                                         <div className="flex items-center gap-2">
-                                          <img src={b.url} className="w-8 h-8 rounded object-cover border border-line" alt="Preview" />
+                                          <img
+                                            src={toDirectImageUrl(b.url)}
+                                            referrerPolicy="no-referrer"
+                                            onError={(e) => {
+                                              const target = e.currentTarget;
+                                              if (target.src.includes("lh3.googleusercontent.com/d/")) {
+                                                const id = target.src.split("/d/")[1]?.split("?")[0]?.split("=")[0];
+                                                if (id) target.src = `https://drive.google.com/thumbnail?id=${id}&sz=w1600`;
+                                              } else if (target.src.includes("drive.google.com/thumbnail")) {
+                                                const m = target.src.match(/id=([a-zA-Z0-9_-]+)/);
+                                                if (m) target.src = `/api/media-proxy?id=${m[1]}`;
+                                              }
+                                            }}
+                                            className="w-8 h-8 rounded object-cover border border-line"
+                                            alt="Preview"
+                                          />
                                           <span className="truncate max-w-[200px] font-mono">{b.url}</span>
                                         </div>
                                       ) : "No file uploaded. Choose a file to upload directly."}

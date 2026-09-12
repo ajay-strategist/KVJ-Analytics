@@ -12,11 +12,12 @@ export default async function CoursePlayerPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ preview?: string }>;
+  searchParams: Promise<{ preview?: string; lesson?: string }>;
 }) {
   const { slug } = await params;
   const resolvedSearchParams = await searchParams;
   const isPreviewParam = resolvedSearchParams?.preview === "1" || resolvedSearchParams?.preview === "true";
+  const initialLessonId = resolvedSearchParams?.lesson || null;
 
   // Any signed-in admin (verified server-side via the admin cookie) who EXPLICITLY requests a preview
   // gets full access to the materials — no student login, enrolment or payment. A student without this cookie
@@ -87,5 +88,5 @@ export default async function CoursePlayerPage({
     ];
   }
 
-  return <ContentPlayerClient course={course} modules={modules} adminPreview={adminPreview} />;
+  return <ContentPlayerClient course={course} modules={modules} adminPreview={adminPreview} initialLessonId={initialLessonId} />;
 }

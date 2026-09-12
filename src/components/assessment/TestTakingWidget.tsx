@@ -113,7 +113,7 @@ export function formatStemHtml(stem: string): string {
     const hasReferrer = /referrerpolicy/i.test(match);
     const hasOnError = /onerror/i.test(match);
     const referrerAttr = hasReferrer ? '' : ' referrerpolicy="no-referrer"';
-    const onErrorAttr = hasOnError ? '' : ' onerror="if(this.src.includes(\'lh3.googleusercontent.com/d/\')){var id=this.src.split(\'/d/\')[1].split(\'?\')[0];this.src=\'https://drive.google.com/thumbnail?id=\'+id+\'&sz=w1000\';}"';
+    const onErrorAttr = hasOnError ? '' : ' onerror="var s=this.src;if(s.indexOf(\'lh3.googleusercontent.com/d/\')!==-1){var id=s.split(\'/d/\')[1].split(\'?\')[0].split(\'=\')[0];this.src=\'https://drive.google.com/thumbnail?id=\'+id+\'&sz=w1600\';}else if(s.indexOf(\'drive.google.com/thumbnail\')!==-1){var m=s.match(/id=([a-zA-Z0-9_-]+)/);if(m){this.src=\'/api/media-proxy?id=\'+m[1];}};"';
     return `<img ${prefix}src="${directSrc}"${referrerAttr}${onErrorAttr}${suffix}>`;
   });
 
@@ -143,7 +143,7 @@ export function formatStemHtml(stem: string): string {
       closeUl(); closeOl();
       const alt = escape(mdImgMatch[1] || "Image");
       const url = toDirectImageUrl(mdImgMatch[2]);
-      result.push(`<div class="my-3 text-center"><img src="${url}" alt="${alt}" referrerpolicy="no-referrer" onerror="if(this.src.includes('lh3.googleusercontent.com/d/')){var id=this.src.split('/d/')[1].split('?')[0];this.src='https://drive.google.com/thumbnail?id='+id+'&sz=w1000';}" class="max-h-96 mx-auto rounded-xl border border-line shadow-sm object-contain" /></div>`);
+      result.push(`<div class="my-3 text-center"><img src="${url}" alt="${alt}" referrerpolicy="no-referrer" onerror="var s=this.src;if(s.indexOf('lh3.googleusercontent.com/d/')!==-1){var id=s.split('/d/')[1].split('?')[0].split('=')[0];this.src='https://drive.google.com/thumbnail?id='+id+'&sz=w1600';}else if(s.indexOf('drive.google.com/thumbnail')!==-1){var m=s.match(/id=([a-zA-Z0-9_-]+)/);if(m){this.src='/api/media-proxy?id='+m[1];}};" class="max-h-96 mx-auto rounded-xl border border-line shadow-sm object-contain" /></div>`);
       continue;
     }
 
@@ -151,7 +151,7 @@ export function formatStemHtml(stem: string): string {
     if (isImageUrl(trimmed) || (trimmed.startsWith("http") && (trimmed.includes("drive.google.com") || trimmed.includes("1drv.ms") || trimmed.includes("onedrive")))) {
       closeUl(); closeOl();
       const url = toDirectImageUrl(trimmed);
-      result.push(`<div class="my-3 text-center"><img src="${url}" alt="Attachment" referrerpolicy="no-referrer" onerror="if(this.src.includes('lh3.googleusercontent.com/d/')){var id=this.src.split('/d/')[1].split('?')[0];this.src='https://drive.google.com/thumbnail?id='+id+'&sz=w1000';}" class="max-h-96 mx-auto rounded-xl border border-line shadow-sm object-contain" /></div>`);
+      result.push(`<div class="my-3 text-center"><img src="${url}" alt="Attachment" referrerpolicy="no-referrer" onerror="var s=this.src;if(s.indexOf('lh3.googleusercontent.com/d/')!==-1){var id=s.split('/d/')[1].split('?')[0].split('=')[0];this.src='https://drive.google.com/thumbnail?id='+id+'&sz=w1600';}else if(s.indexOf('drive.google.com/thumbnail')!==-1){var m=s.match(/id=([a-zA-Z0-9_-]+)/);if(m){this.src='/api/media-proxy?id='+m[1];}};" class="max-h-96 mx-auto rounded-xl border border-line shadow-sm object-contain" /></div>`);
       continue;
     }
 
@@ -197,15 +197,15 @@ export const handleGoogleDriveImageError = (e: React.SyntheticEvent<HTMLImageEle
   const target = e.currentTarget;
   const currentSrc = target.src;
   if (currentSrc.includes("lh3.googleusercontent.com/d/")) {
-    const fileId = currentSrc.split("/d/")[1]?.split("?")[0]?.split("/")[0];
+    const fileId = currentSrc.split("/d/")[1]?.split("?")[0]?.split("/")[0]?.split("=")[0];
     if (fileId) {
-      target.src = `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
+      target.src = `https://drive.google.com/thumbnail?id=${fileId}&sz=w1600`;
       return;
     }
-  } else if (currentSrc.includes("drive.google.com/thumbnail?id=")) {
+  } else if (currentSrc.includes("drive.google.com/thumbnail")) {
     const match = currentSrc.match(/id=([a-zA-Z0-9_-]+)/);
     if (match && match[1]) {
-      target.src = `https://drive.google.com/uc?export=view&id=${match[1]}`;
+      target.src = `/api/media-proxy?id=${match[1]}`;
       return;
     }
   }

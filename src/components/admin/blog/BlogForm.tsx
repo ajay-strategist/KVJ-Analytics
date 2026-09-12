@@ -709,6 +709,12 @@ export function BlogForm({ id, initial }: { id?: string; initial?: BlogInitial }
                               target.src = `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
                               return;
                             }
+                          } else if (target.src.includes("drive.google.com/thumbnail?id=")) {
+                            const match = target.src.match(/id=([a-zA-Z0-9_-]+)/);
+                            if (match && match[1]) {
+                              target.src = `/api/media-proxy?id=${match[1]}`;
+                              return;
+                            }
                           }
                           target.style.display = 'none';
                         }}
