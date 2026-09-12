@@ -439,7 +439,10 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
     if (!testId) return;
     setLoading(true);
     try {
-      const res = await fetch(`/api/admin/questions?test_id=${testId}`);
+      const res = await fetch(`/api/admin/questions?test_id=${testId}&_t=${Date.now()}`, {
+        cache: "no-store",
+        headers: { "Cache-Control": "no-cache" },
+      });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       const parsed = (data.questions || []).map((q: any) => {
@@ -582,8 +585,24 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
+
+      if (data.question) {
+        let config = data.question.config;
+        if (typeof config === "string") {
+          try { config = JSON.parse(config); } catch { config = {}; }
+        }
+        const savedQ = { ...data.question, config };
+        setQuestions((prev) => {
+          if (isNew) {
+            return [...prev, savedQ];
+          } else {
+            return prev.map((q) => (q.id === savedQ.id ? savedQ : q));
+          }
+        });
+      }
+
       setEditingQuestionId(null);
-      fetchQuestions();
+      await fetchQuestions();
     } catch (err: any) {
       alert(err.message || "Failed to save question");
     }
@@ -591,6 +610,8 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
 
   const handleDeleteQuestion = async (qId: string) => {
     if (!confirm("Are you sure you want to delete this question?")) return;
+    // Optimistically remove from state
+    setQuestions((prev) => prev.filter((q) => q.id !== qId));
     try {
       const res = await fetch("/api/admin/questions", {
         method: "DELETE",
@@ -599,9 +620,10 @@ export function QuestionBuilder({ testId }: QuestionBuilderProps) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      fetchQuestions();
+      await fetchQuestions();
     } catch (err: any) {
       alert(err.message || "Failed to delete question");
+      await fetchQuestions();
     }
   };
 

@@ -35,6 +35,9 @@ function normalizeQuestionRecord(q: any) {
   return copy;
 }
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function GET(req: NextRequest) {
   if (!isAuthenticated(req)) return unauthorized();
   const db = getAdmin();
@@ -54,7 +57,14 @@ export async function GET(req: NextRequest) {
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     const formatted = (data || []).map(normalizeQuestionRecord);
-    return NextResponse.json({ questions: formatted });
+    return NextResponse.json(
+      { questions: formatted },
+      {
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+        },
+      }
+    );
   } catch (err: any) {
     return NextResponse.json({ error: err.message || "Invalid request" }, { status: 400 });
   }

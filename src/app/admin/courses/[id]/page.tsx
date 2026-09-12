@@ -2501,7 +2501,42 @@ const LessonEditor = React.memo(function LessonEditor({
                     />
                   </div>
                 ) : previewHtml ? (
-                  <LessonIframe html={previewHtml} darkMode={false} />
+                  previewHtml.includes("kvj-assessment-placeholder") ? (
+                    <div className="space-y-4">
+                      {previewHtml.split(/(<div class="kvj-assessment-placeholder[^>]*><\/div>)/g).map((segment, sIdx) => {
+                        const match = segment.match(/data-test-id="([^"]*)"/);
+                        if (match) {
+                          const testId = match[1];
+                          const showAnswersMatch = segment.match(/data-show-answers="([^"]*)"/);
+                          const showAnswers = showAnswersMatch ? showAnswersMatch[1] === "true" : false;
+                          return (
+                            <div key={sIdx} className="p-4 bg-slate-50/70 border border-line rounded-xl my-4">
+                              {testId ? (
+                                <TestTakingWidget
+                                  testId={testId}
+                                  courseSlug={courseSlug || ""}
+                                  adminPreview={true}
+                                  darkMode={false}
+                                  isInline={true}
+                                  showAnswers={showAnswers}
+                                  onStart={() => {}}
+                                  onExit={() => {}}
+                                />
+                              ) : (
+                                <div className="text-center py-6 text-xs text-slate-400">
+                                  Embedded Assessment (Test ID not linked yet)
+                                </div>
+                              )}
+                            </div>
+                          );
+                        }
+                        if (!segment.trim()) return null;
+                        return <LessonIframe key={sIdx} html={segment} darkMode={false} />;
+                      })}
+                    </div>
+                  ) : (
+                    <LessonIframe html={previewHtml} darkMode={false} />
+                  )
                 ) : (
                   <div className="py-16 text-center space-y-2">
                     <ImageIcon className="w-10 h-10 text-slate/30 mx-auto" />

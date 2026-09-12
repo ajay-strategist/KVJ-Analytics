@@ -919,8 +919,21 @@ export function ContentPlayerClient({ course, modules, adminPreview = false, ini
               />
             </div>
           ) : (
-            <div ref={mainScrollRef} className="flex-1 overflow-y-auto p-6 md:p-10 relative">
-              <div className="max-w-5xl mx-auto space-y-8">
+            <div
+              ref={mainScrollRef}
+              className={`flex-1 overflow-y-auto relative transition-all duration-300 ${
+                !sidebarOpen
+                  ? "p-2 sm:p-4 md:p-6 lg:p-8"
+                  : "p-4 sm:p-6 md:p-8"
+              }`}
+            >
+              <div
+                className={`mx-auto space-y-8 transition-all duration-300 ${
+                  !sidebarOpen
+                    ? "w-full max-w-[98%]"
+                    : "max-w-5xl"
+                }`}
+              >
 
               {/* Lesson Title & Header */}
               <div className={`flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-6 ${darkMode ? "border-white/5" : "border-line"}`}>
@@ -1091,7 +1104,7 @@ export function ContentPlayerClient({ course, modules, adminPreview = false, ini
                             const showAnswers = showAnswersMatch ? showAnswersMatch[1] === "true" : false;
                             const isInlineBlock = true; // Always force inline mode for embedded assessments in textbook pages
                             return (
-                              <div key={idx} className="px-6 sm:px-10 md:px-14 py-6 bg-transparent">
+                              <div key={idx} className="px-3 sm:px-6 md:px-10 py-6 bg-transparent">
                                 <TestTakingWidget
                                   testId={testId}
                                   courseSlug={course.slug}

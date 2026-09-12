@@ -40,7 +40,9 @@ main,
   width: 100% !important;
   max-width: 100% !important;
   margin-left: 0 !important;
-  padding-left: 1.5rem !important;
+  margin-right: 0 !important;
+  padding-left: 0.5rem !important;
+  padding-right: 0.5rem !important;
 }
 `;
 
