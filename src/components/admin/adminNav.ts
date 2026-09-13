@@ -47,6 +47,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
       { label: "Categories", href: "/admin/categories", icon: FolderTree, status: "active" },
       { label: "Enrollments", href: "/admin/enrollments", icon: GraduationCap, status: "active" },
       { label: "Batches", href: "/admin/batches", icon: Layers, status: "active" },
+      { label: "Reports", href: "/admin/learning-reports", icon: BarChart3, status: "active" },
       { label: "Internships", href: "/admin/internships", icon: Briefcase, status: "active" },
       { label: "Assessments", href: "/admin/assessments", icon: ClipboardList, status: "active" },
       { label: "Question Bank", href: "/admin/question-bank", icon: ClipboardList, status: "active" },

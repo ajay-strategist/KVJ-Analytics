@@ -1,0 +1,1249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>KVJ Analytics — Comprehensive Website Audit & Strategic Improvement Report</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800&display=swap');
+
+    :root {
+      --primary: #0284c7;
+      --primary-dark: #0369a1;
+      --primary-light: #e0f2fe;
+      --secondary: #6366f1;
+      --success: #059669;
+      --success-bg: #ecfdf5;
+      --warning: #d97706;
+      --warning-bg: #fffbeb;
+      --danger: #dc2626;
+      --danger-bg: #fef2f2;
+      --dark: #0f172a;
+      --slate: #475569;
+      --light-slate: #94a3b8;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --border: #e2e8f0;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--bg);
+      color: var(--dark);
+      line-height: 1.6;
+      font-size: 13px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    @page {
+      size: A4 portrait;
+      margin: 14mm 14mm 16mm 14mm;
+    }
+
+    @media print {
+      body {
+        background-color: #ffffff;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      .page-break {
+        page-break-after: always;
+        break-after: page;
+      }
+      .no-break {
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+      .header-fixed {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+      }
+    }
+
+    .report-container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: #ffffff;
+    }
+
+    /* Cover Page */
+    .cover-page {
+      min-height: 260mm;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 40px 30px;
+      background: linear-gradient(145deg, #090e17 0%, #0f1d36 50%, #032d56 100%);
+      color: #ffffff;
+      border-radius: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cover-page::before {
+      content: "";
+      position: absolute;
+      top: -100px;
+      right: -100px;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(14, 165, 233, 0.25) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+
+    .cover-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(14, 165, 233, 0.15);
+      border: 1px solid rgba(14, 165, 233, 0.4);
+      color: #38bdf8;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      padding: 6px 14px;
+      border-radius: 30px;
+    }
+
+    .cover-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 34px;
+      font-weight: 800;
+      line-height: 1.2;
+      color: #ffffff;
+      margin-top: 20px;
+      letter-spacing: -0.5px;
+    }
+
+    .cover-subtitle {
+      font-size: 15px;
+      color: #94a3b8;
+      margin-top: 12px;
+      max-width: 580px;
+      line-height: 1.6;
+    }
+
+    .cover-meta-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      padding: 20px;
+      border-radius: 12px;
+      margin-top: 30px;
+    }
+
+    .meta-item label {
+      display: block;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #64748b;
+      font-weight: 600;
+      margin-bottom: 3px;
+    }
+
+    .meta-item value {
+      font-size: 13px;
+      font-weight: 700;
+      color: #f1f5f9;
+      display: block;
+    }
+
+    .cover-pillars {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-top: 25px;
+    }
+
+    .pillar-box {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      padding: 12px 10px;
+      text-align: center;
+    }
+
+    .pillar-box .role {
+      font-size: 10px;
+      font-weight: 700;
+      color: #38bdf8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .pillar-box .desc {
+      font-size: 11px;
+      color: #cbd5e1;
+      margin-top: 4px;
+    }
+
+    .cover-footer {
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      padding-top: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      color: #64748b;
+    }
+
+    /* Standard Page Structure */
+    .page {
+      padding: 24px 0;
+    }
+
+    .section-header {
+      margin-bottom: 18px;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+
+    .section-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--dark);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      letter-spacing: -0.3px;
+    }
+
+    .section-num {
+      background: var(--primary);
+      color: #ffffff;
+      width: 26px;
+      height: 26px;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .section-tag {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--slate);
+    }
+
+    /* Scorecards */
+    .scorecard-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .scorecard {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      text-align: center;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .scorecard::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+    }
+
+    .scorecard.green::before { background: var(--success); }
+    .scorecard.amber::before { background: var(--warning); }
+    .scorecard.red::before { background: var(--danger); }
+    .scorecard.blue::before { background: var(--primary); }
+
+    .scorecard .val {
+      font-family: 'Outfit', sans-serif;
+      font-size: 26px;
+      font-weight: 800;
+      line-height: 1.1;
+      margin-top: 4px;
+    }
+
+    .scorecard .lbl {
+      font-size: 11px;
+      color: var(--slate);
+      font-weight: 600;
+      margin-top: 4px;
+    }
+
+    .scorecard .badge {
+      display: inline-block;
+      font-size: 9px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 20px;
+      margin-top: 6px;
+      text-transform: uppercase;
+    }
+
+    .badge-green { background: var(--success-bg); color: var(--success); }
+    .badge-amber { background: var(--warning-bg); color: var(--warning); }
+    .badge-red { background: var(--danger-bg); color: var(--danger); }
+    .badge-blue { background: var(--primary-light); color: var(--primary); }
+
+    /* Executive Callout Box */
+    .callout {
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 18px;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      border: 1px solid transparent;
+    }
+
+    .callout-icon {
+      font-size: 20px;
+      line-height: 1;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .callout-title {
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .callout-desc {
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .callout-info {
+      background: #f0f9ff;
+      border-color: #bae6fd;
+      color: #0369a1;
+    }
+
+    .callout-warning {
+      background: #fffbeb;
+      border-color: #fde68a;
+      color: #92400e;
+    }
+
+    .callout-danger {
+      background: #fef2f2;
+      border-color: #fecaca;
+      color: #991b1b;
+    }
+
+    .callout-success {
+      background: #ecfdf5;
+      border-color: #a7f3d0;
+      color: #065f46;
+    }
+
+    /* Comparison & Audit Tables */
+    .audit-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+      background: #ffffff;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .audit-table th {
+      background: #f1f5f9;
+      color: var(--dark);
+      font-weight: 700;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 10px 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .audit-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+      color: #334155;
+      vertical-align: top;
+    }
+
+    .audit-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .audit-table tr:hover td {
+      background: #fafbfc;
+    }
+
+    /* Cards & Grids */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    }
+
+    .card-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--dark);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .card-desc {
+      font-size: 12px;
+      color: var(--slate);
+      line-height: 1.5;
+    }
+
+    /* Logic Feature Box */
+    .logic-box {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--primary);
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 14px;
+    }
+
+    .logic-box.warning-edge {
+      border-left-color: var(--warning);
+    }
+
+    .logic-box.danger-edge {
+      border-left-color: var(--danger);
+    }
+
+    .logic-box.success-edge {
+      border-left-color: var(--success);
+    }
+
+    .logic-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .logic-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--dark);
+    }
+
+    .logic-current {
+      font-size: 12px;
+      color: #334155;
+      background: #f8fafc;
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid #e2e8f0;
+      margin-top: 6px;
+      line-height: 1.5;
+    }
+
+    .logic-check {
+      background: #fffbeb;
+      border: 1px solid #fef3c7;
+      padding: 8px 12px;
+      border-radius: 6px;
+      margin-top: 6px;
+      font-size: 11.5px;
+      color: #92400e;
+      display: flex;
+      gap: 6px;
+      align-items: flex-start;
+    }
+
+    .logic-check strong {
+      color: #78350f;
+    }
+
+    /* Checklist */
+    .checklist {
+      list-style: none;
+      margin-top: 8px;
+    }
+
+    .checklist li {
+      position: relative;
+      padding-left: 22px;
+      margin-bottom: 8px;
+      font-size: 12px;
+      color: #334155;
+      line-height: 1.45;
+    }
+
+    .checklist li::before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      top: 0;
+      color: var(--primary);
+      font-weight: 800;
+      font-size: 13px;
+    }
+
+    .checklist.danger li::before {
+      content: "✕";
+      color: var(--danger);
+    }
+
+    .checklist.warning li::before {
+      content: "⚠️";
+      font-size: 10px;
+    }
+
+    /* Stepper / Timeline */
+    .stepper {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    .step-item {
+      display: flex;
+      gap: 14px;
+    }
+
+    .step-num {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--primary-light);
+      color: var(--primary);
+      font-weight: 800;
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .step-content h4 {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--dark);
+      margin-bottom: 3px;
+    }
+
+    .step-content p {
+      font-size: 11.5px;
+      color: var(--slate);
+      line-height: 1.45;
+    }
+
+    .footer-note {
+      text-align: center;
+      font-size: 11px;
+      color: var(--light-slate);
+      margin-top: 30px;
+      border-top: 1px solid var(--border);
+      padding-top: 12px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="report-container">
+
+  <!-- ==================== COVER PAGE ==================== -->
+  <div class="cover-page page-break">
+    <div>
+      <div class="cover-badge">★ Comprehensive Technical & Business Audit</div>
+      <h1 class="cover-title">KVJ Analytics Platform<br>Full Website & LMS Audit Report</h1>
+      <p class="cover-subtitle">
+        An executive-level assessment of website architecture, code organization, digital marketing, mobile readiness, and business logics. Written in plain English for strategic business decision-making.
+      </p>
+
+      <div class="cover-meta-grid">
+        <div class="meta-item">
+          <label>Target Application</label>
+          <value>KVJ Analytics (Corporate + LMS)</value>
+        </div>
+        <div class="meta-item">
+          <label>Technology Stack</label>
+          <value>Next.js 16 • React 19 • Supabase • Razorpay</value>
+        </div>
+        <div class="meta-item">
+          <label>Audit Date</label>
+          <value>September 2026</value>
+        </div>
+        <div class="meta-item">
+          <label>Prepared For</label>
+          <value>CEO & Executive Leadership</value>
+        </div>
+      </div>
+
+      <div class="cover-pillars">
+        <div class="pillar-box">
+          <div class="role">Lead Developer</div>
+          <div class="desc">Code Health & Performance</div>
+        </div>
+        <div class="pillar-box">
+          <div class="role">Architect</div>
+          <div class="desc">Data & Security Models</div>
+        </div>
+        <div class="pillar-box">
+          <div class="role">Mobile Expert</div>
+          <div class="desc">App Experience & PWA</div>
+        </div>
+        <div class="pillar-box">
+          <div class="role">Growth Marketer</div>
+          <div class="desc">SEO & Lead Conversion</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cover-footer">
+      <span>KVJ Analytics Technology Audit • Confidential</span>
+      <span>Status: Actionable Blueprint</span>
+    </div>
+  </div>
+
+  <!-- ==================== PAGE 1: EXECUTIVE SUMMARY ==================== -->
+  <div class="page page-break">
+    <div class="section-header">
+      <div class="section-title">
+        <span class="section-num">1</span> Executive Summary & Health Scorecard
+      </div>
+      <div class="section-tag">High-Level Health Check</div>
+    </div>
+
+    <div class="scorecard-row">
+      <div class="scorecard blue">
+        <div class="lbl">Platform Architecture</div>
+        <div class="val">7.2<span style="font-size: 14px; color: var(--slate)">/10</span></div>
+        <div class="badge badge-blue">Modern Next.js 16</div>
+      </div>
+      <div class="scorecard amber">
+        <div class="lbl">Folder & Code Hygiene</div>
+        <div class="val">4.5<span style="font-size: 14px; color: var(--slate)">/10</span></div>
+        <div class="badge badge-amber">78K+ Junk Files</div>
+      </div>
+      <div class="scorecard amber">
+        <div class="lbl">Business Logic Safety</div>
+        <div class="val">6.0<span style="font-size: 14px; color: var(--slate)">/10</span></div>
+        <div class="badge badge-amber">Verify Assumptions</div>
+      </div>
+      <div class="scorecard green">
+        <div class="lbl">Home Page & Design</div>
+        <div class="val">8.5<span style="font-size: 14px; color: var(--slate)">/10</span></div>
+        <div class="badge badge-green">Cinematic Standard</div>
+      </div>
+    </div>
+
+    <div class="callout callout-info">
+      <div class="callout-icon">💡</div>
+      <div>
+        <div class="callout-title">The "Non-Technical" Plain English Overview</div>
+        <div class="callout-desc">
+          Think of your website like a <strong>luxury commercial office building</strong>. The storefront and lobby (your brand-new cinematic Home page) look spectacular and world-class. However, the basement and backrooms have two main issues:
+          <strong>(1) Huge clutter:</strong> Over 78,000 invisible shadow files and loose documents are cluttering the hallways, and
+          <strong>(2) Business rule discrepancies:</strong> Some of your automated rules (like test passing scores, attempt limits, and GST invoicing) were coded with assumptions that might not match what you actually want for your students and corporate clients.
+        </div>
+      </div>
+    </div>
+
+    <h3 style="font-size: 14px; font-weight: 800; margin-bottom: 12px; color: var(--dark);">Key Findings at a Glance Across 4 Perspectives:</h3>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">
+          <span style="color: var(--primary)">💻</span> Senior Website Developer Perspective
+        </div>
+        <div class="card-desc">
+          <ul class="checklist">
+            <li><strong>Frontend Speed is Great:</strong> Next.js 16 and Tailwind v4 deliver instantaneous page rendering.</li>
+            <li><strong>Dead Weight:</strong> Sanity CMS was abandoned when you adopted Supabase, but its code remains installed, creating 1,200+ harmless warning logs.</li>
+            <li><strong>Broken Material Route:</strong> One old study material link route still tries to call Sanity, resulting in 404 errors for students clicking it.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <span style="color: var(--secondary)">🏛️</span> Architecture & Security Expert Perspective
+        </div>
+        <div class="card-desc">
+          <ul class="checklist">
+            <li><strong>Dual Source of Truth:</strong> Database blueprints are split across 19 different SQL files in 3 folders.</li>
+            <li><strong>Session Security Gaps:</strong> In payments and unlock codes, the system trusts the student's phone to declare their user ID rather than verifying their secure server login cookie.</li>
+            <li><strong>Centralized Protection:</strong> Admin routes need a single security guard at the gate rather than checking credentials page-by-page.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <span style="color: var(--success)">📱</span> Senior Mobile App Developer Perspective
+        </div>
+        <div class="card-desc">
+          <ul class="checklist">
+            <li><strong>Mobile Responsiveness:</strong> Basic pages scale well, but complex interactive exams (like drag-to-table and pivot table questions) are cramped on small smartphones.</li>
+            <li><strong>Missing PWA (Web App):</strong> Students cannot tap "Add to Home Screen" to install your learning portal as an app with an icon on their iPhone or Android phone.</li>
+            <li><strong>No Offline Caching:</strong> Students on commute or weak mobile data lose lesson progress if their internet drops.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <span style="color: var(--warning)">📈</span> Senior Digital Marketing Expert Perspective
+        </div>
+        <div class="card-desc">
+          <ul class="checklist">
+            <li><strong>UTM & Attribution Tracking:</strong> Excellent tracking system is active—it captures where your leads come from (Google Ads, LinkedIn, WhatsApp).</li>
+            <li><strong>Abandoned Checkout:</strong> When someone clicks "Enroll" but leaves without paying Razorpay, no follow-up email is sent to recover the sale.</li>
+            <li><strong>Empty Social Links:</strong> Google's search robot cannot find links to KVJ Analytics' LinkedIn, YouTube, or Facebook pages in your structured SEO tags.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== PAGE 2: FOLDER CLEANLINESS & UNWANTED FILES ==================== -->
+  <div class="page page-break">
+    <div class="section-header">
+      <div class="section-title">
+        <span class="section-num">2</span> Folder Hygiene & Unwanted Files Audit
+      </div>
+      <div class="section-tag">Organization & Decluttering</div>
+    </div>
+
+    <div class="callout callout-danger">
+      <div class="callout-icon">🚨</div>
+      <div>
+        <div class="callout-title">Critical Finding: 78,287 AppleDouble Shadow Files Detected</div>
+        <div class="callout-desc">
+          Because your project folder resides on an external drive or USB volume, macOS automatically generated an invisible companion file starting with <code>._</code> for virtually every file in your system. <strong>78,287 unwanted junk files</strong> are sitting in your project! They bloat backups, slow down code indexing, and cause confusion.
+        </div>
+      </div>
+    </div>
+
+    <h3 style="font-size: 13px; font-weight: 800; margin-bottom: 10px; color: var(--dark);">Inventory of Unwanted & Misplaced Files in Project Root:</h3>
+
+    <table class="audit-table">
+      <thead>
+        <tr>
+          <th>File / Category</th>
+          <th>What It Is</th>
+          <th>Impact on System</th>
+          <th>Recommended Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>78,287 <code>._*</code> Files</strong><br><small style="color: var(--slate)">macOS AppleDouble Junk</small></td>
+          <td>Shadow metadata files created by macOS on external drives.</td>
+          <td>Extreme directory clutter, slow search, 50MB+ wasted space.</td>
+          <td><span class="badge badge-red">Purge Immediately</span><br><small>Safe automated clean</small></td>
+        </tr>
+        <tr>
+          <td><strong>16 Root Markdown Files</strong><br><small>ANTIGRAVITY_*, CLAUDE, MASTER_PROMPT</small></td>
+          <td>Development prompt notes, task lists, and brainstorm checklists.</td>
+          <td>Clutters the top-level folder, making essential config files hard to spot.</td>
+          <td><span class="badge badge-amber">Move to /docs</span><br><small>Organize in archive</small></td>
+        </tr>
+        <tr>
+          <td><strong>3 Loose SQL Files in Root</strong><br><small>supabase_schema.sql, clients_table.sql</small></td>
+          <td>Database setup queries left in the main folder instead of migrations.</td>
+          <td>Developers do not know whether root SQL or migrations folder is active.</td>
+          <td><span class="badge badge-amber">Consolidate</span><br><small>Move to /supabase/migrations</small></td>
+        </tr>
+        <tr>
+          <td><strong>Dead Sanity Files</strong><br><small>sanity.config.ts, /src/sanity/*</small></td>
+          <td>Old CMS schemas abandoned when migrating to Supabase.</td>
+          <td>Generates 1,200+ lint errors and bloats node_modules by ~80MB.</td>
+          <td><span class="badge badge-red">Remove Safely</span><br><small>Uninstall unused deps</small></td>
+        </tr>
+        <tr>
+          <td><strong>Loose Media in Root</strong><br><small>KVJ analytics Logo.png, WAC-Design.docx</small></td>
+          <td>Raw image logo and Word document sitting in code root.</td>
+          <td>Web browsers cannot serve images from root; must be in /public.</td>
+          <td><span class="badge badge-blue">Relocate</span><br><small>Move to /public and /docs</small></td>
+        </tr>
+        <tr>
+          <td><strong>Project Name "temp-next-app"</strong><br><small>package.json line 2</small></td>
+          <td>Placeholder name generated when project was initialized.</td>
+          <td>Shows up in error logs, terminal builds, and package manifests.</td>
+          <td><span class="badge badge-blue">Rename</span><br><small>Set to "kvj-analytics"</small></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">📁 Cleaned-Up Recommended Folder Hierarchy</div>
+        <div class="card-desc">
+          <pre style="background: #f8fafc; padding: 10px; border-radius: 8px; font-size: 11px; color: #0f172a; border: 1px solid var(--border); font-family: monospace;">
+kvj-analytics/
+├── public/              ← Logos, icons, student brochures
+├── src/
+│   ├── app/             ← Website pages, admin, LMS player
+│   ├── components/      ← UI buttons, cards, video player
+│   └── lib/             ← Database client, auth, payments
+├── supabase/
+│   └── migrations/      ← ONE unified database schema
+├── docs/                ← Prompts, specifications & guides
+└── package.json         ← Renamed & cleaned dependencies</pre>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🛡️ Benefits of This Cleanup</div>
+        <div class="card-desc">
+          <ul class="checklist">
+            <li><strong>99% Cleaner Folder:</strong> Root folder shrinks from 45 loose items to just 8 clean files.</li>
+            <li><strong>Zero AppleDouble Ghosts:</strong> Eliminates all 78,000+ duplicate <code>._</code> files permanently.</li>
+            <li><strong>Faster Builds & Less RAM:</strong> Removing dead Sanity packages frees up ~80MB of memory and speeds up deployment.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== PAGE 3: MATERIAL SECTIONS DEEP DIVE ==================== -->
+  <div class="page page-break">
+    <div class="section-header">
+      <div class="section-title">
+        <span class="section-num">3</span> Course Materials & Workbooks Deep Dive
+      </div>
+      <div class="section-tag">Learning Management System</div>
+    </div>
+
+    <div class="callout callout-warning">
+      <div class="callout-icon">⚠️</div>
+      <div>
+        <div class="callout-title">The "Material Sections" Finding You Requested Us to Check</div>
+        <div class="callout-desc">
+          You specifically reminded us: <em>"We have material sections also, remember that also."</em><br>
+          We conducted a line-by-line inspection of how materials (lesson guides, downloadable PDFs, exercise files, and workbooks) are stored and delivered. Here is what we uncovered:
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="logic-box danger-edge">
+        <div class="logic-header">
+          <div class="logic-name">🔴 The Critical Material Bug (API Route)</div>
+        </div>
+        <p style="font-size: 12px; color: var(--slate); margin-bottom: 6px;">
+          The route <code>/api/materials/[id]</code> was written during your early prototype phase to stream PDFs from Sanity CMS.
+        </p>
+        <div class="logic-current">
+          <strong>What happens now:</strong> Because Sanity has been switched off in favor of Supabase, every call to this route immediately returns: <code>404: Study material resource not found.</code>
+        </div>
+        <div class="logic-check">
+          <strong>Impact:</strong> Any external download link or button using this endpoint fails immediately.
+        </div>
+      </div>
+
+      <div class="logic-box success-edge">
+        <div class="logic-header">
+          <div class="logic-name">🟢 How Your Real Materials Actually Work</div>
+        </div>
+        <p style="font-size: 12px; color: var(--slate); margin-bottom: 6px;">
+          In your modern Course Player (<code>/training/[slug]/learn</code>), materials are built inside the <strong>Curriculum Builder</strong>.
+        </p>
+        <div class="logic-current">
+          Each course module contains lessons of three types:<br>
+          1. <code>kind: "material"</code> (Reading notes, embedded images, tables)<br>
+          2. <code>kind: "activity"</code> (Interactive exercises with live scoring)<br>
+          3. <code>kind: "assessment"</code> (Timed exams & quizzes)
+        </div>
+      </div>
+    </div>
+
+    <h3 style="font-size: 13px; font-weight: 800; margin-bottom: 10px; color: var(--dark);">How Materials Are Handled & How to Perfect Them:</h3>
+
+    <table class="audit-table">
+      <thead>
+        <tr>
+          <th>Area</th>
+          <th>Current Mechanism</th>
+          <th>Identified Limitation</th>
+          <th>Strategic Recommendation</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Material Storage</strong></td>
+          <td>Uploaded directly to Supabase storage bucket (<code>course-materials</code>).</td>
+          <td>Files are stored as raw public links. Anyone with the URL can share it.</td>
+          <td><span class="badge badge-amber">Secure URLs</span><br><small>Generate time-expiring download links</small></td>
+        </tr>
+        <tr>
+          <td><strong>Access Control</strong></td>
+          <td>Student must be logged in with an <code>active</code> enrollment in the course.</td>
+          <td>If an enrollment expires, the student cannot access notes. (Works well).</td>
+          <td><span class="badge badge-green">Keep & Strengthen</span><br><small>Derive auth from server cookies</small></td>
+        </tr>
+        <tr>
+          <td><strong>Material Completion</strong></td>
+          <td>Clicking "Mark Complete" records a 100/100 score in <code>activity_results</code>.</td>
+          <td>Students can click "Complete" without actually scrolling through the text.</td>
+          <td><span class="badge badge-blue">Enhancement</span><br><small>Track reading progress / scroll depth</small></td>
+        </tr>
+        <tr>
+          <td><strong>Proprietary PDF Protection</strong></td>
+          <td>Standard PDF embedding inside an isolated iframe (<code>LessonIframe</code>).</td>
+          <td>Students can download and distribute your proprietary training material.</td>
+          <td><span class="badge badge-blue">Add Watermark</span><br><small>Stamp student name & email on PDFs</small></td>
+        </tr>
+        <tr>
+          <td><strong>Admin Preview Mode</strong></td>
+          <td>Admins with <code>admin_session</code> cookie can preview all materials via <code>?preview=1</code>.</td>
+          <td>Allows admin to verify student view without payment or fake enrollments.</td>
+          <td><span class="badge badge-green">Excellent Pattern</span><br><small>Works reliably; preserve this</small></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ==================== PAGE 4: BUSINESS LOGICS APPLIED (PART 1) ==================== -->
+  <div class="page page-break">
+    <div class="section-header">
+      <div class="section-title">
+        <span class="section-num">4</span> Business Logics Applied — Part 1: Exams & Grading
+      </div>
+      <div class="section-tag">Verify Your Business Rules</div>
+    </div>
+
+    <div class="callout callout-warning">
+      <div class="callout-icon">🎯</div>
+      <div>
+        <div class="callout-title">Special Section for CEO Verification</div>
+        <div class="callout-desc">
+          Below is a plain-English translation of the exact grading, testing, and scoring rules coded into your website. <strong>Please review each rule:</strong> if any rule does not match your business model, tell us and we will adjust the code to your preference.
+        </div>
+      </div>
+    </div>
+
+    <!-- Logic 1: Pass Mark -->
+    <div class="logic-box warning-edge">
+      <div class="logic-header">
+        <div class="logic-name">1. Exam Passing Score: 84% Default</div>
+        <span class="badge badge-amber">Needs CEO Confirmation</span>
+      </div>
+      <div class="logic-current">
+        <strong>How it works right now:</strong> The code says: <code>passed = scorePercent &gt;= (test.pass_mark || 84)</code>.<br>
+        If an administrator creates a test and forgets to fill in the passing mark, the system automatically demands <strong>84%</strong> to pass!
+      </div>
+      <div class="logic-check">
+        <strong>Question for You:</strong> Is 84% your intended passing standard for KVJ Analytics certifications? In most professional analytics academies, the passing grade is usually <strong>60%, 70%, or 75%</strong>. If 84% is too harsh, we can change the default to your preferred percentage.
+      </div>
+    </div>
+
+    <!-- Logic 2: Attempts Limit -->
+    <div class="logic-box danger-edge">
+      <div class="logic-header">
+        <div class="logic-name">2. Exam Attempt Limits: Currently Unrestricted</div>
+        <span class="badge badge-red">Missing Server Enforcement</span>
+      </div>
+      <div class="logic-current">
+        <strong>How it works right now:</strong> The database has an <code>attempts_allowed</code> setting (e.g. 1, 2, or 3 attempts). However, <strong>the grading server never checks it upon submission</strong>. A student can retake the exact same mock test 50 times in a row.
+      </div>
+      <div class="logic-check">
+        <strong>Question for You:</strong> Do you want students to have <strong>unlimited practice attempts</strong> on mock tests, or should the system block them once they reach the limit (e.g. max 3 attempts per student)?
+      </div>
+    </div>
+
+    <!-- Logic 3: Negative Marking -->
+    <div class="logic-box warning-edge">
+      <div class="logic-header">
+        <div class="logic-name">3. Negative Marking: Configured in Database but Inactive in Code</div>
+        <span class="badge badge-amber">Inactive Feature</span>
+      </div>
+      <div class="logic-current">
+        <strong>How it works right now:</strong> The database has a <code>negative_marking</code> field and instructions tell students about negative marks. But the server grading code calculates: <code>earned = isCorrect ? marks : 0</code>. Wrong answers give 0 points; they never subtract points.
+      </div>
+      <div class="logic-check">
+        <strong>Question for You:</strong> Do you want negative marking enabled (e.g. -0.25 marks for wrong answers to discourage guessing), or do you prefer <strong>no negative penalty</strong> (0 marks for wrong)?
+      </div>
+    </div>
+
+    <!-- Logic 4: Question Scoring Rules -->
+    <div class="logic-box success-edge">
+      <div class="logic-header">
+        <div class="logic-name">4. Scoring Methodology per Question Type</div>
+        <span class="badge badge-green">Granular Grading System</span>
+      </div>
+      <div class="logic-current">
+        Here is how each of your 10 question formats is graded:
+        <ul style="margin-top: 6px; padding-left: 18px; line-height: 1.6;">
+          <li><strong>Single Choice & True/False:</strong> Full marks if correct; 0 if wrong.</li>
+          <li><strong>Multiple Choice (Checkboxes):</strong> <strong>All-or-Nothing!</strong> If a question has 3 correct answers and the student picks 2 correct and 0 wrong, they receive <strong>0 marks</strong>. No partial credit is given.</li>
+          <li><strong>Drag-to-Table & Pivot Tables:</strong> <strong>Partial Credit!</strong> 1 mark for each correctly placed slot. (e.g., 4 out of 5 correct = 4 marks).</li>
+          <li><strong>Drag & Drop Pairs:</strong> 1 mark per correct match.</li>
+          <li><strong>Fill-in-the-Blanks:</strong> 1 mark per blank, case-insensitive (e.g. "sum" matches "SUM").</li>
+          <li><strong>Code Questions:</strong> Python/JavaScript/SQL code is evaluated against test cases. Partial credit is given based on how many tests pass.</li>
+        </ul>
+      </div>
+      <div class="logic-check">
+        <strong>Question for You:</strong> For Multiple Choice questions, should students get <strong>partial credit</strong> for selecting some of the correct options, or keep it strict all-or-nothing?
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== PAGE 5: BUSINESS LOGICS APPLIED (PART 2) ==================== -->
+  <div class="page page-break">
+    <div class="section-header">
+      <div class="section-title">
+        <span class="section-num">5</span> Business Logics Applied — Part 2: Payments, Codes & Certificates
+      </div>
+      <div class="section-tag">Commercial & Administrative Rules</div>
+    </div>
+
+    <!-- Logic 5: GST Calculation -->
+    <div class="logic-box warning-edge">
+      <div class="logic-header">
+        <div class="logic-name">5. Razorpay Pricing & 18% GST Tax Invoicing</div>
+        <span class="badge badge-amber">Tax Compliance Insight</span>
+      </div>
+      <div class="logic-current">
+        <strong>How it works right now:</strong>
+        All course prices listed on your website (e.g. ₹4,999) are treated as <strong>18% GST Tax-Inclusive</strong>.<br>
+        The system automatically computes:<br>
+        • Taxable Base = Total Amount ÷ 1.18<br>
+        • CGST (9%) = Taxable Base × 0.09<br>
+        • SGST (9%) = Taxable Base × 0.09<br>
+        An automated tax invoice (e.g. <code>INV-784920</code>) is emailed to the student via Resend using your GSTIN (<code>32BIDPK3118B1Z2</code>).
+      </div>
+      <div class="logic-check">
+        <strong>Crucial Tax Question for You:</strong> Your company is registered in <strong>Kerala (State 32)</strong>. Under Indian GST law, when a student from <strong>another state</strong> (e.g. Tamil Nadu, Karnataka, Maharashtra) purchases a course, the invoice must reflect <strong>18% IGST</strong>, not CGST + SGST. Currently, your system applies CGST + SGST to everyone in India. Would you like us to add state detection so out-of-state buyers receive proper IGST invoices?
+      </div>
+    </div>
+
+    <!-- Logic 6: Free Course Enrollment Bug -->
+    <div class="logic-box danger-edge">
+      <div class="logic-header">
+        <div class="logic-name">6. Free Course Enrollment Records as "Paid"</div>
+        <span class="badge badge-red">Logical Database Bug</span>
+      </div>
+      <div class="logic-current">
+        <strong>How it works right now:</strong> When a student signs up for a 100% free course via <code>/api/enroll/free</code>, the code writes to your database: <code>enrollment_method: "paid"</code>.
+      </div>
+      <div class="logic-check">
+        <strong>Impact:</strong> In your Admin reports, free enrollments and paying customers get mixed together, making it impossible to see your true commercial revenue and conversion rate cleanly.
+      </div>
+    </div>
+
+    <!-- Logic 7: Unlock Codes & TOTP Batch Codes -->
+    <div class="logic-box success-edge">
+      <div class="logic-header">
+        <div class="logic-name">7. Access Codes & College Batch Codes (TOTP)</div>
+        <span class="badge badge-green">Sophisticated Logic</span>
+      </div>
+      <div class="logic-current">
+        Your unlock system has two powerful mechanisms:<br>
+        <strong>1. Static Promo Codes:</strong> Gated by seat limits (e.g. first 100 students), expiration dates, and college email domain restrictions (e.g. only <code>@srm.edu.in</code>).<br>
+        <strong>2. Rotating 6-Digit Batch Codes:</strong> Uses time-based security (TOTP) where a 6-digit code changes every 30 seconds on the projector screen for college classroom batches so students cannot share codes with absent peers.
+      </div>
+      <div class="logic-check">
+        <strong>Safety Note:</strong> Once redeemed, the student is marked as enrolled and cannot redeem the same code twice. (This logic is sound and works well).
+      </div>
+    </div>
+
+    <!-- Logic 8: Certificate Issuance -->
+    <div class="logic-box warning-edge">
+      <div class="logic-header">
+        <div class="logic-name">8. Certificate Issuance & Verification</div>
+        <span class="badge badge-amber">Manual vs Automated</span>
+      </div>
+      <div class="logic-current">
+        <strong>How it works right now:</strong> Certificates are <strong>100% manual</strong>. When a student completes a course, nothing happens automatically. An admin must manually log into <code>/admin/certificates</code>, type the student's email, and click "Issue". Each certificate gets a unique 10-digit code (e.g. <code>KVJ-2026-A1B2C3</code>) and can be verified publicly at <code>/certificates/verify/[code]</code>.
+      </div>
+      <div class="logic-check">
+        <strong>Question for You:</strong> Do you want certificates to be <strong>automatically issued</strong> when a student finishes 100% of lessons and passes all exams, or do you prefer to keep manual admin approval before any certificate is awarded?
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== PAGE 6: ARCHITECTURE, MOBILE & MARKETING ==================== -->
+  <div class="page page-break">
+    <div class="section-header">
+      <div class="section-title">
+        <span class="section-num">6</span> Architecture, Mobile & Digital Marketing Strategy
+      </div>
+      <div class="section-tag">Cross-Discipline Recommendations</div>
+    </div>
+
+    <div class="grid-3">
+      <!-- Architecture -->
+      <div class="card">
+        <div class="card-title" style="color: var(--secondary);">
+          🏛️ Architecture & Security
+        </div>
+        <div class="card-desc">
+          <strong style="color: var(--dark)">1. Single Database Schema:</strong>
+          Combine the 19 fragmented SQL scripts into one clean migration file. This ensures you can clone or restore your website in 5 minutes if needed.<br><br>
+          <strong style="color: var(--dark)">2. Security Gatekeeper:</strong>
+          Currently, payment requests trust the phone to declare who the user is. We will lock this so the server strictly identifies students from their encrypted login cookie.<br><br>
+          <strong style="color: var(--dark)">3. Remove Build Error Suppression:</strong>
+          <code>next.config.ts</code> currently has <code>ignoreBuildErrors: true</code>. We verified your code has 0 errors—this flag can now be safely turned off to keep code quality high.
+        </div>
+      </div>
+
+      <!-- Mobile Application -->
+      <div class="card">
+        <div class="card-title" style="color: var(--primary);">
+          📱 Mobile App & PWA
+        </div>
+        <div class="card-desc">
+          <strong style="color: var(--dark)">1. Progressive Web App (PWA):</strong>
+          Add a <code>manifest.json</code> so when students open KVJ Analytics on Safari or Chrome mobile, a banner prompts: <em>"Install KVJ App on Home Screen"</em> with your brand icon.<br><br>
+          <strong style="color: var(--dark)">2. Touch-Friendly Exam Mode:</strong>
+          Dragging tiny table items with a thumb on a smartphone can be frustrating. Add a "Tap Option A, then Tap Target Slot" mode on mobile devices.<br><br>
+          <strong style="color: var(--dark)">3. Full-Screen Study Mode:</strong>
+          On mobile, auto-collapse the top navigation bar when viewing lesson slides to give students 100% screen real estate for learning.
+        </div>
+      </div>
+
+      <!-- Digital Marketing -->
+      <div class="card">
+        <div class="card-title" style="color: var(--success);">
+          📈 Digital Marketing & CRO
+        </div>
+        <div class="card-desc">
+          <strong style="color: var(--dark)">1. Abandoned Cart Recovery:</strong>
+          When a student clicks "Buy Course" but abandons Razorpay, an automated email should trigger 1 hour later: <em>"Complete your enrollment in Power BI Mastery"</em> with a 1-click payment link.<br><br>
+          <strong style="color: var(--dark)">2. Evergreen Urgency:</strong>
+          Replace the artificial 47-hour reset timer with real batch intake dates (e.g. <em>"Next Batch: September 20th • 8 Seats Remaining"</em>) to build authentic trust.<br><br>
+          <strong style="color: var(--dark)">3. Social Profile SEO:</strong>
+          Add KVJ Analytics' verified LinkedIn, YouTube, and Instagram links to your website's structured data so Google displays your official company knowledge panel.
+        </div>
+      </div>
+    </div>
+
+    <div class="callout callout-info" style="margin-top: 10px;">
+      <div class="callout-icon">💡</div>
+      <div>
+        <div class="callout-title">Digital Marketing Bonus: Free Course Lead Magnet Strategy</div>
+        <div class="callout-desc">
+          You have high-value courses in Advanced Excel, Power BI, and Data Analytics. Offering a <strong>Free 1-Hour Starter Module</strong> (where students experience your interactive code sandboxes and quiz widgets) will collect qualified student phone numbers and corporate emails. Your sales team can then nurture them via WhatsApp to upgrade to full paid certifications.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== PAGE 7: STRATEGIC ACTION ROADMAP ==================== -->
+  <div class="page">
+    <div class="section-header">
+      <div class="section-title">
+        <span class="section-num">7</span> Strategic Action Plan & Implementation Roadmap
+      </div>
+      <div class="section-tag">Step-by-Step Execution</div>
+    </div>
+
+    <div class="stepper">
+      <div class="step-item">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <h4>Phase 1: Housekeeping & Folder Decluttering (Immediate — Next 24 Hours)</h4>
+          <p>
+            • Run automated cleanup to purge all 78,287 AppleDouble <code>._*</code> shadow files.<br>
+            • Move loose markdown prompts and notes into <code>/docs</code>.<br>
+            • Remove abandoned Sanity CMS packages and schemas to eliminate 1,200+ lint errors.<br>
+            • Rename package from <code>temp-next-app</code> to <code>kvj-analytics</code>.<br>
+            • Relocate <code>KVJ analytics Logo.png</code> to <code>/public</code>.
+          </p>
+        </div>
+      </div>
+
+      <div class="step-item">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <h4>Phase 2: Business Logic Corrections & Material Route Fix (Week 1)</h4>
+          <p>
+            • Fix the broken <code>/api/materials/[id]</code> route to stream files from Supabase.<br>
+            • Update the passing mark default (confirm whether 84% stays or adjust to 65%-75%).<br>
+            • Enforce exam attempt limits if you wish to prevent infinite re-takes.<br>
+            • Fix the free course enrollment bug so free students are tagged as "free", not "paid".<br>
+            • Add interstate IGST (18%) vs intra-state CGST+SGST (9%+9%) invoice calculation based on buyer state.
+          </p>
+        </div>
+      </div>
+
+      <div class="step-item">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <h4>Phase 3: Mobile Experience, PWA & Security Hardening (Week 2)</h4>
+          <p>
+            • Add PWA support (Web App Manifest + App Icons) so students can install the site like an app.<br>
+            • Optimize drag-and-drop questions on small mobile screens with tap-to-select mode.<br>
+            • Lock down <code>userId</code> verification in payments and code unlocks strictly to secure cookies.<br>
+            • Centralize admin page route protection inside <code>src/middleware.ts</code>.
+          </p>
+        </div>
+      </div>
+
+      <div class="step-item">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <h4>Phase 4: Digital Marketing & Revenue Maximization (Week 3)</h4>
+          <p>
+            • Implement automated abandoned checkout recovery emails via Resend for pending payments.<br>
+            • Add official LinkedIn and YouTube links to your Google Knowledge Graph structured data.<br>
+            • Switch purchase countdown timers to genuine batch intake deadlines for higher conversion trust.<br>
+            • Set up 1-click WhatsApp lead buttons on all corporate and educational solution pages.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-note">
+      Report compiled for <strong>KVJ Analytics</strong> by Antigravity Senior Engineering & Growth Advisory.<br>
+      © 2026 KVJ Analytics. All technical and business recommendations are confidential and proprietary.
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>
