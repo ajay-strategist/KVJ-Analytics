@@ -50,11 +50,6 @@ function StudentAccountDashboard() {
         return;
       }
 
-      if (session.user.user_metadata?.must_change_password) {
-        router.push("/update-password?redirect=/account");
-        return;
-      }
-
       setUser(session.user);
 
       try {

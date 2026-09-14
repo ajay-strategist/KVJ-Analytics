@@ -43,15 +43,11 @@ function SignInForm() {
   const [resetFlowError, setResetFlowError] = useState("");
   const [resetFlowSuccess, setResetFlowSuccess] = useState("");
 
-  // If already logged in, redirect away (unless password change is required)
+  // If already logged in, redirect away
   useEffect(() => {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
-        if (session.user.user_metadata?.must_change_password) {
-          setMustChangePassword(true);
-          return;
-        }
         router.push(redirect);
       }
     };

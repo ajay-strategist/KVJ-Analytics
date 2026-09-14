@@ -94,12 +94,17 @@ function UpdatePasswordForm() {
         throw new Error(data.error || "Failed to update password.");
       }
 
+      try {
+        await supabase.auth.refreshSession();
+      } catch (rErr) {
+        console.warn("Session refresh warning:", rErr);
+      }
+
       setSuccess(true);
 
       setTimeout(() => {
-        router.push(redirect);
-        router.refresh();
-      }, 1500);
+        window.location.href = redirect;
+      }, 1200);
     } catch (err: any) {
       setError(err.message || "An unexpected error occurred. Please try again.");
       setLoading(false);
