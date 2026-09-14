@@ -34,6 +34,13 @@ function SignInForm() {
   const [updatePasswordError, setUpdatePasswordError] = useState("");
   const [updatePasswordSuccess, setUpdatePasswordSuccess] = useState(false);
 
+  // Self-service Reset Password state
+  const [showResetFlow, setShowResetFlow] = useState(false);
+  const [resetIdentifier, setResetIdentifier] = useState("");
+  const [resetFlowLoading, setResetFlowLoading] = useState(false);
+  const [resetFlowError, setResetFlowError] = useState("");
+  const [resetFlowSuccess, setResetFlowSuccess] = useState("");
+
   // If already logged in, redirect away (unless password change is required)
   useEffect(() => {
     const checkUser = async () => {
@@ -172,9 +179,124 @@ function SignInForm() {
     }
   };
 
+  const handleResetRequest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setResetFlowError("");
+    setResetFlowLoading(true);
+
+    const target = (resetIdentifier || email).trim();
+    if (!target) {
+      setResetFlowError("Please enter your email or phone number.");
+      setResetFlowLoading(false);
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/auth/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ identifier: target }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to reset password.");
+
+      if (data?.session?.access_token && data?.session?.refresh_token) {
+        await supabase.auth.setSession({
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token,
+        });
+        const isSecure = typeof window !== "undefined" && window.location.protocol === "https:";
+        const secureFlag = isSecure ? "; Secure" : "";
+        document.cookie = `sb-access-token=${data.session.access_token}; path=/; max-age=${data.session.expires_in || 604800}; SameSite=Lax${secureFlag}`;
+      }
+
+      setResetFlowSuccess("Password reset to default 'password'. Please enter your new password below.");
+      setTimeout(() => {
+        setShowResetFlow(false);
+        setMustChangePassword(true);
+      }, 1000);
+    } catch (err: any) {
+      setResetFlowError(err.message || "Failed to reset password.");
+    } finally {
+      setResetFlowLoading(false);
+    }
+  };
+
   return (
     <Card hoverLift={false} className="max-w-md w-full bg-card border border-line p-8 rounded-3xl backdrop-blur-xl shadow-[0_12px_40px_rgba(0,0,0,0.4)] mx-auto relative z-10">
-      {mustChangePassword ? (
+      {showResetFlow ? (
+        <div>
+          <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center mx-auto mb-3">
+            <KeyRound className="w-6 h-6" />
+          </div>
+          <h2 className="text-2xl font-bold font-display text-ink text-center mb-1">
+            Reset Password
+          </h2>
+          <p className="text-muted font-light text-center text-xs mb-6 leading-relaxed">
+            Enter your registered Email or Phone Number. Your password will be reset to the default temporary password (<strong className="text-ink">password</strong>), and you will immediately set your new password.
+          </p>
+
+          {resetFlowError && (
+            <div className="bg-rose-500/10 border border-rose-500/20 p-3.5 rounded-xl flex items-start space-x-2 text-rose-400 mb-4 text-xs font-semibold">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+              <span>{resetFlowError}</span>
+            </div>
+          )}
+
+          {resetFlowSuccess ? (
+            <div className="bg-emerald-500/10 border border-emerald-500/20 p-6 rounded-2xl text-center space-y-2">
+              <CheckCircle2 className="w-8 h-8 text-emerald-400 mx-auto animate-bounce" />
+              <h3 className="font-bold text-ink text-sm">Reset Successful!</h3>
+              <p className="text-xs text-slate">Transitioning to create your new password...</p>
+            </div>
+          ) : (
+            <form onSubmit={handleResetRequest} className="space-y-4">
+              <div>
+                <label className="block text-xs font-mono font-bold uppercase tracking-wider text-slate mb-2">
+                  Registered Email or Phone
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-4 top-3.5 w-4.5 h-4.5 text-muted" />
+                  <input
+                    type="text"
+                    required
+                    value={resetIdentifier}
+                    onChange={(e) => setResetIdentifier(e.target.value)}
+                    placeholder="name@company.com or 9876543210"
+                    className="w-full pl-12 pr-4 py-3 rounded-xl border border-line text-sm bg-surface text-ink placeholder-muted focus:outline-none focus:border-[#10B981]/40"
+                  />
+                </div>
+              </div>
+
+              <Button
+                type="submit"
+                disabled={resetFlowLoading}
+                className="w-full py-3.5 mt-2 bg-gradient-to-r from-[#10B981] to-[#0D9488] text-black font-bold flex items-center justify-center gap-1.5 border-none cursor-pointer"
+              >
+                {resetFlowLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <>
+                    <span>Reset Password</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
+              </Button>
+
+              <div className="text-center mt-4 pt-3 border-t border-line text-xs">
+                <button
+                  type="button"
+                  onClick={() => setShowResetFlow(false)}
+                  className="text-muted hover:text-ink font-medium transition-colors cursor-pointer"
+                >
+                  &larr; Back to Sign In
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
+      ) : mustChangePassword ? (
         <div>
           <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center mx-auto mb-3">
             <KeyRound className="w-6 h-6" />
@@ -292,9 +414,23 @@ function SignInForm() {
           )}
 
           {error && !invitedInfo && (
-            <div className="bg-rose-500/5 border border-rose-500/15 p-4 rounded-xl flex items-start space-x-3 text-rose-450 mb-6">
-              <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-              <span className="text-sm font-semibold">{error}</span>
+            <div className="bg-rose-500/5 border border-rose-500/15 p-4 rounded-xl space-y-2 text-rose-450 mb-6">
+              <div className="flex items-start space-x-3">
+                <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+                <span className="text-sm font-semibold">{error}</span>
+              </div>
+              <div className="pl-8 text-xs">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setResetIdentifier(email);
+                    setShowResetFlow(true);
+                  }}
+                  className="text-[#10B981] font-bold hover:underline cursor-pointer"
+                >
+                  Click here to Reset Password with default &quot;password&quot; &rarr;
+                </button>
+              </div>
             </div>
           )}
 
@@ -320,9 +456,21 @@ function SignInForm() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate mb-2 font-mono">
-                Password
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-xs font-bold uppercase tracking-wider text-slate font-mono">
+                  Password
+                </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setResetIdentifier(email);
+                    setShowResetFlow(true);
+                  }}
+                  className="text-xs text-[#10B981] hover:underline font-mono font-medium cursor-pointer"
+                >
+                  Reset Password?
+                </button>
+              </div>
               <div className="relative">
                 <Lock className="absolute left-4 top-3.5 w-4.5 h-4.5 text-muted" />
                 <input
@@ -342,7 +490,7 @@ function SignInForm() {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full py-3.5 mt-2 bg-gradient-to-r from-[#10B981] to-[#0D9488] text-black font-bold flex items-center justify-center gap-1.5 border-none"
+              className="w-full py-3.5 mt-2 bg-gradient-to-r from-[#10B981] to-[#0D9488] text-black font-bold flex items-center justify-center gap-1.5 border-none cursor-pointer"
             >
               {loading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -353,6 +501,19 @@ function SignInForm() {
                 </>
               )}
             </Button>
+
+            <div className="text-center pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setResetIdentifier(email);
+                  setShowResetFlow(true);
+                }}
+                className="text-xs text-muted hover:text-[#10B981] transition-colors cursor-pointer"
+              >
+                Forgot password or need to reset? Click here
+              </button>
+            </div>
           </form>
 
           <div className="text-center mt-6 pt-4 border-t border-line text-xs text-slate font-light">
