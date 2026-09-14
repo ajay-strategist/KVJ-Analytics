@@ -152,6 +152,21 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
+    // Fetch current batch to detect course or college changes
+    const { data: oldBatch, error: fetchOldError } = await supabaseAdmin
+      .from("batches")
+      .select("course_slug, college_name")
+      .eq("id", id)
+      .single();
+
+    if (fetchOldError || !oldBatch) {
+      return NextResponse.json(
+        { error: "Batch not found." },
+        { status: 404 }
+      );
+    }
+
+    // Update the batch record
     const { data, error } = await supabaseAdmin
       .from("batches")
       .update(updatePayload)
@@ -160,6 +175,60 @@ export async function PATCH(req: NextRequest) {
       .single();
 
     if (error) throw error;
+
+    // If course changed, migrate enrolled students to the new course
+    const courseChanged = course_slug && course_slug !== oldBatch.course_slug;
+    const collegeChanged = college_name && college_name !== oldBatch.college_name;
+
+    if (courseChanged || collegeChanged) {
+      // Get all JOINED students in this batch with linked profiles
+      const { data: joinedStudents } = await supabaseAdmin
+        .from("batch_students")
+        .select("profile_id")
+        .eq("batch_id", id)
+        .eq("status", "JOINED")
+        .not("profile_id", "is", null);
+
+      if (joinedStudents && joinedStudents.length > 0) {
+        const profileIds = joinedStudents.map((s: any) => s.profile_id);
+
+        if (courseChanged) {
+          // Remove old course enrollments
+          await supabaseAdmin
+            .from("enrollments")
+            .delete()
+            .eq("course_slug", oldBatch.course_slug)
+            .eq("enrollment_method", "college_code")
+            .in("user_id", profileIds);
+
+          // Create new course enrollments
+          const newEnrollments = profileIds.map((uid: string) => ({
+            user_id: uid,
+            course_slug: course_slug,
+            enrollment_method: "college_code",
+            status: "active",
+          }));
+
+          const { error: enrollError } = await supabaseAdmin
+            .from("enrollments")
+            .upsert(newEnrollments, { onConflict: "user_id,course_slug" });
+
+          if (enrollError) {
+            console.error("Failed to migrate enrollments to new course:", enrollError);
+          }
+        }
+
+        if (collegeChanged) {
+          // Update organization on profiles
+          for (const uid of profileIds) {
+            await supabaseAdmin
+              .from("profiles")
+              .update({ organization: college_name })
+              .eq("id", uid);
+          }
+        }
+      }
+    }
 
     return NextResponse.json({ success: true, batch: data });
   } catch (error: any) {
