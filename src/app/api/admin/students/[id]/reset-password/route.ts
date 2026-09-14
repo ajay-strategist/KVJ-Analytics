@@ -22,17 +22,33 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   const { id } = await params;
   const body = await req.json().catch(() => ({}));
-  const { newPassword } = body;
+  let { newPassword } = body;
 
-  if (!newPassword || newPassword.length < 6) {
+  // If newPassword is empty or not provided, default to "password"
+  if (!newPassword || typeof newPassword !== "string" || newPassword.trim().length === 0) {
+    newPassword = "password";
+  }
+
+  if (newPassword.length < 6) {
     return NextResponse.json({ error: "Password must be at least 6 characters long." }, { status: 400 });
   }
 
-  const { data, error } = await db.auth.admin.updateUserById(id, { password: newPassword });
+  const { data: userData } = await db.auth.admin.getUserById(id);
+  const currentMeta = userData?.user?.user_metadata || {};
+
+  const { data, error } = await db.auth.admin.updateUserById(id, {
+    password: newPassword,
+    email_confirm: true,
+    phone_confirm: true,
+    user_metadata: {
+      ...currentMeta,
+      must_change_password: true,
+    },
+  });
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ success: true });
+  return NextResponse.json({ success: true, password: newPassword });
 }

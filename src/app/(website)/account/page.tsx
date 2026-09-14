@@ -19,7 +19,8 @@ import {
   Gift,
   GraduationCap,
   Briefcase,
-  ExternalLink
+  ExternalLink,
+  KeyRound
 } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { Card } from "@/components/ui/Card";
@@ -48,6 +49,12 @@ function StudentAccountDashboard() {
         router.push("/signin?redirect=/account");
         return;
       }
+
+      if (session.user.user_metadata?.must_change_password) {
+        router.push("/update-password?redirect=/account");
+        return;
+      }
+
       setUser(session.user);
 
       try {
@@ -188,14 +195,22 @@ function StudentAccountDashboard() {
               </div>
             </div>
 
-            {/* Logout Button */}
-            <button
-              onClick={handleSignOut}
-              className="flex items-center text-xs font-bold text-slate-300 hover:text-rose-450 transition-all bg-white/5 hover:bg-rose-500/10 border border-white/10 hover:border-rose-500/20 rounded-2xl px-5 py-3 shadow-sm shrink-0 active:scale-95 duration-300 cursor-pointer"
-            >
-              <LogOut className="w-4 h-4 mr-2" />
-              Sign Out Account
-            </button>
+            <div className="flex items-center gap-3 shrink-0">
+              <Link
+                href="/update-password?redirect=/account"
+                className="flex items-center text-xs font-bold text-slate-300 hover:text-white transition-all bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl px-4 py-3 shadow-sm active:scale-95 duration-300 cursor-pointer"
+              >
+                <KeyRound className="w-4 h-4 mr-2 text-[#10B981]" />
+                Change Password
+              </Link>
+              <button
+                onClick={handleSignOut}
+                className="flex items-center text-xs font-bold text-slate-300 hover:text-rose-450 transition-all bg-white/5 hover:bg-rose-500/10 border border-white/10 hover:border-rose-500/20 rounded-2xl px-4 py-3 shadow-sm active:scale-95 duration-300 cursor-pointer"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Sign Out
+              </button>
+            </div>
           </div>
 
           {/* Quick Metrics Cards (Glassmorphism Grid) */}

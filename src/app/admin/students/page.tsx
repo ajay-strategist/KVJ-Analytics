@@ -21,10 +21,16 @@ export default function AdminStudentsPage() {
   const [sort, setSort] = useState<{ key: string; dir: "asc" | "desc" } | null>(null);
 
   const [resetStudent, setResetStudent] = useState<Student | null>(null);
-  const [newPassword, setNewPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("password");
   const [resetLoading, setResetLoading] = useState(false);
   const [resetError, setResetError] = useState("");
   const [resetSuccess, setResetSuccess] = useState(false);
+
+  // Bulk reset state
+  const [showBulkResetModal, setShowBulkResetModal] = useState(false);
+  const [bulkResetLoading, setBulkResetLoading] = useState(false);
+  const [bulkResetMessage, setBulkResetMessage] = useState("");
+  const [bulkResetError, setBulkResetError] = useState("");
 
   // Direct Enroll modal state
   const [enrollStudent, setEnrollStudent] = useState<Student | null>(null);
@@ -40,7 +46,7 @@ export default function AdminStudentsPage() {
   const [courses, setCourses] = useState<{id: string, title: string, slug: string}[]>([]);
   const [batches, setBatches] = useState<{id: string, college_name: string, course_slug: string}[]>([]);
   const [addForm, setAddForm] = useState({
-    name: "", email: "", phone: "", password: "", account_type: "individual", course_id: "", batch_id: ""
+    name: "", email: "", phone: "", password: "password", account_type: "individual", course_id: "", batch_id: ""
   });
 
   const url = useMemo(() => {
@@ -145,13 +151,38 @@ export default function AdminStudentsPage() {
       setResetSuccess(true);
       setTimeout(() => {
         setResetStudent(null);
-        setNewPassword("");
+        setNewPassword("password");
         setResetSuccess(false);
       }, 2000);
     } catch (err: any) {
       setResetError(err.message);
     } finally {
       setResetLoading(false);
+    }
+  };
+
+  const handleBulkReset = async () => {
+    setBulkResetLoading(true);
+    setBulkResetError("");
+    setBulkResetMessage("");
+
+    try {
+      const res = await fetch("/api/admin/students/reset-all", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: "password" }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to bulk reset passwords");
+      setBulkResetMessage(data.message || `Successfully reset passwords for ${data.successCount} students.`);
+      setTimeout(() => {
+        setShowBulkResetModal(false);
+        setBulkResetMessage("");
+      }, 2500);
+    } catch (err: any) {
+      setBulkResetError(err.message);
+    } finally {
+      setBulkResetLoading(false);
     }
   };
 
@@ -181,13 +212,23 @@ export default function AdminStudentsPage() {
           <h2 className="text-xl font-bold text-slate-900">Students</h2>
           <p className="text-sm text-slate-500">Every enrolled learner, synced from Supabase Auth profiles.</p>
         </div>
-        <button
-          onClick={() => { setShowAddModal(true); loadCoursesAndBatches(); }}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          Add Student
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => { setShowBulkResetModal(true); setBulkResetError(""); setBulkResetMessage(""); }}
+            className="flex items-center gap-2 px-3.5 py-2 bg-amber-50 border border-amber-200 text-amber-800 rounded-lg text-sm font-semibold hover:bg-amber-100 transition-colors"
+            title="Reset all student passwords to default 'password'"
+          >
+            <KeyRound className="w-4 h-4 text-amber-600" />
+            Reset All Passwords (password)
+          </button>
+          <button
+            onClick={() => { setShowAddModal(true); loadCoursesAndBatches(); }}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Add Student
+          </button>
+        </div>
       </div>
 
       <DataTable<Student>
@@ -211,7 +252,7 @@ export default function AdminStudentsPage() {
           <RowActions actions={[
             { label: "View enrollments", icon: Eye, onClick: () => router.push(`/admin/enrollments`) },
             { label: "Enroll in Course", icon: BookPlus, onClick: () => { setEnrollStudent(r); loadCoursesAndBatches(); setEnrollError(""); setEnrollSuccess(""); } },
-            { label: "Reset password", icon: KeyRound, onClick: () => { setResetStudent(r); setNewPassword(""); setResetError(""); setResetSuccess(false); } },
+            { label: "Reset password", icon: KeyRound, onClick: () => { setResetStudent(r); setNewPassword("password"); setResetError(""); setResetSuccess(false); } },
           ]} />
         )}
       />
@@ -382,18 +423,30 @@ export default function AdminStudentsPage() {
               
               <div className="space-y-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
-                    New Password
-                  </label>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                      New Password
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setNewPassword("password")}
+                      className="text-xs text-blue-600 hover:text-blue-700 font-medium hover:underline"
+                    >
+                      Use Default ("password")
+                    </button>
+                  </div>
                   <input
                     type="text"
                     required
                     minLength={6}
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                    placeholder="Enter at least 6 characters"
+                    className="w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all font-mono"
+                    placeholder="password"
                   />
+                  <p className="text-xs text-slate-500 mt-1.5">
+                    Default student password is <span className="font-semibold text-slate-700 font-mono">password</span>.
+                  </p>
                 </div>
 
                 {resetError && (
@@ -426,6 +479,71 @@ export default function AdminStudentsPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Reset Confirmation Modal */}
+      {showBulkResetModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200">
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+              <h3 className="font-semibold text-slate-800 flex items-center gap-2">
+                <KeyRound className="w-5 h-5 text-amber-600" />
+                Reset All Student Passwords
+              </h3>
+              <button
+                onClick={() => { if (!bulkResetLoading) setShowBulkResetModal(false); }}
+                className="text-slate-400 hover:text-slate-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6">
+              <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl mb-4 text-amber-800 text-sm">
+                <p className="font-semibold mb-1">⚠️ Bulk Operation</p>
+                <p>
+                  This will reset the password of <strong>all registered students</strong> to:
+                </p>
+                <div className="mt-2 p-2 bg-white/80 border border-amber-300 rounded font-mono font-bold text-center text-amber-900">
+                  password
+                </div>
+                <p className="mt-2 text-xs text-amber-700">
+                  Admin accounts will <strong>not</strong> be affected. Students can log in immediately using their phone number or email and this password.
+                </p>
+              </div>
+
+              {bulkResetError && (
+                <div className="text-sm text-rose-600 bg-rose-50 p-3 rounded-lg border border-rose-100 mb-4">
+                  {bulkResetError}
+                </div>
+              )}
+
+              {bulkResetMessage && (
+                <div className="text-sm text-emerald-600 bg-emerald-50 p-3 rounded-lg border border-emerald-100 mb-4">
+                  {bulkResetMessage}
+                </div>
+              )}
+
+              <div className="flex justify-end gap-3 mt-6">
+                <button
+                  type="button"
+                  disabled={bulkResetLoading}
+                  onClick={() => setShowBulkResetModal(false)}
+                  className="px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={bulkResetLoading || !!bulkResetMessage}
+                  onClick={handleBulkReset}
+                  className="px-4 py-2 text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors flex items-center gap-2"
+                >
+                  {bulkResetLoading ? "Resetting Passwords..." : "Confirm Reset All"}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

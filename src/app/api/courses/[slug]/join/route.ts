@@ -49,14 +49,16 @@ export async function POST(
     }
 
     // 2. Rate-Limiting & Lockout
+    // Key by IP + student identifier (phone/email) so an entire college classroom sharing one Wi-Fi IP is NOT locked out
     const ip = getClientIp(req);
-    const limitKey = `${ip}:${slug}`;
+    const studentIdentifier = (phone || body.email || userId || "").toString().replace(/\D/g, "").slice(-10) || "user";
+    const limitKey = `${ip}:${studentIdentifier}:${slug}`;
     const limitInfo = limitStore.get(limitKey);
 
     if (limitInfo && limitInfo.lockUntil > Date.now()) {
       const remainingSeconds = Math.ceil((limitInfo.lockUntil - Date.now()) / 1000);
       return NextResponse.json(
-        { error: `Too many failed attempts. Locked out. Try again in ${remainingSeconds} seconds.` },
+        { error: `Too many incorrect attempts for this student. Please wait ${remainingSeconds} seconds or get the fresh code from your coordinator.` },
         { status: 429 }
       );
     }
@@ -86,12 +88,12 @@ export async function POST(
       );
     }
 
-    // 4. Validate TOTP code against active secrets
+    // 4. Validate TOTP code against active secrets (window 2 allows +/- 60s clock drift for mobile phones)
     let codeIsValid = false;
     let verifiedBatch: any = null;
 
     for (const batch of activeBatches) {
-      if (verifyTOTP(code, batch.totp_secret, 1)) {
+      if (verifyTOTP(code, batch.totp_secret, 2)) {
         codeIsValid = true;
         verifiedBatch = batch;
         break;
@@ -116,7 +118,7 @@ export async function POST(
       });
 
       return NextResponse.json(
-        { error: "Invalid access code. Please check with your college coordinator." },
+        { error: "Invalid access code. Please check with your college coordinator for the live code." },
         { status: 400 }
       );
     }

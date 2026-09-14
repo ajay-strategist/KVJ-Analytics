@@ -95,25 +95,25 @@ export default function CollegeJoinPage() {
           throw new Error(checkData.error || "Account creation failed.");
         }
 
-        let { error: signInError } = await supabase.auth.signInWithPassword({
-          email: formData.email,
-          password: formData.password,
-        });
-
-        if (signInError && (
-          signInError.message?.toLowerCase().includes("email not confirmed") ||
-          signInError.message?.toLowerCase().includes("confirm")
-        )) {
-          await fetch("/api/auth/confirm-user", {
+        // Sign in via server /api/auth/login to guarantee email auto-confirmation & cookie sync
+        try {
+          const loginRes = await fetch("/api/auth/login", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email: formData.email }),
+            body: JSON.stringify({ identifier: formData.email, password: formData.password }),
           });
-          const retry = await supabase.auth.signInWithPassword({
-            email: formData.email,
-            password: formData.password,
-          });
-          signInError = retry.error;
+          const loginData = await loginRes.json();
+          if (loginData?.session) {
+            await supabase.auth.setSession({
+              access_token: loginData.session.access_token,
+              refresh_token: loginData.session.refresh_token,
+            });
+            const isSecure = typeof window !== "undefined" && window.location.protocol === "https:";
+            const secureFlag = isSecure ? "; Secure" : "";
+            document.cookie = `sb-access-token=${loginData.session.access_token}; path=/; max-age=${loginData.session.expires_in || 604800}; SameSite=Lax${secureFlag}`;
+          }
+        } catch (sErr) {
+          console.warn("Session synchronization warning:", sErr);
         }
 
         activeUserId = checkData?.user?.id;
@@ -246,6 +246,9 @@ export default function CollegeJoinPage() {
                         id="email"
                         name="email"
                         required
+                        autoCapitalize="none"
+                        autoCorrect="off"
+                        spellCheck={false}
                         value={formData.email}
                         onChange={handleChange}
                         placeholder="name@email.com"
@@ -265,6 +268,9 @@ export default function CollegeJoinPage() {
                         id="password"
                         name="password"
                         required
+                        autoCapitalize="none"
+                        autoCorrect="off"
+                        spellCheck={false}
                         value={formData.password}
                         onChange={handleChange}
                         placeholder="••••••••"
