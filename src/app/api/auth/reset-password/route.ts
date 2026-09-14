@@ -17,9 +17,17 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { identifier } = await req.json().catch(() => ({}));
+    const { identifier, newPassword, confirmPassword } = await req.json().catch(() => ({}));
     if (!identifier || typeof identifier !== "string" || !identifier.trim()) {
       return NextResponse.json({ error: "Please enter your email or phone number." }, { status: 400 });
+    }
+
+    if (!newPassword || typeof newPassword !== "string" || newPassword.length < 6) {
+      return NextResponse.json({ error: "New password must be at least 6 characters long." }, { status: 400 });
+    }
+
+    if (confirmPassword !== undefined && newPassword !== confirmPassword) {
+      return NextResponse.json({ error: "Passwords do not match. Please re-enter them carefully." }, { status: 400 });
     }
 
     const rawInput = identifier.trim();
@@ -61,16 +69,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 3. Reset user password to default "password" and set must_change_password: true
+    // 3. Reset user password directly to the new password and clear must_change_password flag
     const currentMeta = matchedUser.user_metadata || {};
     const { error: resetErr } = await supabaseAdmin.auth.admin.updateUserById(matchedUser.id, {
-      password: "password",
+      password: newPassword,
       email_confirm: true,
       phone_confirm: true,
       email_confirmed_at: new Date().toISOString(),
       user_metadata: {
         ...currentMeta,
-        must_change_password: true,
+        must_change_password: false,
+        password_updated_at: new Date().toISOString(),
       },
     });
 
@@ -79,18 +88,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: resetErr.message || "Failed to reset password." }, { status: 500 });
     }
 
-    // 4. Automatically sign in with default password to provide seamless session for updating password
+    // 4. Automatically sign in with the new password so user enters immediately (no second update needed)
     const { data: signInData, error: signInErr } = await supabaseAdmin.auth.signInWithPassword({
       email: matchedUser.email,
-      password: "password",
+      password: newPassword,
     });
 
     const response = NextResponse.json({
       success: true,
       email: matchedUser.email,
-      mustChangePassword: true,
+      mustChangePassword: false,
       session: signInData?.session || null,
-      message: 'Password has been reset to default "password". Please enter your new password now.',
+      message: "Password has been successfully updated. Welcome back!",
     });
 
     if (signInData?.session?.access_token) {

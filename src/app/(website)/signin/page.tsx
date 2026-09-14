@@ -37,6 +37,8 @@ function SignInForm() {
   // Self-service Reset Password state
   const [showResetFlow, setShowResetFlow] = useState(false);
   const [resetIdentifier, setResetIdentifier] = useState("");
+  const [resetNewPassword, setResetNewPassword] = useState("");
+  const [resetConfirmPassword, setResetConfirmPassword] = useState("");
   const [resetFlowLoading, setResetFlowLoading] = useState(false);
   const [resetFlowError, setResetFlowError] = useState("");
   const [resetFlowSuccess, setResetFlowSuccess] = useState("");
@@ -182,20 +184,34 @@ function SignInForm() {
   const handleResetRequest = async (e: React.FormEvent) => {
     e.preventDefault();
     setResetFlowError("");
-    setResetFlowLoading(true);
 
     const target = (resetIdentifier || email).trim();
     if (!target) {
       setResetFlowError("Please enter your email or phone number.");
-      setResetFlowLoading(false);
       return;
     }
+
+    if (!resetNewPassword || resetNewPassword.length < 6) {
+      setResetFlowError("New password must be at least 6 characters long.");
+      return;
+    }
+
+    if (resetNewPassword !== resetConfirmPassword) {
+      setResetFlowError("Passwords do not match. Please re-enter them carefully.");
+      return;
+    }
+
+    setResetFlowLoading(true);
 
     try {
       const res = await fetch("/api/auth/reset-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ identifier: target }),
+        body: JSON.stringify({
+          identifier: target,
+          newPassword: resetNewPassword,
+          confirmPassword: resetConfirmPassword,
+        }),
       });
 
       const data = await res.json();
@@ -211,11 +227,11 @@ function SignInForm() {
         document.cookie = `sb-access-token=${data.session.access_token}; path=/; max-age=${data.session.expires_in || 604800}; SameSite=Lax${secureFlag}`;
       }
 
-      setResetFlowSuccess("Password reset to default 'password'. Please enter your new password below.");
+      setResetFlowSuccess("Password updated successfully! Welcome back.");
       setTimeout(() => {
-        setShowResetFlow(false);
-        setMustChangePassword(true);
-      }, 1000);
+        router.push(redirect);
+        router.refresh();
+      }, 1200);
     } catch (err: any) {
       setResetFlowError(err.message || "Failed to reset password.");
     } finally {
@@ -234,7 +250,7 @@ function SignInForm() {
             Reset Password
           </h2>
           <p className="text-muted font-light text-center text-xs mb-6 leading-relaxed">
-            Enter your registered Email or Phone Number. Your password will be reset to the default temporary password (<strong className="text-ink">password</strong>), and you will immediately set your new password.
+            Enter your registered Email or Phone Number and set your new password directly.
           </p>
 
           {resetFlowError && (
@@ -247,8 +263,8 @@ function SignInForm() {
           {resetFlowSuccess ? (
             <div className="bg-emerald-500/10 border border-emerald-500/20 p-6 rounded-2xl text-center space-y-2">
               <CheckCircle2 className="w-8 h-8 text-emerald-400 mx-auto animate-bounce" />
-              <h3 className="font-bold text-ink text-sm">Reset Successful!</h3>
-              <p className="text-xs text-slate">Transitioning to create your new password...</p>
+              <h3 className="font-bold text-ink text-sm">Password Updated!</h3>
+              <p className="text-xs text-slate">Signing you in and redirecting to your account...</p>
             </div>
           ) : (
             <form onSubmit={handleResetRequest} className="space-y-4">
@@ -269,6 +285,42 @@ function SignInForm() {
                 </div>
               </div>
 
+              <div>
+                <label className="block text-xs font-mono font-bold uppercase tracking-wider text-slate mb-2">
+                  New Password
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-4 top-3.5 w-4.5 h-4.5 text-muted" />
+                  <input
+                    type="password"
+                    required
+                    minLength={6}
+                    value={resetNewPassword}
+                    onChange={(e) => setResetNewPassword(e.target.value)}
+                    placeholder="Enter at least 6 characters"
+                    className="w-full pl-12 pr-4 py-3 rounded-xl border border-line text-sm bg-surface text-ink placeholder-muted focus:outline-none focus:border-[#10B981]/40"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-mono font-bold uppercase tracking-wider text-slate mb-2">
+                  Confirm New Password
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-4 top-3.5 w-4.5 h-4.5 text-muted" />
+                  <input
+                    type="password"
+                    required
+                    minLength={6}
+                    value={resetConfirmPassword}
+                    onChange={(e) => setResetConfirmPassword(e.target.value)}
+                    placeholder="Re-enter your new password"
+                    className="w-full pl-12 pr-4 py-3 rounded-xl border border-line text-sm bg-surface text-ink placeholder-muted focus:outline-none focus:border-[#10B981]/40"
+                  />
+                </div>
+              </div>
+
               <Button
                 type="submit"
                 disabled={resetFlowLoading}
@@ -278,7 +330,7 @@ function SignInForm() {
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
                   <>
-                    <span>Reset Password</span>
+                    <span>Reset & Update Password</span>
                     <ArrowRight className="w-4 h-4" />
                   </>
                 )}
