@@ -34,9 +34,18 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Fallback if userId is explicitly provided in body
+    // Fallback if userId or email is explicitly provided in body
     if (!targetUserId && body.userId) {
       targetUserId = body.userId;
+    }
+
+    if (!targetUserId && body.email) {
+      const cleanEmail = String(body.email).toLowerCase().trim();
+      const { data: uPage } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
+      const found = (uPage?.users || []).find((u: any) => u.email?.toLowerCase().trim() === cleanEmail);
+      if (found) {
+        targetUserId = found.id;
+      }
     }
 
     if (!targetUserId) {

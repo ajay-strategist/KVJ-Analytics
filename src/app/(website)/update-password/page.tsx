@@ -56,26 +56,42 @@ function UpdatePasswordForm() {
     setLoading(true);
 
     try {
-      // 1. Call server update-password API
-      const res = await fetch("/api/auth/update-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ newPassword, confirmPassword }),
-      });
+      const { data: sessionData } = await supabase.auth.getSession();
+      const session = sessionData?.session;
+      const token = session?.access_token;
+      const activeUserId = session?.user?.id;
+      const activeEmail = session?.user?.email || userEmail;
 
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to update password.");
-      }
-
-      // 2. Also synchronize client Supabase session
+      // 1. Try Supabase client auth first
+      let clientSuccess = false;
       try {
-        await supabase.auth.updateUser({
+        const { error: clientErr } = await supabase.auth.updateUser({
           password: newPassword,
           data: { must_change_password: false },
         });
-      } catch (clientErr) {
-        console.warn("Client session password sync:", clientErr);
+        if (!clientErr) clientSuccess = true;
+      } catch (cErr) {
+        console.warn("Client updateUser attempt:", cErr);
+      }
+
+      // 2. Call server update-password API with token, userId, and email fallback
+      const res = await fetch("/api/auth/update-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          newPassword,
+          confirmPassword,
+          userId: activeUserId,
+          email: activeEmail,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok && !clientSuccess) {
+        throw new Error(data.error || "Failed to update password.");
       }
 
       setSuccess(true);
