@@ -68,7 +68,7 @@ function SignUpForm() {
           await fetch("/api/auth/claim-enrollments", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, user_id: activeUserId }),
+            body: JSON.stringify({ email, phone, user_id: activeUserId }),
           });
         } catch (claimErr) {
           console.error("Error claiming batch enrollments:", claimErr);

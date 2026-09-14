@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState, useMemo, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import {
   BarChart3,
   BookOpen,
@@ -23,6 +24,10 @@ import {
   HelpCircle,
   X,
   ExternalLink,
+  Phone,
+  Clock,
+  Users,
+  AlertCircle,
 } from "lucide-react";
 import { useAdminFetch } from "@/components/admin/hooks/useAdminFetch";
 
@@ -47,11 +52,14 @@ interface StudentRow {
   studentId: string;
   studentName: string;
   email: string;
-  phone: string;
+  phone?: string;
   organization: string;
+  batchId?: string | null;
   accountType: string;
   enrollmentMethod: string;
   enrolledAt: string;
+  status?: string;
+  isInvited?: boolean;
   completedTopicsCount: number;
   totalTopicsCount: number;
   courseCompletionPct: number;
@@ -87,6 +95,24 @@ interface CourseItem {
   slug: string;
 }
 
+interface BatchSummary {
+  id: string;
+  name: string;
+  courseSlug: string;
+  validFrom: string;
+  validTo: string;
+  active: boolean;
+  totalStudents: number;
+  joinedStudents: number;
+  invitedStudents: number;
+  inProgressStudents: number;
+  notStartedStudents: number;
+  completedCount: number;
+  avgCompletionPct: number;
+  avgJoinedCompletionPct: number;
+  passRatePct: number;
+}
+
 interface ReportData {
   courses: CourseItem[];
   activeCourse: {
@@ -96,10 +122,13 @@ interface ReportData {
     totalModules: number;
     totalTopics: number;
   } | null;
+  batches: BatchSummary[];
   modules: Module[];
   students: StudentRow[];
   kpis: {
     totalStudents: number;
+    enrolledStudents?: number;
+    invitedStudents?: number;
     avgCompletionPct: number;
     avgScorePct: number;
     passRatePct: number;
@@ -108,13 +137,40 @@ interface ReportData {
 }
 
 export default function LearningReportsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="p-16 text-center space-y-3">
+          <RefreshCw className="h-8 w-8 text-indigo-600 animate-spin mx-auto" />
+          <p className="text-sm font-semibold text-slate-600">Loading learning reports...</p>
+        </div>
+      }
+    >
+      <LearningReportsContent />
+    </Suspense>
+  );
+}
+
+function LearningReportsContent() {
   const router = useRouter();
-  const [selectedCourseSlug, setSelectedCourseSlug] = useState<string>("");
+  const searchParams = useSearchParams();
+
+  const urlCourse = searchParams.get("course_slug") || "";
+  const urlBatch = searchParams.get("batch") || "all";
+
+  const [selectedCourseSlug, setSelectedCourseSlug] = useState<string>(urlCourse);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCollege, setSelectedCollege] = useState("all");
+  const [selectedCollege, setSelectedCollege] = useState(urlBatch);
   const [statusFilter, setStatusFilter] = useState("all");
   const [showPowerBiModal, setShowPowerBiModal] = useState(false);
   const [copiedSql, setCopiedSql] = useState(false);
+
+  useEffect(() => {
+    const qBatch = searchParams.get("batch");
+    if (qBatch) setSelectedCollege(qBatch);
+    const qCourse = searchParams.get("course_slug");
+    if (qCourse) setSelectedCourseSlug(qCourse);
+  }, [searchParams]);
 
   // Construct URL with query parameter
   const fetchUrl = useMemo(() => {
@@ -126,35 +182,64 @@ export default function LearningReportsPage() {
     onUnauthorized: () => router.push("/admin"),
   });
 
-  // Extract unique colleges from students for filter dropdown
-  const uniqueColleges = useMemo(() => {
-    if (!data?.students) return [];
-    const set = new Set<string>();
-    data.students.forEach((s) => {
-      if (s.organization) set.add(s.organization);
+  // Extract combined batch/college options
+  const collegeOptions = useMemo(() => {
+    const list: { value: string; label: string; count?: number; joined?: number; isBatch?: boolean }[] = [];
+    const seen = new Set<string>();
+
+    // 1. Defined Batches for active course
+    (data?.batches || []).forEach((b) => {
+      seen.add(b.name);
+      list.push({
+        value: b.name,
+        label: `${b.name} (${b.totalStudents} total • ${b.joinedStudents} joined)`,
+        count: b.totalStudents,
+        joined: b.joinedStudents,
+        isBatch: true,
+      });
     });
-    return Array.from(set).sort();
-  }, [data?.students]);
+
+    // 2. Any other organizations from student records (e.g. Individual)
+    (data?.students || []).forEach((s) => {
+      if (s.organization && !seen.has(s.organization)) {
+        seen.add(s.organization);
+        const count = (data?.students || []).filter((st) => st.organization === s.organization).length;
+        list.push({
+          value: s.organization,
+          label: `${s.organization} (${count} students)`,
+          count,
+          joined: count,
+          isBatch: false,
+        });
+      }
+    });
+
+    return list;
+  }, [data?.batches, data?.students]);
 
   // Filter students based on search term, college, and completion status
   const filteredStudents = useMemo(() => {
     if (!data?.students) return [];
     return data.students.filter((student) => {
-      // 1. Search term match
+      // 1. Search term match (name, email, phone, organization)
+      const q = searchTerm.trim().toLowerCase();
       const searchMatch =
-        searchTerm.trim() === "" ||
-        student.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        student.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        student.organization.toLowerCase().includes(searchTerm.toLowerCase());
+        q === "" ||
+        student.studentName.toLowerCase().includes(q) ||
+        (student.email && student.email.toLowerCase().includes(q)) ||
+        (student.phone && student.phone.toLowerCase().includes(q)) ||
+        (student.organization && student.organization.toLowerCase().includes(q));
 
       if (!searchMatch) return false;
 
-      // 2. College match
+      // 2. College / Batch match
       if (selectedCollege !== "all" && student.organization !== selectedCollege) {
         return false;
       }
 
       // 3. Status filter
+      if (statusFilter === "joined" && (student.isInvited || student.status === "INVITED")) return false;
+      if (statusFilter === "invited" && (!student.isInvited && student.status !== "INVITED")) return false;
       if (statusFilter === "completed" && student.courseCompletionPct < 100) return false;
       if (statusFilter === "in_progress" && (student.courseCompletionPct === 0 || student.courseCompletionPct >= 100)) return false;
       if (statusFilter === "not_started" && student.courseCompletionPct > 0) return false;
@@ -162,6 +247,45 @@ export default function LearningReportsPage() {
       return true;
     });
   }, [data?.students, searchTerm, selectedCollege, statusFilter]);
+
+  // Selected Batch Information (if filtering by a batch)
+  const activeBatchInfo = useMemo(() => {
+    if (selectedCollege === "all") return null;
+    return (data?.batches || []).find((b) => b.name === selectedCollege) || null;
+  }, [data?.batches, selectedCollege]);
+
+  // Dynamic KPIs based on filtered students
+  const activeKPIs = useMemo(() => {
+    if (!filteredStudents.length) {
+      return {
+        totalStudents: 0,
+        enrolledStudents: 0,
+        invitedStudents: 0,
+        avgCompletionPct: 0,
+        passRatePct: 0,
+        completedCount: 0,
+      };
+    }
+    const total = filteredStudents.length;
+    const enrolled = filteredStudents.filter((s) => !s.isInvited || s.status === "JOINED").length;
+    const invited = filteredStudents.filter((s) => s.isInvited && s.status === "INVITED").length;
+    const completed = filteredStudents.filter((s) => s.courseCompletionPct >= 100).length;
+
+    const sumCompletion = filteredStudents.reduce((acc, s) => acc + (s.courseCompletionPct || 0), 0);
+    const avgCompletion = Number((sumCompletion / total).toFixed(1));
+
+    const passedAssessments = filteredStudents.filter((s) => s.assessmentPassed).length;
+    const passRate = enrolled > 0 ? Number(((passedAssessments / enrolled) * 100).toFixed(1)) : 0;
+
+    return {
+      totalStudents: total,
+      enrolledStudents: enrolled,
+      invitedStudents: invited,
+      avgCompletionPct: avgCompletion,
+      passRatePct: passRate,
+      completedCount: completed,
+    };
+  }, [filteredStudents]);
 
   // Export Matrix Table to CSV
   const handleExportCSV = () => {
@@ -173,7 +297,9 @@ export default function LearningReportsPage() {
     const headers = [
       "Student ID",
       "Student Name",
+      "Status",
       "Email",
+      "Phone",
       "College / Organization",
       "Overall Course Completion %",
       "Avg Module Completion %",
@@ -192,21 +318,27 @@ export default function LearningReportsPage() {
       return [
         `"${s.studentId}"`,
         `"${s.studentName.replace(/"/g, '""')}"`,
+        `"${s.isInvited ? "Invited (Pending)" : "Enrolled (Active)"}"`,
         `"${s.email}"`,
+        `"${s.phone || ""}"`,
         `"${s.organization.replace(/"/g, '""')}"`,
         `"${s.courseCompletionPct}%"`,
         `"${s.avgModuleCompletionPct}%"`,
         s.assessmentScore !== null ? `"${s.assessmentScore}%"` : `""`,
         s.assessmentPassed !== null ? (s.assessmentPassed ? `"Passed"` : `"Failed"`) : `""`,
-        ...topicCols.map((col) => `"${col}"`),
-      ];
+        ...topicCols.map((val) => `"${val}"`),
+      ].join(",");
     });
 
-    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map((e) => e.join(","))].join("\n");
-    const encodedUri = encodeURI(csvContent);
+    const csvContent = [headers.join(","), ...rows].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `KVJ_Learning_Report_${data.activeCourse?.slug || "Matrix"}_${new Date().toISOString().slice(0, 10)}.csv`);
+    link.setAttribute("href", url);
+    link.setAttribute(
+      "download",
+      `learning_matrix_${data.activeCourse?.slug || "report"}_${new Date().toISOString().split("T")[0]}.csv`
+    );
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -232,14 +364,22 @@ export default function LearningReportsPage() {
             Learning Intelligence & Matrix
           </div>
           <h1 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight flex items-center gap-3">
-            Student Learning & Topic Reports
+            Student Learning & Batch Reports
           </h1>
           <p className="text-slate-300 text-sm max-w-2xl leading-relaxed">
-            Real-time curriculum progress matrix, granular topic-by-topic completion status, module averages, and live assessment scores for active cohorts.
+            Real-time cohort progress, batch activation rates, topic-by-topic curriculum completion matrix, and live assessment scores.
           </p>
         </div>
 
         <div className="relative z-10 flex flex-wrap items-center gap-3">
+          <Link
+            href="/admin/batches"
+            className="px-4 py-2.5 rounded-xl bg-indigo-600/30 hover:bg-indigo-600/50 border border-indigo-400/40 text-indigo-200 font-semibold text-xs transition-all flex items-center gap-2 shadow-sm"
+          >
+            <Layers className="h-4 w-4 text-indigo-300" />
+            Manage Batches
+          </Link>
+
           <button
             onClick={() => setShowPowerBiModal(true)}
             className="px-4 py-2.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-amber-300 font-semibold text-xs transition-all flex items-center gap-2 shadow-sm shadow-amber-500/10"
@@ -269,17 +409,21 @@ export default function LearningReportsPage() {
 
       {/* ── KPI Highlight Cards (Vibrant Gradients) ───────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Total Students */}
+        {/* Total Roster / Students */}
         <div className="p-5 rounded-2xl bg-gradient-to-br from-indigo-500/10 via-white to-indigo-50/40 border border-indigo-100 shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-indigo-700">Enrolled Students</span>
+            <span className="text-xs font-bold uppercase tracking-wider text-indigo-700">
+              {selectedCollege !== "all" ? "Batch Roster" : "Enrolled & Roster"}
+            </span>
             <div className="p-2.5 rounded-xl bg-indigo-600 text-white shadow-md shadow-indigo-600/20">
               <GraduationCap className="h-5 w-5" />
             </div>
           </div>
           <div className="mt-3">
-            <div className="text-3xl font-black text-slate-900">{loading ? "—" : data?.kpis.totalStudents ?? 0}</div>
-            <p className="text-xs text-slate-500 mt-1">Active learners in {data?.activeCourse?.title || "course"}</p>
+            <div className="text-3xl font-black text-slate-900">{loading ? "—" : activeKPIs.totalStudents}</div>
+            <p className="text-xs text-slate-500 mt-1">
+              {activeKPIs.enrolledStudents} joined & active • {activeKPIs.invitedStudents} pending invite
+            </p>
           </div>
         </div>
 
@@ -292,11 +436,11 @@ export default function LearningReportsPage() {
             </div>
           </div>
           <div className="mt-3">
-            <div className="text-3xl font-black text-emerald-600">{loading ? "—" : `${data?.kpis.avgCompletionPct ?? 0}%`}</div>
+            <div className="text-3xl font-black text-emerald-600">{loading ? "—" : `${activeKPIs.avgCompletionPct}%`}</div>
             <div className="w-full bg-emerald-100 h-1.5 rounded-full mt-2 overflow-hidden">
               <div
                 className="bg-emerald-500 h-full rounded-full transition-all duration-500"
-                style={{ width: `${Math.min(100, data?.kpis.avgCompletionPct || 0)}%` }}
+                style={{ width: `${Math.min(100, activeKPIs.avgCompletionPct || 0)}%` }}
               />
             </div>
           </div>
@@ -311,8 +455,8 @@ export default function LearningReportsPage() {
             </div>
           </div>
           <div className="mt-3">
-            <div className="text-3xl font-black text-slate-900">{loading ? "—" : `${data?.kpis.passRatePct ?? 0}%`}</div>
-            <p className="text-xs text-slate-500 mt-1">Scored $\ge$ pass benchmark score</p>
+            <div className="text-3xl font-black text-slate-900">{loading ? "—" : `${activeKPIs.passRatePct}%`}</div>
+            <p className="text-xs text-slate-500 mt-1">Scored passing benchmark score</p>
           </div>
         </div>
 
@@ -325,7 +469,7 @@ export default function LearningReportsPage() {
             </div>
           </div>
           <div className="mt-3">
-            <div className="text-3xl font-black text-slate-900">{loading ? "—" : data?.kpis.completedCount ?? 0}</div>
+            <div className="text-3xl font-black text-slate-900">{loading ? "—" : activeKPIs.completedCount}</div>
             <p className="text-xs text-slate-500 mt-1">Completed all modules & activities</p>
           </div>
         </div>
@@ -340,7 +484,10 @@ export default function LearningReportsPage() {
             <span className="text-xs font-bold text-slate-700">Course:</span>
             <select
               value={data?.activeCourse?.slug || selectedCourseSlug}
-              onChange={(e) => setSelectedCourseSlug(e.target.value)}
+              onChange={(e) => {
+                setSelectedCourseSlug(e.target.value);
+                setSelectedCollege("all"); // reset batch when switching courses
+              }}
               className="bg-transparent text-sm font-semibold text-slate-900 focus:outline-none cursor-pointer"
             >
               {(data?.courses || []).map((c) => (
@@ -351,18 +498,19 @@ export default function LearningReportsPage() {
             </select>
           </div>
 
-          {/* College / Organization Dropdown */}
+          {/* College / Batch Dropdown */}
           <div className="flex items-center gap-2 bg-slate-50 px-3 py-2 rounded-xl border border-slate-200">
             <Building2 className="h-4 w-4 text-slate-500" />
+            <span className="text-xs font-bold text-slate-700">Batch:</span>
             <select
               value={selectedCollege}
               onChange={(e) => setSelectedCollege(e.target.value)}
-              className="bg-transparent text-xs font-semibold text-slate-800 focus:outline-none cursor-pointer"
+              className="bg-transparent text-xs font-semibold text-slate-800 focus:outline-none cursor-pointer max-w-[280px]"
             >
-              <option value="all">All Colleges / Batches</option>
-              {uniqueColleges.map((col) => (
-                <option key={col} value={col}>
-                  {col}
+              <option value="all">All Colleges / Batches ({data?.students?.length || 0})</option>
+              {collegeOptions.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
                 </option>
               ))}
             </select>
@@ -376,7 +524,9 @@ export default function LearningReportsPage() {
               onChange={(e) => setStatusFilter(e.target.value)}
               className="bg-transparent text-xs font-semibold text-slate-800 focus:outline-none cursor-pointer"
             >
-              <option value="all">All Progress Statuses</option>
+              <option value="all">All Statuses</option>
+              <option value="joined">Enrolled & Active</option>
+              <option value="invited">Invited / Pending Registration</option>
               <option value="completed">Completed (100%)</option>
               <option value="in_progress">In Progress (1-99%)</option>
               <option value="not_started">Not Started (0%)</option>
@@ -384,18 +534,159 @@ export default function LearningReportsPage() {
           </div>
         </div>
 
-        {/* Search by Student Name / Email */}
+        {/* Search by Student Name / Email / Phone */}
         <div className="relative min-w-[260px]">
           <Search className="h-4 w-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder="Search student or email..."
+            placeholder="Search student, email, phone..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-9 pr-4 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
           />
         </div>
       </div>
+
+      {/* ── Active Batch Progress & Activation Dashboard ──────────────── */}
+      {activeBatchInfo && (
+        <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-6 rounded-3xl border border-indigo-500/30 shadow-xl space-y-4 animate-in fade-in duration-200">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-2xl bg-indigo-600/30 border border-indigo-400/30 text-indigo-300">
+                <Layers className="h-6 w-6" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 text-[10px] font-bold uppercase tracking-wider">
+                    College Cohort Progress
+                  </span>
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                      activeBatchInfo.active
+                        ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                        : "bg-slate-700 text-slate-300"
+                    }`}
+                  >
+                    {activeBatchInfo.active ? "Active Batch" : "Inactive"}
+                  </span>
+                </div>
+                <h2 className="text-xl md:text-2xl font-black text-white mt-1">
+                  {activeBatchInfo.name}
+                </h2>
+                <p className="text-xs text-slate-300">
+                  Course: <strong className="text-white">{data?.activeCourse?.title}</strong>
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Link
+                href="/admin/batches"
+                className="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-semibold text-white transition-all flex items-center gap-1.5 border border-white/10"
+              >
+                <Building2 className="h-3.5 w-3.5" />
+                Manage Batch Code in Batches Page
+              </Link>
+            </div>
+          </div>
+
+          {/* Metric Cards Grid for this batch */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 pt-2">
+            <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10">
+              <div className="text-[11px] font-semibold text-slate-400">Total Roster</div>
+              <div className="text-2xl font-black text-white mt-1">{activeBatchInfo.totalStudents}</div>
+              <div className="text-[10px] text-slate-400 mt-0.5">Imported students</div>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
+              <div className="text-[11px] font-semibold text-emerald-300">Registered & Joined</div>
+              <div className="text-2xl font-black text-emerald-400 mt-1">{activeBatchInfo.joinedStudents}</div>
+              <div className="text-[10px] text-emerald-300/80 mt-0.5">
+                {activeBatchInfo.totalStudents > 0
+                  ? Math.round((activeBatchInfo.joinedStudents / activeBatchInfo.totalStudents) * 100)
+                  : 0}
+                % activation rate
+              </div>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20">
+              <div className="text-[11px] font-semibold text-amber-300">Pending Registration</div>
+              <div className="text-2xl font-black text-amber-400 mt-1">{activeBatchInfo.invitedStudents}</div>
+              <div className="text-[10px] text-amber-300/80 mt-0.5">Invited via Excel roster</div>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-indigo-500/10 border border-indigo-500/20">
+              <div className="text-[11px] font-semibold text-indigo-300">Batch Avg Completion</div>
+              <div className="text-2xl font-black text-indigo-300 mt-1">
+                {activeBatchInfo.avgJoinedCompletionPct > 0
+                  ? `${activeBatchInfo.avgJoinedCompletionPct}%`
+                  : `${activeBatchInfo.avgCompletionPct}%`}
+              </div>
+              <div className="text-[10px] text-indigo-300/80 mt-0.5">
+                {activeBatchInfo.joinedStudents > 0 ? "Across active learners" : "No learners joined yet"}
+              </div>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-purple-500/10 border border-purple-500/20">
+              <div className="text-[11px] font-semibold text-purple-300">Assessment Pass Rate</div>
+              <div className="text-2xl font-black text-purple-300 mt-1">{activeBatchInfo.passRatePct}%</div>
+              <div className="text-[10px] text-purple-300/80 mt-0.5">Mock test passes</div>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-teal-500/10 border border-teal-500/20">
+              <div className="text-[11px] font-semibold text-teal-300">Completed Course</div>
+              <div className="text-2xl font-black text-teal-300 mt-1">{activeBatchInfo.completedCount}</div>
+              <div className="text-[10px] text-teal-300/80 mt-0.5">100% curriculum</div>
+            </div>
+          </div>
+
+          {/* Batch Roster Activation Progress Bar */}
+          <div className="space-y-1.5 pt-1">
+            <div className="flex items-center justify-between text-xs text-slate-300">
+              <span className="font-medium">Student Registration & Onboarding Progress</span>
+              <span className="font-bold text-white">
+                {activeBatchInfo.joinedStudents} of {activeBatchInfo.totalStudents} joined (
+                {activeBatchInfo.totalStudents > 0
+                  ? Math.round((activeBatchInfo.joinedStudents / activeBatchInfo.totalStudents) * 100)
+                  : 0}
+                %)
+              </span>
+            </div>
+            <div className="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden flex border border-white/10">
+              <div
+                className="bg-gradient-to-r from-emerald-500 to-teal-400 h-full transition-all duration-500"
+                style={{
+                  width: `${
+                    activeBatchInfo.totalStudents > 0
+                      ? (activeBatchInfo.joinedStudents / activeBatchInfo.totalStudents) * 100
+                      : 0
+                  }%`,
+                }}
+                title={`Joined: ${activeBatchInfo.joinedStudents}`}
+              />
+              <div
+                className="bg-amber-400/60 h-full transition-all duration-500"
+                style={{
+                  width: `${
+                    activeBatchInfo.totalStudents > 0
+                      ? (activeBatchInfo.invitedStudents / activeBatchInfo.totalStudents) * 100
+                      : 0
+                  }%`,
+                }}
+                title={`Invited: ${activeBatchInfo.invitedStudents}`}
+              />
+            </div>
+            <div className="flex items-center gap-4 text-[11px] text-slate-400 pt-0.5">
+              <span className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-400" /> Joined & Active ({activeBatchInfo.joinedStudents})
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-amber-400" /> Invited / Pending Registration ({activeBatchInfo.invitedStudents})
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Main Topic Completion Matrix Table ────────────────────────── */}
       <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
@@ -442,10 +733,10 @@ export default function LearningReportsPage() {
               <thead className="sticky top-0 z-20 bg-slate-900 text-white uppercase text-[11px] tracking-wider shadow-md">
                 <tr>
                   {/* Fixed Student Info Columns */}
-                  <th className="py-3.5 px-4 font-bold border-r border-slate-800 min-w-[200px] sticky left-0 z-30 bg-slate-900 shadow-r">
+                  <th className="py-3.5 px-4 font-bold border-r border-slate-800 min-w-[240px] sticky left-0 z-30 bg-slate-900 shadow-r">
                     Student Details
                   </th>
-                  <th className="py-3.5 px-3 font-bold border-r border-slate-800 min-w-[130px] text-center">
+                  <th className="py-3.5 px-3 font-bold border-r border-slate-800 min-w-[150px] text-center">
                     College / Batch
                   </th>
                   <th className="py-3.5 px-3 font-bold border-r border-slate-800 min-w-[150px] text-center">
@@ -486,7 +777,7 @@ export default function LearningReportsPage() {
                 </tr>
               </thead>
 
-              {/* Table Body with colorful row highlights */}
+              {/* Table Body */}
               <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
                 {filteredStudents.map((student, sIdx) => {
                   const is100Pct = student.courseCompletionPct >= 100;
@@ -494,57 +785,106 @@ export default function LearningReportsPage() {
 
                   return (
                     <tr key={student.studentId} className={`${rowBg} hover:bg-indigo-50/40 transition-colors`}>
-                      {/* Student Name & Email (Sticky Left Column) */}
+                      {/* Student Name & Email / Phone (Sticky Left Column) */}
                       <td className={`py-3 px-4 border-r border-slate-100 sticky left-0 z-10 ${rowBg} shadow-r`}>
-                        <div className="font-bold text-slate-900">{student.studentName}</div>
-                        <div className="text-[11px] text-slate-500 font-normal truncate max-w-[180px]">{student.email}</div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-slate-900">{student.studentName}</span>
+                          {student.isInvited ? (
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300 inline-flex items-center gap-1 shrink-0">
+                              <Clock className="h-2.5 w-2.5" /> Invited
+                            </span>
+                          ) : (
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 inline-flex items-center gap-1 shrink-0">
+                              <CheckCircle2 className="h-2.5 w-2.5" /> Active
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          {student.email && student.email !== "—" ? (
+                            <span className="text-[11px] text-slate-500 font-normal truncate max-w-[170px]" title={student.email}>
+                              {student.email}
+                            </span>
+                          ) : student.phone && student.phone !== "—" ? (
+                            <span
+                              className="text-[11px] text-indigo-600 font-semibold truncate max-w-[170px] inline-flex items-center gap-1"
+                              title={student.phone}
+                            >
+                              <Phone className="h-2.5 w-2.5" /> {student.phone}
+                            </span>
+                          ) : (
+                            <span className="text-[11px] text-slate-400 italic">No contact info</span>
+                          )}
+                          {student.phone && student.email && student.email !== "—" && (
+                            <span className="text-[10px] text-slate-400 font-medium" title={student.phone}>
+                              • {student.phone}
+                            </span>
+                          )}
+                        </div>
                       </td>
 
                       {/* College / Batch Badge */}
                       <td className="py-3 px-3 border-r border-slate-100 text-center">
-                        <span className="inline-block px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 text-[11px] font-medium max-w-[120px] truncate" title={student.organization}>
+                        <span
+                          className="inline-block px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 text-[11px] font-medium max-w-[140px] truncate"
+                          title={student.organization}
+                        >
                           {student.organization}
                         </span>
                       </td>
 
                       {/* Course Completion Progress Bar */}
                       <td className="py-3 px-3 border-r border-slate-100 text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          <div className="w-16 bg-slate-200 h-2 rounded-full overflow-hidden">
-                            <div
-                              className={`h-full rounded-full ${
-                                is100Pct
-                                  ? "bg-emerald-500"
-                                  : student.courseCompletionPct > 50
-                                  ? "bg-indigo-600"
-                                  : student.courseCompletionPct > 0
-                                  ? "bg-amber-500"
-                                  : "bg-slate-300"
-                              }`}
-                              style={{ width: `${student.courseCompletionPct}%` }}
-                            />
+                        {student.isInvited ? (
+                          <div className="text-center">
+                            <span className="text-xs font-semibold text-slate-400">0%</span>
+                            <div className="text-[10px] text-amber-600 font-medium">Pending Registration</div>
                           </div>
-                          <span
-                            className={`font-bold text-xs ${
-                              is100Pct ? "text-emerald-700" : student.courseCompletionPct > 50 ? "text-indigo-700" : "text-slate-800"
-                            }`}
-                          >
-                            {student.courseCompletionPct}%
-                          </span>
-                        </div>
-                        <div className="text-[10px] text-slate-400 mt-0.5">
-                          {student.completedTopicsCount} / {student.totalTopicsCount} topics
-                        </div>
+                        ) : (
+                          <>
+                            <div className="flex items-center justify-center gap-2">
+                              <div className="w-16 bg-slate-200 h-2 rounded-full overflow-hidden">
+                                <div
+                                  className={`h-full rounded-full ${
+                                    is100Pct
+                                      ? "bg-emerald-500"
+                                      : student.courseCompletionPct > 50
+                                      ? "bg-indigo-600"
+                                      : student.courseCompletionPct > 0
+                                      ? "bg-amber-500"
+                                      : "bg-slate-300"
+                                  }`}
+                                  style={{ width: `${student.courseCompletionPct}%` }}
+                                />
+                              </div>
+                              <span
+                                className={`font-bold text-xs ${
+                                  is100Pct
+                                    ? "text-emerald-700"
+                                    : student.courseCompletionPct > 50
+                                    ? "text-indigo-700"
+                                    : "text-slate-800"
+                                }`}
+                              >
+                                {student.courseCompletionPct}%
+                              </span>
+                            </div>
+                            <div className="text-[10px] text-slate-400 mt-0.5">
+                              {student.completedTopicsCount} / {student.totalTopicsCount} topics
+                            </div>
+                          </>
+                        )}
                       </td>
 
                       {/* Average Module % */}
                       <td className="py-3 px-3 border-r border-slate-100 text-center font-bold text-slate-800">
-                        {student.avgModuleCompletionPct}%
+                        {student.isInvited ? "—" : `${student.avgModuleCompletionPct}%`}
                       </td>
 
                       {/* Mock Test Score Pill */}
                       <td className="py-3 px-3 border-r border-slate-100 text-center bg-indigo-50/30">
-                        {student.assessmentScore !== null ? (
+                        {student.isInvited ? (
+                          <span className="text-slate-400 font-normal text-[11px]">—</span>
+                        ) : student.assessmentScore !== null ? (
                           <span
                             className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold ${
                               student.assessmentPassed
@@ -568,17 +908,21 @@ export default function LearningReportsPage() {
                           <React.Fragment key={mod.id}>
                             {/* Module Summary Column */}
                             <td className="py-3 px-3 border-r border-slate-100 text-center bg-indigo-50/20 font-bold">
-                              <span
-                                className={`inline-block px-2 py-0.5 rounded text-[11px] ${
-                                  mPct === 100
-                                    ? "bg-emerald-100 text-emerald-800 font-bold"
-                                    : mPct > 0
-                                    ? "bg-indigo-100 text-indigo-800"
-                                    : "text-slate-400"
-                                }`}
-                              >
-                                {mPct}%
-                              </span>
+                              {student.isInvited ? (
+                                <span className="text-slate-300 text-[11px]">—</span>
+                              ) : (
+                                <span
+                                  className={`inline-block px-2 py-0.5 rounded text-[11px] ${
+                                    mPct === 100
+                                      ? "bg-emerald-100 text-emerald-800 font-bold"
+                                      : mPct > 0
+                                      ? "bg-indigo-100 text-indigo-800"
+                                      : "text-slate-400"
+                                  }`}
+                                >
+                                  {mPct}%
+                                </span>
+                              )}
                             </td>
 
                             {/* Individual Topic Cells (Yes / Blank) */}

@@ -24,6 +24,7 @@ import {
   Users,
   Trash2,
   Pencil,
+  BarChart3,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import { Button } from "@/components/ui/Button";
@@ -781,6 +782,13 @@ export default function AdminBatchesPage() {
                             >
                               <Users className="w-5 h-5" />
                             </button>
+                            <Link
+                              href={`/admin/learning-reports?course_slug=${batch.course_slug}&batch=${encodeURIComponent(batch.college_name)}`}
+                              className="text-slate hover:text-emerald-600 transition-colors p-1.5 rounded-lg hover:bg-emerald-50 cursor-pointer"
+                              title="View Batch Progress & Reports"
+                            >
+                              <BarChart3 className="w-5 h-5" />
+                            </Link>
                             <button
                               onClick={() => handleOpenEdit(batch)}
                               className="text-slate hover:text-brand transition-colors p-1.5 rounded-lg hover:bg-brand/5 cursor-pointer"
@@ -995,16 +1003,26 @@ export default function AdminBatchesPage() {
                   {activeBatchForStudents.college_name} • {getCourseTitle(activeBatchForStudents.course_slug)}
                 </p>
               </div>
-              <button
-                onClick={() => {
-                  setActiveBatchForStudents(null);
-                  setRoster([]);
-                }}
-                className="text-slate-400 hover:text-slate-700 transition-colors p-1 rounded-full hover:bg-slate-100 cursor-pointer"
-                aria-label="Close"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              <div className="flex items-center gap-2">
+                <Link
+                  href={`/admin/learning-reports?course_slug=${activeBatchForStudents.course_slug}&batch=${encodeURIComponent(activeBatchForStudents.college_name)}`}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-semibold transition-all shadow-sm"
+                  title="Open this batch in Learning Reports"
+                >
+                  <BarChart3 className="w-3.5 h-3.5" />
+                  <span>Batch Progress & Reports</span>
+                </Link>
+                <button
+                  onClick={() => {
+                    setActiveBatchForStudents(null);
+                    setRoster([]);
+                  }}
+                  className="text-slate-400 hover:text-slate-700 transition-colors p-1.5 rounded-full hover:bg-slate-100 cursor-pointer"
+                  aria-label="Close"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
             {/* Modal Content - Split layout */}

@@ -277,7 +277,7 @@ export async function GET(
 
     const finalQuestions = strippedQuestions;
 
-    const totalPossibleMarks = finalQuestions.reduce((acc, q: any) => acc + Number(q.marks || 1), 0);
+    const totalPossibleMarks = finalQuestions.reduce((acc: number, q: any) => acc + Number(q.marks || 1), 0);
 
     const sanitizedTest = {
       id: test.id,

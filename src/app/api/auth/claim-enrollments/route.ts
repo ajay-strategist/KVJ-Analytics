@@ -17,20 +17,33 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { email, user_id } = await req.json();
+    const { email, phone, user_id } = await req.json();
 
-    if (!email || !user_id) {
-      return NextResponse.json({ error: "Missing email or user_id" }, { status: 400 });
+    if (!user_id || (!email && !phone)) {
+      return NextResponse.json({ error: "Missing identifier (email or phone) or user_id" }, { status: 400 });
     }
 
-    // 1. Fetch pending invited batch student records matching email
-    const { data: batchRecords, error: batchErr } = await supabaseAdmin
+    const cleanDigits = (p: any) => (p ? String(p).replace(/\D/g, "") : "");
+    const userPhoneDigits = cleanDigits(phone);
+    const normalizedEmail = email?.toLowerCase().trim() || null;
+
+    // 1. Fetch pending invited batch student records
+    const { data: allInvited, error: batchErr } = await supabaseAdmin
       .from("batch_students")
       .select("*")
-      .eq("email", email.toLowerCase().trim())
       .eq("status", "INVITED");
 
     if (batchErr) throw batchErr;
+
+    const batchRecords = (allInvited || []).filter((record: any) => {
+      const emailMatch = normalizedEmail && record.email && record.email.toLowerCase().trim() === normalizedEmail;
+      const recPhoneDigits = cleanDigits(record.phone);
+      const phoneMatch =
+        userPhoneDigits &&
+        recPhoneDigits &&
+        (userPhoneDigits.endsWith(recPhoneDigits) || recPhoneDigits.endsWith(userPhoneDigits));
+      return Boolean(emailMatch || phoneMatch);
+    });
 
     if (!batchRecords || batchRecords.length === 0) {
       return NextResponse.json({ success: true, claimed: 0 });

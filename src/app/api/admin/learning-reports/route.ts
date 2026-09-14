@@ -122,7 +122,36 @@ export async function GET(req: NextRequest) {
 
     const userIds = (enrollments || []).map((e: any) => e.user_id).filter(Boolean);
 
-    // 4. Resolve Auth Emails & Batch Names for enrolled users
+    // 4. Fetch batches configured for this active course
+    const { data: courseBatches, error: batchesErr } = await supabaseAdmin
+      .from("batches")
+      .select("id, college_name, course_slug, valid_from, valid_to, active, created_at")
+      .eq("course_slug", activeCourse.slug)
+      .order("college_name", { ascending: true });
+
+    if (batchesErr) {
+      console.warn("Error fetching course batches:", batchesErr);
+    }
+
+    const batchIds = (courseBatches || []).map((b: any) => b.id);
+
+    // 5. Fetch all batch students roster for these batches
+    let batchStudents: any[] = [];
+    if (batchIds.length > 0) {
+      const { data: bsData, error: bsErr } = await supabaseAdmin
+        .from("batch_students")
+        .select("id, batch_id, name, email, phone, status, profile_id, student_id, department, added_at, batches(id, college_name, course_slug)")
+        .in("batch_id", batchIds)
+        .order("added_at", { ascending: true });
+
+      if (bsErr) {
+        console.warn("Error fetching batch students:", bsErr);
+      } else if (bsData) {
+        batchStudents = bsData;
+      }
+    }
+
+    // 6. Resolve Auth Emails
     let emailMap: Record<string, string> = {};
     try {
       const { data: usersPage } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
@@ -135,25 +164,50 @@ export async function GET(req: NextRequest) {
       // Non-fatal if listUsers fails in mock mode
     }
 
-    let batchMap: Record<string, string> = {};
-    if (userIds.length > 0) {
-      try {
-        const { data: bStudents } = await supabaseAdmin
-          .from("batch_students")
-          .select("profile_id, email, batches(college_name)")
-          .in("profile_id", userIds);
+    // Helper to clean phone for matching
+    const cleanPhone = (p: any): string => {
+      if (!p) return "";
+      return String(p).replace(/\D/g, "");
+    };
 
-        if (bStudents) {
-          bStudents.forEach((bs: any) => {
-            if (bs.profile_id && bs.batches?.college_name) {
-              batchMap[bs.profile_id] = bs.batches.college_name;
-            }
-          });
-        }
-      } catch (_) {}
-    }
+    // Link batch students to enrollments
+    const linkedBatchStudentIds = new Set<string>();
+    const batchMap: Record<string, string> = {};
+    const batchIdMap: Record<string, string> = {};
 
-    // 5. Fetch Activity Results (Topic completions) for active course
+    // 6a. First match by profile_id
+    batchStudents.forEach((bs: any) => {
+      if (bs.profile_id && userIds.includes(bs.profile_id)) {
+        batchMap[bs.profile_id] = bs.batches?.college_name || bs.department || "Batch";
+        batchIdMap[bs.profile_id] = bs.batch_id;
+        linkedBatchStudentIds.add(bs.id);
+      }
+    });
+
+    // 6b. Then match by email or phone
+    (enrollments || []).forEach((enroll: any) => {
+      const uId = enroll.user_id;
+      if (batchMap[uId]) return;
+
+      const profile = enroll.profiles || {};
+      const uEmail = (emailMap[uId] || "").trim().toLowerCase();
+      const uPhone = cleanPhone(profile.phone);
+
+      const matchedBs = batchStudents.find((bs: any) => {
+        if (linkedBatchStudentIds.has(bs.id)) return false;
+        const bsEmail = (bs.email || "").trim().toLowerCase();
+        const bsPhone = cleanPhone(bs.phone);
+        return (uEmail && bsEmail && uEmail === bsEmail) || (uPhone && bsPhone && uPhone === bsPhone);
+      });
+
+      if (matchedBs) {
+        batchMap[uId] = matchedBs.batches?.college_name || matchedBs.department || "Batch";
+        batchIdMap[uId] = matchedBs.batch_id;
+        linkedBatchStudentIds.add(matchedBs.id);
+      }
+    });
+
+    // 7. Fetch Activity Results (Topic completions) for active course
     const { data: activityResults, error: actErr } = await supabaseAdmin
       .from("activity_results")
       .select("id, user_id, lesson_id, score, max_score, score_percent, passed, submitted_at")
@@ -161,7 +215,7 @@ export async function GET(req: NextRequest) {
 
     if (actErr) throw actErr;
 
-    // 6. Fetch Mock Test attempts for active course
+    // 8. Fetch Mock Test attempts for active course
     const { data: testAttempts, error: testErr } = await supabaseAdmin
       .from("test_attempts")
       .select(`
@@ -211,19 +265,20 @@ export async function GET(req: NextRequest) {
       }
     });
 
-    // 7. Calculate Student Matrix Rows
+    // 9. Calculate Student Matrix Rows for enrolled students
     let totalCompletionAccumulator = 0;
     let totalScoreAccumulator = 0;
     let scoredStudentsCount = 0;
     let passedAssessmentsCount = 0;
     let completedCourseCount = 0;
 
-    const studentMatrixRows = (enrollments || []).map((enroll: any) => {
+    const studentMatrixRows: any[] = (enrollments || []).map((enroll: any) => {
       const uId = enroll.user_id;
       const profile = enroll.profiles || {};
       const studentName = profile.full_name || profile.name || "Student";
       const email = emailMap[uId] || "student@kvjanalytics.com";
       const collegeOrOrg = batchMap[uId] || profile.organization || "Individual";
+      const batchId = batchIdMap[uId] || null;
 
       const userActivities = userActivityMap[uId] || {};
       let completedLessonsCount = 0;
@@ -314,9 +369,12 @@ export async function GET(req: NextRequest) {
         email,
         phone: profile.phone || "",
         organization: collegeOrOrg,
+        batchId,
         accountType: profile.account_type || "individual",
         enrollmentMethod: enroll.enrollment_method,
         enrolledAt: enroll.created_at,
+        status: "JOINED",
+        isInvited: false,
         completedTopicsCount: completedLessonsCount,
         totalTopicsCount: totalCourseTopics,
         courseCompletionPct,
@@ -330,10 +388,106 @@ export async function GET(req: NextRequest) {
       };
     });
 
+    // 10. Add invited roster students (students in batch_students who have not enrolled yet)
+    const unlinkedBatchStudents = batchStudents.filter((bs: any) => !linkedBatchStudentIds.has(bs.id));
+
+    unlinkedBatchStudents.forEach((bs: any) => {
+      const bName = bs.batches?.college_name || bs.department || "Batch";
+
+      // Default empty module progress
+      const emptyModuleProgress: Record<string, { moduleId: string; moduleTitle: string; total: number; completed: number; pct: number }> = {};
+      sortedModules.forEach((m: any) => {
+        emptyModuleProgress[m.id] = {
+          moduleId: m.id,
+          moduleTitle: m.title,
+          total: m.lessons.length,
+          completed: 0,
+          pct: 0,
+        };
+      });
+
+      // Default empty topic statuses
+      const emptyTopicStatuses: Record<string, { completed: boolean; status: "Yes" | ""; score: number | null; maxScore: number | null; passed: boolean | null; submittedAt: string | null }> = {};
+      allLessons.forEach((lesson: any) => {
+        emptyTopicStatuses[lesson.id] = {
+          completed: false,
+          status: "",
+          score: null,
+          maxScore: lesson.max_score || null,
+          passed: null,
+          submittedAt: null,
+        };
+      });
+
+      studentMatrixRows.push({
+        studentId: `roster-${bs.id}`,
+        studentName: bs.name || "Student",
+        email: bs.email || "—",
+        phone: bs.phone || "—",
+        organization: bName,
+        batchId: bs.batch_id,
+        accountType: "invited",
+        enrollmentMethod: "batch_roster",
+        enrolledAt: bs.added_at,
+        status: bs.status || "INVITED",
+        isInvited: true,
+        completedTopicsCount: 0,
+        totalTopicsCount: totalCourseTopics,
+        courseCompletionPct: 0,
+        avgModuleCompletionPct: 0,
+        avgActivityScorePct: null,
+        assessmentScore: null,
+        assessmentPassed: null,
+        assessmentAttempts: 0,
+        moduleProgress: emptyModuleProgress,
+        topicStatuses: emptyTopicStatuses,
+      });
+    });
+
+    // 11. Compute detailed batch progress summaries for each batch
+    const batchSummaries = (courseBatches || []).map((b: any) => {
+      const bStudents = studentMatrixRows.filter(
+        (s) => s.batchId === b.id || s.organization === b.college_name
+      );
+      const total = bStudents.length;
+      const joined = bStudents.filter((s) => !s.isInvited || s.status === "JOINED").length;
+      const invited = bStudents.filter((s) => s.isInvited && s.status === "INVITED").length;
+      const completed = bStudents.filter((s) => s.courseCompletionPct >= 100).length;
+      const inProgress = bStudents.filter((s) => s.courseCompletionPct > 0 && s.courseCompletionPct < 100).length;
+      const notStarted = bStudents.filter((s) => s.courseCompletionPct === 0).length;
+
+      const sumPct = bStudents.reduce((acc, s) => acc + (s.courseCompletionPct || 0), 0);
+      const avgCompletion = total > 0 ? Number((sumPct / total).toFixed(1)) : 0;
+      const joinedSumPct = bStudents.filter((s) => !s.isInvited).reduce((acc, s) => acc + (s.courseCompletionPct || 0), 0);
+      const avgJoinedCompletion = joined > 0 ? Number((joinedSumPct / joined).toFixed(1)) : 0;
+
+      const passedAssessments = bStudents.filter((s) => s.assessmentPassed).length;
+      const passRate = joined > 0 ? Number(((passedAssessments / joined) * 100).toFixed(1)) : 0;
+
+      return {
+        id: b.id,
+        name: b.college_name,
+        courseSlug: b.course_slug,
+        validFrom: b.valid_from,
+        validTo: b.valid_to,
+        active: b.active,
+        totalStudents: total,
+        joinedStudents: joined,
+        invitedStudents: invited,
+        inProgressStudents: inProgress,
+        notStartedStudents: notStarted,
+        completedCount: completed,
+        avgCompletionPct: avgCompletion,
+        avgJoinedCompletionPct: avgJoinedCompletion,
+        passRatePct: passRate,
+      };
+    });
+
     const studentCount = studentMatrixRows.length;
+    const enrolledCount = (enrollments || []).length;
     const avgOverallCompletion = studentCount > 0 ? Number((totalCompletionAccumulator / studentCount).toFixed(1)) : 0;
     const avgOverallScore = scoredStudentsCount > 0 ? Number((totalScoreAccumulator / scoredStudentsCount).toFixed(1)) : 0;
-    const overallPassRate = studentCount > 0 ? Number(((passedAssessmentsCount / studentCount) * 100).toFixed(1)) : 0;
+    const overallPassRate = enrolledCount > 0 ? Number(((passedAssessmentsCount / enrolledCount) * 100).toFixed(1)) : 0;
 
     return NextResponse.json({
       courses: (courses || []).map((c: any) => ({ id: c.id, title: c.title, slug: c.slug })),
@@ -344,10 +498,13 @@ export async function GET(req: NextRequest) {
         totalModules: sortedModules.length,
         totalTopics: totalCourseTopics,
       },
+      batches: batchSummaries,
       modules: sortedModules,
       students: studentMatrixRows,
       kpis: {
         totalStudents: studentCount,
+        enrolledStudents: enrolledCount,
+        invitedStudents: unlinkedBatchStudents.length,
         avgCompletionPct: avgOverallCompletion,
         avgScorePct: avgOverallScore,
         passRatePct: overallPassRate,
