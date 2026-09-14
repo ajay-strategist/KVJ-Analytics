@@ -23,6 +23,7 @@ import {
   X,
   Users,
   Trash2,
+  Pencil,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import { Button } from "@/components/ui/Button";
@@ -82,6 +83,15 @@ export default function AdminBatchesPage() {
   const [newValidTo, setNewValidTo] = useState("");
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState("");
+
+  // Edit batch state
+  const [editBatch, setEditBatch] = useState<Batch | null>(null);
+  const [editCollegeName, setEditCollegeName] = useState("");
+  const [editCourseSlug, setEditCourseSlug] = useState("");
+  const [editValidFrom, setEditValidFrom] = useState("");
+  const [editValidTo, setEditValidTo] = useState("");
+  const [editLoading, setEditLoading] = useState(false);
+  const [editError, setEditError] = useState("");
 
   // Student roster state
   const [activeBatchForStudents, setActiveBatchForStudents] = useState<Batch | null>(null);
@@ -407,6 +417,75 @@ export default function AdminBatchesPage() {
     }
   };
 
+  // Open edit modal with pre-filled values
+  const handleOpenEdit = (batch: Batch) => {
+    setEditBatch(batch);
+    setEditCollegeName(batch.college_name);
+    setEditCourseSlug(batch.course_slug);
+    // Convert ISO to datetime-local format
+    setEditValidFrom(new Date(batch.valid_from).toISOString().slice(0, 16));
+    setEditValidTo(new Date(batch.valid_to).toISOString().slice(0, 16));
+    setEditError("");
+  };
+
+  const handleEditBatch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editBatch) return;
+    setEditLoading(true);
+    setEditError("");
+
+    try {
+      const response = await fetch("/api/admin/batches", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: editBatch.id,
+          college_name: editCollegeName,
+          course_slug: editCourseSlug,
+          valid_from: new Date(editValidFrom).toISOString(),
+          valid_to: new Date(editValidTo).toISOString(),
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Batch update failed.");
+      }
+
+      setEditBatch(null);
+      fetchBatches();
+    } catch (err: any) {
+      setEditError(err.message || "Failed to update batch.");
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
+  const handleDeleteBatch = async (batch: Batch) => {
+    const confirmed = confirm(
+      `Are you sure you want to permanently delete the batch "${batch.college_name}"?\n\nThis will also remove all associated student roster entries. This action cannot be undone.`
+    );
+    if (!confirmed) return;
+
+    try {
+      const response = await fetch("/api/admin/batches", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: batch.id }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to delete batch.");
+      }
+
+      fetchBatches();
+    } catch (err: any) {
+      alert(err.message || "Failed to delete batch.");
+    }
+  };
+
   // Helper format Course Slug to Title
   const getCourseTitle = (slug: string) => {
     const found = courses.find((c) => c.slug === slug);
@@ -702,6 +781,13 @@ export default function AdminBatchesPage() {
                             >
                               <Users className="w-5 h-5" />
                             </button>
+                            <button
+                              onClick={() => handleOpenEdit(batch)}
+                              className="text-slate hover:text-brand transition-colors p-1.5 rounded-lg hover:bg-brand/5 cursor-pointer"
+                              title="Edit Batch Details"
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </button>
                             {batch.active && !isExpired && (
                               <button
                                 onClick={() => setPresentId(batch.id)}
@@ -721,6 +807,13 @@ export default function AdminBatchesPage() {
                               ) : (
                                 <ToggleLeft className="w-9 h-9 text-slate cursor-pointer" />
                               )}
+                            </button>
+                            <button
+                              onClick={() => handleDeleteBatch(batch)}
+                              className="text-slate hover:text-error transition-colors p-1.5 rounded-lg hover:bg-error/5 cursor-pointer"
+                              title="Delete Batch"
+                            >
+                              <Trash2 className="w-4 h-4" />
                             </button>
                           </div>
                         </td>
@@ -781,6 +874,111 @@ export default function AdminBatchesPage() {
           </div>
         );
       })()}
+
+      {/* Edit Batch Modal */}
+      {editBatch && (
+        <div className="fixed inset-0 z-[150] grid place-items-center bg-slate-900/40 backdrop-blur-sm p-4">
+          <Card className="p-6 border-line bg-white shadow-xl max-w-xl w-full rounded-2xl">
+            <div className="flex items-center justify-between border-b border-line pb-3 mb-5">
+              <h3 className="text-lg font-bold font-display text-ink">
+                Edit Batch Details
+              </h3>
+              <button
+                onClick={() => setEditBatch(null)}
+                className="text-slate-400 hover:text-slate-700 transition-colors p-1 rounded-full hover:bg-slate-100 cursor-pointer"
+                aria-label="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {editError && (
+              <div className="bg-error/5 border border-error/20 p-4 rounded-lg flex items-start space-x-3 text-error mb-5">
+                <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+                <span className="text-sm font-semibold">{editError}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleEditBatch} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate mb-1">
+                  College / Institution Name *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editCollegeName}
+                  onChange={(e) => setEditCollegeName(e.target.value)}
+                  placeholder="e.g. Rajagiri College of Social Sciences"
+                  className="w-full px-4 py-2.5 rounded-lg border border-line bg-surface/50 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate mb-1">
+                  Select Associated Course *
+                </label>
+                <select
+                  value={editCourseSlug}
+                  onChange={(e) => setEditCourseSlug(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-lg border border-line bg-surface/50 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
+                >
+                  {courses.map((c) => (
+                    <option key={c.slug} value={c.slug}>
+                      {c.title} ({c.slug})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate mb-1">
+                    Valid From Date/Time *
+                  </label>
+                  <input
+                    type="datetime-local"
+                    required
+                    value={editValidFrom}
+                    onChange={(e) => setEditValidFrom(e.target.value)}
+                    className="w-full px-4 py-2.5 rounded-lg border border-line bg-surface/50 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate mb-1">
+                    Valid To Date/Time *
+                  </label>
+                  <input
+                    type="datetime-local"
+                    required
+                    value={editValidTo}
+                    onChange={(e) => setEditValidTo(e.target.value)}
+                    className="w-full px-4 py-2.5 rounded-lg border border-line bg-surface/50 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-4 flex items-center justify-end space-x-3">
+                <Button
+                  onClick={() => setEditBatch(null)}
+                  type="button"
+                  variant="ghost"
+                  className="px-4 py-2 text-xs border border-line text-slate hover:bg-surface font-semibold"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={editLoading}
+                  className="px-5 py-2 text-xs bg-education hover:bg-teal-700 text-white font-bold"
+                >
+                  {editLoading ? "Saving Changes..." : "Save Changes"}
+                </Button>
+              </div>
+            </form>
+          </Card>
+        </div>
+      )}
 
       {/* Student Roster Modal */}
       {activeBatchForStudents && (

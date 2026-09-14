@@ -128,25 +128,86 @@ export async function PATCH(req: NextRequest) {
   }
 
   try {
-    const { id, active } = await req.json();
+    const { id, active, college_name, course_slug, valid_from, valid_to } = await req.json();
 
-    if (!id || active === undefined) {
+    if (!id) {
       return NextResponse.json(
-        { error: "Missing batch ID or status." },
+        { error: "Missing batch ID." },
         { status: 400 }
       );
     }
 
+    // Build update payload from provided fields
+    const updatePayload: Record<string, any> = {};
+    if (active !== undefined) updatePayload.active = active;
+    if (college_name !== undefined) updatePayload.college_name = college_name;
+    if (course_slug !== undefined) updatePayload.course_slug = course_slug;
+    if (valid_from !== undefined) updatePayload.valid_from = valid_from;
+    if (valid_to !== undefined) updatePayload.valid_to = valid_to;
+
+    if (Object.keys(updatePayload).length === 0) {
+      return NextResponse.json(
+        { error: "No fields to update." },
+        { status: 400 }
+      );
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from("batches")
+      .update(updatePayload)
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return NextResponse.json({ success: true, batch: data });
+  } catch (error: any) {
+    console.error("Failed to update batch:", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  if (!isAuthorized(req)) {
+    return NextResponse.json({ error: "Unauthorized access." }, { status: 401 });
+  }
+
+  const supabaseAdmin = getAdminClient();
+  if (!supabaseAdmin) {
+    return NextResponse.json(
+      { error: "Supabase not configured." },
+      { status: 500 }
+    );
+  }
+
+  try {
+    const { id } = await req.json();
+
+    if (!id) {
+      return NextResponse.json(
+        { error: "Missing batch ID." },
+        { status: 400 }
+      );
+    }
+
+    // Delete associated student roster entries first
+    await supabaseAdmin
+      .from("batch_students")
+      .delete()
+      .eq("batch_id", id);
+
+    // Delete the batch itself
     const { error } = await supabaseAdmin
       .from("batches")
-      .update({ active })
+      .delete()
       .eq("id", id);
 
     if (error) throw error;
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
-    console.error("Failed to update batch:", error);
+    console.error("Failed to delete batch:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
