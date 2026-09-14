@@ -83,8 +83,26 @@ export function cleanLessonHtml(html: string): string {
       if (closeIdx !== -1) cleaned = cleaned.slice(closeIdx + 3);
     }
   }
-  // 2. Trim outer newlines and spaces
+  // 1b. If the HTML is a full HTML document, extract inner body and any head styles/scripts
+  if (/<!DOCTYPE\s+html/i.test(cleaned) || /<html[\s>]/i.test(cleaned)) {
+    const headMatch = cleaned.match(/<head[\s\S]*?>([\s\S]*?)<\/head>/i);
+    const bodyMatch = cleaned.match(/<body[\s\S]*?>([\s\S]*?)<\/body>/i);
+    if (bodyMatch) {
+      let extractedHead = "";
+      if (headMatch) {
+        const headTags = headMatch[1].match(/<style[\s\S]*?<\/style>|<script[\s\S]*?<\/script>|<link[\s\S]*?>/gi) || [];
+        extractedHead = headTags.join("\n");
+      }
+      cleaned = extractedHead + "\n" + bodyMatch[1];
+    } else {
+      cleaned = cleaned.replace(/<!DOCTYPE\s+html[^>]*>/gi, "").replace(/<\/?(html|head|body)[^>]*>/gi, "");
+    }
+  }
+
+  // 2. Trim outer newlines and spaces, and remove trailing empty tags/breaks
   cleaned = cleaned.replace(/^(\s|\\n)+|(\s|\\n)+$/g, "");
+  cleaned = cleaned.replace(/(?:<p[^>]*>\s*(?:<br\s*\/?>|&nbsp;|\s)*<\/p>|<br\s*\/?>|\s)+$/gi, "");
+
   // 3. Replace literal \n with <br/> and \" with " only outside of style/script tags
   const regex = /(<style[\s\S]*?<\/style>|<script[\s\S]*?<\/script>|<[^>]+>)|(\\n)|(\\\")/g;
   cleaned = cleaned.replace(regex, (match, tagOrHtml, literalNL, literalQuote) => {
@@ -165,10 +183,18 @@ export function LessonIframe({
     line-height:1.8;
     color: var(--color-slate);
     background-color:transparent;
-    margin:0;
-    padding:0;
+    margin:0 !important;
+    padding:0 !important;
+    height:auto !important;
+    min-height:auto !important;
+    max-height:none !important;
   }
   body{overflow:hidden}
+
+  /* Prevent lesson styles from locking the iframe to full viewport height or centering inside void */
+  body [style*="100vh"], body [style*="90vh"], body [style*="95vh"] {
+    min-height: auto !important;
+  }
 
   [align="left"] { text-align: left !important; }
   [align="center"] { text-align: center !important; }
@@ -440,17 +466,22 @@ export function LessonIframe({
     color: #f87171 !important;
   }
   
-  /* Reset top margin on the first element so banners and headers sit right at the top */
-  body > div > *:first-child,
-  body > div > .kvj-custom-html-block > *:first-child,
+  /* Reset top and bottom margins on outer elements to eliminate excessive blank spaces */
+  #kvj-content-root > *:first-child,
+  #kvj-content-root .kvj-custom-html-block > *:first-child,
   .kvj-custom-html-block > *:first-child {
     margin-top: 0 !important;
   }
+  #kvj-content-root > *:last-child,
+  #kvj-content-root .kvj-custom-html-block > *:last-child,
+  .kvj-custom-html-block > *:last-child {
+    margin-bottom: 0 !important;
+  }
 </style>
 </head>
-<body class="px-5 py-6 sm:px-8 sm:py-8">
-<div class="w-full max-w-none">
-${html.includes("<!-- KVJ_MATERIAL_METADATA:") ? cleanHtml : `<div class="kvj-custom-html-block">${cleanHtml}</div>`}
+<body class="m-0 p-0 overflow-hidden">
+<div id="kvj-content-root" class="w-full max-w-none px-5 py-6 sm:px-8 sm:py-8">
+${cleanHtml.includes("kvj-custom-html-block") ? cleanHtml : `<div class="kvj-custom-html-block">${cleanHtml}</div>`}
 </div>
 <script>
   // Copy Code Button & Language Label
@@ -551,6 +582,43 @@ ${html.includes("<!-- KVJ_MATERIAL_METADATA:") ? cleanHtml : `<div class="kvj-cu
     }
   });
 
+  // Dynamic content height measurement & reporting via ResizeObserver
+  function notifyHeight() {
+    const root = document.getElementById('kvj-content-root') || document.body;
+    if (!root) return;
+    const rect = root.getBoundingClientRect();
+    let maxBottom = rect.height;
+    const children = Array.from(root.children);
+    for (const child of children) {
+      if (child.tagName === 'SCRIPT' || child.tagName === 'STYLE') continue;
+      const cr = child.getBoundingClientRect();
+      if (cr.bottom > maxBottom) maxBottom = cr.bottom;
+    }
+    const h = Math.ceil(Math.max(maxBottom, root.offsetHeight));
+    if (h > 0) {
+      window.parent.postMessage({ type: 'KVJ_IFRAME_RESIZE', height: h }, '*');
+    }
+  }
+
+  if (typeof ResizeObserver !== 'undefined') {
+    const ro = new ResizeObserver(() => {
+      notifyHeight();
+    });
+    const root = document.getElementById('kvj-content-root');
+    if (root) ro.observe(root);
+    ro.observe(document.body);
+    ro.observe(document.documentElement);
+  }
+
+  window.addEventListener('load', notifyHeight);
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(notifyHeight);
+  }
+  notifyHeight();
+  setTimeout(notifyHeight, 100);
+  setTimeout(notifyHeight, 350);
+  setTimeout(notifyHeight, 750);
+
 </script>
 </body>
 </html>`;
@@ -575,10 +643,21 @@ ${html.includes("<!-- KVJ_MATERIAL_METADATA:") ? cleanHtml : `<div class="kvj-cu
     const frame = frameRef.current;
     if (!frame) return;
     try {
-      const body = frame.contentDocument?.body;
-      if (body) {
-        frame.style.height = "0px";
-        frame.style.height = `${body.scrollHeight + 16}px`;
+      const doc = frame.contentDocument;
+      if (!doc) return;
+      const root = doc.getElementById("kvj-content-root") || doc.body;
+      if (!root) return;
+      const rect = root.getBoundingClientRect();
+      let maxBottom = rect.height;
+      const children = Array.from(root.children);
+      for (const child of children) {
+        if (child.tagName === "SCRIPT" || child.tagName === "STYLE") continue;
+        const cr = child.getBoundingClientRect();
+        if (cr.bottom > maxBottom) maxBottom = cr.bottom;
+      }
+      const h = Math.ceil(Math.max(maxBottom, root.offsetHeight));
+      if (h > 0) {
+        frame.style.height = `${h}px`;
       }
     } catch (e) {
       // Cross-origin safety
@@ -621,8 +700,8 @@ ${html.includes("<!-- KVJ_MATERIAL_METADATA:") ? cleanHtml : `<div class="kvj-cu
         let count = 0;
         const interval = setInterval(() => {
           autoResize();
-          if (++count > 5) clearInterval(interval);
-        }, 300);
+          if (++count > 6) clearInterval(interval);
+        }, 250);
 
         return () => {
           observer.disconnect();
@@ -644,12 +723,49 @@ ${html.includes("<!-- KVJ_MATERIAL_METADATA:") ? cleanHtml : `<div class="kvj-cu
     applyOverlays();
   }, [hideSidebar, applyOverlays]);
 
+  // Listen for iframe self-reported resize messages
+  useEffect(() => {
+    const handleMessage = (e: MessageEvent) => {
+      const frame = frameRef.current;
+      if (!frame || e.source !== frame.contentWindow) return;
+      if (e.data?.type === "KVJ_IFRAME_RESIZE" && typeof e.data.height === "number") {
+        frame.style.height = `${Math.ceil(e.data.height)}px`;
+      }
+    };
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, []);
+
+  // ResizeObserver on the iframe element so width changes (e.g. sidebar open/close) trigger height recalibration
+  useEffect(() => {
+    const frame = frameRef.current;
+    if (!frame || typeof ResizeObserver === "undefined") return;
+
+    let lastWidth = frame.clientWidth;
+    const ro = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.contentRect.width !== lastWidth) {
+          lastWidth = entry.contentRect.width;
+          autoResize();
+        }
+      }
+    });
+    ro.observe(frame);
+    return () => ro.disconnect();
+  }, [autoResize]);
+
+  // Window resize fallback
+  useEffect(() => {
+    window.addEventListener("resize", autoResize);
+    return () => window.removeEventListener("resize", autoResize);
+  }, [autoResize]);
+
   return (
     <iframe
       ref={frameRef}
       srcDoc={srcDoc}
       onLoad={handleLoad}
-      className="w-full border-none bg-transparent transition-all duration-200"
+      className="w-full border-none bg-transparent block"
       style={{ minHeight: "150px" }}
       sandbox="allow-scripts allow-same-origin allow-popups"
       scrolling="no"
