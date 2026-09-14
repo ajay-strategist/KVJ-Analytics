@@ -231,12 +231,11 @@ export function ContentPlayerClient({ course, modules, adminPreview = false, ini
     setHideSidebarRaw(!open);
     lsSet(lsHideKey, !open);
     // Dispatch resize event during and after sidebar transition to recalibrate layout heights
-    setTimeout(() => {
-      if (typeof window !== "undefined") window.dispatchEvent(new Event("resize"));
-    }, 150);
-    setTimeout(() => {
-      if (typeof window !== "undefined") window.dispatchEvent(new Event("resize"));
-    }, 350);
+    [0, 50, 150, 300, 450, 600].forEach((delay) => {
+      setTimeout(() => {
+        if (typeof window !== "undefined") window.dispatchEvent(new Event("resize"));
+      }, delay);
+    });
   };
 
   /**

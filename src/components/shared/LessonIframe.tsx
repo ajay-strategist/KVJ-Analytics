@@ -467,6 +467,12 @@ export function LessonIframe({
   }
   
   /* Reset top and bottom margins on outer elements to eliminate excessive blank spaces */
+  #kvj-content-root,
+  .kvj-custom-html-block {
+    display: flow-root !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
   #kvj-content-root > *:first-child,
   #kvj-content-root .kvj-custom-html-block > *:first-child,
   .kvj-custom-html-block > *:first-child {
@@ -583,22 +589,45 @@ ${cleanHtml.includes("kvj-custom-html-block") ? cleanHtml : `<div class="kvj-cus
   });
 
   // Dynamic content height measurement & reporting via ResizeObserver
-  function notifyHeight() {
+  function calculateDocHeight() {
     const root = document.getElementById('kvj-content-root') || document.body;
-    if (!root) return;
-    const rect = root.getBoundingClientRect();
-    let maxBottom = rect.height;
-    const children = Array.from(root.children);
-    for (const child of children) {
-      if (child.tagName === 'SCRIPT' || child.tagName === 'STYLE') continue;
-      const cr = child.getBoundingClientRect();
-      if (cr.bottom > maxBottom) maxBottom = cr.bottom;
+    if (!root) return 0;
+    
+    // Find the deepest visual bottom in the entire document
+    let maxBottom = 0;
+    const all = document.body.getElementsByTagName('*');
+    for (let i = 0; i < all.length; i++) {
+      const el = all[i];
+      const tag = el.tagName;
+      if (tag === 'SCRIPT' || tag === 'STYLE' || tag === 'NOSCRIPT' || tag === 'LINK') continue;
+      const rect = el.getBoundingClientRect();
+      if (rect.width > 0 || rect.height > 0) {
+        const bottom = rect.bottom + window.pageYOffset;
+        if (bottom > maxBottom) maxBottom = bottom;
+      }
     }
-    const h = Math.ceil(Math.max(maxBottom, root.offsetHeight));
+
+    const rootRect = root.getBoundingClientRect();
+    const rootBottom = rootRect.bottom + window.pageYOffset;
+    if (rootBottom > maxBottom) maxBottom = rootBottom;
+
+    // Buffer 16px to guarantee the bottom-most card or takeaway has complete visual padding and zero clipping
+    return Math.ceil(Math.max(maxBottom + 16, rootRect.height));
+  }
+
+  function notifyHeight() {
+    const h = calculateDocHeight();
     if (h > 0) {
       window.parent.postMessage({ type: 'KVJ_IFRAME_RESIZE', height: h }, '*');
     }
   }
+
+  window.addEventListener('resize', notifyHeight);
+  window.addEventListener('message', (e) => {
+    if (e.data && e.data.type === 'RECHECK_HEIGHT') {
+      notifyHeight();
+    }
+  });
 
   if (typeof ResizeObserver !== 'undefined') {
     const ro = new ResizeObserver(() => {
@@ -615,9 +644,11 @@ ${cleanHtml.includes("kvj-custom-html-block") ? cleanHtml : `<div class="kvj-cus
     document.fonts.ready.then(notifyHeight);
   }
   notifyHeight();
-  setTimeout(notifyHeight, 100);
+  setTimeout(notifyHeight, 50);
+  setTimeout(notifyHeight, 150);
   setTimeout(notifyHeight, 350);
-  setTimeout(notifyHeight, 750);
+  setTimeout(notifyHeight, 600);
+  setTimeout(notifyHeight, 1000);
 
 </script>
 </body>
@@ -644,21 +675,33 @@ ${cleanHtml.includes("kvj-custom-html-block") ? cleanHtml : `<div class="kvj-cus
     if (!frame) return;
     try {
       const doc = frame.contentDocument;
-      if (!doc) return;
+      const win = frame.contentWindow;
+      if (!doc || !doc.body) return;
+
       const root = doc.getElementById("kvj-content-root") || doc.body;
-      if (!root) return;
-      const rect = root.getBoundingClientRect();
-      let maxBottom = rect.height;
-      const children = Array.from(root.children);
-      for (const child of children) {
-        if (child.tagName === "SCRIPT" || child.tagName === "STYLE") continue;
-        const cr = child.getBoundingClientRect();
-        if (cr.bottom > maxBottom) maxBottom = cr.bottom;
+
+      let maxBottom = 0;
+      const all = doc.body.getElementsByTagName("*");
+      for (let i = 0; i < all.length; i++) {
+        const el = all[i];
+        const tag = el.tagName;
+        if (tag === "SCRIPT" || tag === "STYLE" || tag === "NOSCRIPT" || tag === "LINK") continue;
+        const rect = el.getBoundingClientRect();
+        if (rect.width > 0 || rect.height > 0) {
+          const bottom = rect.bottom + (win?.pageYOffset || 0);
+          if (bottom > maxBottom) maxBottom = bottom;
+        }
       }
-      const h = Math.ceil(Math.max(maxBottom, root.offsetHeight));
+
+      const rootRect = root.getBoundingClientRect();
+      const rootBottom = rootRect.bottom + (win?.pageYOffset || 0);
+      if (rootBottom > maxBottom) maxBottom = rootBottom;
+
+      const h = Math.ceil(Math.max(maxBottom + 16, rootRect.height));
       if (h > 0) {
         frame.style.height = `${h}px`;
       }
+      win?.postMessage({ type: "RECHECK_HEIGHT" }, "*");
     } catch (e) {
       // Cross-origin safety
     }
@@ -744,7 +787,7 @@ ${cleanHtml.includes("kvj-custom-html-block") ? cleanHtml : `<div class="kvj-cus
     let lastWidth = frame.clientWidth;
     const ro = new ResizeObserver((entries) => {
       for (const entry of entries) {
-        if (entry.contentRect.width !== lastWidth) {
+        if (Math.abs(entry.contentRect.width - lastWidth) >= 0.5) {
           lastWidth = entry.contentRect.width;
           autoResize();
         }
