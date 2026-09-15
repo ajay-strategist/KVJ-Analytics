@@ -566,18 +566,23 @@ export function TestTakingWidget({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const mouseSensor = useSensor(MouseSensor, {
+  const pointerSensor = useSensor(PointerSensor, {
     activationConstraint: {
       distance: 5,
     },
   });
   const touchSensor = useSensor(TouchSensor, {
     activationConstraint: {
-      delay: 150,
+      delay: 100,
       tolerance: 8,
     },
   });
-  const sensors = useSensors(mouseSensor, touchSensor);
+  const mouseSensor = useSensor(MouseSensor, {
+    activationConstraint: {
+      distance: 5,
+    },
+  });
+  const sensors = useSensors(pointerSensor, touchSensor, mouseSensor);
 
   // Mobile Tap-to-Place (Click-to-Match) selection state
   const [selectedDraggable, setSelectedDraggable] = useState<{ questionId: string; value: string } | null>(null);

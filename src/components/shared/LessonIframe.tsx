@@ -482,6 +482,30 @@ export function LessonIframe({
   .kvj-custom-html-block > *:last-child {
     margin-bottom: 0 !important;
   }
+
+  /* Mobile Touch Drag and Drop enhancements */
+  [draggable="true"], .draggable, .drag-item, .s4-data-field, .pbs-field, [data-field] {
+    touch-action: none !important;
+    -webkit-touch-callout: none !important;
+    -webkit-user-select: none !important;
+    user-select: none !important;
+    cursor: grab !important;
+  }
+  [draggable="true"]:active, .s4-data-field:active, .pbs-field:active {
+    cursor: grabbing !important;
+  }
+  .kvj-mobile-selected-draggable {
+    outline: 2px solid #0D9488 !important;
+    outline-offset: 3px !important;
+    box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.25) !important;
+    position: relative !important;
+  }
+  .kvj-mobile-target-pulse {
+    outline: 2px dashed #0D9488 !important;
+    outline-offset: 2px !important;
+    background-color: rgba(13, 148, 136, 0.08) !important;
+    transition: all 0.2s ease !important;
+  }
 </style>
 </head>
 <body class="m-0 p-0 overflow-hidden">
@@ -543,6 +567,305 @@ ${cleanHtml.includes("kvj-custom-html-block") ? cleanHtml : `<div class="kvj-cus
       }
     }
   });
+
+  // =========================================================
+  // MOBILE TOUCH DRAG & DROP POLYFILL AND TAP-TO-PLACE ENGINE
+  // =========================================================
+  (function initMobileDragAndDrop() {
+    function createDataTransfer() {
+      const store = {};
+      return {
+        dropEffect: 'copy',
+        effectAllowed: 'all',
+        types: [],
+        files: [],
+        items: [],
+        setData: function(format, data) {
+          const key = String(format).toLowerCase();
+          store[key] = String(data);
+          store[format] = String(data);
+          if (key === 'text' || key === 'text/plain') {
+            store['text'] = String(data);
+            store['text/plain'] = String(data);
+          }
+          if (!this.types.includes(key)) this.types.push(key);
+        },
+        getData: function(format) {
+          const key = String(format).toLowerCase();
+          return store[format] || store[key] || (key === 'text' ? store['text/plain'] : '') || '';
+        },
+        clearData: function(format) {
+          if (format) {
+            delete store[format];
+            delete store[String(format).toLowerCase()];
+          } else {
+            for (const k in store) delete store[k];
+            this.types = [];
+          }
+        }
+      };
+    }
+
+    function dispatchDragEvent(type, target, dataTransfer, clientX, clientY, bubbles) {
+      if (!target) return false;
+      let evt;
+      try {
+        evt = new CustomEvent(type, { bubbles: bubbles !== false, cancelable: true });
+      } catch (e) {
+        evt = document.createEvent('CustomEvent');
+        evt.initCustomEvent(type, bubbles !== false, true, null);
+      }
+      evt.dataTransfer = dataTransfer;
+      evt.clientX = clientX || 0;
+      evt.clientY = clientY || 0;
+      evt.pageX = (clientX || 0) + (window.pageXOffset || 0);
+      evt.pageY = (clientY || 0) + (window.pageYOffset || 0);
+      evt.screenX = clientX || 0;
+      evt.screenY = clientY || 0;
+
+      let defaultPrevented = false;
+      const origPrevent = evt.preventDefault.bind(evt);
+      evt.preventDefault = function() {
+        defaultPrevented = true;
+        origPrevent();
+      };
+
+      target.dispatchEvent(evt);
+      const handler = target['on' + type];
+      if (typeof handler === 'function') {
+        handler(evt);
+      }
+      return defaultPrevented || evt.defaultPrevented;
+    }
+
+    function findDraggable(el) {
+      if (!el || el === document.body || el === document.documentElement) return null;
+      return el.closest('[draggable="true"], [data-draggable="true"], .draggable, .drag-item, .s4-data-field, .pbs-field, [data-field]');
+    }
+
+    function findDropTarget(el) {
+      if (!el || el === document.body || el === document.documentElement) return null;
+      return el.closest('.s4-well, .pbs-zone, .pbs-drop, [ondrop], .dropzone, .drop-zone, .field-bucket, .bucket, [data-accept], [data-drop-zone], td.pbs-slot, .pbs-builder-target') || el;
+    }
+
+    function populateData(draggable, dt) {
+      const fieldVal = draggable.dataset.field || draggable.getAttribute('data-field') || draggable.textContent.trim();
+      const typeVal = draggable.dataset.type || draggable.getAttribute('data-type') || 'category';
+      dt.setData('field', fieldVal);
+      dt.setData('type', typeVal);
+      dt.setData('text/plain', fieldVal);
+      dt.setData('text', fieldVal);
+      return { fieldVal, typeVal };
+    }
+
+    let activeDraggable = null;
+    let activeDataTransfer = null;
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let isDragging = false;
+    let dragGhost = null;
+    let currentDropTarget = null;
+
+    // --- MOBILE TAP-TO-PLACE ---
+    let selectedTapElement = null;
+    let selectedTapDataTransfer = null;
+    let bannerEl = null;
+
+    function showBanner(fieldName) {
+      if (!bannerEl) {
+        bannerEl = document.createElement('div');
+        bannerEl.style.cssText = 'position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#0F172A;color:#FFFFFF;padding:8px 14px;border-radius:9999px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:10px;box-shadow:0 10px 25px rgba(0,0,0,0.35);z-index:9999999;max-width:92%;white-space:nowrap;border:1px solid rgba(255,255,255,0.15);';
+        document.body.appendChild(bannerEl);
+      }
+      bannerEl.innerHTML = '<span>Selected: <strong style="color:#2DD4BF;">' + (fieldName || 'Field') + '</strong> — Tap any target slot to place</span><button id="kvjCancelTap" style="background:rgba(255,255,255,0.2);border:none;color:#FFF;padding:2px 8px;border-radius:9999px;font-size:10px;cursor:pointer;">Cancel</button>';
+      bannerEl.style.display = 'flex';
+      const btn = bannerEl.querySelector('#kvjCancelTap');
+      if (btn) {
+        btn.onclick = function(e) {
+          e.stopPropagation();
+          clearTapSelection();
+        };
+      }
+    }
+
+    function hideBanner() {
+      if (bannerEl) bannerEl.style.display = 'none';
+    }
+
+    function clearTapSelection() {
+      if (selectedTapElement) {
+        selectedTapElement.classList.remove('kvj-mobile-selected-draggable');
+        selectedTapElement = null;
+        selectedTapDataTransfer = null;
+      }
+      document.querySelectorAll('.kvj-mobile-target-pulse').forEach(function(el) {
+        el.classList.remove('kvj-mobile-target-pulse');
+      });
+      hideBanner();
+    }
+
+    function highlightDropTargets() {
+      document.querySelectorAll('.s4-well, .pbs-zone, .pbs-drop, [ondrop], .dropzone, .drop-zone, .field-bucket, .bucket, [data-accept], [data-drop-zone]').forEach(function(el) {
+        el.classList.add('kvj-mobile-target-pulse');
+      });
+    }
+
+    // TAP-TO-PLACE CLICK HANDLER
+    document.addEventListener('click', function(e) {
+      const draggable = findDraggable(e.target);
+      const dropzone = findDropTarget(e.target);
+
+      // 1. User clicked on a draggable item
+      if (draggable) {
+        if (selectedTapElement === draggable) {
+          clearTapSelection();
+          return;
+        }
+        clearTapSelection();
+        selectedTapElement = draggable;
+        selectedTapElement.classList.add('kvj-mobile-selected-draggable');
+
+        selectedTapDataTransfer = createDataTransfer();
+        const info = populateData(draggable, selectedTapDataTransfer);
+        dispatchDragEvent('dragstart', draggable, selectedTapDataTransfer, e.clientX, e.clientY);
+        highlightDropTargets();
+        showBanner(info.fieldVal);
+        return;
+      }
+
+      // 2. User clicked on a drop target while an item is selected
+      if (selectedTapElement && dropzone && dropzone !== selectedTapElement && !selectedTapElement.contains(dropzone)) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const fieldVal = selectedTapElement.dataset.field || selectedTapElement.getAttribute('data-field') || selectedTapElement.textContent.trim();
+
+        dispatchDragEvent('dragover', dropzone, selectedTapDataTransfer, e.clientX, e.clientY);
+        dispatchDragEvent('drop', dropzone, selectedTapDataTransfer, e.clientX, e.clientY);
+        dispatchDragEvent('dragend', selectedTapElement, selectedTapDataTransfer, e.clientX, e.clientY);
+
+        // Feedback Toast
+        const toast = document.createElement('div');
+        toast.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#0D9488;color:#FFFFFF;padding:8px 16px;border-radius:9999px;font-size:12px;font-weight:700;box-shadow:0 10px 25px rgba(13,148,136,0.4);z-index:99999999;';
+        toast.textContent = '✓ Placed ' + fieldVal + '!';
+        document.body.appendChild(toast);
+        setTimeout(function() { toast.remove(); }, 2000);
+
+        clearTapSelection();
+        return;
+      }
+
+      // 3. Clicked elsewhere
+      if (selectedTapElement && !e.target.closest('#kvjCancelTap')) {
+        clearTapSelection();
+      }
+    }, true);
+
+    // TOUCH DRAG POLYFILL
+    document.addEventListener('touchstart', function(e) {
+      if (e.touches.length !== 1) return;
+      const touch = e.touches[0];
+      const draggable = findDraggable(e.target);
+      if (!draggable) return;
+
+      activeDraggable = draggable;
+      touchStartX = touch.clientX;
+      touchStartY = touch.clientY;
+      isDragging = false;
+      activeDataTransfer = createDataTransfer();
+      populateData(draggable, activeDataTransfer);
+    }, { passive: true });
+
+    document.addEventListener('touchmove', function(e) {
+      if (!activeDraggable || e.touches.length !== 1) return;
+      const touch = e.touches[0];
+      const dx = touch.clientX - touchStartX;
+      const dy = touch.clientY - touchStartY;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      if (!isDragging && distance > 6) {
+        isDragging = true;
+        clearTapSelection();
+        dispatchDragEvent('dragstart', activeDraggable, activeDataTransfer, touch.clientX, touch.clientY);
+
+        dragGhost = activeDraggable.cloneNode(true);
+        dragGhost.id = 'kvj-drag-ghost';
+        dragGhost.style.cssText = 'position:fixed !important;pointer-events:none !important;z-index:99999999 !important;opacity:0.9 !important;box-shadow:0 12px 30px rgba(0,0,0,0.35) !important;border:2px solid #0D9488 !important;border-radius:10px !important;background:#FFFFFF !important;transform:translate(-50%, -50%) scale(1.04) !important;transition:none !important;width:' + Math.min(activeDraggable.offsetWidth, 240) + 'px !important;';
+        document.body.appendChild(dragGhost);
+      }
+
+      if (isDragging) {
+        if (e.cancelable) e.preventDefault();
+
+        if (dragGhost) {
+          dragGhost.style.left = touch.clientX + 'px';
+          dragGhost.style.top = touch.clientY + 'px';
+          dragGhost.style.display = 'none';
+        }
+
+        const elUnder = document.elementFromPoint(touch.clientX, touch.clientY);
+        if (dragGhost) dragGhost.style.display = '';
+
+        const target = findDropTarget(elUnder);
+
+        if (target !== currentDropTarget) {
+          if (currentDropTarget) {
+            dispatchDragEvent('dragleave', currentDropTarget, activeDataTransfer, touch.clientX, touch.clientY);
+          }
+          if (target) {
+            dispatchDragEvent('dragenter', target, activeDataTransfer, touch.clientX, touch.clientY);
+          }
+          currentDropTarget = target;
+        }
+
+        if (target) {
+          dispatchDragEvent('dragover', target, activeDataTransfer, touch.clientX, touch.clientY);
+        }
+      }
+    }, { passive: false });
+
+    document.addEventListener('touchend', function(e) {
+      if (!activeDraggable) return;
+
+      if (isDragging) {
+        if (e.cancelable) e.preventDefault();
+
+        if (dragGhost) {
+          dragGhost.remove();
+          dragGhost = null;
+        }
+
+        const touch = e.changedTouches[0];
+        const elUnder = document.elementFromPoint(touch.clientX, touch.clientY);
+        const target = findDropTarget(elUnder);
+
+        if (target) {
+          dispatchDragEvent('drop', target, activeDataTransfer, touch.clientX, touch.clientY);
+        }
+
+        dispatchDragEvent('dragend', activeDraggable, activeDataTransfer, touch.clientX, touch.clientY);
+      }
+
+      activeDraggable = null;
+      activeDataTransfer = null;
+      isDragging = false;
+      currentDropTarget = null;
+    }, { passive: false });
+
+    document.addEventListener('touchcancel', function() {
+      if (dragGhost) {
+        dragGhost.remove();
+        dragGhost = null;
+      }
+      if (activeDraggable && isDragging) {
+        dispatchDragEvent('dragend', activeDraggable, activeDataTransfer, 0, 0);
+      }
+      activeDraggable = null;
+      activeDataTransfer = null;
+      isDragging = false;
+      currentDropTarget = null;
+    });
+  })();
 
   // Image Zoom Lightbox
   document.querySelectorAll('img').forEach(img => {
