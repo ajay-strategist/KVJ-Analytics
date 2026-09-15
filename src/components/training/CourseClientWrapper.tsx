@@ -19,6 +19,7 @@ import {
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { supabase } from "@/lib/supabase";
+import { fetchWithStudentAuth } from "@/lib/studentAuth";
 
 interface Lesson {
   id: string;
@@ -140,10 +141,18 @@ export function CourseClientWrapper({ course, modules }: CourseClientWrapperProp
   const [unlockError, setUnlockError] = useState("");
   const [unlockSuccess, setUnlockSuccess] = useState("");
   const [unlockLoading, setUnlockLoading] = useState(false);
+  const [isLaunching, setIsLaunching] = useState(false);
 
   // Offer interaction states
   const [offerApplied, setOfferApplied] = useState(false);
   const [pulseTimer, setPulseTimer] = useState(false);
+
+  // Prefetch player route immediately if enrolled to eliminate navigation delay
+  useEffect(() => {
+    if (enrolled) {
+      router.prefetch(`/training/${course.slug}/learn`);
+    }
+  }, [enrolled, course.slug, router]);
 
   useEffect(() => {
     const getSession = async () => {
@@ -335,7 +344,7 @@ export function CourseClientWrapper({ course, modules }: CourseClientWrapperProp
 
     setCheckoutLoading(true);
     try {
-      const response = await fetch("/api/enroll/free", {
+      const response = await fetchWithStudentAuth("/api/enroll/free", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ courseSlug: course.slug }),
@@ -458,11 +467,24 @@ export function CourseClientWrapper({ course, modules }: CourseClientWrapperProp
               You are enrolled in this training. You can view all learning modules and launch the dashboard player.
             </p>
             <Button
-              onClick={() => router.push(`/training/${course.slug}/learn`)}
-              className="w-full py-4 bg-gradient-to-r from-[#10B981] to-[#0D9488] text-black font-bold flex items-center justify-center gap-1.5 shadow-[0_4px_20px_rgba(16,185,129,0.15)] rounded-full text-center whitespace-nowrap"
+              disabled={isLaunching}
+              onClick={() => {
+                setIsLaunching(true);
+                router.push(`/training/${course.slug}/learn`);
+              }}
+              className="w-full py-4 bg-gradient-to-r from-[#10B981] to-[#0D9488] text-black font-bold flex items-center justify-center gap-2 shadow-[0_4px_20px_rgba(16,185,129,0.15)] rounded-full text-center whitespace-nowrap active:scale-[0.98] transition-all"
             >
-              <ShieldCheck className="w-4 h-4" />
-              <span>Launch Course Player</span>
+              {isLaunching ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Opening Course Player...</span>
+                </>
+              ) : (
+                <>
+                  <ShieldCheck className="w-4 h-4" />
+                  <span>Launch Course Player</span>
+                </>
+              )}
             </Button>
           </Card>
         ) : (

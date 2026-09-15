@@ -229,10 +229,10 @@ export async function POST(req: NextRequest) {
       mustChangePassword,
     });
 
-    // Set sb-access-token cookie directly on the response headers
+    // Set sb-access-token cookie directly on the response headers (30 days persistence)
     response.cookies.set("sb-access-token", signInData.session.access_token, {
       path: "/",
-      maxAge: signInData.session.expires_in || 60 * 60 * 24 * 7,
+      maxAge: 60 * 60 * 24 * 30, // 30 days
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
       httpOnly: false,

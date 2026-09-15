@@ -199,18 +199,28 @@ export async function GET(
 
     // 2. Validate session from cookie or Authorization header
     const authHeader = req.headers.get("authorization");
-    const bearerToken = authHeader?.startsWith("Bearer ") ? authHeader.substring(7) : null;
-    const token = req.cookies.get("sb-access-token")?.value || bearerToken;
+    const bearerToken = authHeader?.startsWith("Bearer ") ? authHeader.substring(7).trim() : null;
+    const cookieToken = req.cookies.get("sb-access-token")?.value?.trim() || null;
+    const primaryToken = bearerToken || cookieToken;
     const adminSession = req.cookies.get("admin_session")?.value;
     const isExplicitPreview = req.nextUrl.searchParams.get("preview") === "1" || req.nextUrl.searchParams.get("preview") === "true";
     const isAdminPreview = (adminSession === adminToken()) && isExplicitPreview;
 
     if (!isAdminPreview) {
-      if (!token) {
+      if (!primaryToken) {
         return NextResponse.json({ error: "Unauthorized session." }, { status: 401 });
       }
 
-      const { data: { user }, error: authError } = await db.auth.getUser(token);
+      let { data: { user }, error: authError } = await db.auth.getUser(primaryToken);
+      if ((authError || !user) && bearerToken && cookieToken && bearerToken !== cookieToken) {
+        const alternateToken = primaryToken === bearerToken ? cookieToken : bearerToken;
+        const fallback = await db.auth.getUser(alternateToken);
+        if (!fallback.error && fallback.data.user) {
+          user = fallback.data.user;
+          authError = null;
+        }
+      }
+
       if (authError || !user) {
         return NextResponse.json({ error: "Invalid auth token." }, { status: 401 });
       }
@@ -340,19 +350,29 @@ export async function POST(
     // 2. Validate session from cookie or Authorization header
     let user: any = null;
     const authHeader = req.headers.get("authorization");
-    const bearerToken = authHeader?.startsWith("Bearer ") ? authHeader.substring(7) : null;
-    const token = req.cookies.get("sb-access-token")?.value || bearerToken;
+    const bearerToken = authHeader?.startsWith("Bearer ") ? authHeader.substring(7).trim() : null;
+    const cookieToken = req.cookies.get("sb-access-token")?.value?.trim() || null;
+    const primaryToken = bearerToken || cookieToken;
     const adminSession = req.cookies.get("admin_session")?.value;
     const urlObj = new URL(req.url);
     const isExplicitPreview = urlObj.searchParams.get("preview") === "true" || urlObj.searchParams.get("preview") === "1";
     const isAdminPreview = (adminSession === adminToken()) && isExplicitPreview;
 
     if (!isAdminPreview) {
-      if (!token) {
+      if (!primaryToken) {
         return NextResponse.json({ error: "Unauthorized session." }, { status: 401 });
       }
 
-      const { data: { user: authUser }, error: authError } = await db.auth.getUser(token);
+      let { data: { user: authUser }, error: authError } = await db.auth.getUser(primaryToken);
+      if ((authError || !authUser) && bearerToken && cookieToken && bearerToken !== cookieToken) {
+        const alternateToken = primaryToken === bearerToken ? cookieToken : bearerToken;
+        const fallback = await db.auth.getUser(alternateToken);
+        if (!fallback.error && fallback.data.user) {
+          authUser = fallback.data.user;
+          authError = null;
+        }
+      }
+
       if (authError || !authUser) {
         return NextResponse.json({ error: "Invalid auth session." }, { status: 401 });
       }
@@ -383,9 +403,9 @@ export async function POST(
           );
         }
       }
-    } else if (token && !user) {
+    } else if (primaryToken && !user) {
       // If user token is available even during admin preview, extract user for reference
-      const { data: { user: authUser } } = await db.auth.getUser(token);
+      const { data: { user: authUser } } = await db.auth.getUser(primaryToken);
       if (authUser) user = authUser;
     }
 

@@ -103,16 +103,29 @@ export async function GET(
       return serveMaterial(material);
     }
 
-    // 3. Secure Gate: Read cookies for authenticated student session
-    const token = req.cookies.get("sb-access-token")?.value;
-    if (!token) {
+    // 3. Secure Gate: Read Authorization header or cookies for authenticated student session
+    const authHeader = req.headers.get("authorization");
+    const bearerToken = authHeader?.startsWith("Bearer ") ? authHeader.substring(7).trim() : null;
+    const cookieToken = req.cookies.get("sb-access-token")?.value?.trim() || null;
+    const primaryToken = bearerToken || cookieToken;
+
+    if (!primaryToken) {
       return NextResponse.json(
         { error: "Access denied. Please sign in to your student account." },
         { status: 401 }
       );
     }
 
-    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+    let { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(primaryToken);
+    if ((authError || !user) && bearerToken && cookieToken && bearerToken !== cookieToken) {
+      const alternateToken = primaryToken === bearerToken ? cookieToken : bearerToken;
+      const fallback = await supabaseAdmin.auth.getUser(alternateToken);
+      if (!fallback.error && fallback.data.user) {
+        user = fallback.data.user;
+        authError = null;
+      }
+    }
+
     if (authError || !user) {
       return NextResponse.json(
         { error: "Access denied. Invalid or expired student session." },

@@ -23,8 +23,9 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { supabase } from "@/lib/supabase";
+import { fetchWithStudentAuth } from "@/lib/studentAuth";
 
-import { DndContext, useDraggable, useDroppable, useSensor, useSensors, PointerSensor, TouchSensor } from "@dnd-kit/core";
+import { DndContext, useDraggable, useDroppable, useSensor, useSensors, MouseSensor, TouchSensor, PointerSensor } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
@@ -212,12 +213,25 @@ export const handleGoogleDriveImageError = (e: React.SyntheticEvent<HTMLImageEle
   target.style.display = "none";
 };
 
-// Draggable Right Item for DragDrop Matching
-function DraggableItem({ id, text, colors }: { id: string; text: string; colors: any }) {
+// Draggable Right Item for DragDrop Matching, DragTable, and Pivot Table
+function DraggableItem({
+  id,
+  text,
+  colors,
+  isSelected,
+  onSelect,
+}: {
+  id: string;
+  text: string;
+  colors: any;
+  isSelected?: boolean;
+  onSelect?: () => void;
+}) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id });
   const style = {
     transform: CSS.Translate.toString(transform),
-    opacity: isDragging ? 0.5 : 1,
+    opacity: isDragging ? 0.35 : 1,
+    touchAction: "none" as const,
   };
   return (
     <div
@@ -225,9 +239,25 @@ function DraggableItem({ id, text, colors }: { id: string; text: string; colors:
       style={style}
       {...listeners}
       {...attributes}
-      className={`p-3 border rounded-lg cursor-grab active:cursor-grabbing text-xs font-semibold shadow-sm select-none ${colors.card} ${colors.hover}`}
+      onClick={(e) => {
+        onSelect?.();
+      }}
+      className={`p-3 border rounded-xl cursor-grab active:cursor-grabbing text-xs font-semibold shadow-xs select-none touch-none transition-all flex items-center justify-between gap-2.5 ${
+        isSelected
+          ? "border-brand bg-brand/10 text-brand ring-2 ring-brand/50 shadow-md font-bold"
+          : `${colors.card} ${colors.hover} text-ink hover:border-brand/40`
+      }`}
     >
-      {text}
+      <span className="truncate">{text}</span>
+      {isSelected ? (
+        <span className="text-[9px] font-extrabold bg-brand text-white px-2 py-0.5 rounded-full shrink-0 uppercase tracking-wider animate-pulse">
+          Selected
+        </span>
+      ) : (
+        <span className="text-[9px] text-slate-400 font-medium shrink-0 opacity-60">
+          Tap or drag
+        </span>
+      )}
     </div>
   );
 }
@@ -239,28 +269,35 @@ function DroppableSlot({
   label,
   onClear,
   colors,
+  onSlotClick,
+  isTargetActive,
 }: {
   id: string;
   matchedItem?: string;
   label: string;
   onClear: () => void;
   colors: any;
+  onSlotClick?: () => void;
+  isTargetActive?: boolean;
 }) {
   const { isOver, setNodeRef } = useDroppable({ id });
   return (
     <div className="flex items-center gap-3">
-      <div className={`w-1/2 p-3 border rounded-lg text-xs font-semibold select-none ${colors.card}`}>
+      <div className={`w-1/2 p-3 border rounded-xl text-xs font-semibold select-none ${colors.card}`}>
         {label}
       </div>
       <div className={`${colors.slate} font-bold text-xs select-none`}>⇌</div>
       <div
         ref={setNodeRef}
-        className={`w-1/2 p-3 border rounded-lg min-h-[46px] flex items-center justify-between text-xs font-semibold transition-all relative ${
+        onClick={() => onSlotClick?.()}
+        className={`w-1/2 p-3 border rounded-xl min-h-[48px] flex items-center justify-between text-xs font-semibold transition-all relative touch-none ${
           isOver 
-            ? "border-brand bg-brand/10 border-dashed ring-2 ring-brand/30" 
+            ? "border-brand bg-brand/15 border-dashed ring-2 ring-brand/50" 
             : matchedItem 
-            ? "border-emerald-500/40 bg-emerald-50 text-emerald-900 shadow-xs" 
-            : `${colors.card} border-dashed`
+            ? "border-emerald-500/50 bg-emerald-50 text-emerald-900 shadow-xs" 
+            : isTargetActive
+            ? "border-brand border-dashed bg-brand/10 ring-2 ring-brand/40 cursor-pointer animate-pulse"
+            : `${colors.card} border-dashed hover:border-brand/30 cursor-pointer`
         }`}
       >
         {matchedItem ? (
@@ -279,7 +316,9 @@ function DroppableSlot({
             </button>
           </>
         ) : (
-          <span className={`${colors.slate} opacity-40 italic select-none pointer-events-none`}>Drop match here</span>
+          <span className={`text-[11px] select-none pointer-events-none ${isTargetActive ? "text-brand font-bold" : `${colors.slate} opacity-50 italic`}`}>
+            {isTargetActive ? "Tap to place here" : "Tap or drop match"}
+          </span>
         )}
       </div>
     </div>
@@ -291,22 +330,29 @@ function TableDroppableSlot({
   matchedItem,
   onClear,
   colors,
+  onSlotClick,
+  isTargetActive,
 }: {
   id: string;
   matchedItem?: string;
   onClear: () => void;
   colors: any;
+  onSlotClick?: () => void;
+  isTargetActive?: boolean;
 }) {
   const { isOver, setNodeRef } = useDroppable({ id });
   return (
     <div
       ref={setNodeRef}
-      className={`p-2 border rounded-lg min-h-[38px] flex items-center justify-between text-xs font-semibold transition-all relative ${
+      onClick={() => onSlotClick?.()}
+      className={`p-2 border rounded-lg min-h-[40px] flex items-center justify-between text-xs font-semibold transition-all relative touch-none ${
         isOver
-          ? "border-brand bg-brand/10 border-dashed ring-2 ring-brand/30"
+          ? "border-brand bg-brand/15 border-dashed ring-2 ring-brand/50"
           : matchedItem
-          ? "border-emerald-500/40 bg-emerald-50 text-emerald-900 shadow-xs"
-          : "border-dashed border-slate-300 bg-slate-50/70 text-slate-400 hover:border-slate-400"
+          ? "border-emerald-500/50 bg-emerald-50 text-emerald-900 shadow-xs"
+          : isTargetActive
+          ? "border-brand border-dashed bg-brand/10 ring-2 ring-brand/40 cursor-pointer animate-pulse"
+          : "border-dashed border-slate-300 bg-slate-50/70 text-slate-400 hover:border-slate-400 cursor-pointer"
       }`}
     >
       {matchedItem ? (
@@ -325,7 +371,9 @@ function TableDroppableSlot({
           </button>
         </>
       ) : (
-        <span className="text-[10px] italic opacity-60 text-center w-full select-none pointer-events-none">Drop here</span>
+        <span className={`text-[10px] select-none pointer-events-none text-center w-full ${isTargetActive ? "text-brand font-bold" : "italic opacity-60"}`}>
+          {isTargetActive ? "Tap to place" : "Tap or drop"}
+        </span>
       )}
     </div>
   );
@@ -337,23 +385,30 @@ function PivotDroppableSlot({
   matchedItem,
   onClear,
   colors,
+  onSlotClick,
+  isTargetActive,
 }: {
   id: string;
   slotId: string;
   matchedItem?: string;
   onClear: () => void;
   colors: any;
+  onSlotClick?: () => void;
+  isTargetActive?: boolean;
 }) {
   const { isOver, setNodeRef } = useDroppable({ id });
   return (
     <div
       ref={setNodeRef}
-      className={`p-2 border rounded-lg min-h-[42px] min-w-[100px] flex items-center justify-between text-xs font-semibold transition-all relative ${
+      onClick={() => onSlotClick?.()}
+      className={`p-2 border rounded-lg min-h-[44px] min-w-[100px] flex items-center justify-between text-xs font-semibold transition-all relative touch-none ${
         isOver
-          ? "border-brand bg-brand/10 border-dashed ring-2 ring-brand/30"
+          ? "border-brand bg-brand/15 border-dashed ring-2 ring-brand/50"
           : matchedItem
-          ? "border-emerald-500/40 bg-emerald-50 text-emerald-900 shadow-xs"
-          : "border-dashed border-slate-300 bg-slate-50/70 text-slate-500 hover:border-slate-400"
+          ? "border-emerald-500/50 bg-emerald-50 text-emerald-900 shadow-xs"
+          : isTargetActive
+          ? "border-brand border-dashed bg-brand/10 ring-2 ring-brand/40 cursor-pointer animate-pulse"
+          : "border-dashed border-slate-300 bg-slate-50/70 text-slate-500 hover:border-slate-400 cursor-pointer"
       }`}
     >
       {matchedItem ? (
@@ -372,31 +427,88 @@ function PivotDroppableSlot({
           </button>
         </>
       ) : (
-        <span className="text-[11px] font-semibold text-slate-500 text-center w-full select-none pointer-events-none">
-          {slotId}
+        <span className={`text-[11px] font-semibold text-center w-full select-none pointer-events-none ${isTargetActive ? "text-brand font-bold" : "text-slate-500"}`}>
+          {isTargetActive ? `Place in ${slotId}` : slotId}
         </span>
       )}
     </div>
   );
 }
 
-// Sortable Item for Sequence Ordering
-function SortableSeqItem({ id, text, colors }: { id: string; text: string; colors: any }) {
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
+// Sortable Item for Sequence Ordering with mobile-friendly Up/Down buttons
+function SortableSeqItem({
+  id,
+  text,
+  colors,
+  index,
+  total,
+  onMoveUp,
+  onMoveDown,
+}: {
+  id: string;
+  text: string;
+  colors: any;
+  index: number;
+  total: number;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
+    opacity: isDragging ? 0.35 : 1,
+    touchAction: "none" as const,
   };
   return (
     <div
       ref={setNodeRef}
       style={style}
-      {...attributes}
-      {...listeners}
-      className={`p-3 border rounded-lg cursor-grab active:cursor-grabbing text-xs font-semibold shadow-sm flex items-center gap-2 select-none ${colors.card} ${colors.hover}`}
+      className={`p-3 border rounded-xl text-xs font-semibold shadow-xs flex items-center justify-between gap-3 select-none touch-none ${colors.card} ${colors.hover}`}
     >
-      <GripVertical className={`w-4 h-4 shrink-0 ${colors.slate}`} />
-      <span className={colors.ink}>{text}</span>
+      <div {...attributes} {...listeners} className="flex items-center gap-2.5 flex-1 cursor-grab active:cursor-grabbing min-w-0">
+        <GripVertical className={`w-4 h-4 shrink-0 ${colors.slate}`} />
+        <span className="w-5 h-5 rounded-full bg-slate-200/80 dark:bg-zinc-700 text-slate-700 dark:text-zinc-300 font-bold text-[10px] flex items-center justify-center shrink-0">
+          {index + 1}
+        </span>
+        <span className={`truncate ${colors.ink}`}>{text}</span>
+      </div>
+
+      {/* Mobile-friendly quick move buttons */}
+      <div className="flex items-center gap-1 shrink-0">
+        <button
+          type="button"
+          disabled={index === 0}
+          onClick={(e) => {
+            e.stopPropagation();
+            onMoveUp?.();
+          }}
+          className={`p-1.5 px-2 rounded-lg border text-[11px] font-bold transition-colors ${
+            index === 0
+              ? "opacity-25 cursor-not-allowed border-transparent text-slate-300"
+              : "hover:bg-slate-100 active:bg-slate-200 dark:hover:bg-zinc-700 border-line text-slate-700 dark:text-zinc-300 cursor-pointer shadow-2xs"
+          }`}
+          title="Move Up"
+        >
+          ▲
+        </button>
+        <button
+          type="button"
+          disabled={index === total - 1}
+          onClick={(e) => {
+            e.stopPropagation();
+            onMoveDown?.();
+          }}
+          className={`p-1.5 px-2 rounded-lg border text-[11px] font-bold transition-colors ${
+            index === total - 1
+              ? "opacity-25 cursor-not-allowed border-transparent text-slate-300"
+              : "hover:bg-slate-100 active:bg-slate-200 dark:hover:bg-zinc-700 border-line text-slate-700 dark:text-zinc-300 cursor-pointer shadow-2xs"
+          }`}
+          title="Move Down"
+        >
+          ▼
+        </button>
+      </div>
     </div>
   );
 }
@@ -454,18 +566,21 @@ export function TestTakingWidget({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const pointerSensor = useSensor(PointerSensor, {
+  const mouseSensor = useSensor(MouseSensor, {
     activationConstraint: {
       distance: 5,
     },
   });
   const touchSensor = useSensor(TouchSensor, {
     activationConstraint: {
-      delay: 250,
-      tolerance: 5,
+      delay: 150,
+      tolerance: 8,
     },
   });
-  const sensors = useSensors(pointerSensor, touchSensor);
+  const sensors = useSensors(mouseSensor, touchSensor);
+
+  // Mobile Tap-to-Place (Click-to-Match) selection state
+  const [selectedDraggable, setSelectedDraggable] = useState<{ questionId: string; value: string } | null>(null);
 
   const [test, setTest] = useState<any>(null);
   const [started, setStarted] = useState(isInline || autoStart);
@@ -491,7 +606,7 @@ export function TestTakingWidget({
     }
 
     try {
-      const res = await fetch(`/api/tests/${testId}/check${adminPreview ? "?preview=1" : ""}`, {
+      const res = await fetchWithStudentAuth(`/api/tests/${testId}/check${adminPreview ? "?preview=1" : ""}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ questionId, studentAnswer }),
@@ -554,13 +669,17 @@ export function TestTakingWidget({
   }, [currentQuestionIndex, started, completed]);
 
   useEffect(() => {
+    setSelectedDraggable(null);
+  }, [currentQuestionIndex]);
+
+  useEffect(() => {
     const initialize = async () => {
       try {
         setLoading(true);
         setError("");
 
         // Fetch course and enrollments to double gate
-        const resTest = await fetch(`/api/tests/${testId}${adminPreview ? "?preview=1" : ""}`);
+        const resTest = await fetchWithStudentAuth(`/api/tests/${testId}${adminPreview ? "?preview=1" : ""}`);
         const testData = await resTest.json();
 
         const testObj = testData?.test;
@@ -658,16 +777,9 @@ export function TestTakingWidget({
         startedAt: new Date(Date.now() - elapsedSecs * 1000).toISOString(),
       };
 
-      // Get current auth token to ensure request is authenticated
-      const { data: { session } } = await supabase.auth.getSession();
-      const headers: Record<string, string> = { "Content-Type": "application/json" };
-      if (session?.access_token) {
-        headers["Authorization"] = `Bearer ${session.access_token}`;
-      }
-
-      const res = await fetch(`/api/tests/${testId}${adminPreview ? "?preview=true" : ""}`, {
+      const res = await fetchWithStudentAuth(`/api/tests/${testId}${adminPreview ? "?preview=true" : ""}`, {
         method: "POST",
-        headers,
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(bodyPayload),
       });
 
@@ -1097,65 +1209,103 @@ export function TestTakingWidget({
               // Allow assigning same option to multiple table slots
               currentAnswers[slotId] = dragItem;
               setAnswers((prev) => ({ ...prev, [q.id]: currentAnswers }));
+              setSelectedDraggable(null);
             }}>
-              <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-                <div className="lg:col-span-1 border border-line p-4 rounded-2xl bg-surface/50 space-y-4">
-                  <div>
-                    <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate">Draggable Options</h4>
-                    <p className={`text-[10px] italic mt-0.5 ${colors.slate}`}>Options can be reused across multiple cells.</p>
+              <div className="space-y-4">
+                {selectedDraggable && selectedDraggable.questionId === q.id && (
+                  <div className="p-2.5 bg-brand/10 border border-brand/30 rounded-xl text-xs text-brand font-semibold flex items-center justify-between animate-fadeIn">
+                    <span>Selected: <strong>&ldquo;{selectedDraggable.value}&rdquo;</strong> — tap any empty cell to place</span>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedDraggable(null)}
+                      className="ml-2 text-xs font-bold underline cursor-pointer text-slate hover:text-ink"
+                    >
+                      Cancel
+                    </button>
                   </div>
-                  <div className="flex flex-col gap-2.5">
-                    {(q.config.draggables || []).map((d: string, dIdx: number) => (
-                      <DraggableItem key={`dragtable-opt-${dIdx}`} id={d} text={d} colors={colors} />
-                    ))}
+                )}
+
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                  <div className="lg:col-span-1 border border-line p-4 rounded-2xl bg-surface/50 space-y-3">
+                    <div>
+                      <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate">Draggable Options</h4>
+                      <p className={`text-[10px] italic mt-0.5 ${colors.slate}`}>Tap or drag an option to place in table.</p>
+                    </div>
+                    <div className="flex flex-wrap lg:flex-col gap-2">
+                      {(q.config.draggables || []).map((d: string, dIdx: number) => {
+                        const isSelected = selectedDraggable?.questionId === q.id && selectedDraggable?.value === d;
+                        return (
+                          <DraggableItem
+                            key={`dragtable-opt-${dIdx}`}
+                            id={d}
+                            text={d}
+                            colors={colors}
+                            isSelected={isSelected}
+                            onSelect={() => {
+                              setSelectedDraggable(isSelected ? null : { questionId: q.id, value: d });
+                            }}
+                          />
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-                <div className="lg:col-span-3 space-y-4">
-                  <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate">Fill in the Answer Area</h4>
-                  <div className="overflow-x-auto border border-line rounded-xl bg-white shadow-soft">
-                    <table className="w-full text-left border-collapse min-w-[500px]">
-                      <thead>
-                        <tr className="bg-slate-50 border-b border-line">
-                          {(q.config.headers || []).map((h: string, hIdx: number) => (
-                            <th key={hIdx} className="p-3 text-[10px] font-bold text-slate uppercase tracking-wider select-none">
-                              {h}
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {(q.config.rows || []).map((row: string[], rIdx: number) => (
-                          <tr key={rIdx} className="border-b border-line/60 last:border-0 hover:bg-slate-50/50">
-                            {row.map((cell: string, cIdx: number) => {
-                              const isPlaceholder = cell.startsWith("{{") && cell.endsWith("}}");
-                              if (isPlaceholder) {
-                                const slotId = cell.replace("{{", "").replace("}}", "").trim();
-                                const matchedItem = (answers[q.id] || {})[slotId] || "";
+                  <div className="lg:col-span-3 space-y-3">
+                    <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate">Fill in the Answer Area</h4>
+                    <div className="overflow-x-auto border border-line rounded-xl bg-white shadow-soft">
+                      <table className="w-full text-left border-collapse min-w-[500px]">
+                        <thead>
+                          <tr className="bg-slate-50 border-b border-line">
+                            {(q.config.headers || []).map((h: string, hIdx: number) => (
+                              <th key={hIdx} className="p-3 text-[10px] font-bold text-slate uppercase tracking-wider select-none">
+                                {h}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {(q.config.rows || []).map((row: string[], rIdx: number) => (
+                            <tr key={rIdx} className="border-b border-line/60 last:border-0 hover:bg-slate-50/50">
+                              {row.map((cell: string, cIdx: number) => {
+                                const isPlaceholder = cell.startsWith("{{") && cell.endsWith("}}");
+                                if (isPlaceholder) {
+                                  const slotId = cell.replace("{{", "").replace("}}", "").trim();
+                                  const matchedItem = (answers[q.id] || {})[slotId] || "";
+                                  const isTargetActive = Boolean(selectedDraggable && selectedDraggable.questionId === q.id);
+                                  return (
+                                    <td key={cIdx} className="p-2 min-w-[120px]">
+                                      <TableDroppableSlot
+                                        id={`slot-${slotId}`}
+                                        matchedItem={matchedItem}
+                                        isTargetActive={isTargetActive}
+                                        onSlotClick={() => {
+                                          if (selectedDraggable && selectedDraggable.questionId === q.id) {
+                                            const currentAnswers = { ...(answers[q.id] || {}) };
+                                            currentAnswers[slotId] = selectedDraggable.value;
+                                            setAnswers((prev) => ({ ...prev, [q.id]: currentAnswers }));
+                                            setSelectedDraggable(null);
+                                          }
+                                        }}
+                                        onClear={() => {
+                                          const nextAnswers = { ...(answers[q.id] || {}) };
+                                          delete nextAnswers[slotId];
+                                          setAnswers((prev) => ({ ...prev, [q.id]: nextAnswers }));
+                                        }}
+                                        colors={colors}
+                                      />
+                                    </td>
+                                  );
+                                }
                                 return (
-                                  <td key={cIdx} className="p-2 min-w-[120px]">
-                                    <TableDroppableSlot
-                                      id={`slot-${slotId}`}
-                                      matchedItem={matchedItem}
-                                      onClear={() => {
-                                        const nextAnswers = { ...(answers[q.id] || {}) };
-                                        delete nextAnswers[slotId];
-                                        setAnswers((prev) => ({ ...prev, [q.id]: nextAnswers }));
-                                      }}
-                                      colors={colors}
-                                    />
+                                  <td key={cIdx} className="p-3 text-xs font-semibold text-ink select-none">
+                                    {cell}
                                   </td>
                                 );
-                              }
-                              return (
-                                <td key={cIdx} className="p-3 text-xs font-semibold text-ink select-none">
-                                  {cell}
-                                </td>
-                              );
-                            })}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                              })}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1173,119 +1323,157 @@ export function TestTakingWidget({
                 const currentAnswers = { ...(answers[q.id] || {}) };
                 currentAnswers[slotId] = dragItem;
                 setAnswers((prev) => ({ ...prev, [q.id]: currentAnswers }));
+                setSelectedDraggable(null);
               }}
             >
-              <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
-                {/* 1. Source Reference Table (Left - 5 cols) */}
-                <div className="xl:col-span-5 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate">Source Data Table</h4>
+              <div className="space-y-4">
+                {selectedDraggable && selectedDraggable.questionId === q.id && (
+                  <div className="p-2.5 bg-brand/10 border border-brand/30 rounded-xl text-xs text-brand font-semibold flex items-center justify-between animate-fadeIn">
+                    <span>Selected: <strong>&ldquo;{selectedDraggable.value}&rdquo;</strong> — tap any target slot to place</span>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedDraggable(null)}
+                      className="ml-2 text-xs font-bold underline cursor-pointer text-slate hover:text-ink"
+                    >
+                      Cancel
+                    </button>
                   </div>
-                  {q.config?.sourceImage ? (
-                    <div className="border border-line rounded-xl p-2 bg-white overflow-hidden shadow-soft">
-                      <img
-                        src={getDirectImageUrl(q.config.sourceImage)}
-                        alt="Source Data Table"
-                        referrerPolicy="no-referrer"
-                        onError={handleGoogleDriveImageError}
-                        className="w-full object-contain max-h-96 rounded-lg"
-                      />
+                )}
+
+                <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
+                  {/* 1. Source Reference Table (Left - 5 cols) */}
+                  <div className="xl:col-span-5 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate">Source Data Table</h4>
                     </div>
-                  ) : (
-                    <div className="overflow-x-auto border border-line rounded-xl bg-white shadow-soft">
-                      <table className="w-full text-left border-collapse text-xs">
-                        <thead>
-                          <tr className="bg-slate-900 text-white border-b border-slate-700">
-                            {(q.config?.sourceTable?.headers || []).map((h: string, hIdx: number) => (
-                              <th key={hIdx} className="p-2.5 font-bold text-[10px] uppercase tracking-wider select-none">
-                                {h}
-                              </th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {(q.config?.sourceTable?.rows || []).map((row: string[], rIdx: number) => (
-                            <tr
-                              key={rIdx}
-                              className={`border-b border-line/60 last:border-0 ${
-                                rIdx % 2 === 1 ? "bg-slate-50/80" : "bg-white"
-                              } hover:bg-brand/5`}
-                            >
-                              {row.map((cell: string, cIdx: number) => (
-                                <td key={cIdx} className="p-2 text-xs font-medium text-slate-800 select-none">
-                                  {cell}
-                                </td>
+                    {q.config?.sourceImage ? (
+                      <div className="border border-line rounded-xl p-2 bg-white overflow-hidden shadow-soft">
+                        <img
+                          src={getDirectImageUrl(q.config.sourceImage)}
+                          alt="Source Data Table"
+                          referrerPolicy="no-referrer"
+                          onError={handleGoogleDriveImageError}
+                          className="w-full object-contain max-h-96 rounded-lg"
+                        />
+                      </div>
+                    ) : (
+                      <div className="overflow-x-auto border border-line rounded-xl bg-white shadow-soft">
+                        <table className="w-full text-left border-collapse text-xs">
+                          <thead>
+                            <tr className="bg-slate-900 text-white border-b border-slate-700">
+                              {(q.config?.sourceTable?.headers || []).map((h: string, hIdx: number) => (
+                                <th key={hIdx} className="p-2.5 font-bold text-[10px] uppercase tracking-wider select-none">
+                                  {h}
+                                </th>
                               ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {(q.config?.sourceTable?.rows || []).map((row: string[], rIdx: number) => (
+                              <tr
+                                key={rIdx}
+                                className={`border-b border-line/60 last:border-0 ${
+                                  rIdx % 2 === 1 ? "bg-slate-50/80" : "bg-white"
+                                } hover:bg-brand/5`}
+                              >
+                                {row.map((cell: string, cIdx: number) => (
+                                  <td key={cIdx} className="p-2 text-xs font-medium text-slate-800 select-none">
+                                    {cell}
+                                  </td>
+                                ))}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 2. Draggable Labels Pool (Middle - 3 cols) */}
+                  <div className="xl:col-span-3 space-y-3">
+                    <div>
+                      <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate">Labels</h4>
+                      <p className={`text-[10px] italic mt-0.5 ${colors.slate}`}>
+                        Tap or drag labels to target locations.
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap xl:flex-col gap-2 p-3 rounded-2xl border border-line bg-surface/50">
+                      {(q.config?.labels || []).map((label: string, lIdx: number) => {
+                        const isSelected = selectedDraggable?.questionId === q.id && selectedDraggable?.value === label;
+                        return (
+                          <DraggableItem
+                            key={`pivot-lbl-${lIdx}`}
+                            id={label}
+                            text={label}
+                            colors={colors}
+                            isSelected={isSelected}
+                            onSelect={() => {
+                              setSelectedDraggable(isSelected ? null : { questionId: q.id, value: label });
+                            }}
+                          />
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* 3. Target Pivot Table (Right - 4 cols) */}
+                  <div className="xl:col-span-4 space-y-3">
+                    <div>
+                      <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate">Pivot Table</h4>
+                      <p className={`text-[10px] italic mt-0.5 ${colors.slate}`}>
+                        Place appropriate labels into target cells.
+                      </p>
+                    </div>
+                    <div className="overflow-x-auto border-2 border-slate-300 rounded-xl bg-white shadow-soft p-1">
+                      <table className="w-full text-left border-collapse">
+                        <tbody>
+                          {(q.config?.targetTable?.rows || []).map((row: string[], rIdx: number) => (
+                            <tr key={rIdx} className="border-b border-slate-200 last:border-0">
+                              {row.map((cell: string, cIdx: number) => {
+                                const isPlaceholder = cell.startsWith("{{") && cell.endsWith("}}");
+                                if (isPlaceholder) {
+                                  const slotId = cell.replace("{{", "").replace("}}", "").trim();
+                                  const matchedItem = (answers[q.id] || {})[slotId] || "";
+                                  const isTargetActive = Boolean(selectedDraggable && selectedDraggable.questionId === q.id);
+                                  return (
+                                    <td key={cIdx} className="p-1.5 border-r border-slate-200 last:border-0 align-middle">
+                                      <PivotDroppableSlot
+                                        id={`pivot-slot-${slotId}`}
+                                        slotId={slotId}
+                                        matchedItem={matchedItem}
+                                        isTargetActive={isTargetActive}
+                                        onSlotClick={() => {
+                                          if (selectedDraggable && selectedDraggable.questionId === q.id) {
+                                            const currentAnswers = { ...(answers[q.id] || {}) };
+                                            currentAnswers[slotId] = selectedDraggable.value;
+                                            setAnswers((prev) => ({ ...prev, [q.id]: currentAnswers }));
+                                            setSelectedDraggable(null);
+                                          }
+                                        }}
+                                        onClear={() => {
+                                          const nextAnswers = { ...(answers[q.id] || {}) };
+                                          delete nextAnswers[slotId];
+                                          setAnswers((prev) => ({ ...prev, [q.id]: nextAnswers }));
+                                        }}
+                                        colors={colors}
+                                      />
+                                    </td>
+                                  );
+                                }
+                                return (
+                                  <td
+                                    key={cIdx}
+                                    className="p-3 text-xs font-semibold text-ink border-r border-slate-200 last:border-0 select-none text-center bg-slate-50/40"
+                                  >
+                                    {cell}
+                                  </td>
+                                );
+                              })}
                             </tr>
                           ))}
                         </tbody>
                       </table>
                     </div>
-                  )}
-                </div>
-
-                {/* 2. Draggable Labels Pool (Middle - 3 cols) */}
-                <div className="xl:col-span-3 space-y-3">
-                  <div>
-                    <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate">Labels</h4>
-                    <p className={`text-[10px] italic mt-0.5 ${colors.slate}`}>
-                      Drag labels to target locations on the right.
-                    </p>
-                  </div>
-                  <div className="flex flex-col gap-2 p-3 rounded-2xl border border-line bg-surface/50">
-                    {(q.config?.labels || []).map((label: string, lIdx: number) => (
-                      <DraggableItem key={`pivot-lbl-${lIdx}`} id={label} text={label} colors={colors} />
-                    ))}
-                  </div>
-                </div>
-
-                {/* 3. Target Pivot Table (Right - 4 cols) */}
-                <div className="xl:col-span-4 space-y-3">
-                  <div>
-                    <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate">Pivot Table</h4>
-                    <p className={`text-[10px] italic mt-0.5 ${colors.slate}`}>
-                      Drop appropriate labels into the target cells.
-                    </p>
-                  </div>
-                  <div className="overflow-x-auto border-2 border-slate-300 rounded-xl bg-white shadow-soft p-1">
-                    <table className="w-full text-left border-collapse">
-                      <tbody>
-                        {(q.config?.targetTable?.rows || []).map((row: string[], rIdx: number) => (
-                          <tr key={rIdx} className="border-b border-slate-200 last:border-0">
-                            {row.map((cell: string, cIdx: number) => {
-                              const isPlaceholder = cell.startsWith("{{") && cell.endsWith("}}");
-                              if (isPlaceholder) {
-                                const slotId = cell.replace("{{", "").replace("}}", "").trim();
-                                const matchedItem = (answers[q.id] || {})[slotId] || "";
-                                return (
-                                  <td key={cIdx} className="p-1.5 border-r border-slate-200 last:border-0 align-middle">
-                                    <PivotDroppableSlot
-                                      id={`pivot-slot-${slotId}`}
-                                      slotId={slotId}
-                                      matchedItem={matchedItem}
-                                      onClear={() => {
-                                        const nextAnswers = { ...(answers[q.id] || {}) };
-                                        delete nextAnswers[slotId];
-                                        setAnswers((prev) => ({ ...prev, [q.id]: nextAnswers }));
-                                      }}
-                                      colors={colors}
-                                    />
-                                  </td>
-                                );
-                              }
-                              return (
-                                <td
-                                  key={cIdx}
-                                  className="p-3 text-xs font-semibold text-ink border-r border-slate-200 last:border-0 select-none text-center bg-slate-50/40"
-                                >
-                                  {cell}
-                                </td>
-                              );
-                            })}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
                   </div>
                 </div>
               </div>
@@ -1306,39 +1494,77 @@ export function TestTakingWidget({
               // Only update the target slot; do NOT clear other slots that have the same option
               currentMatches[slotIdx] = [currentMatches[slotIdx]?.[0] ?? "", rightStr];
               setAnswers((prev) => ({ ...prev, [q.id]: currentMatches }));
+              setSelectedDraggable(null);
             }}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Column 1: Match Choices (Draggables) — always show all options so they can be reused */}
-                <div className="space-y-3">
-                  <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate">Match Choices</h4>
-                  <p className={`text-[10px] italic mb-1 ${colors.slate}`}>Options can be reused across multiple targets.</p>
-                  <div className="flex flex-col gap-2">
-                    {(q.config.right || []).map((r: string, rIdx: number) => (
-                      <DraggableItem key={`opt-${rIdx}`} id={r} text={r} colors={colors} />
-                    ))}
+              <div className="space-y-4">
+                {selectedDraggable && selectedDraggable.questionId === q.id && (
+                  <div className="p-2.5 bg-brand/10 border border-brand/30 rounded-xl text-xs text-brand font-semibold flex items-center justify-between animate-fadeIn">
+                    <span>Selected: <strong>&ldquo;{selectedDraggable.value}&rdquo;</strong> — tap any matching target slot to place</span>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedDraggable(null)}
+                      className="ml-2 text-xs font-bold underline cursor-pointer text-slate hover:text-ink"
+                    >
+                      Cancel
+                    </button>
                   </div>
-                </div>
+                )}
 
-                {/* Column 2: Items to Match (Droppables) */}
-                <div className="space-y-3">
-                  <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate">Items to Match</h4>
-                  {(q.config.left || []).map((l: string, lIdx: number) => {
-                    const pair = (answers[q.id] || [])[lIdx];
-                    return (
-                      <DroppableSlot
-                        key={`slot-${lIdx}`}
-                        id={`slot-${lIdx}`}
-                        label={l}
-                        matchedItem={pair ? pair[1] : ""}
-                        onClear={() => {
-                          const nextMatches = [...(answers[q.id] || [])];
-                          nextMatches[lIdx] = [l, ""];
-                          setAnswers((prev) => ({ ...prev, [q.id]: nextMatches }));
-                        }}
-                        colors={colors}
-                      />
-                    );
-                  })}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Column 1: Match Choices (Draggables) — always show all options so they can be reused */}
+                  <div className="space-y-3">
+                    <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate">Match Choices</h4>
+                    <p className={`text-[10px] italic mb-1 ${colors.slate}`}>Tap or drag an option to match.</p>
+                    <div className="flex flex-wrap md:flex-col gap-2">
+                      {(q.config.right || []).map((r: string, rIdx: number) => {
+                        const isSelected = selectedDraggable?.questionId === q.id && selectedDraggable?.value === r;
+                        return (
+                          <DraggableItem
+                            key={`opt-${rIdx}`}
+                            id={r}
+                            text={r}
+                            colors={colors}
+                            isSelected={isSelected}
+                            onSelect={() => {
+                              setSelectedDraggable(isSelected ? null : { questionId: q.id, value: r });
+                            }}
+                          />
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Column 2: Items to Match (Droppables) */}
+                  <div className="space-y-3">
+                    <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate">Items to Match</h4>
+                    {(q.config.left || []).map((l: string, lIdx: number) => {
+                      const pair = (answers[q.id] || [])[lIdx];
+                      const isTargetActive = Boolean(selectedDraggable && selectedDraggable.questionId === q.id);
+                      return (
+                        <DroppableSlot
+                          key={`slot-${lIdx}`}
+                          id={`slot-${lIdx}`}
+                          label={l}
+                          matchedItem={pair ? pair[1] : ""}
+                          isTargetActive={isTargetActive}
+                          onSlotClick={() => {
+                            if (selectedDraggable && selectedDraggable.questionId === q.id) {
+                              const currentMatches = [...(answers[q.id] || [])];
+                              currentMatches[lIdx] = [l, selectedDraggable.value];
+                              setAnswers((prev) => ({ ...prev, [q.id]: currentMatches }));
+                              setSelectedDraggable(null);
+                            }
+                          }}
+                          onClear={() => {
+                            const nextMatches = [...(answers[q.id] || [])];
+                            nextMatches[lIdx] = [l, ""];
+                            setAnswers((prev) => ({ ...prev, [q.id]: nextMatches }));
+                          }}
+                          colors={colors}
+                        />
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             </DndContext>
@@ -1358,12 +1584,33 @@ export function TestTakingWidget({
             }}>
               <div className="max-w-md mx-auto space-y-4">
                 <h4 className={`text-[10px] font-bold uppercase tracking-wider mb-2 text-center ${colors.slate}`}>
-                  Drag items to rearrange sequence
+                  Drag items or use ▲ / ▼ buttons to rearrange sequence
                 </h4>
                 <SortableContext items={answers[q.id] || []} strategy={verticalListSortingStrategy}>
                   <div className="space-y-2">
-                    {(answers[q.id] || []).map((item: string) => (
-                      <SortableSeqItem key={item} id={item} text={item} colors={colors} />
+                    {(answers[q.id] || []).map((item: string, sIdx: number, arr: string[]) => (
+                      <SortableSeqItem
+                        key={item}
+                        id={item}
+                        text={item}
+                        colors={colors}
+                        index={sIdx}
+                        total={arr.length}
+                        onMoveUp={() => {
+                          if (sIdx <= 0) return;
+                          const nextSeq = [...arr];
+                          const [moved] = nextSeq.splice(sIdx, 1);
+                          nextSeq.splice(sIdx - 1, 0, moved);
+                          setAnswers((prev) => ({ ...prev, [q.id]: nextSeq }));
+                        }}
+                        onMoveDown={() => {
+                          if (sIdx >= arr.length - 1) return;
+                          const nextSeq = [...arr];
+                          const [moved] = nextSeq.splice(sIdx, 1);
+                          nextSeq.splice(sIdx + 1, 0, moved);
+                          setAnswers((prev) => ({ ...prev, [q.id]: nextSeq }));
+                        }}
+                      />
                     ))}
                   </div>
                 </SortableContext>

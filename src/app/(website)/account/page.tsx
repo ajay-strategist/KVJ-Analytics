@@ -26,6 +26,7 @@ import { Container } from "@/components/ui/Container";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { supabase } from "@/lib/supabase";
+import { clearStudentSessionCookie } from "@/lib/studentAuth";
 
 function StudentAccountDashboard() {
   const router = useRouter();
@@ -128,8 +129,7 @@ function StudentAccountDashboard() {
 
   const handleSignOut = async () => {
     setLoading(true);
-    // Clear cookies
-    document.cookie = "sb-access-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
+    clearStudentSessionCookie();
     await supabase.auth.signOut();
     router.push("/training");
     router.refresh();

@@ -16,9 +16,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Supabase client not configured." }, { status: 500 });
   }
 
-  // 1. Get access token from cookie
-  const token = req.cookies.get("sb-access-token")?.value;
-  if (!token) {
+  // 1. Get access token from Authorization header or cookie
+  const authHeader = req.headers.get("authorization");
+  const bearerToken = authHeader?.startsWith("Bearer ") ? authHeader.substring(7).trim() : null;
+  const cookieToken = req.cookies.get("sb-access-token")?.value?.trim() || null;
+  const primaryToken = bearerToken || cookieToken;
+
+  if (!primaryToken) {
     return NextResponse.json(
       { error: "Access denied. Please sign in to your student account." },
       { status: 401 }
@@ -26,7 +30,16 @@ export async function POST(req: NextRequest) {
   }
 
   // 2. Validate token to get authenticated user
-  const { data: { user }, error: authError } = await db.auth.getUser(token);
+  let { data: { user }, error: authError } = await db.auth.getUser(primaryToken);
+  if ((authError || !user) && bearerToken && cookieToken && bearerToken !== cookieToken) {
+    const alternateToken = primaryToken === bearerToken ? cookieToken : bearerToken;
+    const fallback = await db.auth.getUser(alternateToken);
+    if (!fallback.error && fallback.data.user) {
+      user = fallback.data.user;
+      authError = null;
+    }
+  }
+
   if (authError || !user) {
     return NextResponse.json(
       { error: "Access denied. Invalid or expired student session." },

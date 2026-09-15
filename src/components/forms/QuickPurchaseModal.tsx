@@ -239,13 +239,19 @@ export function QuickPurchaseModal({ course, onClose }: QuickPurchaseModalProps)
                 </p>
               </div>
               <Button
-                onClick={() => { router.push(`/training/${course.slug}/learn`); onClose(); }}
-                className="w-full py-3.5 bg-gradient-to-r from-[#10B981] to-[#0D9488] text-black font-bold rounded-full flex items-center justify-center gap-2"
+                onClick={() => {
+                  router.push(`/training/${course.slug}/learn`);
+                  onClose();
+                }}
+                onMouseEnter={() => {
+                  router.prefetch(`/training/${course.slug}/learn`);
+                }}
+                className="w-full py-3.5 bg-gradient-to-r from-[#10B981] to-[#0D9488] text-black font-bold rounded-full flex items-center justify-center gap-2 active:scale-[0.98] transition-all"
               >
                 <ShieldCheck className="w-4 h-4" />
                 Launch Course Player
               </Button>
-              <button onClick={onClose} className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors">
+              <button onClick={onClose} className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer">
                 Return to catalog
               </button>
             </div>

@@ -161,7 +161,6 @@ export function LessonIframe({
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<base target="_blank" />
 <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
 <style>
@@ -514,11 +513,35 @@ ${cleanHtml.includes("kvj-custom-html-block") ? cleanHtml : `<div class="kvj-cus
       pre.childNodes.forEach(node => {
         if (node !== btn && node !== label) codeText += node.textContent;
       });
-      navigator.clipboard.writeText(codeText.trim());
+      const textToCopy = codeText.trim();
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(textToCopy).catch(() => {});
+      }
       btn.textContent = 'Copied!';
       setTimeout(() => btn.textContent = 'Copy', 2000);
     };
     pre.appendChild(btn);
+  });
+
+  // Handle link clicks: open external links in new tab, keep anchor & in-page buttons functioning locally
+  document.addEventListener('click', (e) => {
+    const link = e.target.closest('a');
+    if (!link) return;
+    const href = link.getAttribute('href');
+    if (!href) return;
+    
+    if (href.startsWith('http://') || href.startsWith('https://') || href.startsWith('//')) {
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+    } else if (href.startsWith('#')) {
+      e.preventDefault();
+      const targetId = href.substring(1);
+      const targetEl = document.getElementById(targetId);
+      if (targetEl) {
+        targetEl.scrollIntoView({ behavior: 'smooth' });
+        window.parent.postMessage({ type: 'ACTIVE_HEADING', id: targetId }, '*');
+      }
+    }
   });
 
   // Image Zoom Lightbox
@@ -592,27 +615,14 @@ ${cleanHtml.includes("kvj-custom-html-block") ? cleanHtml : `<div class="kvj-cus
   function calculateDocHeight() {
     const root = document.getElementById('kvj-content-root') || document.body;
     if (!root) return 0;
-    
-    // Find the deepest visual bottom in the entire document
-    let maxBottom = 0;
-    const all = document.body.getElementsByTagName('*');
-    for (let i = 0; i < all.length; i++) {
-      const el = all[i];
-      const tag = el.tagName;
-      if (tag === 'SCRIPT' || tag === 'STYLE' || tag === 'NOSCRIPT' || tag === 'LINK') continue;
-      const rect = el.getBoundingClientRect();
-      if (rect.width > 0 || rect.height > 0) {
-        const bottom = rect.bottom + window.pageYOffset;
-        if (bottom > maxBottom) maxBottom = bottom;
-      }
-    }
-
-    const rootRect = root.getBoundingClientRect();
-    const rootBottom = rootRect.bottom + window.pageYOffset;
-    if (rootBottom > maxBottom) maxBottom = rootBottom;
-
-    // Buffer 16px to guarantee the bottom-most card or takeaway has complete visual padding and zero clipping
-    return Math.ceil(Math.max(maxBottom + 16, rootRect.height));
+    const h = Math.max(
+      root.scrollHeight,
+      root.offsetHeight,
+      document.body ? document.body.scrollHeight : 0,
+      document.body ? document.body.offsetHeight : 0,
+      document.documentElement ? document.documentElement.scrollHeight : 0
+    );
+    return Math.ceil(h + 24);
   }
 
   function notifyHeight() {
@@ -675,34 +685,21 @@ ${cleanHtml.includes("kvj-custom-html-block") ? cleanHtml : `<div class="kvj-cus
     if (!frame) return;
     try {
       const doc = frame.contentDocument;
-      const win = frame.contentWindow;
       if (!doc || !doc.body) return;
 
       const root = doc.getElementById("kvj-content-root") || doc.body;
+      const h = Math.max(
+        root.scrollHeight,
+        root.offsetHeight,
+        doc.body.scrollHeight || 0,
+        doc.body.offsetHeight || 0,
+        doc.documentElement.scrollHeight || 0
+      ) + 24;
 
-      let maxBottom = 0;
-      const all = doc.body.getElementsByTagName("*");
-      for (let i = 0; i < all.length; i++) {
-        const el = all[i];
-        const tag = el.tagName;
-        if (tag === "SCRIPT" || tag === "STYLE" || tag === "NOSCRIPT" || tag === "LINK") continue;
-        const rect = el.getBoundingClientRect();
-        if (rect.width > 0 || rect.height > 0) {
-          const bottom = rect.bottom + (win?.pageYOffset || 0);
-          if (bottom > maxBottom) maxBottom = bottom;
-        }
-      }
-
-      const rootRect = root.getBoundingClientRect();
-      const rootBottom = rootRect.bottom + (win?.pageYOffset || 0);
-      if (rootBottom > maxBottom) maxBottom = rootBottom;
-
-      const h = Math.ceil(Math.max(maxBottom + 16, rootRect.height));
       if (h > 0) {
-        frame.style.height = `${h}px`;
+        frame.style.height = `${Math.ceil(h)}px`;
       }
-      win?.postMessage({ type: "RECHECK_HEIGHT" }, "*");
-    } catch (e) {
+    } catch {
       // Cross-origin safety
     }
   }, []);
@@ -810,7 +807,8 @@ ${cleanHtml.includes("kvj-custom-html-block") ? cleanHtml : `<div class="kvj-cus
       onLoad={handleLoad}
       className="w-full border-none bg-transparent block"
       style={{ minHeight: "150px" }}
-      sandbox="allow-scripts allow-same-origin allow-popups"
+      sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-modals allow-downloads allow-popups-to-escape-sandbox"
+      allow="clipboard-write; fullscreen"
       scrolling="no"
     />
   );

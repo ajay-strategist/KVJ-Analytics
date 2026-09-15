@@ -8,6 +8,7 @@ import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { supabase } from "@/lib/supabase";
+import { syncStudentSessionCookie } from "@/lib/studentAuth";
 
 function SignInForm() {
   const router = useRouter();
@@ -105,10 +106,8 @@ function SignInForm() {
           refresh_token: loginData.session.refresh_token,
         });
 
-        // Set fallback cookie on client
-        const isSecure = typeof window !== "undefined" && window.location.protocol === "https:";
-        const secureFlag = isSecure ? "; Secure" : "";
-        document.cookie = `sb-access-token=${loginData.session.access_token}; path=/; max-age=${loginData.session.expires_in || 604800}; SameSite=Lax${secureFlag}`;
+        // Set persistent 30-day cookie on client
+        syncStudentSessionCookie(loginData.session);
       }
 
       // 4. Check if password update is required
@@ -218,9 +217,7 @@ function SignInForm() {
           access_token: data.session.access_token,
           refresh_token: data.session.refresh_token,
         });
-        const isSecure = typeof window !== "undefined" && window.location.protocol === "https:";
-        const secureFlag = isSecure ? "; Secure" : "";
-        document.cookie = `sb-access-token=${data.session.access_token}; path=/; max-age=${data.session.expires_in || 604800}; SameSite=Lax${secureFlag}`;
+        syncStudentSessionCookie(data.session);
       }
 
       setResetFlowSuccess("Password updated successfully! Welcome back.");

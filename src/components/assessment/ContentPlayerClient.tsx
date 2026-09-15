@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { Button } from "../ui/Button";
 import { supabase } from "@/lib/supabase";
+import { fetchWithStudentAuth, getValidStudentSession, syncStudentSessionCookie } from "@/lib/studentAuth";
 import { TestTakingWidget } from "@/components/assessment/TestTakingWidget";
 import { LessonIframe, cleanLessonHtml } from "../shared/LessonIframe";
 
@@ -282,7 +283,7 @@ export function ContentPlayerClient({ course, modules, adminPreview = false, ini
       if (!currentUser) return;
 
       try {
-        const res = await fetch("/api/activity-result", {
+        const res = await fetchWithStudentAuth("/api/activity-result", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -411,42 +412,37 @@ export function ContentPlayerClient({ course, modules, adminPreview = false, ini
       }
 
       // 1. Get user session & sync cookie for API routes
-      const { data: { session } } = await supabase.auth.getSession();
+      const session = await getValidStudentSession();
       if (!session?.user) {
         router.push(`/signin?redirect=/training/${course.slug}/learn`);
         return;
       }
       setUser(session.user);
+      syncStudentSessionCookie(session);
 
-      if (session.access_token) {
-        const isSecure = typeof window !== "undefined" && window.location.protocol === "https:";
-        const secureFlag = isSecure ? "; Secure" : "";
-        document.cookie = `sb-access-token=${session.access_token}; path=/; max-age=${session.expires_in || 3600}; SameSite=Lax${secureFlag}`;
-      }
+      // 2 & 3. Verify enrollment and fetch completed lessons in parallel (halving initial network latency)
+      const [enrollmentRes, resultsRes] = await Promise.all([
+        supabase
+          .from("enrollments")
+          .select("id")
+          .eq("user_id", session.user.id)
+          .eq("course_slug", course.slug)
+          .eq("status", "active")
+          .maybeSingle(),
+        supabase
+          .from("activity_results")
+          .select("lesson_id, passed")
+          .eq("user_id", session.user.id)
+          .eq("course_slug", course.slug),
+      ]);
 
-      // 2. Verify enrollment
-      const { data: enrollment } = await supabase
-        .from("enrollments")
-        .select("id")
-        .eq("user_id", session.user.id)
-        .eq("course_slug", course.slug)
-        .eq("status", "active")
-        .maybeSingle();
-
-      if (!enrollment) {
+      if (!enrollmentRes.data) {
         alert("Access denied. You must enroll in the course to access the content player.");
         router.push(`/training/${course.slug}`);
         return;
       }
 
-      // 3. Fetch completed lessons (activity results)
-      const { data: results } = await supabase
-        .from("activity_results")
-        .select("lesson_id, passed")
-        .eq("user_id", session.user.id)
-        .eq("course_slug", course.slug);
-
-      const completedSet = new Set<string>(results ? results.map((r: any) => r.lesson_id) : []);
+      const completedSet = new Set<string>(resultsRes.data ? resultsRes.data.map((r: any) => r.lesson_id) : []);
       setCompletedLessonIds(completedSet);
 
       // 4. Resume Lesson Determination:
@@ -556,7 +552,7 @@ export function ContentPlayerClient({ course, modules, adminPreview = false, ini
         setCompletedLessonIds(newCompletions);
       } else {
         // Mark complete by submitting result
-        const response = await fetch("/api/activity-result", {
+        const response = await fetchWithStudentAuth("/api/activity-result", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -568,7 +564,7 @@ export function ContentPlayerClient({ course, modules, adminPreview = false, ini
         });
 
         if (!response.ok) {
-          const errData = await response.json();
+          const errData = await response.json().catch(() => ({}));
           throw new Error(errData.error || "Failed to submit completion.");
         }
 
@@ -577,51 +573,50 @@ export function ContentPlayerClient({ course, modules, adminPreview = false, ini
         setCompletedLessonIds(newCompletions);
       }
     } catch (err: any) {
-      alert(err.message || "Failed to update completion status.");
+      console.error("[KVJ] Toggle completion error:", err);
+      // If unauthorized, redirect to signin to restore session smoothly
+      if (err.message?.includes("Invalid or expired student session") || err.message?.includes("Please sign in")) {
+        router.push(`/signin?redirect=/training/${course.slug}/learn`);
+      } else {
+        alert(err.message || "Failed to update completion status.");
+      }
     } finally {
       setActionLoading(false);
     }
   };
 
-  const handleMarkCompleteAndNext = async () => {
+  const handleMarkCompleteAndNext = () => {
     if (!activeLesson) return;
 
-    const isCurrentlyCompleted = completedLessonIds.has(activeLesson.id);
+    const currentLessonId = activeLesson.id;
+    const isCurrentlyCompleted = completedLessonIds.has(currentLessonId);
 
-    if (!isCurrentlyCompleted) {
-      setActionLoading(true);
-      try {
-        if (!adminPreview && user) {
-          const response = await fetch("/api/activity-result", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              lessonId: activeLesson.id,
-              score: 100,
-              maxScore: 100,
-              courseSlug: course.slug,
-            }),
-          });
-
-          if (!response.ok) {
-            const errData = await response.json();
-            throw new Error(errData.error || "Failed to submit completion.");
-          }
-        }
-        setCompletedLessonIds((prev) => new Set([...prev, activeLesson.id]));
-      } catch (err: any) {
-        alert(err.message || "Failed to update completion status.");
-        setActionLoading(false);
-        return;
-      } finally {
-        setActionLoading(false);
-      }
-    }
-
+    // 1. Immediately advance to next lesson or return to course overview (0ms delay!)
     if (nextLesson) {
       handleLessonSelect(nextLesson);
     } else {
       router.push(`/training/${course.slug}`);
+    }
+
+    // 2. Optimistically update local completion set
+    if (!isCurrentlyCompleted) {
+      setCompletedLessonIds((prev) => new Set([...prev, currentLessonId]));
+
+      // 3. Persist activity completion asynchronously in background without blocking navigation
+      if (!adminPreview && user) {
+        fetchWithStudentAuth("/api/activity-result", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            lessonId: currentLessonId,
+            score: 100,
+            maxScore: 100,
+            courseSlug: course.slug,
+          }),
+        }).catch((err) => {
+          console.error("[KVJ] Background mark complete error:", err);
+        });
+      }
     }
   };
 
@@ -902,7 +897,7 @@ export function ContentPlayerClient({ course, modules, adminPreview = false, ini
                 onComplete={async (score, maxScore, passed) => {
                   setAttemptsTrigger((prev) => prev + 1);
                   try {
-                    const res = await fetch("/api/activity-result", {
+                    const res = await fetchWithStudentAuth("/api/activity-result", {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
                       body: JSON.stringify({
@@ -1072,7 +1067,7 @@ export function ContentPlayerClient({ course, modules, adminPreview = false, ini
                         setAttemptsTrigger((prev) => prev + 1);
                         if (!adminPreview) {
                           try {
-                            const res = await fetch("/api/activity-result", {
+                            const res = await fetchWithStudentAuth("/api/activity-result", {
                               method: "POST",
                               headers: { "Content-Type": "application/json" },
                               body: JSON.stringify({
@@ -1191,16 +1186,10 @@ export function ContentPlayerClient({ course, modules, adminPreview = false, ini
                   ) : (
                     <button
                       type="button"
-                      disabled={actionLoading}
                       onClick={handleMarkCompleteAndNext}
-                      className="py-2.5 px-6 bg-[#08A88A] hover:bg-[#068A72] active:scale-[0.98] text-white text-sm font-bold flex items-center gap-2 rounded-xl border-none transition-all shadow-[0_4px_15px_rgba(8,168,138,0.25)]"
+                      className="py-2.5 px-6 bg-[#08A88A] hover:bg-[#068A72] active:scale-[0.98] text-white text-sm font-bold flex items-center gap-2 rounded-xl border-none transition-all shadow-[0_4px_15px_rgba(8,168,138,0.25)] cursor-pointer"
                     >
-                      {actionLoading ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          <span>Saving...</span>
-                        </>
-                      ) : completedLessonIds.has(activeLesson.id) ? (
+                      {completedLessonIds.has(activeLesson.id) ? (
                         nextLesson ? (
                           <>
                             <span>Next Lesson</span>

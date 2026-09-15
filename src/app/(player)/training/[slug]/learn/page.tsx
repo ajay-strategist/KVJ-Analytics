@@ -25,10 +25,29 @@ export default async function CoursePlayerPage({
   const cookieStore = await cookies();
   const adminPreview = (cookieStore.get("admin_session")?.value === adminToken()) && isPreviewParam;
 
-  // 1. Fetch Course
+  // 1. Fetch Course with nested modules and lessons in a single relational query (eliminating 2 extra roundtrips)
   const { data: course, error: courseError } = await supabase
     .from("courses")
-    .select("id, title, slug")
+    .select(`
+      id,
+      title,
+      slug,
+      modules (
+        id,
+        title,
+        display_order,
+        lessons (
+          id,
+          module_id,
+          title,
+          kind,
+          max_score,
+          video_url,
+          content_html,
+          display_order
+        )
+      )
+    `)
     .eq("slug", slug)
     .maybeSingle();
 
@@ -36,27 +55,15 @@ export default async function CoursePlayerPage({
     notFound();
   }
 
-  // 2. Fetch Modules
-  const { data: dbMods } = await supabase
-    .from("modules")
-    .select("id, title, display_order")
-    .eq("course_id", course.id)
-    .order("display_order", { ascending: true });
-
+  // Sort modules and lessons in memory by display_order
   let modules: any[] = [];
-  if (dbMods && dbMods.length > 0) {
-    // 3. Fetch Lessons
-    const { data: dbLessons } = await supabase
-      .from("lessons")
-      .select("id, module_id, title, kind, max_score, video_url, content_html, display_order")
-      .in("module_id", dbMods.map((m: any) => m.id))
-      .order("display_order", { ascending: true });
-
-    modules = dbMods.map((m: any) => ({
+  if (course.modules && course.modules.length > 0) {
+    const rawModules = [...course.modules].sort((a: any, b: any) => (a.display_order ?? 0) - (b.display_order ?? 0));
+    modules = rawModules.map((m: any) => ({
       id: m.id,
       title: m.title,
-      lessons: (dbLessons || [])
-        .filter((l: any) => l.module_id === m.id)
+      lessons: (m.lessons || [])
+        .sort((a: any, b: any) => (a.display_order ?? 0) - (b.display_order ?? 0))
         .map((l: any) => ({
           id: l.id,
           title: l.title,

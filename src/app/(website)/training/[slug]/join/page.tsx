@@ -11,6 +11,7 @@ import { BoldStatement } from "@/components/ui/BoldStatement";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { supabase } from "@/lib/supabase";
+import { syncStudentSessionCookie } from "@/lib/studentAuth";
 
 export default function CollegeJoinPage() {
   const routeParams = useParams<{ slug: string }>();
@@ -108,9 +109,7 @@ export default function CollegeJoinPage() {
               access_token: loginData.session.access_token,
               refresh_token: loginData.session.refresh_token,
             });
-            const isSecure = typeof window !== "undefined" && window.location.protocol === "https:";
-            const secureFlag = isSecure ? "; Secure" : "";
-            document.cookie = `sb-access-token=${loginData.session.access_token}; path=/; max-age=${loginData.session.expires_in || 604800}; SameSite=Lax${secureFlag}`;
+            syncStudentSessionCookie(loginData.session);
           }
         } catch (sErr) {
           console.warn("Session synchronization warning:", sErr);

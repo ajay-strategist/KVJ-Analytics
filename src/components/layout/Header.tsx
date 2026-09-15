@@ -7,6 +7,7 @@ import { Menu, X, PhoneCall } from "lucide-react";
 import { Button } from "../ui/Button";
 import { FALLBACK_SITE_SETTINGS } from "@/lib/constants";
 import { supabase } from "@/lib/supabase";
+import { syncStudentSessionCookie, clearStudentSessionCookie } from "@/lib/studentAuth";
 
 interface HeaderProps {
   siteSettings?: typeof FALLBACK_SITE_SETTINGS;
@@ -33,11 +34,9 @@ export function Header({ siteSettings = FALLBACK_SITE_SETTINGS }: HeaderProps) {
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
       if (session) {
-        const isSecure = typeof window !== "undefined" && window.location.protocol === "https:";
-        const secureFlag = isSecure ? "; Secure" : "";
-        document.cookie = `sb-access-token=${session.access_token}; path=/; max-age=${session.expires_in}; SameSite=Lax${secureFlag}`;
+        syncStudentSessionCookie(session);
       } else {
-        document.cookie = "sb-access-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        clearStudentSessionCookie();
       }
     });
     return () => subscription.unsubscribe();
