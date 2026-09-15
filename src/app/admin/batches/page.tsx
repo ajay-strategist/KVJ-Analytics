@@ -27,6 +27,7 @@ import {
   BarChart3,
   UserPlus,
   UploadCloud,
+  Search,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import { Button } from "@/components/ui/Button";
@@ -120,6 +121,93 @@ export default function AdminBatchesPage() {
   });
   const [singleStudentLoading, setSingleStudentLoading] = useState(false);
   const [singleStudentMsg, setSingleStudentMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  // Roster search and filter state
+  const [rosterSearch, setRosterSearch] = useState("");
+  const [rosterStatusFilter, setRosterStatusFilter] = useState<"ALL" | "JOINED" | "INVITED">("ALL");
+
+  // Edit student modal state
+  const [editingStudent, setEditingStudent] = useState<any | null>(null);
+  const [editForm, setEditForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    student_id: "",
+    department: "",
+    status: "INVITED" as "INVITED" | "JOINED",
+  });
+  const [studentEditLoading, setStudentEditLoading] = useState(false);
+  const [studentEditError, setStudentEditError] = useState("");
+  const [studentEditSuccess, setStudentEditSuccess] = useState(false);
+
+  const handleOpenEditStudent = (student: any) => {
+    setEditingStudent(student);
+    setEditForm({
+      name: student.name || "",
+      email: student.email || "",
+      phone: student.phone || "",
+      student_id: student.student_id || "",
+      department: student.department || "",
+      status: student.status || "INVITED",
+    });
+    setStudentEditError("");
+    setStudentEditSuccess(false);
+  };
+
+  const handleUpdateStudent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingStudent || !activeBatchForStudents) return;
+
+    setStudentEditLoading(true);
+    setStudentEditError("");
+    setStudentEditSuccess(false);
+
+    try {
+      const res = await fetch(`/api/admin/batches/${activeBatchForStudents.id}/students`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          studentId: editingStudent.id,
+          ...editForm,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to update student");
+
+      const updated = data.student || { ...editingStudent, ...editForm };
+      setRoster((prev) =>
+        prev.map((s) => (s.id === editingStudent.id ? { ...s, ...updated } : s))
+      );
+
+      setStudentEditSuccess(true);
+      setTimeout(() => {
+        setEditingStudent(null);
+        setStudentEditSuccess(false);
+      }, 700);
+    } catch (err: any) {
+      setStudentEditError(err.message || "Failed to update student");
+    } finally {
+      setStudentEditLoading(false);
+    }
+  };
+
+  const filteredRoster = roster.filter((student) => {
+    if (rosterStatusFilter === "JOINED" && student.status !== "JOINED") return false;
+    if (rosterStatusFilter === "INVITED" && student.status === "JOINED") return false;
+
+    if (!rosterSearch.trim()) return true;
+    const q = rosterSearch.toLowerCase().trim();
+    const nameMatch = (student.name || "").toLowerCase().includes(q);
+    const idMatch = (student.student_id || "").toLowerCase().includes(q);
+    const deptMatch = (student.department || "").toLowerCase().includes(q);
+    const emailMatch = (student.email || "").toLowerCase().includes(q);
+    const phoneMatch = (student.phone || "").toLowerCase().includes(q);
+
+    return nameMatch || idMatch || deptMatch || emailMatch || phoneMatch;
+  });
+
+  const joinedCount = roster.filter((s) => s.status === "JOINED").length;
+  const invitedCount = roster.length - joinedCount;
 
   const fetchRoster = async (batchId: string) => {
     setRosterLoading(true);
@@ -1438,6 +1526,87 @@ export default function AdminBatchesPage() {
                   </div>
                 </div>
 
+                {/* Search & Filter Toolbar */}
+                {roster.length > 0 && (
+                  <div className="space-y-2 pt-1">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                      <div className="relative flex-1">
+                        <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                        <input
+                          type="text"
+                          value={rosterSearch}
+                          onChange={(e) => setRosterSearch(e.target.value)}
+                          placeholder="Search student, roll no, dept, phone, email..."
+                          className="w-full pl-8 pr-8 py-1.5 text-xs bg-slate-50/80 hover:bg-white focus:bg-white border border-slate-200 focus:border-brand rounded-xl focus:outline-none focus:ring-1 focus:ring-brand transition-all"
+                        />
+                        {rosterSearch && (
+                          <button
+                            type="button"
+                            onClick={() => setRosterSearch("")}
+                            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5"
+                            title="Clear search"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0 bg-slate-100 p-0.5 rounded-lg border border-slate-200/60 text-[11px] font-semibold">
+                        <button
+                          type="button"
+                          onClick={() => setRosterStatusFilter("ALL")}
+                          className={`px-2.5 py-1 rounded-md transition-all ${
+                            rosterStatusFilter === "ALL"
+                              ? "bg-white text-slate-900 shadow-sm font-bold"
+                              : "text-slate-500 hover:text-slate-800"
+                          }`}
+                        >
+                          All ({roster.length})
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setRosterStatusFilter("JOINED")}
+                          className={`px-2.5 py-1 rounded-md transition-all ${
+                            rosterStatusFilter === "JOINED"
+                              ? "bg-emerald-500 text-white shadow-sm font-bold"
+                              : "text-emerald-700 hover:text-emerald-900"
+                          }`}
+                        >
+                          Joined ({joinedCount})
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setRosterStatusFilter("INVITED")}
+                          className={`px-2.5 py-1 rounded-md transition-all ${
+                            rosterStatusFilter === "INVITED"
+                              ? "bg-amber-500 text-white shadow-sm font-bold"
+                              : "text-amber-700 hover:text-amber-900"
+                          }`}
+                        >
+                          Invited ({invitedCount})
+                        </button>
+                      </div>
+                    </div>
+
+                    {(rosterSearch || rosterStatusFilter !== "ALL") && (
+                      <div className="flex items-center justify-between text-[11px] text-slate-500 px-0.5">
+                        <span>
+                          Showing <strong>{filteredRoster.length}</strong> of <strong>{roster.length}</strong> students
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setRosterSearch("");
+                            setRosterStatusFilter("ALL");
+                          }}
+                          className="text-brand hover:underline font-semibold"
+                        >
+                          Reset filter
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {rosterLoading ? (
                   <div className="flex flex-col items-center justify-center py-12 text-slate-400">
                     <Loader2 className="w-8 h-8 animate-spin text-brand mb-2" />
@@ -1456,6 +1625,22 @@ export default function AdminBatchesPage() {
                       Upload an Excel spreadsheet on the left to authorize student registrations for this batch.
                     </p>
                   </div>
+                ) : filteredRoster.length === 0 ? (
+                  <div className="border border-dashed border-slate-200 rounded-xl py-12 text-center text-slate-400">
+                    <Search className="w-8 h-8 mx-auto mb-2 opacity-30 text-slate" />
+                    <p className="text-xs font-bold text-slate-600">No students match your filter</p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">Try searching with a different name, phone, or roll number.</p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRosterSearch("");
+                        setRosterStatusFilter("ALL");
+                      }}
+                      className="mt-3 inline-flex items-center text-xs font-bold text-brand hover:underline cursor-pointer"
+                    >
+                      Clear search filter
+                    </button>
+                  </div>
                 ) : (
                   <div className="border border-slate-100 rounded-xl overflow-hidden flex-1 overflow-y-auto max-h-[50vh]">
                     <table className="w-full text-left border-collapse text-[13px]">
@@ -1469,7 +1654,7 @@ export default function AdminBatchesPage() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
-                        {roster.map((student) => (
+                        {filteredRoster.map((student) => (
                           <tr key={student.id} className="hover:bg-slate-50/30 transition-colors">
                             <td className="p-3 pl-4 font-semibold text-slate-900">
                               {student.name || <span className="italic text-slate-400 text-xs">Unnamed Student</span>}
@@ -1512,13 +1697,24 @@ export default function AdminBatchesPage() {
                               )}
                             </td>
                             <td className="p-3 text-center">
-                              <button
-                                onClick={() => handleRemoveStudent(student.id, activeBatchForStudents.id)}
-                                className="text-slate-400 hover:text-error transition-colors p-1.5 rounded-lg hover:bg-error/5 cursor-pointer"
-                                title="Remove student from roster"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
+                              <div className="inline-flex items-center gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenEditStudent(student)}
+                                  className="text-slate-400 hover:text-brand transition-colors p-1.5 rounded-lg hover:bg-brand/5 cursor-pointer"
+                                  title="Edit student details"
+                                >
+                                  <Pencil className="w-4 h-4" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveStudent(student.id, activeBatchForStudents.id)}
+                                  className="text-slate-400 hover:text-error transition-colors p-1.5 rounded-lg hover:bg-error/5 cursor-pointer"
+                                  title="Remove student from roster"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         ))}
@@ -1528,6 +1724,155 @@ export default function AdminBatchesPage() {
                 )}
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Student Modal */}
+      {editingStudent && (
+        <div className="fixed inset-0 z-[200] grid place-items-center bg-slate-900/50 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md bg-white rounded-2xl border border-slate-200 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div className="border-b border-slate-100 p-4 flex justify-between items-center bg-slate-50/50">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-brand/10 text-brand flex items-center justify-center">
+                  <Pencil className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-slate-900 text-sm">Edit Student</h4>
+                  <p className="text-[11px] text-slate-500">Update roster credentials</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditingStudent(null)}
+                className="text-slate-400 hover:text-slate-700 p-1.5 rounded-full hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateStudent} className="p-5 space-y-3.5 text-xs">
+              {studentEditError && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
+                  <span>{studentEditError}</span>
+                </div>
+              )}
+              {studentEditSuccess && (
+                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-700 text-xs flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 shrink-0 text-emerald-600" />
+                  <span>Student updated successfully!</span>
+                </div>
+              )}
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">
+                  Student Name <span className="text-error">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editForm.name}
+                  onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                  placeholder="e.g. Lakshmi"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand bg-white"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">
+                    Phone Number
+                  </label>
+                  <input
+                    type="tel"
+                    value={editForm.phone}
+                    onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                    placeholder="+919876543210"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand bg-white font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    value={editForm.email}
+                    onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                    placeholder="student@gmail.com"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand bg-white"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">
+                    Student ID / Roll No
+                  </label>
+                  <input
+                    type="text"
+                    value={editForm.student_id}
+                    onChange={(e) => setEditForm({ ...editForm, student_id: e.target.value })}
+                    placeholder="e.g. 23BCM042"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand bg-white font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">
+                    Department
+                  </label>
+                  <input
+                    type="text"
+                    value={editForm.department}
+                    onChange={(e) => setEditForm({ ...editForm, department: e.target.value })}
+                    placeholder="e.g. BCom Aided"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand bg-white"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">
+                  Enrollment Status
+                </label>
+                <select
+                  value={editForm.status}
+                  onChange={(e) => setEditForm({ ...editForm, status: e.target.value as "INVITED" | "JOINED" })}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand bg-white font-medium"
+                >
+                  <option value="INVITED">INVITED (Awaiting student signup/joining)</option>
+                  <option value="JOINED">JOINED (Active college enrollment)</option>
+                </select>
+              </div>
+
+              <div className="pt-2 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingStudent(null)}
+                  className="px-4 py-2 border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl font-semibold transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <Button
+                  type="submit"
+                  disabled={studentEditLoading}
+                  className="px-5 py-2 bg-brand text-white hover:bg-brand/90 font-bold rounded-xl shadow-sm cursor-pointer"
+                >
+                  {studentEditLoading ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />
+                      <span>Saving...</span>
+                    </>
+                  ) : (
+                    <span>Save Changes</span>
+                  )}
+                </Button>
+              </div>
+            </form>
           </div>
         </div>
       )}

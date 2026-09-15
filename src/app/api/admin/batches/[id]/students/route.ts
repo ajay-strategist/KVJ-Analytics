@@ -299,3 +299,99 @@ export async function DELETE(
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
+
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  if (!isAuthorized(req)) {
+    return NextResponse.json({ error: "Unauthorized access." }, { status: 401 });
+  }
+
+  const supabaseAdmin = getAdminClient();
+  if (!supabaseAdmin) {
+    return NextResponse.json(
+      { error: "Supabase not configured." },
+      { status: 500 }
+    );
+  }
+
+  const { id } = await params;
+
+  try {
+    const body = await req.json();
+    const { studentId, name, email, phone, student_id, department, status } = body;
+
+    if (!studentId) {
+      return NextResponse.json(
+        { error: "Missing student ID to update." },
+        { status: 400 }
+      );
+    }
+
+    const cleanEmail = email !== undefined ? (email ? email.trim().toLowerCase() : null) : undefined;
+    const cleanPhone = phone !== undefined ? (phone ? normalizePhone(phone) : null) : undefined;
+    const cleanName = name !== undefined ? (name ? name.trim() : null) : undefined;
+    const cleanStudentId = student_id !== undefined ? (student_id ? student_id.trim() : null) : undefined;
+    const cleanDept = department !== undefined ? (department ? department.trim() : null) : undefined;
+
+    const updatePayload: Record<string, any> = {};
+    if (cleanName !== undefined) updatePayload.name = cleanName;
+    if (cleanEmail !== undefined) updatePayload.email = cleanEmail;
+    if (cleanPhone !== undefined) updatePayload.phone = cleanPhone;
+    if (cleanStudentId !== undefined) updatePayload.student_id = cleanStudentId;
+    if (cleanDept !== undefined) updatePayload.department = cleanDept;
+    if (status !== undefined) updatePayload.status = status;
+
+    // If email or phone updated, check if matched to registered user
+    if (cleanEmail || cleanPhone) {
+      let profileId = null;
+      if (cleanEmail) {
+        try {
+          const { data: authUser } = await supabaseAdmin.auth.admin.getUserByEmail(cleanEmail);
+          if (authUser?.user) {
+            profileId = authUser.user.id;
+          }
+        } catch (err) {
+          console.warn(`User search failed for email ${cleanEmail}:`, err);
+        }
+      }
+      if (!profileId && cleanPhone) {
+        try {
+          const { data: profile } = await supabaseAdmin
+            .from("profiles")
+            .select("id")
+            .eq("phone", cleanPhone)
+            .maybeSingle();
+          if (profile) {
+            profileId = profile.id;
+          }
+        } catch (err) {
+          console.warn(`User search failed for phone ${cleanPhone}:`, err);
+        }
+      }
+      if (profileId) {
+        updatePayload.profile_id = profileId;
+        if (status === undefined) {
+          updatePayload.status = "JOINED";
+        }
+      }
+    }
+
+    const { data: updatedStudent, error } = await supabaseAdmin
+      .from("batch_students")
+      .update(updatePayload)
+      .eq("id", studentId)
+      .eq("batch_id", id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return NextResponse.json({ success: true, student: updatedStudent });
+  } catch (error: any) {
+    console.error("Failed to update batch student:", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+

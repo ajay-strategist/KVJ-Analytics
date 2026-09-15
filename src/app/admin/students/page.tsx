@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, KeyRound, X, Plus, BookPlus, GraduationCap, CheckCircle } from "lucide-react";
+import { Eye, KeyRound, X, Plus, BookPlus, GraduationCap, CheckCircle, Pencil, AlertCircle, Loader2 } from "lucide-react";
 import { DataTable, StatusBadge, AvatarCell, RowActions, formatDate, type Column } from "@/components/admin/DataTable";
 import { useAdminFetch } from "@/components/admin/hooks/useAdminFetch";
 
@@ -48,6 +48,59 @@ export default function AdminStudentsPage() {
   const [addForm, setAddForm] = useState({
     name: "", email: "", phone: "", password: "password", account_type: "individual", course_id: "", batch_id: ""
   });
+
+  // Edit Student modal state
+  const [editingStudent, setEditingStudent] = useState<Student | null>(null);
+  const [editForm, setEditForm] = useState({
+    name: "",
+    phone: "",
+    organization: "",
+    profession: "",
+    account_type: "individual",
+  });
+  const [editLoading, setEditLoading] = useState(false);
+  const [editError, setEditError] = useState("");
+  const [editSuccess, setEditSuccess] = useState(false);
+
+  const handleOpenEditStudent = (s: Student) => {
+    setEditingStudent(s);
+    setEditForm({
+      name: s.full_name || s.name || "",
+      phone: s.phone || "",
+      organization: s.organization || "",
+      profession: s.profession || "",
+      account_type: s.account_type || "individual",
+    });
+    setEditError("");
+    setEditSuccess(false);
+  };
+
+  const handleSaveStudent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingStudent) return;
+    setEditLoading(true);
+    setEditError("");
+    setEditSuccess(false);
+    try {
+      const res = await fetch(`/api/admin/students/${editingStudent.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editForm),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to update student");
+      setEditSuccess(true);
+      reload();
+      setTimeout(() => {
+        setEditingStudent(null);
+        setEditSuccess(false);
+      }, 700);
+    } catch (err: any) {
+      setEditError(err.message || "Failed to update student");
+    } finally {
+      setEditLoading(false);
+    }
+  };
 
   const url = useMemo(() => {
     const p = new URLSearchParams({ page: String(page), pageSize: String(PAGE_SIZE) });
@@ -250,6 +303,7 @@ export default function AdminStudentsPage() {
         emptyDescription="Students appear here once they sign up on the site."
         rowActions={(r) => (
           <RowActions actions={[
+            { label: "Edit student", icon: Pencil, onClick: () => handleOpenEditStudent(r) },
             { label: "View enrollments", icon: Eye, onClick: () => router.push(`/admin/enrollments`) },
             { label: "Enroll in Course", icon: BookPlus, onClick: () => { setEnrollStudent(r); loadCoursesAndBatches(); setEnrollError(""); setEnrollSuccess(""); } },
             { label: "Reset password", icon: KeyRound, onClick: () => { setResetStudent(r); setNewPassword("password"); setResetError(""); setResetSuccess(false); } },
@@ -544,6 +598,137 @@ export default function AdminStudentsPage() {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Student Modal */}
+      {editingStudent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+              <h3 className="font-semibold text-slate-800 flex items-center gap-2 text-sm">
+                <Pencil className="w-4 h-4 text-blue-600" />
+                Edit Student Profile
+              </h3>
+              <button
+                type="button"
+                onClick={() => setEditingStudent(null)}
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-100"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveStudent} className="p-6 space-y-4">
+              {editError && (
+                <div className="p-3 text-xs bg-red-50 border border-red-200 text-red-700 rounded-lg flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
+                  <span>{editError}</span>
+                </div>
+              )}
+              {editSuccess && (
+                <div className="p-3 text-xs bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 shrink-0 text-emerald-600" />
+                  <span>Student profile updated successfully!</span>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Full Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editForm.name}
+                  onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                  placeholder="Student name"
+                  className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Phone Number
+                </label>
+                <input
+                  type="tel"
+                  value={editForm.phone}
+                  onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                  placeholder="+919876543210"
+                  className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Organization / College
+                </label>
+                <input
+                  type="text"
+                  value={editForm.organization}
+                  onChange={(e) => setEditForm({ ...editForm, organization: e.target.value })}
+                  placeholder="e.g. Christ University"
+                  className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Profession
+                  </label>
+                  <input
+                    type="text"
+                    value={editForm.profession}
+                    onChange={(e) => setEditForm({ ...editForm, profession: e.target.value })}
+                    placeholder="e.g. student"
+                    className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Account Type
+                  </label>
+                  <select
+                    value={editForm.account_type}
+                    onChange={(e) => setEditForm({ ...editForm, account_type: e.target.value })}
+                    className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  >
+                    <option value="individual">Individual</option>
+                    <option value="college">College</option>
+                    <option value="corporate">Corporate</option>
+                    <option value="one_to_one">1-to-1</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingStudent(null)}
+                  className="px-4 py-2 text-xs font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={editLoading}
+                  className="px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-lg flex items-center gap-1.5"
+                >
+                  {editLoading ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Saving...</span>
+                    </>
+                  ) : (
+                    <span>Save Changes</span>
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
