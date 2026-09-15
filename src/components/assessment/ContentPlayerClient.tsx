@@ -511,6 +511,11 @@ export function ContentPlayerClient({ course, modules, adminPreview = false, ini
     if (mainScrollRef.current) {
       mainScrollRef.current.scrollTop = 0;
     }
+    // Auto-expand module containing this lesson in sidebar
+    const parentMod = modules.find((m: any) => (m.lessons || []).some((l: any) => l.id === lesson.id));
+    if (parentMod) {
+      setExpandedModuleIds((prev) => new Set([...prev, parentMod.id]));
+    }
     if (typeof window !== "undefined") {
       try {
         window.scrollTo({ top: 0, left: 0, behavior: "instant" });
@@ -855,20 +860,23 @@ export function ContentPlayerClient({ course, modules, adminPreview = false, ini
                 {nextLesson ? (
                   <button
                     type="button"
-                    onClick={() => activeLesson && handleLessonSelect(nextLesson!)}
-                    className={`py-1.5 px-3 text-xs border flex items-center gap-1 rounded-lg transition-all ${
-                      darkMode
-                        ? "bg-zinc-900 hover:bg-zinc-800 text-zinc-350 border-white/5"
-                        : "bg-white hover:bg-zinc-50 text-zinc-700 border-zinc-200"
+                    onClick={handleMarkCompleteAndNext}
+                    className={`py-1.5 px-3 text-xs border flex items-center gap-1.5 rounded-lg transition-all font-semibold ${
+                      completedLessonIds.has(activeLesson.id)
+                        ? darkMode
+                          ? "bg-zinc-900 hover:bg-zinc-800 text-zinc-350 border-white/5"
+                          : "bg-white hover:bg-zinc-50 text-zinc-700 border-zinc-200"
+                        : "bg-[#08A88A] hover:bg-[#068A72] text-white border-transparent shadow-sm"
                     }`}
                   >
-                    Next <ChevronRight className="w-3.5 h-3.5" />
+                    <span>{completedLessonIds.has(activeLesson.id) ? "Next" : "Complete & Next"}</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
                   </button>
                 ) : (
                   <button
                     type="button"
-                    onClick={() => router.push(`/training/${course.slug}`)}
-                    className={`py-1.5 px-3 text-xs border flex items-center gap-1 rounded-lg transition-all ${
+                    onClick={handleMarkCompleteAndNext}
+                    className={`py-1.5 px-3 text-xs border flex items-center gap-1.5 rounded-lg transition-all font-semibold ${
                       darkMode
                         ? "bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border-emerald-500/30"
                         : "bg-emerald-50 hover:bg-emerald-100 text-brand border-brand/20"
@@ -894,6 +902,7 @@ export function ContentPlayerClient({ course, modules, adminPreview = false, ini
                 autoStart={true}
                 onStart={() => setIsAssessmentActive(true)}
                 onExit={() => setIsAssessmentActive(false)}
+                onNext={nextLesson ? () => handleMarkCompleteAndNext() : undefined}
                 onComplete={async (score, maxScore, passed) => {
                   setAttemptsTrigger((prev) => prev + 1);
                   try {
@@ -1043,6 +1052,28 @@ export function ContentPlayerClient({ course, modules, adminPreview = false, ini
                         </span>
                       </div>
                     )}
+
+                    <div className="pt-2 flex items-center justify-center gap-3">
+                      {nextLesson ? (
+                        <button
+                          type="button"
+                          onClick={handleMarkCompleteAndNext}
+                          className="inline-flex items-center gap-2 px-8 py-3 rounded-xl font-bold text-sm bg-[#08A88A] hover:bg-[#068A72] text-white shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5"
+                        >
+                          Continue to Next Session
+                          <ChevronRight className="w-4 h-4" />
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => router.push(`/training/${course.slug}`)}
+                          className="inline-flex items-center gap-2 px-8 py-3 rounded-xl font-bold text-sm bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5"
+                        >
+                          Finish Course
+                          <CheckCircle2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
                   </div>
                 ) : (
                   <div className={`border rounded-3xl overflow-hidden ${darkMode ? "bg-[#0A0A0C]/55 border-white/5" : "bg-white border-line shadow-soft"}`}>
@@ -1063,6 +1094,7 @@ export function ContentPlayerClient({ course, modules, adminPreview = false, ini
                           setIsAssessmentActive(false);
                         }
                       }}
+                      onNext={nextLesson ? () => handleMarkCompleteAndNext() : undefined}
                       onComplete={async (score, maxScore, passed) => {
                         setAttemptsTrigger((prev) => prev + 1);
                         if (!adminPreview) {
@@ -1169,15 +1201,15 @@ export function ContentPlayerClient({ course, modules, adminPreview = false, ini
                     nextLesson ? (
                       <button
                         type="button"
-                        onClick={() => activeLesson && handleLessonSelect(nextLesson!)}
+                        onClick={handleMarkCompleteAndNext}
                         className="py-2.5 px-6 bg-[#08A88A] hover:bg-[#068A72] text-white text-sm font-semibold flex items-center gap-1.5 rounded-xl border-none transition-all shadow-[0_4px_15px_rgba(8,168,138,0.2)]"
                       >
-                        Next Lesson <ChevronRight className="w-4 h-4" />
+                        Continue to Next Session <ChevronRight className="w-4 h-4" />
                       </button>
                     ) : (
                       <button
                         type="button"
-                        onClick={() => router.push(`/training/${course.slug}`)}
+                        onClick={handleMarkCompleteAndNext}
                         className="py-2.5 px-6 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold flex items-center gap-1.5 rounded-xl border-none transition-all shadow-[0_4px_15px_rgba(16,185,129,0.2)]"
                       >
                         Finish Course <CheckCircle2 className="w-4 h-4" />

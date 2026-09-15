@@ -521,6 +521,7 @@ interface TestTakingWidgetProps {
   onComplete?: (score: number, maxScore: number, passed: boolean) => void;
   onStart?: () => void;
   onExit?: () => void;
+  onNext?: () => void;
   isInline?: boolean;
   showAnswers?: boolean;
   autoStart?: boolean;
@@ -534,6 +535,7 @@ export function TestTakingWidget({
   onComplete,
   onStart,
   onExit,
+  onNext,
   isInline = false,
   showAnswers = false,
   autoStart = false,
@@ -2297,18 +2299,28 @@ export function TestTakingWidget({
                 )}
               </div>
 
-              {onExit && (
-                <div className="result-card-anim-delay pt-2">
+              <div className="result-card-anim-delay pt-2 flex items-center justify-center gap-3 flex-wrap">
+                {onExit && (
                   <button
                     type="button"
                     onClick={onExit}
-                    className="inline-flex items-center gap-2 px-8 py-3 rounded-xl font-bold text-sm bg-white text-slate-800 hover:bg-slate-100 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm bg-white/20 text-white hover:bg-white/30 transition-all shadow-md hover:-translate-y-0.5 border border-white/20"
                   >
                     <ArrowLeft className="w-4 h-4" />
-                    Return to Course Player
+                    Review Questions
                   </button>
-                </div>
-              )}
+                )}
+                {onNext && (
+                  <button
+                    type="button"
+                    onClick={onNext}
+                    className="inline-flex items-center gap-2 px-8 py-3 rounded-xl font-bold text-sm bg-white text-slate-900 hover:bg-emerald-50 hover:text-emerald-700 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+                  >
+                    Continue to Next Session
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 
@@ -2809,16 +2821,28 @@ export function TestTakingWidget({
             })}
 
             {/* Bottom CTA */}
-            {onExit && (
-              <div className="flex justify-center pt-4">
-                <button
-                  type="button"
-                  onClick={onExit}
-                  className="inline-flex items-center gap-2 px-8 py-3 rounded-xl font-bold text-sm bg-brand text-white hover:bg-brand/90 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                  Return to Course
-                </button>
+            {(onExit || onNext) && (
+              <div className="flex items-center justify-center gap-4 pt-4 flex-wrap">
+                {onExit && (
+                  <button
+                    type="button"
+                    onClick={onExit}
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm bg-zinc-800 text-zinc-200 hover:bg-zinc-700 transition-all shadow-md"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                    Back to Player
+                  </button>
+                )}
+                {onNext && (
+                  <button
+                    type="button"
+                    onClick={onNext}
+                    className="inline-flex items-center gap-2 px-8 py-3 rounded-xl font-bold text-sm bg-[#08A88A] hover:bg-[#068A72] text-white transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+                  >
+                    Continue to Next Session
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                )}
               </div>
             )}
           </div>

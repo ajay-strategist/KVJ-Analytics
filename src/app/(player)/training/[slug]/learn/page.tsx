@@ -66,6 +66,7 @@ export default async function CoursePlayerPage({
         .sort((a: any, b: any) => (a.display_order ?? 0) - (b.display_order ?? 0))
         .map((l: any) => ({
           id: l.id,
+          module_id: l.module_id || m.id,
           title: l.title,
           kind: l.kind as any,
           max_score: l.max_score,
