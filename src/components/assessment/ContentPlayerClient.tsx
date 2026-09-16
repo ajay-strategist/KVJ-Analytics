@@ -343,33 +343,44 @@ export function ContentPlayerClient({ course, modules, adminPreview = false, ini
         setAttemptsCount(0);
         setHighestAttempt(null);
         try {
-          const { data: testsData, error: testError } = await supabase
+          const testPromise = supabase
             .from("mock_tests")
             .select("*")
             .eq("lesson_id", activeLesson.id)
             .order("created_at", { ascending: false });
+          const timeoutPromise = new Promise<{ data: null; error: any }>((resolve) =>
+            setTimeout(() => resolve({ data: null, error: new Error("Test load timeout") }), 5000)
+          );
+
+          const { data: testsData, error: testError } = await Promise.race([testPromise, timeoutPromise]);
 
           if (testError) {
-            console.error("Failed to load test:", testError);
+            console.warn("Failed or timed out loading test:", testError);
           }
           const testData = testsData?.[0];
           if (testData) {
             setActiveTest(testData);
 
             if (!adminPreview && user?.id) {
-              const { data: attempts, error: attemptsError } = await supabase
-                .from("test_attempts")
-                .select("*")
-                .eq("test_id", testData.id)
-                .eq("user_id", user.id);
-
-              if (attemptsError) throw attemptsError;
-              if (attempts) {
-                setAttemptsCount(attempts.length);
-                if (attempts.length > 0) {
-                  const sorted = [...attempts].sort((a, b) => b.score - a.score);
-                  setHighestAttempt(sorted[0]);
+              try {
+                const attemptsPromise = supabase
+                  .from("test_attempts")
+                  .select("*")
+                  .eq("test_id", testData.id)
+                  .eq("user_id", user.id);
+                const attTimeout = new Promise<{ data: null; error: any }>((resolve) =>
+                  setTimeout(() => resolve({ data: null, error: new Error("Attempts load timeout") }), 3500)
+                );
+                const { data: attempts } = await Promise.race([attemptsPromise, attTimeout]);
+                if (attempts) {
+                  setAttemptsCount(attempts.length);
+                  if (attempts.length > 0) {
+                    const sorted = [...attempts].sort((a, b) => b.score - a.score);
+                    setHighestAttempt(sorted[0]);
+                  }
                 }
+              } catch (attErr) {
+                console.warn("Non-fatal: failed to load previous attempts:", attErr);
               }
             }
           }

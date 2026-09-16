@@ -567,6 +567,7 @@ export function TestTakingWidget({
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [retryKey, setRetryKey] = useState(0);
 
   const pointerSensor = useSensor(PointerSensor, {
     activationConstraint: {
@@ -685,8 +686,12 @@ export function TestTakingWidget({
         setLoading(true);
         setError("");
 
-        // Fetch course and enrollments to double gate
-        const resTest = await fetchWithStudentAuth(`/api/tests/${testId}${adminPreview ? "?preview=1" : ""}`);
+        // Fetch course and enrollments to double gate with timeout safeguard
+        const fetchPromise = fetchWithStudentAuth(`/api/tests/${testId}${adminPreview ? "?preview=1" : ""}`);
+        const timeoutPromise = new Promise<Response>((_, reject) =>
+          setTimeout(() => reject(new Error("Connection took too long to load exam. Please click Retry.")), 15000)
+        );
+        const resTest = await Promise.race([fetchPromise, timeoutPromise]);
         const testData = await resTest.json();
 
         const testObj = testData?.test;
@@ -736,7 +741,7 @@ export function TestTakingWidget({
     };
 
     initialize();
-  }, [testId]);
+  }, [testId, retryKey]);
 
   // Countdown timer
   useEffect(() => {
@@ -895,13 +900,22 @@ export function TestTakingWidget({
       <div className={`p-8 flex items-center justify-center font-body h-96 ${colors.container}`}>
         <div className={`text-center p-8 rounded-2xl max-w-sm shadow-soft ${colors.surface}`}>
           <AlertTriangle className="w-12 h-12 text-error mx-auto mb-3" />
-          <h3 className="font-bold text-base">Access Error</h3>
-          <p className="text-xs text-slate-500 mt-2">{error}</p>
-          {onExit && (
-            <Button onClick={onExit} variant="secondary" className="mt-6 px-4 py-2 text-xs">
-              Go Back
-            </Button>
-          )}
+          <h3 className="font-bold text-base">Assessment Error</h3>
+          <p className="text-xs text-slate-500 mt-2 leading-relaxed">{error}</p>
+          <div className="flex items-center justify-center gap-3 mt-6">
+            <button
+              type="button"
+              onClick={() => setRetryKey((k) => k + 1)}
+              className="px-4 py-2 text-xs font-bold rounded-xl bg-brand text-white hover:bg-brand/90 transition-all shadow-sm"
+            >
+              Retry Loading
+            </button>
+            {onExit && (
+              <Button onClick={onExit} variant="secondary" className="px-4 py-2 text-xs">
+                Go Back
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     );

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAdminClient } from "@/lib/supabaseAdmin";
+import { getAdminClient, verifyAndEnsureStudentEnrollment } from "@/lib/supabaseAdmin";
 
 export async function POST(req: NextRequest) {
   const db = getAdminClient();
@@ -60,15 +60,9 @@ export async function POST(req: NextRequest) {
     const isAdmin = profile?.role === "admin";
 
     if (!isAdmin) {
-      const { data: enrollment, error: enrollError } = await db
-        .from("enrollments")
-        .select("id")
-        .eq("user_id", user.id)
-        .eq("course_slug", courseSlug)
-        .eq("status", "active")
-        .maybeSingle();
+      const isEnrolled = await verifyAndEnsureStudentEnrollment(db, user.id, courseSlug || "");
 
-      if (enrollError || !enrollment) {
+      if (!isEnrolled) {
         return NextResponse.json(
           { error: "Access denied. You must be enrolled in this course to save results." },
           { status: 403 }

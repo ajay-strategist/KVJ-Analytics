@@ -1,16 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { getAdminClient, verifyAndEnsureStudentEnrollment } from "@/lib/supabaseAdmin";
 import { adminToken } from "@/lib/adminAuth";
 import { evaluateStudentCode } from "@/lib/codeEvaluator";
-
-function getAdmin() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key || url === "https://placeholder.supabase.co") {
-    return require("@/lib/mockSupabase").mockSupabaseClient;
-  }
-  return createClient(url, key, { auth: { persistSession: false } });
-}
 
 function getCorrectAnswerLabel(type: string, config: any) {
   if (!config) return "";
@@ -68,7 +59,7 @@ export async function POST(
 ) {
   try {
     const { id: testId } = await params;
-    const db = getAdmin();
+    const db = getAdminClient();
 
     if (!db) {
       return NextResponse.json({ error: "Supabase client not configured." }, { status: 500 });
@@ -140,15 +131,10 @@ export async function POST(
       const isAdmin = profile?.role === "admin";
 
       if (!isAdmin) {
-        const { data: enrollment, error: enrollError } = await db
-          .from("enrollments")
-          .select("id")
-          .eq("user_id", user.id)
-          .eq("course_slug", course?.slug)
-          .eq("status", "active")
-          .maybeSingle();
+        const targetSlug = course?.slug || "";
+        const isEnrolled = await verifyAndEnsureStudentEnrollment(db, user.id, targetSlug);
 
-        if (enrollError || !enrollment) {
+        if (!isEnrolled) {
           return NextResponse.json(
             { error: "Access denied. You must be enrolled in the course to check answers." },
             { status: 403 }

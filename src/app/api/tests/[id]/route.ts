@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAdminClient } from "@/lib/supabaseAdmin";
+import { getAdminClient, verifyAndEnsureStudentEnrollment } from "@/lib/supabaseAdmin";
 import { adminToken } from "@/lib/adminAuth";
 import { evaluateStudentCode } from "@/lib/codeEvaluator";
 
@@ -224,15 +224,10 @@ export async function GET(
         .maybeSingle();
 
       if (profile?.role !== "admin") {
-        const { data: enrollment, error: enrollError } = await db
-          .from("enrollments")
-          .select("id")
-          .eq("user_id", user.id)
-          .eq("course_slug", course?.slug)
-          .eq("status", "active")
-          .maybeSingle();
+        const targetSlug = course?.slug || "";
+        const isEnrolled = await verifyAndEnsureStudentEnrollment(db, user.id, targetSlug);
 
-        if (enrollError || !enrollment) {
+        if (!isEnrolled) {
           return NextResponse.json(
             { error: "Access denied. You must be enrolled in the course to take this mock test." },
             { status: 403 }
@@ -379,15 +374,10 @@ export async function POST(
       const isAdmin = profile?.role === "admin";
 
       if (!isAdmin) {
-        const { data: enrollment, error: enrollError } = await db
-          .from("enrollments")
-          .select("id")
-          .eq("user_id", user.id)
-          .eq("course_slug", course?.slug)
-          .eq("status", "active")
-          .maybeSingle();
+        const targetSlug = course?.slug || "";
+        const isEnrolled = await verifyAndEnsureStudentEnrollment(db, user.id, targetSlug);
 
-        if (enrollError || !enrollment) {
+        if (!isEnrolled) {
           return NextResponse.json(
             { error: "Access denied. You must be enrolled in the course to evaluate this mock test." },
             { status: 403 }

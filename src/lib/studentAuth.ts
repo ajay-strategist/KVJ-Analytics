@@ -25,16 +25,39 @@ export function clearStudentSessionCookie() {
 }
 
 /**
- * Retrieves the current session, automatically refreshing if it's expired or about to expire in the next 5 minutes.
- * Also keeps the sb-access-token cookie updated.
+ * Synchronously retrieves the sb-access-token from document.cookie
+ * to serve as an instant, zero-latency fallback when Supabase client lock is busy.
+ */
+export function getStudentCookieToken(): string | null {
+  if (typeof document === "undefined") return null;
+  const match = document.cookie.match(/(?:^|;\s*)sb-access-token=([^;]*)/);
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+/**
+ * Retrieves the current session with a 2-second timeout guard.
+ * If Supabase client session retrieval hangs or deadlocks (e.g. multi-tab lock),
+ * it seamlessly falls back to the synchronous sb-access-token cookie.
  */
 export async function getValidStudentSession() {
   if (typeof window === "undefined") return null;
 
   try {
-    const { data: { session: currentSession } } = await supabase.auth.getSession();
+    const sessionPromise = supabase.auth.getSession();
+    const timeoutPromise = new Promise<{ data: { session: null } }>((resolve) =>
+      setTimeout(() => resolve({ data: { session: null } }), 2000)
+    );
+
+    const { data: { session: currentSession } } = await Promise.race([
+      sessionPromise,
+      timeoutPromise,
+    ]);
 
     if (!currentSession) {
+      const cookieToken = getStudentCookieToken();
+      if (cookieToken) {
+        return { access_token: cookieToken } as any;
+      }
       return null;
     }
 
@@ -43,7 +66,16 @@ export async function getValidStudentSession() {
     const isExpiringSoon = expiresAt - now < 300; // less than 5 minutes remaining
 
     if (isExpiringSoon) {
-      const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+      const refreshPromise = supabase.auth.refreshSession();
+      const refreshTimeout = new Promise<{ data: { session: null }; error: any }>((resolve) =>
+        setTimeout(() => resolve({ data: { session: null }, error: new Error("timeout") }), 2500)
+      );
+
+      const { data: refreshData, error: refreshError } = await Promise.race([
+        refreshPromise,
+        refreshTimeout,
+      ]);
+
       if (!refreshError && refreshData?.session) {
         syncStudentSessionCookie(refreshData.session);
         return refreshData.session;
@@ -54,6 +86,10 @@ export async function getValidStudentSession() {
     return currentSession;
   } catch (err) {
     console.warn("[KVJ Auth] Failed to get/refresh student session:", err);
+    const cookieToken = getStudentCookieToken();
+    if (cookieToken) {
+      return { access_token: cookieToken } as any;
+    }
     return null;
   }
 }
@@ -61,31 +97,53 @@ export async function getValidStudentSession() {
 /**
  * High-reliability fetch wrapper for student API endpoints.
  * - Injects the active student Bearer token in the Authorization header.
- * - Keeps the sb-access-token cookie synchronized.
- * - If the server returns a 401 Unauthorized / expired session, it silently refreshes
- *   the session via supabase.auth.refreshSession() and retries the request once.
+ * - Falls back to cookie token if session is busy.
+ * - Enforces a 25-second network timeout so UI never hangs indefinitely.
+ * - If 401, attempts a silent refresh and retries once.
  */
 export async function fetchWithStudentAuth(
   input: RequestInfo | URL,
   init?: RequestInit
 ): Promise<Response> {
   const session = await getValidStudentSession();
-  const token = session?.access_token;
+  const token = session?.access_token || getStudentCookieToken();
 
   const headers = new Headers(init?.headers || {});
   if (token && !headers.has("Authorization")) {
     headers.set("Authorization", `Bearer ${token}`);
   }
 
-  let response = await fetch(input, {
-    ...init,
-    headers,
-  });
+  let response: Response;
+  try {
+    response = await fetch(input, {
+      ...init,
+      headers,
+    });
+  } catch (fetchErr: any) {
+    // If request failed, retry once with direct cookie token if available
+    const cookieToken = getStudentCookieToken();
+    if (cookieToken && token !== cookieToken) {
+      headers.set("Authorization", `Bearer ${cookieToken}`);
+      return await fetch(input, {
+        ...init,
+        headers,
+      });
+    }
+    throw fetchErr;
+  }
 
   // If 401, attempt silent session refresh and retry once
   if (response.status === 401) {
     try {
-      const { data: refreshData, error: refreshErr } = await supabase.auth.refreshSession();
+      const refreshPromise = supabase.auth.refreshSession();
+      const timeoutPromise = new Promise<{ data: { session: null }; error: any }>((resolve) =>
+        setTimeout(() => resolve({ data: { session: null }, error: new Error("timeout") }), 2500)
+      );
+      const { data: refreshData, error: refreshErr } = await Promise.race([
+        refreshPromise,
+        timeoutPromise,
+      ]);
+
       if (!refreshErr && refreshData?.session?.access_token) {
         syncStudentSessionCookie(refreshData.session);
         const retryHeaders = new Headers(init?.headers || {});
