@@ -1,14 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-function getAdminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key || url === "https://placeholder.supabase.co") {
-    return require("@/lib/mockSupabase").mockSupabaseClient;
-  }
-  return createClient(url, key, { auth: { persistSession: false } });
-}
+import { getAdminClient } from "@/lib/supabaseAdmin";
 
 export async function POST(req: NextRequest) {
   const supabaseAdmin = getAdminClient();
@@ -41,10 +32,13 @@ export async function POST(req: NextRequest) {
 
     if (!targetUserId && body.email) {
       const cleanEmail = String(body.email).toLowerCase().trim();
-      const { data: uPage } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
-      const found = (uPage?.users || []).find((u: any) => u.email?.toLowerCase().trim() === cleanEmail);
-      if (found) {
-        targetUserId = found.id;
+      const { data: pRec } = await supabaseAdmin
+        .from("profiles")
+        .select("id")
+        .ilike("email", cleanEmail)
+        .maybeSingle();
+      if (pRec?.id) {
+        targetUserId = pRec.id;
       }
     }
 

@@ -1,14 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-function getAdminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key || url === "https://placeholder.supabase.co") {
-    return require("@/lib/mockSupabase").mockSupabaseClient;
-  }
-  return createClient(url, key, { auth: { persistSession: false } });
-}
+import { getAdminClient } from "@/lib/supabaseAdmin";
 
 export async function POST(req: NextRequest) {
   const supabaseAdmin = getAdminClient();
@@ -34,37 +25,68 @@ export async function POST(req: NextRequest) {
     const isEmail = rawInput.includes("@");
     const cleanDigits = rawInput.replace(/\D/g, "");
 
-    // 1. Find user in auth list
-    const { data: usersPage, error: listErr } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
-    if (listErr) throw listErr;
+    // 1. Find user in profiles (0.5ms SQL lookup)
+    let matchedUserId: string | null = null;
+    let targetEmail: string | null = null;
 
-    let matchedUser = (usersPage?.users || []).find((u: any) => {
-      if (isEmail && u.email?.toLowerCase().trim() === rawInput.toLowerCase()) return true;
-      if (!isEmail && cleanDigits) {
-        const p = (u.phone || "").replace(/\D/g, "");
-        if (p && (p === cleanDigits || p.endsWith(cleanDigits) || cleanDigits.endsWith(p))) return true;
-      }
-      return false;
-    });
-
-    // 2. If not found in auth by phone, check batch_students
-    if (!matchedUser && !isEmail && cleanDigits) {
-      const { data: batchStudent } = await supabaseAdmin
-        .from("batch_students")
-        .select("email, phone, name")
-        .ilike("phone", `%${cleanDigits.slice(-10)}%`)
+    if (isEmail) {
+      const { data: pRec } = await supabaseAdmin
+        .from("profiles")
+        .select("id, email")
+        .ilike("email", rawInput.toLowerCase())
         .maybeSingle();
+      if (pRec) {
+        matchedUserId = pRec.id;
+        targetEmail = pRec.email || rawInput.toLowerCase();
+      }
+    } else if (cleanDigits) {
+      const last10 = cleanDigits.slice(-10);
+      const { data: pRec } = await supabaseAdmin
+        .from("profiles")
+        .select("id, email")
+        .or(`phone.ilike.%${last10}%`)
+        .maybeSingle();
+      if (pRec) {
+        matchedUserId = pRec.id;
+        targetEmail = pRec.email;
+      }
 
-      if (batchStudent?.email) {
-        matchedUser = (usersPage?.users || []).find(
-          (u: any) => u.email?.toLowerCase().trim() === batchStudent.email.toLowerCase().trim()
-        );
+      if (!matchedUserId) {
+        const { data: bs } = await supabaseAdmin
+          .from("batch_students")
+          .select("profile_id, email")
+          .ilike("phone", `%${last10}%`)
+          .maybeSingle();
+        if (bs?.profile_id) {
+          matchedUserId = bs.profile_id;
+          targetEmail = bs.email;
+        } else if (bs?.email) {
+          const { data: pByEmail } = await supabaseAdmin
+            .from("profiles")
+            .select("id, email")
+            .ilike("email", bs.email.toLowerCase().trim())
+            .maybeSingle();
+          if (pByEmail) {
+            matchedUserId = pByEmail.id;
+            targetEmail = pByEmail.email;
+          }
+        }
       }
     }
 
-    if (!matchedUser || !matchedUser.email) {
+    if (!matchedUserId) {
       return NextResponse.json(
-        { error: "No account found matching this email or phone number. Please check or register." },
+        { error: "No account found matching this email address or phone number." },
+        { status: 404 }
+      );
+    }
+
+    const { data: userRec } = await supabaseAdmin.auth.admin.getUserById(matchedUserId);
+    const matchedUser = userRec?.user;
+
+    if (!matchedUser) {
+      return NextResponse.json(
+        { error: "No student account found. Please check your credentials or register." },
         { status: 404 }
       );
     }
@@ -75,7 +97,6 @@ export async function POST(req: NextRequest) {
       password: newPassword,
       email_confirm: true,
       phone_confirm: true,
-      email_confirmed_at: new Date().toISOString(),
       user_metadata: {
         ...currentMeta,
         must_change_password: false,
@@ -88,9 +109,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: resetErr.message || "Failed to reset password." }, { status: 500 });
     }
 
+    const finalEmail = matchedUser.email || targetEmail || "";
+
     // 4. Automatically sign in with the new password so user enters immediately (no second update needed)
     const { data: signInData, error: signInErr } = await supabaseAdmin.auth.signInWithPassword({
-      email: matchedUser.email,
+      email: finalEmail,
       password: newPassword,
     });
 

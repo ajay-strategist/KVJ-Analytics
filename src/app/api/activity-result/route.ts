@@ -1,17 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-function getAdmin() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key || url === "https://placeholder.supabase.co") {
-    return require("@/lib/mockSupabase").mockSupabaseClient;
-  }
-  return createClient(url, key, { auth: { persistSession: false } });
-}
+import { getAdminClient } from "@/lib/supabaseAdmin";
 
 export async function POST(req: NextRequest) {
-  const db = getAdmin();
+  const db = getAdminClient();
   if (!db) {
     return NextResponse.json({ error: "Supabase client not configured." }, { status: 500 });
   }

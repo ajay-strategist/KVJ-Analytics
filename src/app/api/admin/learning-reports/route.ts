@@ -1,15 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { getAdminClient } from "@/lib/supabaseAdmin";
 import { adminToken } from "@/lib/adminAuth";
-
-function getAdminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key || url === "https://placeholder.supabase.co") {
-    return require("@/lib/mockSupabase").mockSupabaseClient;
-  }
-  return createClient(url, key, { auth: { persistSession: false } });
-}
 
 function isAuthorized(req: NextRequest) {
   const session = req.cookies.get("admin_session")?.value;
@@ -109,6 +100,7 @@ export async function GET(req: NextRequest) {
           id,
           name,
           full_name,
+          email,
           organization,
           phone,
           role,
@@ -151,18 +143,14 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // 6. Resolve Auth Emails
+    // 6. Resolve Auth Emails directly from loaded profiles
     let emailMap: Record<string, string> = {};
-    try {
-      const { data: usersPage } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
-      if (usersPage?.users) {
-        usersPage.users.forEach((u: any) => {
-          emailMap[u.id] = u.email;
-        });
+    (enrollments || []).forEach((e: any) => {
+      const pEmail = e.profiles?.email;
+      if (e.user_id && pEmail) {
+        emailMap[e.user_id] = pEmail;
       }
-    } catch (_) {
-      // Non-fatal if listUsers fails in mock mode
-    }
+    });
 
     // Helper to clean phone for matching
     const cleanPhone = (p: any): string => {

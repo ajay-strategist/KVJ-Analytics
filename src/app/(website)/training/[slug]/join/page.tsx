@@ -92,30 +92,33 @@ export default function CollegeJoinPage() {
           }),
         });
         const checkData = await checkRes.json();
-        if (!checkRes.ok) {
+        const isAlreadyRegistered = !checkRes.ok && (checkData.error || "").toLowerCase().includes("already registered");
+
+        if (!checkRes.ok && !isAlreadyRegistered) {
           throw new Error(checkData.error || "Account creation failed.");
         }
 
         // Sign in via server /api/auth/login to guarantee email auto-confirmation & cookie sync
-        try {
-          const loginRes = await fetch("/api/auth/login", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ identifier: formData.email, password: formData.password }),
-          });
-          const loginData = await loginRes.json();
-          if (loginData?.session) {
-            await supabase.auth.setSession({
-              access_token: loginData.session.access_token,
-              refresh_token: loginData.session.refresh_token,
-            });
-            syncStudentSessionCookie(loginData.session);
-          }
-        } catch (sErr) {
-          console.warn("Session synchronization warning:", sErr);
+        const loginRes = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ identifier: formData.email, password: formData.password }),
+        });
+        const loginData = await loginRes.json();
+
+        if (!loginRes.ok) {
+          throw new Error(loginData.error || "Login failed. If you already have an account, please check your password.");
         }
 
-        activeUserId = checkData?.user?.id;
+        if (loginData?.session) {
+          await supabase.auth.setSession({
+            access_token: loginData.session.access_token,
+            refresh_token: loginData.session.refresh_token,
+          });
+          syncStudentSessionCookie(loginData.session);
+        }
+
+        activeUserId = loginData?.user?.id || checkData?.user?.id;
       }
 
       const response = await fetch(`/api/courses/${slug}/join`, {
@@ -135,9 +138,9 @@ export default function CollegeJoinPage() {
 
       setSuccess(true);
       setTimeout(() => {
-        router.push("/account");
+        router.push(`/training/${slug}/learn`);
         router.refresh();
-      }, 2000);
+      }, 1500);
     } catch (err: any) {
       setError(err.message || "Invalid code or connection error.");
       setLoading(false);

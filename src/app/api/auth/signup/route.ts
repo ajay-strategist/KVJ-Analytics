@@ -1,14 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-function getAdminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key || url === "https://placeholder.supabase.co") {
-    return require("@/lib/mockSupabase").mockSupabaseClient;
-  }
-  return createClient(url, key, { auth: { persistSession: false } });
-}
+import { getAdminClient } from "@/lib/supabaseAdmin";
 
 export async function POST(req: NextRequest) {
   const supabaseAdmin = getAdminClient();
@@ -23,21 +14,29 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing required fields." }, { status: 400 });
     }
 
-    // 1. Fetch user to see if they already exist in auth
-    const { data: usersPage, error: userErr } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
-    if (userErr) throw userErr;
+    const normalizedEmail = email.toLowerCase().trim();
 
-    const existingUser = usersPage?.users?.find(
-      (u: any) => u.email?.toLowerCase() === email.toLowerCase().trim()
-    );
+    // 1. Fast indexed check in profiles table (0.5ms SQL lookup instead of heavy listUsers HTTP call)
+    let existingUser: any = null;
+    const { data: existingProfile } = await supabaseAdmin
+      .from("profiles")
+      .select("id, name, full_name, phone, role")
+      .ilike("email", normalizedEmail)
+      .maybeSingle();
+
+    if (existingProfile) {
+      const { data: authUserRec } = await supabaseAdmin.auth.admin.getUserById(existingProfile.id);
+      if (authUserRec?.user) {
+        existingUser = authUserRec.user;
+      }
+    }
 
     if (existingUser) {
       // Check if user is a pre-created placeholder account or incomplete account
-      const fullName = existingUser.user_metadata?.full_name || "";
+      const fullName = existingUser.user_metadata?.full_name || existingUser.user_metadata?.name || existingProfile?.full_name || "";
       const isPlaceholder = !fullName || fullName.toLowerCase() === "student" || !existingUser.email_confirmed_at;
 
       if (isPlaceholder) {
-        // Update user password, email_confirm and name metadata
         const { data: updatedUserData, error: updateErr } = await supabaseAdmin.auth.admin.updateUserById(existingUser.id, {
           password: password,
           email_confirm: true,
@@ -49,28 +48,25 @@ export async function POST(req: NextRequest) {
         if (updateErr) throw updateErr;
 
         // Upsert profile
-        const { error: profileError } = await supabaseAdmin
+        await supabaseAdmin
           .from("profiles")
           .upsert({
             id: existingUser.id,
             name: name,
             full_name: name,
-            phone: phone || null,
+            email: normalizedEmail,
+            phone: phone || existingProfile?.phone || null,
             profession: profession || null,
             role: "student"
           });
 
-        if (profileError) console.error("Profile upsert warning:", profileError);
-
         return NextResponse.json({ success: true, preCreated: true, user: updatedUserData.user });
       } else {
-        // Email is already fully registered by someone else
         return NextResponse.json({ error: "Email is already registered. Please sign in." }, { status: 400 });
       }
     }
 
     // 2. User is completely new: create directly with email_confirm: true so no verification email is required
-    // Format phone to E.164 if provided
     let formattedPhone = phone?.trim();
     if (formattedPhone) {
       if (!formattedPhone.startsWith("+")) {
@@ -79,7 +75,7 @@ export async function POST(req: NextRequest) {
     }
 
     const { data: newUser, error: createErr } = await supabaseAdmin.auth.admin.createUser({
-      email: email.trim(),
+      email: normalizedEmail,
       password: password,
       phone: formattedPhone || undefined,
       email_confirm: true,
@@ -90,22 +86,27 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    if (createErr) throw createErr;
+    if (createErr) {
+      const errMsg = (createErr.message || "").toLowerCase();
+      if (errMsg.includes("already registered") || errMsg.includes("email_exists") || errMsg.includes("already exists")) {
+        return NextResponse.json({ error: "Email is already registered. Please sign in." }, { status: 400 });
+      }
+      throw createErr;
+    }
 
     // Upsert profile for the newly created user
-    const { error: profileError } = await supabaseAdmin
+    await supabaseAdmin
       .from("profiles")
       .upsert({
         id: newUser.user.id,
         name: name,
         full_name: name,
+        email: normalizedEmail,
         phone: formattedPhone || null,
         profession: profession || null,
         account_type: "individual",
         role: "student"
       });
-
-    if (profileError) console.error("New user profile upsert warning:", profileError);
 
     return NextResponse.json({ success: true, created: true, user: newUser.user });
 

@@ -1,14 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-function getAdminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key || url === "https://placeholder.supabase.co") {
-    return require("@/lib/mockSupabase").mockSupabaseClient;
-  }
-  return createClient(url, key, { auth: { persistSession: false } });
-}
+import { getAdminClient } from "@/lib/supabaseAdmin";
 
 export async function POST(req: NextRequest) {
   const supabaseAdmin = getAdminClient();
@@ -46,38 +37,27 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      // 1. Check in auth.users by phone
-      const { data: usersPage } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
-      const matchedAuthUser = usersPage?.users?.find((u: any) => {
-        const uPhone = (u.phone || "").replace(/\D/g, "");
-        const uMetaPhone = (u.user_metadata?.phone || "").replace(/\D/g, "");
-        return (uPhone && uPhone.endsWith(last10)) || (uMetaPhone && uMetaPhone.endsWith(last10));
-      });
+      // 1. Direct indexed check in profiles table by phone
+      const { data: prof } = await supabaseAdmin
+        .from("profiles")
+        .select("id, full_name, phone, email")
+        .or(`phone.ilike.%${last10}%`)
+        .limit(1)
+        .maybeSingle();
 
-      if (matchedAuthUser?.email) {
-        targetEmail = matchedAuthUser.email;
-        matchedUserId = matchedAuthUser.id;
-      }
-
-      // 2. Check in profiles table if not found in auth.users
-      if (!targetEmail) {
-        const { data: prof } = await supabaseAdmin
-          .from("profiles")
-          .select("id, full_name, phone")
-          .or(`phone.ilike.%${last10}%`)
-          .limit(1)
-          .maybeSingle();
-
-        if (prof?.id) {
-          matchedUserId = prof.id;
+      if (prof?.id) {
+        matchedUserId = prof.id;
+        if (prof.email) {
+          targetEmail = prof.email.toLowerCase();
+        } else {
           const { data: userRec } = await supabaseAdmin.auth.admin.getUserById(prof.id);
           if (userRec?.user?.email) {
-            targetEmail = userRec.user.email;
+            targetEmail = userRec.user.email.toLowerCase();
           }
         }
       }
 
-      // 3. If student is not registered in auth but is on a batch roster
+      // 2. If student is not registered in auth but is on a batch roster
       if (!targetEmail) {
         const { data: rosterEntry } = await supabaseAdmin
           .from("batch_students")
@@ -134,20 +114,20 @@ export async function POST(req: NextRequest) {
 
       if (isConfirmIssue) {
         try {
-          // Find user ID if not already known
+          // Find user ID if not already known via profiles
           if (!matchedUserId) {
-            const { data: uPage } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
-            const u = uPage?.users?.find(
-              (x: any) => x.email?.toLowerCase().trim() === targetEmail!.toLowerCase().trim()
-            );
-            if (u) matchedUserId = u.id;
+            const { data: pRec } = await supabaseAdmin
+              .from("profiles")
+              .select("id")
+              .ilike("email", targetEmail!.toLowerCase().trim())
+              .maybeSingle();
+            if (pRec?.id) matchedUserId = pRec.id;
           }
 
           if (matchedUserId) {
             await supabaseAdmin.auth.admin.updateUserById(matchedUserId, {
               email_confirm: true,
               phone_confirm: true,
-              email_confirmed_at: new Date().toISOString(),
             });
 
             // Retry sign in
@@ -171,46 +151,54 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Auto claim any pending invited batch enrollments
+    // Auto claim any pending invited batch enrollments (targeted query instead of full-table scan)
     try {
       if (signInData.user?.id) {
         const cleanDigits = !isEmail ? identifier.replace(/\D/g, "").slice(-10) : "";
-        const { data: invitedRecords } = await supabaseAdmin
+        
+        let batchQuery = supabaseAdmin
           .from("batch_students")
-          .select("*, batches(course_slug, college_name)")
+          .select("id, email, phone, batches(course_slug, college_name)")
           .eq("status", "INVITED");
 
-        const matched = (invitedRecords || []).filter((r: any) => {
-          const emailMatch = r.email && r.email.toLowerCase().trim() === targetEmail!.toLowerCase().trim();
-          const rDigits = (r.phone || "").replace(/\D/g, "").slice(-10);
-          const phoneMatch = cleanDigits && rDigits && rDigits === cleanDigits;
-          return emailMatch || phoneMatch;
-        });
+        if (cleanDigits && targetEmail) {
+          batchQuery = batchQuery.or(`email.ilike.${targetEmail},phone.ilike.%${cleanDigits}%`);
+        } else if (targetEmail) {
+          batchQuery = batchQuery.ilike("email", targetEmail);
+        } else if (cleanDigits) {
+          batchQuery = batchQuery.ilike("phone", `%${cleanDigits}%`);
+        }
 
-        for (const record of matched) {
-          if (record.batches?.course_slug) {
-            await supabaseAdmin.from("enrollments").upsert(
-              {
-                user_id: signInData.user.id,
-                course_slug: record.batches.course_slug,
-                enrollment_method: "college_code",
-                status: "active",
-              },
-              { onConflict: "user_id,course_slug" }
-            );
+        const { data: matched } = await batchQuery;
 
-            await supabaseAdmin
-              .from("profiles")
-              .update({
-                organization: record.batches.college_name,
-                account_type: "college",
-              })
-              .eq("id", signInData.user.id);
+        if (matched && matched.length > 0) {
+          for (const record of matched) {
+            const b = (record as any).batches;
+            if (b?.course_slug) {
+              await supabaseAdmin.from("enrollments").upsert(
+                {
+                  user_id: signInData.user.id,
+                  course_slug: b.course_slug,
+                  enrollment_method: "college_code",
+                  status: "active",
+                },
+                { onConflict: "user_id,course_slug" }
+              );
 
-            await supabaseAdmin
-              .from("batch_students")
-              .update({ status: "JOINED", profile_id: signInData.user.id })
-              .eq("id", record.id);
+              await supabaseAdmin
+                .from("profiles")
+                .update({
+                  organization: b.college_name,
+                  account_type: "college",
+                  email: targetEmail || undefined,
+                })
+                .eq("id", signInData.user.id);
+
+              await supabaseAdmin
+                .from("batch_students")
+                .update({ status: "JOINED", profile_id: signInData.user.id })
+                .eq("id", record.id);
+            }
           }
         }
       }

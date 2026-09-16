@@ -1,14 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-function getAdminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key || url === "https://placeholder.supabase.co") {
-    return require("@/lib/mockSupabase").mockSupabaseClient;
-  }
-  return createClient(url, key, { auth: { persistSession: false } });
-}
+import { getAdminClient } from "@/lib/supabaseAdmin";
 
 export async function POST(req: NextRequest) {
   const supabaseAdmin = getAdminClient();
@@ -38,14 +29,33 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 2. Find user in auth list to set email_confirm & phone_confirm & email_confirmed_at flags
-    const { data: usersPage } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
-    
-    let matchedUser = usersPage?.users?.find((u: any) => {
-      if (cleanEmail && u.email?.toLowerCase().trim() === cleanEmail) return true;
-      if (cleanPhone && u.phone?.trim() === cleanPhone) return true;
-      return false;
-    });
+    // 2. Find user in profiles (fast indexed lookup instead of listUsers)
+    let matchedUserId: string | null = null;
+
+    if (cleanEmail) {
+      const { data: pRec } = await supabaseAdmin
+        .from("profiles")
+        .select("id")
+        .ilike("email", cleanEmail)
+        .maybeSingle();
+      if (pRec?.id) matchedUserId = pRec.id;
+    }
+
+    if (!matchedUserId && cleanPhone) {
+      const last10 = cleanPhone.replace(/\D/g, "").slice(-10);
+      const { data: pRec } = await supabaseAdmin
+        .from("profiles")
+        .select("id")
+        .or(`phone.ilike.%${last10}%`)
+        .maybeSingle();
+      if (pRec?.id) matchedUserId = pRec.id;
+    }
+
+    let matchedUser: any = null;
+    if (matchedUserId) {
+      const { data: uRec } = await supabaseAdmin.auth.admin.getUserById(matchedUserId);
+      matchedUser = uRec?.user;
+    }
 
     if (matchedUser) {
       const updateData: any = {
