@@ -197,6 +197,7 @@ export function ContentPlayerClient({ course, modules, adminPreview = false, ini
   // On-demand lesson content loading state & client cache
   const [lessonContent, setLessonContent] = useState<string | null>(null);
   const [loadingLessonContent, setLoadingLessonContent] = useState<boolean>(false);
+  const [lessonFetchRetry, setLessonFetchRetry] = useState<number>(0);
   const lessonContentCache = useRef<Map<string, string>>(new Map());
   const submittedScoresRef = useRef<Map<string, number>>(new Map());
 
@@ -238,39 +239,54 @@ export function ContentPlayerClient({ course, modules, adminPreview = false, ini
       return;
     }
 
-    // Fetch on-demand from /api/lessons/[id]
+    // Fetch on-demand from /api/lessons/[id] with up to 3 retries + exponential backoff.
+    // This handles cold-start timeouts and transient network errors during peak classroom load.
     let isMounted = true;
     setLoadingLessonContent(true);
     setLessonContent(null);
 
-    fetchWithStudentAuth(
-      `/api/lessons/${activeLesson.id}?courseSlug=${course.slug}${adminPreview ? "&preview=1" : ""}`
-    )
-      .then(async (res) => {
+    const lessonUrl = `/api/lessons/${activeLesson.id}?courseSlug=${course.slug}${adminPreview ? "&preview=1" : ""}`;
+    const MAX_RETRIES = 3;
+
+    (async () => {
+      for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
         if (!isMounted) return;
-        if (res.ok) {
-          const data = await res.json();
-          const html = data.content_html || "";
-          lessonContentCache.current.set(activeLesson.id, html);
-          setLessonContent(html);
-        } else {
-          console.warn("[ContentPlayer] Failed to load lesson content:", res.status);
-          setLessonContent("");
+        try {
+          const res = await fetchWithStudentAuth(lessonUrl);
+          if (!isMounted) return;
+          if (res.ok) {
+            const data = await res.json();
+            const html = data.content_html || "";
+            lessonContentCache.current.set(activeLesson.id, html);
+            if (isMounted) setLessonContent(html);
+            return; // success — stop retrying
+          }
+          // 401 or 403: auth error — no point retrying
+          if (res.status === 401 || res.status === 403) {
+            console.warn("[ContentPlayer] Auth error loading lesson content:", res.status);
+            if (isMounted) setLessonContent("");
+            return;
+          }
+          // Other server errors — retry
+          console.warn(`[ContentPlayer] Lesson fetch attempt ${attempt}/${MAX_RETRIES} failed:`, res.status);
+        } catch (err) {
+          if (!isMounted) return;
+          console.warn(`[ContentPlayer] Lesson fetch attempt ${attempt}/${MAX_RETRIES} error:`, err);
         }
-      })
-      .catch((err) => {
-        if (!isMounted) return;
-        console.error("[ContentPlayer] Error fetching lesson content:", err);
-        setLessonContent("");
-      })
-      .finally(() => {
-        if (isMounted) setLoadingLessonContent(false);
-      });
+        // Exponential backoff: 1s, 2s, 4s before giving up
+        if (attempt < MAX_RETRIES && isMounted) {
+          await new Promise((r) => setTimeout(r, 1000 * Math.pow(2, attempt - 1)));
+        }
+      }
+      if (isMounted) setLessonContent("");
+    })().finally(() => {
+      if (isMounted) setLoadingLessonContent(false);
+    });
 
     return () => {
       isMounted = false;
     };
-  }, [activeLesson?.id, activeLesson?.kind, activeLesson?.content_html, course.slug, adminPreview]);
+  }, [activeLesson?.id, activeLesson?.kind, activeLesson?.content_html, course.slug, adminPreview, lessonFetchRetry]);
 
   // Viewer controls — hide-sidebar persisted in localStorage per course slug.
   // Dark mode is permanently OFF — player always uses the light theme.
@@ -1255,7 +1271,22 @@ export function ContentPlayerClient({ course, modules, adminPreview = false, ini
                       })()}
                     </div>
                   ) : (
-                    <p className={`italic text-sm p-8 ${darkMode ? "text-zinc-550" : "text-zinc-400"}`}>No textbook or text reference uploaded for this lesson. Use worksheets.</p>
+                    <div className={`flex flex-col items-center justify-center py-16 gap-4 ${darkMode ? "text-zinc-400" : "text-zinc-500"}`}>
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-10 h-10 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" /></svg>
+                      <p className={`text-sm font-semibold ${darkMode ? "text-zinc-300" : "text-zinc-600"}`}>Lesson content could not be loaded.</p>
+                      <p className={`text-xs text-center max-w-xs ${darkMode ? "text-zinc-500" : "text-zinc-400"}`}>This may be a temporary network issue. Please tap Retry — your progress is safe.</p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          lessonContentCache.current.delete(activeLesson.id);
+                          setLessonContent(null);
+                          setLessonFetchRetry((n) => n + 1);
+                        }}
+                        className="mt-1 px-5 py-2 rounded-lg text-sm font-semibold bg-[#08A88A] hover:bg-[#068A72] text-white transition-colors shadow-sm"
+                      >
+                        ↺ Retry
+                      </button>
+                    </div>
                   )}
                 </div>
               )}
