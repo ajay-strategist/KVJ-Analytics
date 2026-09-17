@@ -76,6 +76,12 @@ async function getRedirects(): Promise<Record<string, { target: string; type: 30
 
 export async function middleware(req: NextRequest) {
   const path = req.nextUrl.pathname;
+
+  // API routes do not use SEO redirects or page visibility gating
+  if (path.startsWith("/api/")) {
+    return NextResponse.next();
+  }
+
   const cleanPath = path.replace(/\/$/, "") || "/";
 
   // 1. Check Dynamic SEO Redirects

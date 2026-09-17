@@ -22,19 +22,25 @@ async function serveMaterial(material: any) {
     
     try {
       const response = await fetch(material.pdfUrl);
-      if (!response.ok) {
+      if (!response.ok || !response.body) {
         throw new Error(`Failed to fetch PDF asset: ${response.statusText}`);
       }
       
-      const fileBuffer = await response.arrayBuffer();
-      
-      return new NextResponse(Buffer.from(fileBuffer), {
-        headers: {
-          "Content-Type": "application/pdf",
-          "Content-Disposition": `inline; filename="${encodeURIComponent(
-            material.title
-          )}.pdf"`,
-        },
+      const headers = new Headers();
+      headers.set("Content-Type", response.headers.get("content-type") || "application/pdf");
+      headers.set(
+        "Content-Disposition",
+        `inline; filename="${encodeURIComponent(material.title)}.pdf"`
+      );
+      const contentLength = response.headers.get("content-length");
+      if (contentLength) {
+        headers.set("Content-Length", contentLength);
+      }
+      headers.set("Cache-Control", "private, no-transform, max-age=3600");
+
+      return new NextResponse(response.body as any, {
+        status: 200,
+        headers,
       });
     } catch (err: any) {
       console.error("Error streaming material file:", err);

@@ -527,6 +527,11 @@ interface TestTakingWidgetProps {
   autoStart?: boolean;
 }
 
+// Request-deduplicating promise map & session memory cache for test metadata
+// Prevents duplicate concurrent network requests when multiple widgets mount on the same page.
+const testFetchPromises = new Map<string, Promise<any>>();
+const testDataMemoryCache = new Map<string, any>();
+
 export function TestTakingWidget({
   testId,
   courseSlug,
@@ -686,13 +691,35 @@ export function TestTakingWidget({
         setLoading(true);
         setError("");
 
-        // Fetch course and enrollments to double gate with timeout safeguard
-        const fetchPromise = fetchWithStudentAuth(`/api/tests/${testId}${adminPreview ? "?preview=1" : ""}`);
-        const timeoutPromise = new Promise<Response>((_, reject) =>
-          setTimeout(() => reject(new Error("Connection took too long to load exam. Please click Retry.")), 15000)
-        );
-        const resTest = await Promise.race([fetchPromise, timeoutPromise]);
-        const testData = await resTest.json();
+        const cacheKey = `${testId}:${Boolean(adminPreview)}`;
+        let testData = testDataMemoryCache.get(cacheKey);
+
+        if (!testData) {
+          let pending = testFetchPromises.get(cacheKey);
+          if (!pending) {
+            pending = (async () => {
+              const fetchPromise = fetchWithStudentAuth(
+                `/api/tests/${testId}${adminPreview ? "?preview=1" : ""}`
+              );
+              const timeoutPromise = new Promise<Response>((_, reject) =>
+                setTimeout(() => reject(new Error("Connection took too long to load exam. Please click Retry.")), 20000)
+              );
+              const resTest = await Promise.race([fetchPromise, timeoutPromise]);
+              if (!resTest.ok) {
+                const errJson = await resTest.json().catch(() => ({}));
+                throw new Error(errJson.error || `Failed to load exam (${resTest.status})`);
+              }
+              return resTest.json();
+            })().finally(() => {
+              testFetchPromises.delete(cacheKey);
+            });
+            testFetchPromises.set(cacheKey, pending);
+          }
+          testData = await pending;
+          if (testData?.test) {
+            testDataMemoryCache.set(cacheKey, testData);
+          }
+        }
 
         const testObj = testData?.test;
         if (!testObj) {

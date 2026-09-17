@@ -194,6 +194,12 @@ export function ContentPlayerClient({ course, modules, adminPreview = false, ini
   const [highestAttempt, setHighestAttempt] = useState<any>(null);
   const [attemptsTrigger, setAttemptsTrigger] = useState(0);
 
+  // On-demand lesson content loading state & client cache
+  const [lessonContent, setLessonContent] = useState<string | null>(null);
+  const [loadingLessonContent, setLoadingLessonContent] = useState<boolean>(false);
+  const lessonContentCache = useRef<Map<string, string>>(new Map());
+  const submittedScoresRef = useRef<Map<string, number>>(new Map());
+
   // Refs so the postMessage handler always sees the current lesson/user
   // without being re-created on every render (avoids stale-closure bugs).
   const activeLessonRef = useRef<Lesson | null>(null);
@@ -203,6 +209,68 @@ export function ContentPlayerClient({ course, modules, adminPreview = false, ini
   // contentWindows of the currently-loaded lesson iframe(s), used to validate
   // event.source in the postMessage handler so we ignore rogue messages.
   const lessonFrameWindowsRef = useRef<Set<Window>>(new Set());
+
+  // Fetch full lesson content on-demand when active lesson changes
+  useEffect(() => {
+    if (!activeLesson?.id) {
+      setLessonContent(null);
+      setLoadingLessonContent(false);
+      return;
+    }
+
+    if (activeLesson.kind === "assessment") {
+      setLessonContent(null);
+      setLoadingLessonContent(false);
+      return;
+    }
+
+    // If activeLesson already has content_html (e.g. fallback lessons)
+    if (activeLesson.content_html) {
+      setLessonContent(activeLesson.content_html);
+      setLoadingLessonContent(false);
+      return;
+    }
+
+    // Check in-memory client cache
+    if (lessonContentCache.current.has(activeLesson.id)) {
+      setLessonContent(lessonContentCache.current.get(activeLesson.id) || "");
+      setLoadingLessonContent(false);
+      return;
+    }
+
+    // Fetch on-demand from /api/lessons/[id]
+    let isMounted = true;
+    setLoadingLessonContent(true);
+    setLessonContent(null);
+
+    fetchWithStudentAuth(
+      `/api/lessons/${activeLesson.id}?courseSlug=${course.slug}${adminPreview ? "&preview=1" : ""}`
+    )
+      .then(async (res) => {
+        if (!isMounted) return;
+        if (res.ok) {
+          const data = await res.json();
+          const html = data.content_html || "";
+          lessonContentCache.current.set(activeLesson.id, html);
+          setLessonContent(html);
+        } else {
+          console.warn("[ContentPlayer] Failed to load lesson content:", res.status);
+          setLessonContent("");
+        }
+      })
+      .catch((err) => {
+        if (!isMounted) return;
+        console.error("[ContentPlayer] Error fetching lesson content:", err);
+        setLessonContent("");
+      })
+      .finally(() => {
+        if (isMounted) setLoadingLessonContent(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [activeLesson?.id, activeLesson?.kind, activeLesson?.content_html, course.slug, adminPreview]);
 
   // Viewer controls — hide-sidebar persisted in localStorage per course slug.
   // Dark mode is permanently OFF — player always uses the light theme.
@@ -282,6 +350,11 @@ export function ContentPlayerClient({ course, modules, adminPreview = false, ini
 
       if (!currentUser) return;
 
+      // Avoid duplicate submissions for the same lesson and score
+      if (submittedScoresRef.current.get(lesson.id) === score) {
+        return;
+      }
+
       try {
         const res = await fetchWithStudentAuth("/api/activity-result", {
           method: "POST",
@@ -298,6 +371,7 @@ export function ContentPlayerClient({ course, modules, adminPreview = false, ini
           console.error("[KVJ] Activity submit failed:", d.error);
           return;
         }
+        submittedScoresRef.current.set(lesson.id, score);
         // Mark lesson complete in sidebar
         setCompletedLessonIds((prev) => new Set([...prev, lesson.id]));
       } catch (err) {
@@ -343,19 +417,14 @@ export function ContentPlayerClient({ course, modules, adminPreview = false, ini
         setAttemptsCount(0);
         setHighestAttempt(null);
         try {
-          const testPromise = supabase
+          const { data: testsData, error: testError } = await supabase
             .from("mock_tests")
             .select("*")
             .eq("lesson_id", activeLesson.id)
             .order("created_at", { ascending: false });
-          const timeoutPromise = new Promise<{ data: null; error: any }>((resolve) =>
-            setTimeout(() => resolve({ data: null, error: new Error("Test load timeout") }), 5000)
-          );
-
-          const { data: testsData, error: testError } = await Promise.race([testPromise, timeoutPromise]);
 
           if (testError) {
-            console.warn("Failed or timed out loading test:", testError);
+            console.warn("Failed loading test:", testError);
           }
           const testData = testsData?.[0];
           if (testData) {
@@ -363,15 +432,12 @@ export function ContentPlayerClient({ course, modules, adminPreview = false, ini
 
             if (!adminPreview && user?.id) {
               try {
-                const attemptsPromise = supabase
+                const { data: attempts } = await supabase
                   .from("test_attempts")
                   .select("*")
                   .eq("test_id", testData.id)
                   .eq("user_id", user.id);
-                const attTimeout = new Promise<{ data: null; error: any }>((resolve) =>
-                  setTimeout(() => resolve({ data: null, error: new Error("Attempts load timeout") }), 3500)
-                );
-                const { data: attempts } = await Promise.race([attemptsPromise, attTimeout]);
+
                 if (attempts) {
                   setAttemptsCount(attempts.length);
                   if (attempts.length > 0) {
@@ -832,7 +898,7 @@ export function ContentPlayerClient({ course, modules, adminPreview = false, ini
           <div className="flex items-center gap-1.5 md:gap-2 shrink-0">
 
             {/* ── Viewer controls (only shown when lesson has HTML content) ── */}
-            {activeLesson?.content_html && viewerReady && (
+            {Boolean(lessonContent || activeLesson?.content_html) && viewerReady && (
               <>
                 {/* Hide embedded sidebar toggle */}
                 <ViewerToggle
@@ -1136,10 +1202,16 @@ export function ContentPlayerClient({ course, modules, adminPreview = false, ini
                 )
               ) : (
                 <div className={`border rounded-3xl overflow-hidden ${darkMode ? "bg-[#0A0A0C]/55 border-white/5" : "bg-white border-line shadow-soft"}`}>
-                  {activeLesson.content_html ? (
+                  {loadingLessonContent ? (
+                    <div className="flex flex-col items-center justify-center py-24 space-y-3">
+                      <Loader2 className="w-8 h-8 animate-spin text-[#08A88A]" />
+                      <p className="text-xs text-zinc-500 font-medium">Loading lesson material...</p>
+                    </div>
+                  ) : (lessonContent || activeLesson.content_html) ? (
                     <div className="divide-y divide-line dark:divide-white/5">
                       {(() => {
-                        const cleanedHtml = cleanLessonHtml(activeLesson.content_html);
+                        const rawHtml = lessonContent || activeLesson.content_html || "";
+                        const cleanedHtml = cleanLessonHtml(rawHtml);
                         return cleanedHtml.split(/(<div class="kvj-assessment-placeholder[^>]*><\/div>)/g).map((segment, idx) => {
                           const match = segment.match(/data-test-id="([^"]*)"/);
                           if (match) {

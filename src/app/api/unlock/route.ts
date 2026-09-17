@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAdminClient } from "@/lib/supabaseAdmin";
+import { getAdminClient, invalidateEnrollmentCache } from "@/lib/supabaseAdmin";
 import { verifyTOTP } from "@/lib/totp";
 
 export async function POST(req: NextRequest) {
@@ -94,6 +94,8 @@ export async function POST(req: NextRequest) {
               );
             }
 
+            invalidateEnrollmentCache(userId, batchCourse.slug);
+
             return NextResponse.json({
               success: true,
               message: `Successfully unlocked ${batchCourse.title}!`,
@@ -143,9 +145,9 @@ export async function POST(req: NextRequest) {
 
     // 4. Check Seats Allocation (either seats/seats_used or legacy max_uses/used_count)
     const seatsTotal = codeData.seats !== null ? codeData.seats : codeData.max_uses;
-    const seatsUsed = codeData.seats_used !== null ? codeData.seats_used : codeData.used_count;
+    const currentSeatsUsed = codeData.seats_used !== null ? codeData.seats_used : (codeData.used_count || 0);
     
-    if (seatsTotal !== null && seatsUsed >= seatsTotal) {
+    if (seatsTotal !== null && currentSeatsUsed >= seatsTotal) {
       return NextResponse.json(
         { error: "This unlock code has reached its maximum usage limit." },
         { status: 400 }
@@ -194,7 +196,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 7. Create or verify redemption (prevent double redemption)
+    // 7. Check existing redemption (prevent double redemption)
     const { data: existingRedemption } = await supabaseAdmin
       .from("code_redemptions")
       .select("id")
@@ -209,7 +211,32 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 8. Create enrollment first, getting the generated ID
+    // 8. Atomic seat reservation: ensures seats cannot be oversold under concurrent redemptions
+    let reserveQuery = supabaseAdmin
+      .from("unlock_codes")
+      .update({
+        seats_used: currentSeatsUsed + 1,
+        used_count: (codeData.used_count || 0) + 1,
+      })
+      .eq("id", codeData.id)
+      .eq("is_active", true);
+
+    if (seatsTotal !== null) {
+      reserveQuery = reserveQuery.lt("seats_used", seatsTotal);
+    }
+
+    const { data: reservedCode, error: reserveErr } = await reserveQuery
+      .select("id, seats_used, seats, max_uses, status")
+      .maybeSingle();
+
+    if (reserveErr || !reservedCode) {
+      return NextResponse.json(
+        { error: "This unlock code has reached its maximum usage limit or was claimed concurrently." },
+        { status: 400 }
+      );
+    }
+
+    // 9. Create enrollment first, getting the generated ID
     const { data: enrollData, error: enrollError } = await supabaseAdmin
       .from("enrollments")
       .upsert(
@@ -226,13 +253,22 @@ export async function POST(req: NextRequest) {
 
     if (enrollError || !enrollData) {
       console.error("Enrollment creation error:", enrollError);
+      // Revert the reserved seat count
+      await supabaseAdmin
+        .from("unlock_codes")
+        .update({
+          seats_used: Math.max(0, currentSeatsUsed),
+          used_count: Math.max(0, codeData.used_count || 0),
+        })
+        .eq("id", codeData.id);
+
       return NextResponse.json(
         { error: "Failed to create enrollment record." },
         { status: 500 }
       );
     }
 
-    // 9. Create redemption log referencing enrollment
+    // 10. Create redemption log referencing enrollment
     const { error: redemptionError } = await supabaseAdmin
       .from("code_redemptions")
       .insert([
@@ -252,19 +288,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 10. Increment used count / seats used atomically
-    const newSeatsUsed = (codeData.seats_used !== null ? codeData.seats_used : codeData.used_count) + 1;
-    const newUsedCount = codeData.used_count + 1;
-    const isExhausted = seatsTotal !== null && newSeatsUsed >= seatsTotal;
+    invalidateEnrollmentCache(userId, courseData.slug);
 
-    await supabaseAdmin
-      .from("unlock_codes")
-      .update({
-        used_count: newUsedCount,
-        seats_used: newSeatsUsed,
-        status: isExhausted ? "EXHAUSTED" : codeData.status
-      })
-      .eq("id", codeData.id);
+    // Check if code is now exhausted and mark status
+    const finalSeatsTotal = reservedCode.seats !== null ? reservedCode.seats : reservedCode.max_uses;
+    if (finalSeatsTotal !== null && reservedCode.seats_used >= finalSeatsTotal) {
+      await supabaseAdmin
+        .from("unlock_codes")
+        .update({ status: "EXHAUSTED" })
+        .eq("id", codeData.id);
+    }
 
     // 11. Write audit log trail
     try {

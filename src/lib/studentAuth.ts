@@ -35,8 +35,8 @@ export function getStudentCookieToken(): string | null {
 }
 
 /**
- * Retrieves the current session with a 2-second timeout guard.
- * If Supabase client session retrieval hangs or deadlocks (e.g. multi-tab lock),
+ * Retrieves the current session with a resilient timeout guard.
+ * If Supabase client session retrieval hangs or deadlocks (e.g. multi-tab storage lock),
  * it seamlessly falls back to the synchronous sb-access-token cookie.
  */
 export async function getValidStudentSession() {
@@ -45,7 +45,7 @@ export async function getValidStudentSession() {
   try {
     const sessionPromise = supabase.auth.getSession();
     const timeoutPromise = new Promise<{ data: { session: null } }>((resolve) =>
-      setTimeout(() => resolve({ data: { session: null } }), 2000)
+      setTimeout(() => resolve({ data: { session: null } }), 10000)
     );
 
     const { data: { session: currentSession } } = await Promise.race([
@@ -68,7 +68,7 @@ export async function getValidStudentSession() {
     if (isExpiringSoon) {
       const refreshPromise = supabase.auth.refreshSession();
       const refreshTimeout = new Promise<{ data: { session: null }; error: any }>((resolve) =>
-        setTimeout(() => resolve({ data: { session: null }, error: new Error("timeout") }), 2500)
+        setTimeout(() => resolve({ data: { session: null }, error: new Error("timeout") }), 10000)
       );
 
       const { data: refreshData, error: refreshError } = await Promise.race([
@@ -137,7 +137,7 @@ export async function fetchWithStudentAuth(
     try {
       const refreshPromise = supabase.auth.refreshSession();
       const timeoutPromise = new Promise<{ data: { session: null }; error: any }>((resolve) =>
-        setTimeout(() => resolve({ data: { session: null }, error: new Error("timeout") }), 2500)
+        setTimeout(() => resolve({ data: { session: null }, error: new Error("timeout") }), 8000)
       );
       const { data: refreshData, error: refreshErr } = await Promise.race([
         refreshPromise,

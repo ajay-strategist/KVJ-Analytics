@@ -288,7 +288,14 @@ export async function GET(
       courseSlug: course?.slug || "",
     };
 
-    return NextResponse.json({ test: sanitizedTest });
+    return NextResponse.json(
+      { test: sanitizedTest },
+      {
+        headers: {
+          "Cache-Control": "private, max-age=120, stale-while-revalidate=60",
+        },
+      }
+    );
   } catch (error: any) {
     console.error("GET mock test error:", error);
     return NextResponse.json({ error: "Internal server error." }, { status: 500 });

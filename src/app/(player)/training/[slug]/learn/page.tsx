@@ -25,7 +25,8 @@ export default async function CoursePlayerPage({
   const cookieStore = await cookies();
   const adminPreview = (cookieStore.get("admin_session")?.value === adminToken()) && isPreviewParam;
 
-  // 1. Fetch Course with nested modules and lessons in a single relational query (eliminating 2 extra roundtrips)
+  // 1. Fetch Course with nested modules and lightweight lesson metadata in a single relational query.
+  // Full lesson content_html is loaded on-demand per active lesson via /api/lessons/[id] to minimize payload size.
   const { data: course, error: courseError } = await supabase
     .from("courses")
     .select(`
@@ -43,7 +44,6 @@ export default async function CoursePlayerPage({
           kind,
           max_score,
           video_url,
-          content_html,
           display_order
         )
       )
@@ -71,7 +71,7 @@ export default async function CoursePlayerPage({
           kind: l.kind as any,
           max_score: l.max_score,
           video_url: l.video_url || null,
-          content_html: l.content_html || null,
+          content_html: null, // loaded on demand when lesson becomes active
         })),
     }));
   }
