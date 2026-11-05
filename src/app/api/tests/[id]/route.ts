@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAdminClient, verifyAndEnsureStudentEnrollment } from "@/lib/supabaseAdmin";
 import { adminToken } from "@/lib/adminAuth";
 import { evaluateStudentCode } from "@/lib/codeEvaluator";
+import { authenticateStudentRequest, getAuthorizedStudentRole } from "@/lib/sessionAuth";
 
 function stripAnswers(type: string, config: any) {
   if (!config) return {};
@@ -164,68 +165,49 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const db = getAdminClient();
 
-    if (!db) {
-      return NextResponse.json({ error: "Supabase client not configured." }, { status: 500 });
-    }
-
-    // 1. Fetch test details from mock_tests table
-    const { data: test, error: testErr } = await db
-      .from("mock_tests")
-      .select("*")
-      .eq("id", id)
-      .maybeSingle();
-
-    if (testErr || !test) {
-      return NextResponse.json({ error: "Mock test not found." }, { status: 404 });
-    }
-
-    // Fetch the associated course slug
-    const { data: course } = await db
-      .from("courses")
-      .select("slug")
-      .eq("id", test.course_id)
-      .maybeSingle();
-
-    // 2. Validate session from cookie or Authorization header
-    const authHeader = req.headers.get("authorization");
-    const bearerToken = authHeader?.startsWith("Bearer ") ? authHeader.substring(7).trim() : null;
-    const cookieToken = req.cookies.get("sb-access-token")?.value?.trim() || null;
-    const primaryToken = bearerToken || cookieToken;
+    // 1. Authenticate caller BEFORE any database queries (0 DB queries dispatched for unauthenticated calls)
     const adminSession = req.cookies.get("admin_session")?.value;
     const isExplicitPreview = req.nextUrl.searchParams.get("preview") === "1" || req.nextUrl.searchParams.get("preview") === "true";
     const isAdminPreview = (adminSession === adminToken()) && isExplicitPreview;
 
+    let user: any = null;
     if (!isAdminPreview) {
-      if (!primaryToken) {
-        return NextResponse.json({ error: "Unauthorized session." }, { status: 401 });
+      const auth = await authenticateStudentRequest(req);
+      if (!auth.success) {
+        return NextResponse.json({ error: auth.error }, { status: auth.status });
       }
+      user = auth.user;
+    }
 
-      let { data: { user }, error: authError } = await db.auth.getUser(primaryToken);
-      if ((authError || !user) && bearerToken && cookieToken && bearerToken !== cookieToken) {
-        const alternateToken = primaryToken === bearerToken ? cookieToken : bearerToken;
-        const fallback = await db.auth.getUser(alternateToken);
-        if (!fallback.error && fallback.data.user) {
-          user = fallback.data.user;
-          authError = null;
-        }
-      }
+    const db = getAdminClient();
+    if (!db) {
+      return NextResponse.json({ error: "Supabase client not configured." }, { status: 500 });
+    }
 
-      if (authError || !user) {
-        return NextResponse.json({ error: "Invalid auth token." }, { status: 401 });
-      }
+    // 2. Fetch mock test details and questions in ONE roundtrip
+    const [testRes, qRes] = await Promise.all([
+      db.from("mock_tests").select("*, courses(slug)").eq("id", id).maybeSingle(),
+      db.from("student_questions_view").select("*").eq("test_id", id).order("display_order", { ascending: true }).order("id", { ascending: true }),
+    ]);
 
-      // 3. Allow admins or check student enrollment
-      const { data: profile } = await db
-        .from("profiles")
-        .select("role")
-        .eq("id", user.id)
-        .maybeSingle();
+    const test = testRes.data;
+    if (testRes.error || !test) {
+      return NextResponse.json({ error: "Mock test not found." }, { status: 404 });
+    }
 
-      if (profile?.role !== "admin") {
-        const targetSlug = course?.slug || "";
-        const isEnrolled = await verifyAndEnsureStudentEnrollment(db, user.id, targetSlug);
+    if (qRes.error) {
+      return NextResponse.json({ error: qRes.error.message }, { status: 500 });
+    }
+    const dbQuestions = qRes.data || [];
+
+    const courseSlug = (test as any)?.courses?.slug || (test as any)?.courses?.[0]?.slug || "";
+
+    // 3. Allow admins or check student enrollment (using cached role and cached enrollment)
+    if (!isAdminPreview && user) {
+      const role = await getAuthorizedStudentRole(db, user.id);
+      if (role !== "admin") {
+        const isEnrolled = await verifyAndEnsureStudentEnrollment(db, user.id, courseSlug);
 
         if (!isEnrolled) {
           return NextResponse.json(
@@ -234,18 +216,6 @@ export async function GET(
           );
         }
       }
-    }
-
-    // 4. Fetch the questions sorted by display_order
-    const { data: dbQuestions, error: qErr } = await db
-      .from("questions")
-      .select("*")
-      .eq("test_id", id)
-      .order("display_order", { ascending: true })
-      .order("id", { ascending: true });
-
-    if (qErr) {
-      return NextResponse.json({ error: qErr.message }, { status: 500 });
     }
 
     const strippedQuestions = (dbQuestions || []).map((q: any) => {
@@ -285,11 +255,33 @@ export async function GET(
       instructions: test.instructions || "",
       totalPossibleMarks: totalPossibleMarks,
       questions: finalQuestions,
-      courseSlug: course?.slug || "",
+      courseSlug: courseSlug,
     };
 
+    // 4. Optionally fetch latest or specific attempt for authenticated student
+    let latestAttempt: any = null;
+    if (user?.id) {
+      const queryAttemptId = req.nextUrl.searchParams.get("attemptId");
+      let attemptQuery = db
+        .from("test_attempts")
+        .select("id, score, max_score, score_percent, passed, submitted_at, started_at, per_question")
+        .eq("user_id", user.id)
+        .eq("test_id", id);
+
+      if (queryAttemptId) {
+        attemptQuery = attemptQuery.eq("id", queryAttemptId);
+      } else {
+        attemptQuery = attemptQuery.order("submitted_at", { ascending: false }).limit(1);
+      }
+
+      const { data: attemptData } = await attemptQuery.maybeSingle();
+      if (attemptData) {
+        latestAttempt = attemptData;
+      }
+    }
+
     return NextResponse.json(
-      { test: sanitizedTest },
+      { test: sanitizedTest, latestAttempt },
       {
         headers: {
           "Cache-Control": "private, max-age=120, stale-while-revalidate=60",
@@ -309,11 +301,6 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
-    const db = getAdminClient();
-
-    if (!db) {
-      return NextResponse.json({ error: "Supabase client not configured." }, { status: 500 });
-    }
 
     const body = await req.json();
     const { answers, startedAt } = body; // answers is a record: { [qId: string]: studentAnswerValue }
@@ -322,25 +309,7 @@ export async function POST(
       return NextResponse.json({ error: "Submission is missing answers or started timestamp." }, { status: 400 });
     }
 
-    // 1. Fetch complete mock_test details
-    const { data: test, error: testErr } = await db
-      .from("mock_tests")
-      .select("*")
-      .eq("id", id)
-      .maybeSingle();
-
-    if (testErr || !test) {
-      return NextResponse.json({ error: "Mock test not found." }, { status: 404 });
-    }
-
-    // Fetch the associated course slug
-    const { data: course } = await db
-      .from("courses")
-      .select("slug")
-      .eq("id", test.course_id)
-      .maybeSingle();
-
-    // 2. Validate session from cookie or Authorization header
+    // 1. Authenticate caller BEFORE any database queries (0 DB queries dispatched for unauthenticated calls)
     let user: any = null;
     const authHeader = req.headers.get("authorization");
     const bearerToken = authHeader?.startsWith("Bearer ") ? authHeader.substring(7).trim() : null;
@@ -352,37 +321,46 @@ export async function POST(
     const isAdminPreview = (adminSession === adminToken()) && isExplicitPreview;
 
     if (!isAdminPreview) {
-      if (!primaryToken) {
-        return NextResponse.json({ error: "Unauthorized session." }, { status: 401 });
+      const auth = await authenticateStudentRequest(req);
+      if (!auth.success) {
+        return NextResponse.json({ error: auth.error }, { status: auth.status });
       }
+      user = auth.user;
+    } else if (primaryToken && !user) {
+      const auth = await authenticateStudentRequest(req);
+      if (auth.success) user = auth.user;
+    }
 
-      let { data: { user: authUser }, error: authError } = await db.auth.getUser(primaryToken);
-      if ((authError || !authUser) && bearerToken && cookieToken && bearerToken !== cookieToken) {
-        const alternateToken = primaryToken === bearerToken ? cookieToken : bearerToken;
-        const fallback = await db.auth.getUser(alternateToken);
-        if (!fallback.error && fallback.data.user) {
-          authUser = fallback.data.user;
-          authError = null;
-        }
-      }
+    const db = getAdminClient();
+    if (!db) {
+      return NextResponse.json({ error: "Supabase client not configured." }, { status: 500 });
+    }
 
-      if (authError || !authUser) {
-        return NextResponse.json({ error: "Invalid auth session." }, { status: 401 });
-      }
-      user = authUser;
+    // 2. Fetch mock test details and real questions with configs in ONE roundtrip
+    const [testRes, qRes] = await Promise.all([
+      db.from("mock_tests").select("*, courses(slug)").eq("id", id).maybeSingle(),
+      db.from("questions").select("*").eq("test_id", id).order("display_order", { ascending: true }).order("id", { ascending: true }),
+    ]);
 
-      // 3. Allow admins or verify enrollment
-      const { data: profile } = await db
-        .from("profiles")
-        .select("role")
-        .eq("id", user.id)
-        .maybeSingle();
+    const test = testRes.data;
+    if (testRes.error || !test) {
+      return NextResponse.json({ error: "Mock test not found." }, { status: 404 });
+    }
 
-      const isAdmin = profile?.role === "admin";
+    const questions = qRes.data;
+    if (qRes.error || !questions) {
+      return NextResponse.json({ error: "Failed to fetch test questions." }, { status: 500 });
+    }
+
+    const courseSlug = (test as any)?.courses?.slug || (test as any)?.courses?.[0]?.slug || "";
+
+    // 3. Allow admins or verify enrollment (using cached role and cached enrollment)
+    if (!isAdminPreview && user) {
+      const role = await getAuthorizedStudentRole(db, user.id);
+      const isAdmin = role === "admin";
 
       if (!isAdmin) {
-        const targetSlug = course?.slug || "";
-        const isEnrolled = await verifyAndEnsureStudentEnrollment(db, user.id, targetSlug);
+        const isEnrolled = await verifyAndEnsureStudentEnrollment(db, user.id, courseSlug);
 
         if (!isEnrolled) {
           return NextResponse.json(
@@ -391,22 +369,6 @@ export async function POST(
           );
         }
       }
-    } else if (primaryToken && !user) {
-      // If user token is available even during admin preview, extract user for reference
-      const { data: { user: authUser } } = await db.auth.getUser(primaryToken);
-      if (authUser) user = authUser;
-    }
-
-    // 4. Fetch the real questions with answer configurations
-    const { data: questions, error: qErr } = await db
-      .from("questions")
-      .select("*")
-      .eq("test_id", id)
-      .order("display_order", { ascending: true })
-      .order("id", { ascending: true });
-
-    if (qErr || !questions) {
-      return NextResponse.json({ error: "Failed to fetch test questions." }, { status: 500 });
     }
 
     // 5. Score answers on the server side
@@ -606,6 +568,31 @@ export async function POST(
     let dbSaveError: string | null = null;
 
     if (user?.id) {
+      // 5. Check for duplicate submission idempotency (client retry or double-click)
+      const { data: existingAttempt } = await db
+        .from("test_attempts")
+        .select("id, score, max_score, score_percent, passed, per_question, submitted_at")
+        .eq("user_id", user.id)
+        .eq("test_id", id)
+        .eq("started_at", startedAt)
+        .maybeSingle();
+
+      if (existingAttempt) {
+        console.log("[test_attempts] Idempotent retry detected for attempt:", existingAttempt.id);
+        return NextResponse.json({
+          success: true,
+          score: existingAttempt.score,
+          totalPossibleMarks: existingAttempt.max_score || totalPossibleMarks,
+          scorePercent: existingAttempt.score_percent || scorePercent,
+          passed: existingAttempt.passed,
+          passMark: test.pass_mark,
+          gradedQuestions: existingAttempt.per_question || perQuestionFeedback,
+          attemptId: existingAttempt.id,
+          isPreview: isPreview,
+          isDuplicate: true,
+        });
+      }
+
       // 6. Store attempt in Supabase test_attempts table
       const fullRecord = {
         user_id: user.id,
@@ -629,6 +616,38 @@ export async function POST(
         .single();
 
       if (resInsert.error) {
+        // Atomic race-condition resolution: If unique constraint violation occurred (23505),
+        // another concurrent request for this student won the race. Fetch and return that attempt.
+        if (
+          resInsert.error.code === "23505" ||
+          resInsert.error.message?.includes("uq_test_attempts") ||
+          resInsert.error.message?.includes("duplicate key")
+        ) {
+          console.log("[test_attempts] Concurrent unique race detected (23505). Fetching winning attempt...");
+          const { data: raceAttempt } = await db
+            .from("test_attempts")
+            .select("id, score, max_score, score_percent, passed, per_question, submitted_at")
+            .eq("user_id", user.id)
+            .eq("test_slug", id)
+            .eq("started_at", startedAt)
+            .maybeSingle();
+
+          if (raceAttempt) {
+            return NextResponse.json({
+              success: true,
+              score: raceAttempt.score,
+              totalPossibleMarks: raceAttempt.max_score || totalPossibleMarks,
+              scorePercent: raceAttempt.score_percent || scorePercent,
+              passed: raceAttempt.passed,
+              passMark: test.pass_mark,
+              gradedQuestions: raceAttempt.per_question || perQuestionFeedback,
+              attemptId: raceAttempt.id,
+              isPreview: isPreview,
+              isDuplicate: true,
+            });
+          }
+        }
+
         console.error("[test_attempts] Full insert failed:", JSON.stringify(resInsert.error));
         // Fallback: minimal record without extended columns
         const standardRecord = {
@@ -648,6 +667,36 @@ export async function POST(
           .single();
 
         if (fallbackInsert.error) {
+          // Check if fallback also hit the unique constraint race
+          if (
+            fallbackInsert.error.code === "23505" ||
+            fallbackInsert.error.message?.includes("uq_test_attempts") ||
+            fallbackInsert.error.message?.includes("duplicate key")
+          ) {
+            const { data: raceAttempt } = await db
+              .from("test_attempts")
+              .select("id, score, max_score, score_percent, passed, per_question, submitted_at")
+              .eq("user_id", user.id)
+              .eq("test_slug", id)
+              .eq("started_at", startedAt)
+              .maybeSingle();
+
+            if (raceAttempt) {
+              return NextResponse.json({
+                success: true,
+                score: raceAttempt.score,
+                totalPossibleMarks: raceAttempt.max_score || totalPossibleMarks,
+                scorePercent: raceAttempt.score_percent || scorePercent,
+                passed: raceAttempt.passed,
+                passMark: test.pass_mark,
+                gradedQuestions: raceAttempt.per_question || perQuestionFeedback,
+                attemptId: raceAttempt.id,
+                isPreview: isPreview,
+                isDuplicate: true,
+              });
+            }
+          }
+
           console.error("[test_attempts] Fallback insert also failed:", JSON.stringify(fallbackInsert.error));
           console.error("[test_attempts] Fallback record:", JSON.stringify(standardRecord));
           // Don't block student from seeing results — save error for logging only
