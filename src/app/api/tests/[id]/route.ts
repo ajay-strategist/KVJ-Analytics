@@ -196,10 +196,21 @@ export async function GET(
       return NextResponse.json({ error: "Mock test not found." }, { status: 404 });
     }
 
+    let dbQuestions = qRes.data || [];
     if (qRes.error) {
-      return NextResponse.json({ error: qRes.error.message }, { status: 500 });
+      // Resilient fallback if student_questions_view is not present in PostgREST schema cache
+      const rawQ = await db
+        .from("questions")
+        .select("*")
+        .eq("test_id", id)
+        .order("display_order", { ascending: true })
+        .order("id", { ascending: true });
+
+      if (rawQ.error) {
+        return NextResponse.json({ error: rawQ.error.message }, { status: 500 });
+      }
+      dbQuestions = rawQ.data || [];
     }
-    const dbQuestions = qRes.data || [];
 
     const courseSlug = (test as any)?.courses?.slug || (test as any)?.courses?.[0]?.slug || "";
 
