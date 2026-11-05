@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { Magnetic } from "./Magnetic";
 import { Reveal } from "@/components/ui/Reveal";
+import { CURRENT_EXP_YEARS } from "@/lib/constants";
 
 interface Cta { label: string; href: string }
 
@@ -18,8 +19,8 @@ interface Cta { label: string; href: string }
  * Replaced GSAP with hardware-accelerated native CSS animations and passive scroll listeners.
  */
 export function HeroCommandCenter({
-  headline, paragraph, primaryCta, secondaryCta,
-}: { headline: string; paragraph: string; primaryCta: Cta; secondaryCta: Cta; imageUrl?: string }) {
+  headline, paragraph, primaryCta, secondaryCta, experienceBadge,
+}: { headline: string; paragraph: string; primaryCta: Cta; secondaryCta: Cta; imageUrl?: string; experienceBadge?: string }) {
   const sectionRef = useRef<HTMLElement>(null);
   const headlineRef = useRef<HTMLHeadingElement>(null);
   const paragraphRef = useRef<HTMLParagraphElement>(null);
@@ -175,6 +176,14 @@ export function HeroCommandCenter({
 
           {/* ── Left: Headline & Copy ── */}
           <div className="max-w-xl">
+            <Reveal variant="up" delay={20}>
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-brand/30 bg-brand/10 backdrop-blur-md mb-6 shadow-sm">
+                <span className="flex h-2 w-2 rounded-full bg-brand animate-pulse" />
+                <span className="text-[12px] font-bold uppercase tracking-[0.16em] text-brand">
+                  {experienceBadge || `${CURRENT_EXP_YEARS}+ Years of Analytics & Automation Excellence`}
+                </span>
+              </div>
+            </Reveal>
             <Reveal variant="up" delay={50}>
               <h1
                 ref={headlineRef}
@@ -214,6 +223,18 @@ export function HeroCommandCenter({
                     <ArrowUpRight className="h-4 w-4 text-brand transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                   </Link>
                 </Magnetic>
+              </div>
+
+              {/* Audience pathway for educational institutions */}
+              <div className="mt-5 flex items-center gap-2 text-xs font-medium text-slate">
+                <span className="text-slate-500">Academic institution?</span>
+                <Link
+                  href="/education"
+                  className="inline-flex items-center text-ink hover:text-brand font-semibold underline underline-offset-4 decoration-brand/40 hover:decoration-brand transition-colors"
+                >
+                  Explore College &amp; University Solutions
+                  <ArrowRight className="w-3 h-3 ml-1 text-brand inline" />
+                </Link>
               </div>
             </Reveal>
           </div>

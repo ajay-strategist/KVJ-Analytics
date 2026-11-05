@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { createClient } from "@supabase/supabase-js";
+import { cacheDel } from "@/shared/cache/redis";
 import { adminToken } from "@/lib/adminAuth";
 
 function getAdmin() {
@@ -31,6 +33,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { data, error } = await db.from("lessons").insert([body]).select().single();
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    try { revalidatePath("/training"); } catch {}
     return NextResponse.json({ lesson: data });
   } catch (err: any) {
     return NextResponse.json({ error: err.message || "Invalid request body" }, { status: 400 });
@@ -54,6 +57,10 @@ export async function PATCH(req: NextRequest) {
       .single();
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    try {
+      revalidatePath("/training");
+      await cacheDel(`lesson_data:${id}`);
+    } catch {}
     return NextResponse.json({ lesson: data });
   } catch (err: any) {
     return NextResponse.json({ error: err.message || "Invalid request body" }, { status: 400 });
@@ -71,6 +78,10 @@ export async function DELETE(req: NextRequest) {
 
     const { error } = await db.from("lessons").delete().eq("id", id);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    try {
+      revalidatePath("/training");
+      await cacheDel(`lesson_data:${id}`);
+    } catch {}
     return NextResponse.json({ success: true });
   } catch (err: any) {
     return NextResponse.json({ error: err.message || "Invalid request body" }, { status: 400 });

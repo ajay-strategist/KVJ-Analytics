@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { adminToken } from "@/lib/adminAuth";
+import { invalidateEnrollmentCache } from "@/lib/supabaseAdmin";
 
 function getAdminClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -221,6 +222,11 @@ export async function POST(req: NextRequest) {
 
     if (enrollErr) throw enrollErr;
 
+    // Invalidate authorization cache immediately
+    try {
+      await invalidateEnrollmentCache(matchedUser.id, course.slug);
+    } catch {}
+
     // 4. Audit log
     try {
       await supabaseAdmin.from("audit_logs").insert([{
@@ -259,12 +265,27 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: "enrollment_id is required." }, { status: 400 });
     }
 
+    // 1. Fetch enrollment to retrieve user_id and course_slug for immediate revocation invalidation
+    const { data: targetEnrollment } = await supabaseAdmin
+      .from("enrollments")
+      .select("user_id, course_slug")
+      .eq("id", enrollment_id)
+      .maybeSingle();
+
+    // 2. Delete enrollment record
     const { error } = await supabaseAdmin
       .from("enrollments")
       .delete()
       .eq("id", enrollment_id);
 
     if (error) throw error;
+
+    // 3. Invalidate authorization cache immediately so revoked students cannot access lessons
+    if (targetEnrollment?.user_id && targetEnrollment?.course_slug) {
+      try {
+        await invalidateEnrollmentCache(targetEnrollment.user_id, targetEnrollment.course_slug);
+      } catch {}
+    }
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

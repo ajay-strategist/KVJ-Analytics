@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAdminClient } from "@/lib/supabaseAdmin";
+import { getAdminClient, getAuthClient } from "@/lib/supabaseAdmin";
 
 export async function POST(req: NextRequest) {
   const supabaseAdmin = getAdminClient();
@@ -97,8 +97,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid login credentials." }, { status: 400 });
     }
 
-    // Attempt sign in via Supabase Admin
-    let { data: signInData, error: signInError } = await supabaseAdmin.auth.signInWithPassword({
+    // Attempt sign in via isolated ephemeral auth client (protects admin singleton session)
+    const authClient = getAuthClient();
+    let { data: signInData, error: signInError } = await authClient.auth.signInWithPassword({
       email: targetEmail,
       password: password,
     });
@@ -130,8 +131,8 @@ export async function POST(req: NextRequest) {
               phone_confirm: true,
             });
 
-            // Retry sign in
-            const retry = await supabaseAdmin.auth.signInWithPassword({
+            // Retry sign in via isolated auth client
+            const retry = await authClient.auth.signInWithPassword({
               email: targetEmail,
               password: password,
             });
@@ -151,53 +152,63 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Auto claim any pending invited batch enrollments (targeted query instead of full-table scan)
+    // Auto claim any pending invited batch enrollments atomically via database procedure
     try {
       if (signInData.user?.id) {
         const cleanDigits = !isEmail ? identifier.replace(/\D/g, "").slice(-10) : "";
         
-        let batchQuery = supabaseAdmin
-          .from("batch_students")
-          .select("id, email, phone, batches(course_slug, college_name)")
-          .eq("status", "INVITED");
+        // 1. Try atomic PostgreSQL RPC (executes entire matching + enrollment + profile claim in ~3ms)
+        const { error: rpcError } = await supabaseAdmin.rpc("fn_claim_student_onboarding", {
+          p_user_id: signInData.user.id,
+          p_target_email: targetEmail || null,
+          p_clean_phone: cleanDigits || null,
+        });
 
-        if (cleanDigits && targetEmail) {
-          batchQuery = batchQuery.or(`email.ilike.${targetEmail},phone.ilike.%${cleanDigits}%`);
-        } else if (targetEmail) {
-          batchQuery = batchQuery.ilike("email", targetEmail);
-        } else if (cleanDigits) {
-          batchQuery = batchQuery.ilike("phone", `%${cleanDigits}%`);
-        }
+        // 2. Graceful fallback if database migration is not yet applied on remote instance
+        if (rpcError) {
+          let batchQuery = supabaseAdmin
+            .from("batch_students")
+            .select("id, email, phone, batches(course_slug, college_name)")
+            .eq("status", "INVITED");
 
-        const { data: matched } = await batchQuery;
+          if (cleanDigits && targetEmail) {
+            batchQuery = batchQuery.or(`email.ilike.${targetEmail},phone.ilike.%${cleanDigits}%`);
+          } else if (targetEmail) {
+            batchQuery = batchQuery.ilike("email", targetEmail);
+          } else if (cleanDigits) {
+            batchQuery = batchQuery.ilike("phone", `%${cleanDigits}%`);
+          }
 
-        if (matched && matched.length > 0) {
-          for (const record of matched) {
-            const b = (record as any).batches;
-            if (b?.course_slug) {
-              await supabaseAdmin.from("enrollments").upsert(
-                {
-                  user_id: signInData.user.id,
-                  course_slug: b.course_slug,
-                  enrollment_method: "college_code",
-                  status: "active",
-                },
-                { onConflict: "user_id,course_slug" }
-              );
+          const { data: matched } = await batchQuery;
 
-              await supabaseAdmin
-                .from("profiles")
-                .update({
-                  organization: b.college_name,
-                  account_type: "college",
-                  email: targetEmail || undefined,
-                })
-                .eq("id", signInData.user.id);
+          if (matched && matched.length > 0) {
+            for (const record of matched) {
+              const b = (record as any).batches;
+              if (b?.course_slug) {
+                await supabaseAdmin.from("enrollments").upsert(
+                  {
+                    user_id: signInData.user.id,
+                    course_slug: b.course_slug,
+                    enrollment_method: "college_code",
+                    status: "active",
+                  },
+                  { onConflict: "user_id,course_slug" }
+                );
 
-              await supabaseAdmin
-                .from("batch_students")
-                .update({ status: "JOINED", profile_id: signInData.user.id })
-                .eq("id", record.id);
+                await supabaseAdmin
+                  .from("profiles")
+                  .update({
+                    organization: b.college_name,
+                    account_type: "college",
+                    email: targetEmail || undefined,
+                  })
+                  .eq("id", signInData.user.id);
+
+                await supabaseAdmin
+                  .from("batch_students")
+                  .update({ status: "JOINED", profile_id: signInData.user.id })
+                  .eq("id", record.id);
+              }
             }
           }
         }
@@ -217,13 +228,13 @@ export async function POST(req: NextRequest) {
       mustChangePassword,
     });
 
-    // Set sb-access-token cookie directly on the response headers (30 days persistence)
+    // Set sb-access-token cookie directly on the response headers (30 days persistence, HttpOnly for XSS security)
     response.cookies.set("sb-access-token", signInData.session.access_token, {
       path: "/",
       maxAge: 60 * 60 * 24 * 30, // 30 days
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
-      httpOnly: false,
+      httpOnly: true,
     });
 
     return response;

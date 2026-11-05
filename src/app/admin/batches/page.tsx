@@ -32,7 +32,6 @@ import {
 import * as XLSX from "xlsx";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { client as sanityClient } from "@/sanity/lib/client";
 
 interface Batch {
   id: string;

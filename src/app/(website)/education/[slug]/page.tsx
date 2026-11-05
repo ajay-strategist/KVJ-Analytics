@@ -163,10 +163,10 @@ export default async function EducationalServiceDetailPage({
               </div>
 
               <Button
-                href={`/contact?interest=${encodeURIComponent("Educational " + title)}`}
+                href={`/contact?interest=${encodeURIComponent(title.toLowerCase().includes("curriculum") ? "Curriculum Development" : "Educational Partnerships")}`}
                 className="w-full py-4 text-center font-bold bg-education hover:bg-teal-700 text-white shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 relative z-10"
               >
-                {partner.buttonText}
+                {partner.buttonText || "Discuss Your Requirements"}
               </Button>
             </div>
           </div>

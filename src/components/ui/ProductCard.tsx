@@ -203,7 +203,9 @@ export function ProductCard({
               >
                 {name}
               </h3>
-              <span className="text-[10px] font-semibold text-slate uppercase tracking-[0.18em]">Software Platform</span>
+              <span className="text-[10px] font-semibold text-slate uppercase tracking-[0.18em]">
+                {isGradeScope ? "Institutional Analytics Platform" : "Assignment Automation Platform"}
+              </span>
             </div>
           </div>
 
@@ -227,7 +229,7 @@ export function ProductCard({
             className="relative mt-auto w-full group btn-liquid-glow-sweep"
             style={{ transform: isHovered ? "translateZ(25px)" : "translateZ(0)", transition: "transform 0.3s ease" }}
           >
-            <span>Request Demo &amp; Details</span>
+            <span>Explore Platform &amp; Request Demo</span>
             <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1.5" />
           </Button>
         </div>

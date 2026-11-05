@@ -99,7 +99,7 @@ export function Footer({ siteSettings = FALLBACK_SITE_SETTINGS }: FooterProps) {
                   {contact.phones.map((phone, pIdx) => (
                     <a
                       key={pIdx}
-                      href={`tel:${phone}`}
+                      href={`tel:${phone.replace(/[^\d+]/g, "")}`}
                       className="text-xs text-slate hover:text-brand transition-colors duration-150"
                     >
                       {phone}

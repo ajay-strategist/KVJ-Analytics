@@ -1,14 +1,20 @@
 import React from "react";
+import { Card } from "./Card";
 
 interface NumberedCardProps {
-  number?: string; // optional — kept for backwards compatibility, no longer displayed
+  number?: string; // optional — kept for backwards compatibility
   title: string;
   description: string;
+  className?: string;
 }
 
-export function NumberedCard({ title, description }: NumberedCardProps) {
+export function NumberedCard({ title, description, className = "" }: NumberedCardProps) {
   return (
-    <div className="relative overflow-hidden bg-card rounded-card border border-line/80 p-8 shadow-soft hover:shadow-hover-lift hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between h-full group">
+    <Card
+      hoverLift
+      tone="neutral"
+      className={`relative overflow-hidden p-8 flex flex-col justify-between h-full group border-line/80 ${className}`}
+    >
       <div className="absolute top-0 left-0 right-0 h-1 signature-gradient opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       <div>
         {/* Brand accent */}
@@ -20,6 +26,6 @@ export function NumberedCard({ title, description }: NumberedCardProps) {
           {description}
         </p>
       </div>
-    </div>
+    </Card>
   );
 }

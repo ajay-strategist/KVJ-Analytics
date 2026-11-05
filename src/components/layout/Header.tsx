@@ -97,14 +97,14 @@ export function Header({ siteSettings = FALLBACK_SITE_SETTINGS }: HeaderProps) {
         {/* Right side CTA & Quick Contacts */}
         <div className="hidden lg:flex items-center gap-2 xl:gap-3 flex-shrink-0">
           <a
-            href={`tel:${contact.phones[0]}`}
+            href={`tel:${(contact.phones[0] || "").replace(/[^\d+]/g, "")}`}
             className="flex items-center whitespace-nowrap text-[13px] font-medium transition-all duration-300 px-4 py-2 rounded-full border border-line hover:border-brand/40 bg-surface text-slate hover:text-brand"
           >
             <PhoneCall className="w-3.5 h-3.5 mr-2 text-brand flex-shrink-0 animate-pulse" />
             <span>Call</span>
           </a>
-          <Button variant="primary" href="/contact" className="px-5 py-2 text-[13px] xl:text-sm">
-            Request Demo
+          <Button variant="primary" href="/contact?interest=Corporate+Consulting" className="px-5 py-2 text-[13px] xl:text-sm">
+            Request Consultation
           </Button>
         </div>
  
@@ -113,6 +113,8 @@ export function Header({ siteSettings = FALLBACK_SITE_SETTINGS }: HeaderProps) {
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           className="lg:hidden p-2 rounded-full focus:outline-none transition-colors text-ink hover:bg-emerald-50 border border-transparent hover:border-line"
           aria-label="Toggle navigation menu"
+          aria-expanded={mobileMenuOpen}
+          aria-controls="mobile-nav-panel"
         >
           {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
@@ -120,7 +122,7 @@ export function Header({ siteSettings = FALLBACK_SITE_SETTINGS }: HeaderProps) {
 
       {/* Mobile Menu Panel */}
       {mobileMenuOpen && (
-        <div className="lg:hidden absolute top-full left-0 right-0 mt-2 bg-glass-card/95 backdrop-blur-xl border border-line rounded-3xl shadow-2xl animate-fade-in py-6 px-5 space-y-4 max-h-[80vh] overflow-y-auto">
+        <div id="mobile-nav-panel" className="lg:hidden absolute top-full left-0 right-0 mt-2 bg-glass-card/95 backdrop-blur-xl border border-line rounded-3xl shadow-2xl animate-fade-in py-6 px-5 space-y-4 max-h-[80vh] overflow-y-auto">
           <div className="flex flex-col space-y-1">
             {navItems.map((item, idx) => {
               const isActive = pathname === item.href;
@@ -143,14 +145,14 @@ export function Header({ siteSettings = FALLBACK_SITE_SETTINGS }: HeaderProps) {
           </div>
           <div className="border-t border-line pt-4 flex flex-col space-y-3">
             <a
-              href={`tel:${contact.phones[0]}`}
+              href={`tel:${(contact.phones[0] || "").replace(/[^\d+]/g, "")}`}
               className="flex items-center justify-center w-full px-4 py-3 rounded-full text-sm font-medium border border-line bg-surface text-ink hover:bg-emerald-50 transition-all duration-300"
             >
               <PhoneCall className="w-4 h-4 mr-2 text-brand" />
               Call Us
             </a>
-            <Button variant="primary" href="/contact" className="w-full py-3">
-              Request Demo
+            <Button variant="primary" href="/contact?interest=Corporate+Consulting" className="w-full py-3">
+              Request Consultation
             </Button>
           </div>
         </div>

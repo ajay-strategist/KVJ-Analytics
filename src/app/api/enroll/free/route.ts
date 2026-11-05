@@ -1,14 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-function getAdminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key || url === "https://placeholder.supabase.co") {
-    return require("@/lib/mockSupabase").mockSupabaseClient;
-  }
-  return createClient(url, key, { auth: { persistSession: false } });
-}
+import { getAdminClient } from "@/lib/supabaseAdmin";
+import { authenticateStudentRequest } from "@/lib/sessionAuth";
 
 export async function POST(req: NextRequest) {
   const db = getAdminClient();
@@ -16,36 +8,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Supabase client not configured." }, { status: 500 });
   }
 
-  // 1. Get access token from Authorization header or cookie
-  const authHeader = req.headers.get("authorization");
-  const bearerToken = authHeader?.startsWith("Bearer ") ? authHeader.substring(7).trim() : null;
-  const cookieToken = req.cookies.get("sb-access-token")?.value?.trim() || null;
-  const primaryToken = bearerToken || cookieToken;
-
-  if (!primaryToken) {
+  // 1. Fast local JWT authentication (Derived Identity & Rule 3 compliance)
+  const auth = await authenticateStudentRequest(req);
+  if (!auth.success) {
     return NextResponse.json(
-      { error: "Access denied. Please sign in to your student account." },
-      { status: 401 }
+      { error: auth.error || "Access denied. Please sign in to your student account." },
+      { status: auth.status || 401 }
     );
   }
-
-  // 2. Validate token to get authenticated user
-  let { data: { user }, error: authError } = await db.auth.getUser(primaryToken);
-  if ((authError || !user) && bearerToken && cookieToken && bearerToken !== cookieToken) {
-    const alternateToken = primaryToken === bearerToken ? cookieToken : bearerToken;
-    const fallback = await db.auth.getUser(alternateToken);
-    if (!fallback.error && fallback.data.user) {
-      user = fallback.data.user;
-      authError = null;
-    }
-  }
-
-  if (authError || !user) {
-    return NextResponse.json(
-      { error: "Access denied. Invalid or expired student session." },
-      { status: 401 }
-    );
-  }
+  const user = auth.user;
 
   try {
     const { courseSlug } = await req.json();

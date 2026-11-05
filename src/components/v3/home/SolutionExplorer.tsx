@@ -4,7 +4,7 @@ import React, { useEffect, useRef } from "react";
 import Link from "next/link";
 import { ArrowRight, BarChart3, Workflow, Cpu, Boxes, Check } from "lucide-react";
 
-interface Card { title: string; points?: string[] }
+interface Card { title: string; points?: string[]; href?: string; ctaLabel?: string }
 
 /**
  * Enterprise Solutions — cards fly in from 3D space with GSAP.
@@ -154,6 +154,18 @@ export function SolutionExplorer({
                     </li>
                   ))}
                 </ul>
+
+                {c.href ? (
+                  <div className="mt-6 pt-4 border-t border-line/60" style={{ transform: "translateZ(20px)" }}>
+                    <Link
+                      href={c.href}
+                      className="group/link inline-flex items-center text-xs font-bold text-brand hover:underline"
+                    >
+                      <span>{c.ctaLabel || "Learn More"}</span>
+                      <ArrowRight className="w-3.5 h-3.5 ml-1.5 transition-transform duration-200 group-hover/link:translate-x-1" />
+                    </Link>
+                  </div>
+                ) : null}
               </div>
             );
           })}

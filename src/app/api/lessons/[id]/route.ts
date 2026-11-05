@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminClient, verifyAndEnsureStudentEnrollment } from "@/lib/supabaseAdmin";
 import { adminToken } from "@/lib/adminAuth";
+import { authenticateStudentRequest, getAuthorizedStudentRole } from "@/lib/sessionAuth";
+import { cacheGet, cacheSet } from "@/shared/cache/redis";
 
 export async function GET(
   req: NextRequest,
@@ -22,79 +24,79 @@ export async function GET(
     let user: { id: string } | null = null;
 
     if (!isAdminPreview) {
-      // 2. Authenticate student session
-      const authHeader = req.headers.get("authorization");
-      const bearerToken = authHeader?.startsWith("Bearer ") ? authHeader.substring(7).trim() : null;
-      const cookieToken = req.cookies.get("sb-access-token")?.value?.trim() || null;
-      const primaryToken = bearerToken || cookieToken;
-
-      if (!primaryToken) {
+      // 2. Authenticate student session (fast-path local JWT verification)
+      const auth = await authenticateStudentRequest(req);
+      if (!auth.success) {
         return NextResponse.json(
-          { error: "Access denied. Please sign in to your student account." },
-          { status: 401 }
+          { error: auth.error },
+          { status: auth.status }
         );
       }
-
-      let { data: { user: authUser }, error: authError } = await db.auth.getUser(primaryToken);
-
-      // Fallback if primary token failed but secondary token exists
-      if ((authError || !authUser) && bearerToken && cookieToken && bearerToken !== cookieToken) {
-        const alternateToken = primaryToken === bearerToken ? cookieToken : bearerToken;
-        const fallback = await db.auth.getUser(alternateToken);
-        if (!fallback.error && fallback.data.user) {
-          authUser = fallback.data.user;
-          authError = null;
-        }
-      }
-
-      if (authError || !authUser) {
-        return NextResponse.json(
-          { error: "Access denied. Invalid or expired student session." },
-          { status: 401 }
-        );
-      }
-      user = authUser;
+      user = auth.user;
     }
 
-    // 3. Fetch lesson content and its parent course slug
-    const { data: lesson, error: lessonError } = await db
-      .from("lessons")
-      .select(`
-        id,
-        title,
-        kind,
-        content_html,
-        modules (
+    // 3. Fetch lesson content (with distributed cache, 300s TTL)
+    const cacheKey = `lesson_data:${lessonId}`;
+    let cachedLesson = await cacheGet<{
+      id: string;
+      title: string;
+      kind: string;
+      content_html: string | null;
+      courseSlug: string | null;
+    }>(cacheKey);
+
+    if (!cachedLesson) {
+      const { data: lesson, error: lessonError } = await db
+        .from("lessons")
+        .select(`
           id,
-          courses (
+          title,
+          kind,
+          content_html,
+          modules (
             id,
-            slug
+            courses (
+              id,
+              slug
+            )
           )
-        )
-      `)
-      .eq("id", lessonId)
-      .maybeSingle();
-
-    if (lessonError || !lesson) {
-      return NextResponse.json({ error: "Lesson not found." }, { status: 404 });
-    }
-
-    // Extract course slug from relation or query param fallback
-    const lessonRecord = lesson as unknown as { modules?: { courses?: { slug?: string } } };
-    const courseSlug = lessonRecord?.modules?.courses?.slug || req.nextUrl.searchParams.get("courseSlug");
-
-    // 4. Verify enrollment if not admin preview
-    if (!isAdminPreview && user) {
-      const { data: profile } = await db
-        .from("profiles")
-        .select("role")
-        .eq("id", user.id)
+        `)
+        .eq("id", lessonId)
         .maybeSingle();
 
-      const isAdmin = profile?.role === "admin";
+      if (lessonError || !lesson) {
+        return NextResponse.json({ error: "Lesson not found." }, { status: 404 });
+      }
 
-      if (!isAdmin && courseSlug) {
-        const isEnrolled = await verifyAndEnsureStudentEnrollment(db, user.id, courseSlug);
+      const lessonRecord = lesson as unknown as { modules?: { courses?: { slug?: string } } };
+      const derivedCourseSlug = lessonRecord?.modules?.courses?.slug || null;
+
+      cachedLesson = {
+        id: lesson.id,
+        title: lesson.title,
+        kind: lesson.kind,
+        content_html: lesson.content_html,
+        courseSlug: derivedCourseSlug,
+      };
+
+      await cacheSet(cacheKey, cachedLesson, 300); // 5 minutes TTL
+    }
+
+    // 4. Verify enrollment if not admin preview (fail-closed, authoritative course slug)
+    if (!isAdminPreview && user) {
+      const role = await getAuthorizedStudentRole(db, user.id);
+      const isAdmin = role === "admin";
+
+      if (!isAdmin) {
+        const authoritativeCourseSlug = cachedLesson.courseSlug;
+        if (!authoritativeCourseSlug) {
+          return NextResponse.json(
+            { error: "Access denied. Lesson is not associated with an active course enrollment." },
+            { status: 403 }
+          );
+        }
+
+        const isEnrolled = await verifyAndEnsureStudentEnrollment(db, user.id, authoritativeCourseSlug);
         if (!isEnrolled) {
           return NextResponse.json(
             { error: "Access denied. You must be enrolled in the course to view this lesson." },
@@ -107,8 +109,8 @@ export async function GET(
     // 5. Return sanitized lesson content with private cache header
     return NextResponse.json(
       {
-        id: lesson.id,
-        content_html: lesson.content_html || null,
+        id: cachedLesson.id,
+        content_html: cachedLesson.content_html || null,
       },
       {
         headers: {

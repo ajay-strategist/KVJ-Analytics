@@ -4,8 +4,47 @@ import { cookies } from "next/headers";
 import { ContentPlayerClient } from "@/components/assessment/ContentPlayerClient";
 import { supabase } from "@/lib/supabase";
 import { adminToken } from "@/lib/adminAuth";
+import { unstable_cache } from "next/cache";
 
-export const revalidate = 0; // Dynamic route
+export const revalidate = 300; // 5-minute background revalidation
+
+// Cached query fetching course structure with modules and lesson metadata.
+// Prevents 80-100 students from concurrently querying the database for identical course curriculum data.
+const getCachedCourseCurriculum = (slug: string) =>
+  unstable_cache(
+    async () => {
+      const { data: course, error: courseError } = await supabase
+        .from("courses")
+        .select(`
+          id,
+          title,
+          slug,
+          modules (
+            id,
+            title,
+            display_order,
+            lessons (
+              id,
+              module_id,
+              title,
+              kind,
+              max_score,
+              video_url,
+              display_order
+            )
+          )
+        `)
+        .eq("slug", slug)
+        .maybeSingle();
+
+      return { course, courseError: courseError?.message || null };
+    },
+    [`course-curriculum-${slug}`],
+    {
+      revalidate: 300,
+      tags: ["courses", `course:${slug}`],
+    }
+  )();
 
 export default async function CoursePlayerPage({
   params,
@@ -25,31 +64,9 @@ export default async function CoursePlayerPage({
   const cookieStore = await cookies();
   const adminPreview = (cookieStore.get("admin_session")?.value === adminToken()) && isPreviewParam;
 
-  // 1. Fetch Course with nested modules and lightweight lesson metadata in a single relational query.
+  // 1. Fetch Course with nested modules and lightweight lesson metadata via cached query.
   // Full lesson content_html is loaded on-demand per active lesson via /api/lessons/[id] to minimize payload size.
-  const { data: course, error: courseError } = await supabase
-    .from("courses")
-    .select(`
-      id,
-      title,
-      slug,
-      modules (
-        id,
-        title,
-        display_order,
-        lessons (
-          id,
-          module_id,
-          title,
-          kind,
-          max_score,
-          video_url,
-          display_order
-        )
-      )
-    `)
-    .eq("slug", slug)
-    .maybeSingle();
+  const { course, courseError } = await getCachedCourseCurriculum(slug);
 
   if (courseError || !course) {
     notFound();

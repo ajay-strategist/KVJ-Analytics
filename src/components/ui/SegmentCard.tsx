@@ -2,6 +2,7 @@ import React from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import * as Icons from "lucide-react";
+import { Card } from "./Card";
 
 interface SegmentCardProps {
   segment: "corporate" | "education";
@@ -44,33 +45,36 @@ export function SegmentCard({
   const c = colors[segment];
 
   return (
-    <Link
-      href={href}
-      className={`group block rounded-[24px] bg-glass-card backdrop-blur-[18px] border border-line p-8 transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${c.shadowHover} ${c.bgHover} border-l-4 ${c.border} hover:-translate-y-1.5`}
-    >
-      <div className="flex flex-col h-full justify-between">
-        <div>
-          <div className={`inline-flex p-3 rounded-xl mb-6 ${c.accent}`}>
-            {IconComponent && <IconComponent className="w-8 h-8" />}
+    <Link href={href} className="block group">
+      <Card
+        hoverLift
+        tone={segment === "corporate" ? "teal" : "emerald"}
+        className={`rounded-[24px] bg-glass-card backdrop-blur-[18px] p-8 border-l-4 ${c.border} ${c.bgHover} ${c.shadowHover}`}
+      >
+        <div className="flex flex-col h-full justify-between">
+          <div>
+            <div className={`inline-flex p-3 rounded-xl mb-6 ${c.accent}`}>
+              {IconComponent && <IconComponent className="w-8 h-8" />}
+            </div>
+            <span className={`block text-xs font-bold uppercase tracking-[0.25em] mb-2 ${c.text}`}>
+              {segment}
+            </span>
+            <h3 className="text-2xl font-bold font-display text-ink mb-3 group-hover:text-brand transition-colors duration-200">
+              {title}
+            </h3>
+            <p className="text-sm font-semibold text-slate/80 mb-4">{tagline}</p>
+            <p className="text-base text-slate leading-relaxed font-medium mb-8">
+              {description}
+            </p>
           </div>
-          <span className={`block text-xs font-bold uppercase tracking-[0.25em] mb-2 ${c.text}`}>
-            {segment}
-          </span>
-          <h3 className="text-2xl font-bold font-display text-ink mb-3 group-hover:text-brand transition-colors duration-200">
-            {title}
-          </h3>
-          <p className="text-sm font-semibold text-slate mb-4">
-            {tagline}
-          </p>
-          <p className="text-base text-slate/85 leading-relaxed mb-6 font-light">
-            {description}
-          </p>
+          <div
+            className={`inline-flex items-center gap-2 font-bold text-sm tracking-wide transition-transform duration-300 ${c.btn}`}
+          >
+            Explore {segment === "corporate" ? "Corporate" : "Academic"} Solutions
+            <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+          </div>
         </div>
-        <div className={`inline-flex items-center font-bold text-sm font-body ${c.text}`}>
-          <span className="mr-2">Explore Solutions</span>
-          <ArrowRight className={`w-4 h-4 transition-transform duration-200 ${c.btn}`} />
-        </div>
-      </div>
+      </Card>
     </Link>
   );
 }

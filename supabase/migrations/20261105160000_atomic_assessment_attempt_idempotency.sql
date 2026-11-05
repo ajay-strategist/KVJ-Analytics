@@ -22,3 +22,4 @@ CREATE INDEX IF NOT EXISTS idx_test_attempts_user_test_started
 
 -- Reload PostgREST schema cache
 NOTIFY pgrst, 'reload schema';
+

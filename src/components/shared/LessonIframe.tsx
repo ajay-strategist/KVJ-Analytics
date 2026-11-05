@@ -155,15 +155,16 @@ export function LessonIframe({
   const cleanHtml = cleanLessonHtml(html);
 
   // Build a self-contained HTML document wrapping the content.
-  // Tailwind CDN is linked so that all our pre-designed premium blocks render beautifully.
+  // Tailwind runtime is served locally from /styles/lesson-runtime.css to eliminate external CDN stalls during concurrent classroom usage.
   const srcDoc = `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+<link href="/styles/lesson-runtime.css" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
 <style>
+  ${hideSidebar ? HIDE_SIDEBAR_CSS : ""}
   *{box-sizing:border-box}
   :root {
     --color-base: #FFFFFF;
@@ -948,11 +949,15 @@ ${cleanHtml.includes("kvj-custom-html-block") ? cleanHtml : `<div class="kvj-cus
     return Math.ceil(h + 24);
   }
 
+  let resizeTimer: any = null;
   function notifyHeight() {
-    const h = calculateDocHeight();
-    if (h > 0) {
-      window.parent.postMessage({ type: 'KVJ_IFRAME_RESIZE', height: h }, '*');
-    }
+    if (resizeTimer) cancelAnimationFrame(resizeTimer);
+    resizeTimer = requestAnimationFrame(() => {
+      const h = calculateDocHeight();
+      if (h > 0) {
+        window.parent.postMessage({ type: 'KVJ_IFRAME_RESIZE', height: h }, '*');
+      }
+    });
   }
 
   window.addEventListener('resize', notifyHeight);
@@ -977,114 +982,27 @@ ${cleanHtml.includes("kvj-custom-html-block") ? cleanHtml : `<div class="kvj-cus
     document.fonts.ready.then(notifyHeight);
   }
   notifyHeight();
-  setTimeout(notifyHeight, 50);
-  setTimeout(notifyHeight, 150);
-  setTimeout(notifyHeight, 350);
-  setTimeout(notifyHeight, 600);
-  setTimeout(notifyHeight, 1000);
 
 </script>
 </body>
 </html>`;
-
-  const injectStyle = useCallback((doc: Document, id: string, css: string) => {
-    const existing = doc.querySelector(`style[data-kvj-id="${id}"]`);
-    if (existing) {
-      existing.textContent = css;
-    } else {
-      const tag = doc.createElement("style");
-      tag.setAttribute("data-kvj-id", id);
-      tag.textContent = css;
-      doc.head.appendChild(tag);
-    }
-  }, []);
-
-  const removeStyle = useCallback((doc: Document, id: string) => {
-    doc.querySelector(`style[data-kvj-id="${id}"]`)?.remove();
-  }, []);
-
-  const autoResize = useCallback(() => {
-    const frame = frameRef.current;
-    if (!frame) return;
-    try {
-      const doc = frame.contentDocument;
-      if (!doc || !doc.body) return;
-
-      const root = doc.getElementById("kvj-content-root") || doc.body;
-      const h = Math.max(
-        root.scrollHeight,
-        root.offsetHeight,
-        doc.body.scrollHeight || 0,
-        doc.body.offsetHeight || 0,
-        doc.documentElement.scrollHeight || 0
-      ) + 24;
-
-      if (h > 0) {
-        frame.style.height = `${Math.ceil(h)}px`;
-      }
-    } catch {
-      // Cross-origin safety
-    }
-  }, []);
-
-  const applyOverlays = useCallback(() => {
-    const frame = frameRef.current;
-    const doc = frame?.contentDocument;
-    if (!doc || !doc.head) return;
-
-    // The entire website is light-themed. Make body use light class.
-    doc.body.classList.add("light");
-    doc.body.classList.remove("dark");
-
-    if (hideSidebar) {
-      injectStyle(doc, "kvj-hide-sidebar", HIDE_SIDEBAR_CSS);
-    } else {
-      removeStyle(doc, "kvj-hide-sidebar");
-    }
-
-    autoResize();
-  }, [hideSidebar, injectStyle, removeStyle, autoResize]);
 
   // Initial load handler
   const handleLoad = () => {
     const frame = frameRef.current;
     if (!frame) return;
     try {
-      const doc = frame.contentDocument;
-      if (doc) {
-        applyOverlays();
-        onContentWindow?.(frame.contentWindow);
-
-        // Attach mutation observer to dynamically resize on content updates
-        const observer = new MutationObserver(autoResize);
-        observer.observe(doc.body, { subtree: true, childList: true, attributes: true });
-        
-        // Poll resize for images loading or external files
-        let count = 0;
-        const interval = setInterval(() => {
-          autoResize();
-          if (++count > 6) clearInterval(interval);
-        }, 250);
-
-        return () => {
-          observer.disconnect();
-          clearInterval(interval);
-        };
-      }
+      onContentWindow?.(frame.contentWindow);
+      frame.contentWindow?.postMessage({ type: "RECHECK_HEIGHT" }, "*");
     } catch {
-      // ignore
+      // Cross-origin safety
     }
   };
 
   useEffect(() => {
-    // Re-trigger load setup if html changes (since srcDoc forces iframe reload)
     const timer = setTimeout(handleLoad, 50);
     return () => clearTimeout(timer);
-  }, [html]);
-
-  useEffect(() => {
-    applyOverlays();
-  }, [hideSidebar, applyOverlays]);
+  }, [html, hideSidebar]);
 
   // Listen for iframe self-reported resize messages
   useEffect(() => {
@@ -1099,7 +1017,7 @@ ${cleanHtml.includes("kvj-custom-html-block") ? cleanHtml : `<div class="kvj-cus
     return () => window.removeEventListener("message", handleMessage);
   }, []);
 
-  // ResizeObserver on the iframe element so width changes (e.g. sidebar open/close) trigger height recalibration
+  // ResizeObserver on the iframe element so width changes (e.g. sidebar toggle) trigger height recalibration
   useEffect(() => {
     const frame = frameRef.current;
     if (!frame || typeof ResizeObserver === "undefined") return;
@@ -1109,19 +1027,22 @@ ${cleanHtml.includes("kvj-custom-html-block") ? cleanHtml : `<div class="kvj-cus
       for (const entry of entries) {
         if (Math.abs(entry.contentRect.width - lastWidth) >= 0.5) {
           lastWidth = entry.contentRect.width;
-          autoResize();
+          frame.contentWindow?.postMessage({ type: "RECHECK_HEIGHT" }, "*");
         }
       }
     });
     ro.observe(frame);
     return () => ro.disconnect();
-  }, [autoResize]);
+  }, []);
 
   // Window resize fallback
   useEffect(() => {
-    window.addEventListener("resize", autoResize);
-    return () => window.removeEventListener("resize", autoResize);
-  }, [autoResize]);
+    const handleResize = () => {
+      frameRef.current?.contentWindow?.postMessage({ type: "RECHECK_HEIGHT" }, "*");
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   return (
     <iframe
@@ -1130,7 +1051,7 @@ ${cleanHtml.includes("kvj-custom-html-block") ? cleanHtml : `<div class="kvj-cus
       onLoad={handleLoad}
       className="w-full border-none bg-transparent block"
       style={{ minHeight: "150px" }}
-      sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-modals allow-downloads allow-popups-to-escape-sandbox"
+      sandbox="allow-scripts allow-popups allow-forms allow-modals allow-downloads allow-popups-to-escape-sandbox"
       allow="clipboard-write; fullscreen"
       scrolling="no"
     />

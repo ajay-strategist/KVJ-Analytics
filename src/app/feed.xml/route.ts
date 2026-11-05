@@ -1,34 +1,49 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@sanity/client";
-
-const client = createClient({
-  projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || "kvj-analytics",
-  dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || "production",
-  apiVersion: "2024-01-01",
-  useCdn: true,
-});
+import { supabase } from "@/lib/supabase";
 
 export async function GET(req: NextRequest) {
   const host = req.headers.get("host") || "www.kvjanalytics.in";
   const protocol = req.headers.get("x-forwarded-proto") || "https";
   const baseUrl = `${protocol}://${host}`;
 
-  let posts: any[] = [];
+  let posts: Array<{
+    title: string;
+    slug: string;
+    publishedAt: string;
+    category?: { title?: string };
+    author?: { name?: string };
+    description?: string;
+  }> = [];
 
   try {
-    posts = await client.fetch(`
-      *[_type == "post"] | order(publishedAt desc) [0..10] {
-        title,
-        "slug": slug.current,
-        publishedAt,
-        category->{ title },
-        author->{ name },
-        description
-      }
-    `);
+    const { data } = await supabase
+      .from("posts")
+      .select("title, slug, published_at, category_title, author_name, description")
+      .order("published_at", { ascending: false })
+      .limit(10);
+
+    if (data && data.length > 0) {
+      posts = (data as Array<{
+        title: string;
+        slug: string;
+        published_at?: string;
+        category_title?: string;
+        author_name?: string;
+        description?: string;
+      }>).map((p) => ({
+        title: p.title,
+        slug: p.slug,
+        publishedAt: p.published_at || new Date().toISOString(),
+        category: { title: p.category_title },
+        author: { name: p.author_name },
+        description: p.description,
+      }));
+    }
   } catch (err) {
     console.error("RSS feed generation fetching error:", err);
-    // Fallback posts list
+  }
+
+  if (posts.length === 0) {
     posts = [
       {
         title: "Smarter Excel Reports: 3 Automation Workflows for Modern Offices",

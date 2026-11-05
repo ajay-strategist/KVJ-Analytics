@@ -11,7 +11,7 @@ import { BoldStatement } from "@/components/ui/BoldStatement";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { supabase } from "@/lib/supabase";
-import { syncStudentSessionCookie } from "@/lib/studentAuth";
+import { syncStudentSessionCookie, fetchWithStudentAuth } from "@/lib/studentAuth";
 
 export default function CollegeJoinPage() {
   const routeParams = useParams<{ slug: string }>();
@@ -121,7 +121,7 @@ export default function CollegeJoinPage() {
         activeUserId = loginData?.user?.id || checkData?.user?.id;
       }
 
-      const response = await fetch(`/api/courses/${slug}/join`, {
+      const response = await fetchWithStudentAuth(`/api/courses/${slug}/join`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

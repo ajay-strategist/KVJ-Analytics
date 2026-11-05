@@ -9,12 +9,16 @@ import type { NextRequest } from "next/server";
  * old static-string check allowed). The secret never leaves the server.
  */
 function sessionSecret(): string {
-  return (
+  const secret =
     process.env.ADMIN_SESSION_SECRET ||
     process.env.SUPABASE_SERVICE_ROLE_KEY ||
-    process.env.ADMIN_PASSWORD ||
-    "kvj-insecure-dev-secret-change-me"
-  );
+    process.env.ADMIN_PASSWORD;
+
+  if (!secret) {
+    throw new Error("[KVJ Admin Auth] Missing server secret: configure ADMIN_SESSION_SECRET or SUPABASE_SERVICE_ROLE_KEY.");
+  }
+
+  return secret;
 }
 
 export function adminToken(): string {

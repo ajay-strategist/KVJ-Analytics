@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { createClient } from "@supabase/supabase-js";
 import { adminToken } from "@/lib/adminAuth";
 
@@ -31,6 +32,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { data, error } = await db.from("modules").insert([body]).select().single();
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    try { revalidatePath("/training"); } catch {}
     return NextResponse.json({ module: data });
   } catch (err: any) {
     return NextResponse.json({ error: err.message || "Invalid request body" }, { status: 400 });
@@ -54,6 +56,7 @@ export async function PATCH(req: NextRequest) {
       .single();
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    try { revalidatePath("/training"); } catch {}
     return NextResponse.json({ module: data });
   } catch (err: any) {
     return NextResponse.json({ error: err.message || "Invalid request body" }, { status: 400 });
@@ -71,6 +74,7 @@ export async function DELETE(req: NextRequest) {
 
     const { error } = await db.from("modules").delete().eq("id", id);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    try { revalidatePath("/training"); } catch {}
     return NextResponse.json({ success: true });
   } catch (err: any) {
     return NextResponse.json({ error: err.message || "Invalid request body" }, { status: 400 });

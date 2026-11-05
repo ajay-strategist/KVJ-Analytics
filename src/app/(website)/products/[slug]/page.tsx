@@ -1,6 +1,6 @@
 import React from "react";
 import { notFound } from "next/navigation";
-import { ArrowLeft, CheckCircle2, Monitor, Layers } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, Monitor, Layers } from "lucide-react";
 import Link from "next/link";
 import { Container } from "@/components/ui/Container";
 import { Section } from "@/components/ui/Section";
@@ -178,22 +178,64 @@ export default async function ProductDetailPage({
 
               {isGradeScope ? (
                 <Button
-                  href={`/contact?interest=${encodeURIComponent("Demo Request " + name)}`}
+                  href="/contact?interest=Product+Demonstrations"
                   className="w-full py-4 text-center font-bold text-black bg-[#10B981] hover:bg-[#10B981]/90 transition-all duration-200 relative z-10"
                 >
-                  {demo.buttonText}
+                  Request a Product Demo
                 </Button>
               ) : (
                 <Button
-                  href={`/contact?interest=${encodeURIComponent("Demo Request " + name)}`}
+                  href="/contact?interest=Product+Demonstrations"
                   className="w-full py-4 text-center font-bold text-white bg-[#0D9488] hover:bg-[#0D9488]/90 transition-all duration-200 relative z-10 border-none"
                 >
-                  {demo.buttonText}
+                  Request a Product Demo
                 </Button>
               )}
             </div>
           </div>
         </div>
+
+        {/* Related Software Platforms */}
+        {products.filter((p: any) => p.slug !== slug).length > 0 ? (
+          <div className="mt-20 pt-12 border-t border-line/80 max-w-5xl mx-auto">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+              <div>
+                <span className="text-xs font-bold uppercase tracking-wider text-brand">Institutional Software</span>
+                <h3 className="font-display text-2xl font-bold text-ink mt-1">Explore Other KVJ Software Platforms</h3>
+              </div>
+              <Link
+                href="/products"
+                className="inline-flex items-center text-sm font-bold text-brand hover:underline"
+              >
+                View All Products <ArrowRight className="w-4 h-4 ml-1" />
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {products
+                .filter((p: any) => p.slug !== slug)
+                .map((rel: any, rIdx: number) => (
+                  <Link
+                    key={rIdx}
+                    href={`/products/${rel.slug}`}
+                    className="group rounded-2xl border border-line bg-surface/50 p-6 hover:border-brand/40 hover:shadow-hover-lift transition-all duration-300 flex flex-col justify-between"
+                  >
+                    <div>
+                      <h4 className="font-display font-bold text-xl text-ink group-hover:text-brand transition-colors mb-2">
+                        {rel.name}
+                      </h4>
+                      <p className="text-xs font-semibold text-brand mb-2 italic">{rel.tagline}</p>
+                      <p className="text-xs text-slate line-clamp-3 leading-relaxed mb-4">
+                        {rel.description}
+                      </p>
+                    </div>
+                    <span className="inline-flex items-center text-xs font-bold text-brand group-hover:underline mt-auto">
+                      Explore Platform <ArrowRight className="w-3.5 h-3.5 ml-1 transition-transform group-hover:translate-x-1" />
+                    </span>
+                  </Link>
+                ))}
+            </div>
+          </div>
+        ) : null}
       </Container>
     </Section>
   );

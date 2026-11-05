@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAdminClient } from "@/lib/supabaseAdmin";
+import { getAdminClient, getAuthClient } from "@/lib/supabaseAdmin";
 
 export async function POST(req: NextRequest) {
   const supabaseAdmin = getAdminClient();
@@ -73,11 +73,12 @@ export async function POST(req: NextRequest) {
         console.warn("updateUserById warning:", updateErr);
       }
 
-      // 3. Server-side login attempt to generate session tokens for client
+      // 3. Server-side login attempt to generate session tokens for client (using isolated auth client)
       let session = null;
       if (cleanEmail && password) {
         try {
-          const { data: signInData } = await supabaseAdmin.auth.signInWithPassword({
+          const authClient = getAuthClient();
+          const { data: signInData } = await authClient.auth.signInWithPassword({
             email: cleanEmail,
             password: password,
           });
@@ -111,7 +112,8 @@ export async function POST(req: NextRequest) {
         if (!createErr && newUser?.user) {
           let session = null;
           try {
-            const { data: signInData } = await supabaseAdmin.auth.signInWithPassword({
+            const authClient = getAuthClient();
+            const { data: signInData } = await authClient.auth.signInWithPassword({
               email: cleanEmail,
               password: password,
             });

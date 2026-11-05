@@ -8,15 +8,15 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: "https", hostname: "cdn.sanity.io" },
       { protocol: "https", hostname: "lh3.googleusercontent.com" }, // Google Drive (converted)
+      { protocol: "https", hostname: "drive.google.com" },
       { protocol: "https", hostname: "api.onedrive.com" },          // OneDrive (converted)
       { protocol: "https", hostname: "**.supabase.co" },            // Supabase uploads
       { protocol: "https", hostname: "**.sharepoint.com" },         // OneDrive/SharePoint business
       { protocol: "https", hostname: "images.unsplash.com" },
-      { protocol: "https", hostname: "**" },                        // catch-all for any pasted link
+      { protocol: "https", hostname: "res.cloudinary.com" },
+      { protocol: "https", hostname: "kvjanalytics.in" },
+      { protocol: "https", hostname: "**.kvjanalytics.in" },
     ],
-  },
-  typescript: {
-    ignoreBuildErrors: true,
   },
 };
 

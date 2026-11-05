@@ -145,7 +145,7 @@ export default async function ContactPage() {
                       <div className="text-[10px] font-mono text-slate uppercase tracking-widest mb-1">Hotlines</div>
                       <div className="flex flex-col gap-0.5">
                         {contact.phones.map((phone: string, idx: number) => (
-                          <a key={idx} href={`tel:${phone}`} className="text-sm font-semibold text-white hover:text-[#10B981] transition-colors">
+                          <a key={idx} href={`tel:${phone.replace(/[^\d+]/g, "")}`} className="text-sm font-semibold text-white hover:text-[#10B981] transition-colors">
                             {phone}
                           </a>
                         ))}
@@ -156,7 +156,7 @@ export default async function ContactPage() {
 
                 {/* WhatsApp button with outer green stroke glow */}
                 <a
-                  href={`https://wa.me/91${contact.phones[0]}?text=${encodeURIComponent(
+                  href={`https://wa.me/91${(contact.phones[0] || "").replace(/\D/g, "").replace(/^(91)+/, "") || "9961813730"}?text=${encodeURIComponent(
                     "Hello KVJ Analytics, I visited your website and would like to discuss training/automation."
                   )}`}
                   target="_blank"

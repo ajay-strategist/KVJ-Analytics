@@ -14,10 +14,10 @@ export const revalidate = 3600;
 
 export async function generateMetadata(): Promise<Metadata> {
   return resolveSeo("/products", {
-    title: "EdTech Products — Grade Scope & Protrix",
+    title: "EdTech Products — GradeScope & Protrix",
     description:
-      "Grade Scope and Protrix: KVJ Analytics' proprietary platforms for automated educational reporting, assessment automation, and institutional analytics. Request a demo.",
-    keywords: ["Grade Scope", "Protrix", "assessment automation", "educational reporting software", "institutional analytics"],
+      "GradeScope and Protrix: KVJ Analytics' proprietary platforms for automated educational reporting, assessment automation, and institutional analytics. Request a demo.",
+    keywords: ["GradeScope", "Protrix", "assessment automation", "educational reporting software", "institutional analytics"],
   });
 }
 

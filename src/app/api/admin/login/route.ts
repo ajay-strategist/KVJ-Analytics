@@ -4,8 +4,16 @@ import { adminToken } from "@/lib/adminAuth";
 export async function POST(req: NextRequest) {
   try {
     const { username, password } = await req.json();
-    const adminUsername = process.env.ADMIN_USERNAME || "mail@thestrategist.co.in";
-    const adminPassword = process.env.ADMIN_PASSWORD || "AjayThomas@1";
+    const adminUsername = process.env.ADMIN_USERNAME;
+    const adminPassword = process.env.ADMIN_PASSWORD;
+
+    if (!adminUsername || !adminPassword) {
+      console.error("[KVJ Admin Auth] Missing ADMIN_USERNAME or ADMIN_PASSWORD configuration.");
+      return NextResponse.json(
+        { error: "Admin service is not configured properly." },
+        { status: 500 }
+      );
+    }
 
     if (username !== adminUsername || password !== adminPassword) {
       return NextResponse.json(

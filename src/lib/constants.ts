@@ -10,7 +10,7 @@ export const FALLBACK_SITE_SETTINGS = {
   regionsServed: ["Kerala", "India", "UAE", "Oman", "USA", "Europe"],
   contactInfo: {
     email: "info@kvjanalytics.in",
-    phones: ["9961813730", "0484-4059310", "7902661012"],
+    phones: ["+91 99618 13730", "+91 (0484) 4059310", "+91 79026 61012"],
     address:
       "3rd Floor, Lalan Towers, Banerji Road, High Court Jn., Cochin-682 031, Ernakulam, Kerala, India",
     gstNumber: "32BIDPK3118B1Z2",
@@ -56,7 +56,7 @@ export const FALLBACK_SITE_SETTINGS = {
       links: [
         { label: "Certification Programs", href: "/education/certification-programs" },
         { label: "Curriculum Development", href: "/education/curriculum-development" },
-        { label: "Grade Scope", href: "/products/grade-scope" },
+        { label: "GradeScope", href: "/products/grade-scope" },
         { label: "Protrix", href: "/products/protrix" },
         { label: "Skill Development Programs", href: "/training" },
       ],
@@ -72,11 +72,9 @@ export const FALLBACK_SITE_SETTINGS = {
     { label: "Blog", href: "/blog" },
     { label: "Contact", href: "/contact" },
   ],
-  socialLinks: [
-    { platform: "LinkedIn", url: "https://linkedin.com" },
-    { platform: "Twitter", url: "https://twitter.com" },
-    { platform: "Facebook", url: "https://facebook.com" },
-  ],
+  // Social links: unverified platform homepages removed per Task 3.
+  // Official company profile URLs pending stakeholder confirmation.
+  socialLinks: [] as { platform: string; url: string }[],
 };
 
 // V3 HOME — Positioning: Analytics / AI / BI / Digital Transformation (NOT a training institute).
@@ -89,8 +87,8 @@ export const FALLBACK_HOME_PAGE = {
     supporting:
       "Helping organizations make smarter decisions through Business Intelligence, Artificial Intelligence, Automation and Digital Transformation.",
     description:
-      "KVJ Analytics partners with businesses, enterprises and educational institutions to build intelligent analytics platforms, automate business processes, modernize operations and enable data-driven decision making. We combine technology, strategy and innovation to create measurable business outcomes.",
-    primaryCta: { label: "Schedule a Consultation", href: "/contact" },
+      `For over ${CURRENT_EXP_YEARS} years, KVJ Analytics has partnered with businesses, enterprises and educational institutions to build intelligent analytics platforms, automate reporting processes, modernize operations and enable data-driven decision making. We combine technology, strategy and innovation to create measurable business outcomes.`,
+    primaryCta: { label: "Schedule a Consultation", href: "/contact?interest=Corporate+Consulting" },
     secondaryCta: { label: "Explore Corporate Solutions", href: "/corporate" },
   },
   trustedBy: {
@@ -102,23 +100,80 @@ export const FALLBACK_HOME_PAGE = {
     description:
       "We help organizations transform data into strategic assets through intelligent analytics, automation and enterprise technology solutions.",
     cards: [
-      { title: "Corporate Analytics", points: ["Business Intelligence", "Executive Dashboards", "Data Visualization", "Performance Analytics", "Decision Support"] },
-      { title: "Digital Transformation", points: ["Business Process Automation", "Workflow Optimization", "Cloud Transformation", "Digital Strategy", "Technology Modernization"] },
-      { title: "Enterprise Technology", points: ["Custom Business Applications", "Enterprise Portals", "Analytics Platforms", "Data Platforms", "System Integration"] },
-      { title: "Consulting Services", points: ["Analytics Consulting", "Technology Advisory", "Digital Strategy", "Business Process Analysis", "Implementation Roadmaps"] },
+      {
+        title: "MIS & Report Automation",
+        points: [
+          "Multi-Source Data Pipelines",
+          "ERP & Financial File Consolidation",
+          "Human Error & Copy-Paste Elimination",
+          "Custom Management Reporting"
+        ],
+        href: "/corporate/report-automation",
+        ctaLabel: "Explore Report Automation"
+      },
+      {
+        title: "Power BI & Executive Dashboards",
+        points: [
+          "Real-Time Operational Visibility",
+          "Multi-Department KPI Monitoring",
+          "Executive Drill-Down Analysis",
+          "Lightweight, Maintainable Data Models"
+        ],
+        href: "/corporate/dashboard-development",
+        ctaLabel: "Explore Dashboards"
+      },
+      {
+        title: "Spreadsheet Consulting & Optimization",
+        points: [
+          "Complex Financial & MIS Modeling",
+          "Formula Audit & Lag Recovery",
+          "Data Validation & Integrity Protection",
+          "Cost-Effective In-House Handoffs"
+        ],
+        href: "/corporate/spreadsheet-consulting",
+        ctaLabel: "Explore Spreadsheet Consulting"
+      },
+      {
+        title: "Institutional Analytics & Academic Platforms",
+        points: [
+          "GradeScope Academic Analytics",
+          "Protrix Assessment Automation",
+          "Accreditation & NAAC Data Readiness",
+          "Practical Campus Analytics Labs"
+        ],
+        href: "/education",
+        ctaLabel: "Explore Educational Solutions"
+      }
     ],
-    cta: { label: "Explore Corporate Solutions", href: "/corporate" },
+    cta: { label: "Explore All Corporate Solutions", href: "/corporate" },
   },
   whyUs: {
     heading: "Turning Complex Data into Clear Decisions",
-    // Titles are approved; one-line bodies to be added via CMS (not fabricated).
     cards: [
-      { title: "Business Intelligence", body: "" },
-      { title: "Automation", body: "" },
-      { title: "Artificial Intelligence", body: "" },
-      { title: "Enterprise Platforms", body: "" },
-      { title: "Custom Solutions", body: "" },
-      { title: "Innovation", body: "" },
+      {
+        title: "Business Intelligence",
+        body: "Transform disparate operational records into interactive executive dashboards and KPI telemetry that drive data-informed decisions.",
+      },
+      {
+        title: "Automation",
+        body: "Eliminate repetitive manual spreadsheet processing and reporting routines through resilient scheduled data pipelines and scripts.",
+      },
+      {
+        title: "Artificial Intelligence",
+        body: "Apply intelligent analytics models, anomaly detection, and predictive forecasting to uncover actionable operational patterns.",
+      },
+      {
+        title: "Enterprise Platforms",
+        body: "Deploy scalable, secure analytics architectures and centralized reporting portals integrated directly with your business systems.",
+      },
+      {
+        title: "Custom Solutions",
+        body: "Develop purpose-built spreadsheet models, reporting tools, and database connectors tailored to your exact operational workflows.",
+      },
+      {
+        title: "Innovation",
+        body: "Continuously modernize business reporting frameworks with emerging analytical standards and automated evaluation methodologies.",
+      },
     ],
   },
   industries: {
@@ -154,8 +209,8 @@ export const FALLBACK_HOME_PAGE = {
     // Draft description assembled from approved Home phrasing — editable in CMS.
     description:
       "Partner with KVJ Analytics to build intelligent analytics platforms, automate operations and enable data-driven decisions that create measurable business outcomes.",
-    primaryCta: { label: "Schedule a Consultation", href: "/contact" },
-    secondaryCta: { label: "Contact Us", href: "/contact" },
+    primaryCta: { label: "Request a Consultation", href: "/contact?interest=Corporate+Consulting" },
+    secondaryCta: { label: "Explore Educational Solutions", href: "/education" },
   },
 };
 
@@ -351,11 +406,11 @@ export const FALLBACK_CORPORATE = {
   heading: "Corporate Solutions",
   strapline: "Smarter Reporting. Faster Decisions.",
   intro:
-    "We help organizations automate reporting, improve visibility, optimize workflows, and make faster business decisions.",
+    "We help organizations eliminate repetitive manual reporting, streamline spreadsheet workflows, and gain clear visibility into operational performance through cost-conscious, maintainable analytics solutions.",
   cta: {
     title: "Looking for custom automation, reports or dashboards?",
     description:
-      "We provide full-spectrum consultation, audit, development, and training integration tailored to your company.",
+      "We audit existing reporting workflows, eliminate repetitive spreadsheet bottlenecks, and deliver maintainable automation solutions tailored to your operational budget.",
     primaryText: "Schedule a Free Discovery Session",
     primaryHref: "/contact",
     secondaryText: "",
@@ -366,84 +421,133 @@ export const FALLBACK_CORPORATE = {
       title: "Report Automation",
       slug: "report-automation",
       shortDescription:
-        "Automate MIS, financial, operational, and management reports with speed and accuracy.",
+        "Automate MIS, financial, operational, and management reports with speed, consistency, and reduced manual effort.",
+      problemSolved:
+        "Finance and operations teams losing hours every week manually consolidating disparate spreadsheets, risking formula breakage and delayed management decisions.",
+      targetAudience: [
+        "CFOs & Finance Controllers",
+        "MIS & Operations Heads",
+        "Department Reporting Leads"
+      ],
       details: [
-        "Say goodbye to hours of copying and pasting cells manually.",
-        "Consolidate multiple files and ERP data pipelines with single-click routines.",
-        "Reduce calculation errors and data mismatch issues.",
-        "Create scalable macros, scripts, and scheduled data loaders."
+        "Significantly reduce time spent copying, pasting, and consolidating manual spreadsheets.",
+        "Unify ERP exports, transactional files, and departmental reports into single-click workflows.",
+        "Minimize recurring data discrepancies with standardized validation rules.",
+        "Deploy reusable macros and automated scripts engineered for long-term operational reliability."
       ]
     },
     {
       title: "Data Visualization",
       slug: "data-visualization",
       shortDescription:
-        "Convert complex data into meaningful visual insights and interactive reports.",
+        "Convert complex multi-source data into clear visual insights, executive dashboards, and interactive reports.",
+      problemSolved:
+        "Dense, table-heavy reports obscuring critical business trends, regional variances, and performance bottlenecks from leadership.",
+      targetAudience: [
+        "Executive Leadership & Boards",
+        "Commercial Directors",
+        "Business Unit Managers"
+      ],
       details: [
-        "Design clear visual hierarchies that highlight operational insights.",
-        "Map out comparative trends and monthly performance breakdowns.",
-        "Structure charts and KPIs to align with corporate audit standards.",
-        "Incorporate company color styles for unified board presentations."
+        "Design intuitive visual hierarchies that highlight operational insights and performance bottlenecks.",
+        "Map out comparative trends, monthly variances, and regional breakdowns with clear context.",
+        "Structure charts and KPIs to align with corporate audit and reporting standards.",
+        "Incorporate company branding standards for consistent executive and board presentations."
       ]
     },
     {
       title: "Spreadsheet Consulting",
       slug: "spreadsheet-consulting",
       shortDescription:
-        "Advanced Excel systems, automation, validation, and optimization solutions.",
+        "Advanced Excel systems, automated modeling, data validation, and performance optimization.",
+      problemSolved:
+        "Slow, fragile, bloated workbooks with undocumented formulas that crash frequently and create single-point employee dependencies.",
+      targetAudience: [
+        "Financial Analysts",
+        "Operations Controllers",
+        "Spreadsheet-Heavy Teams"
+      ],
       details: [
-        "Audit existing formulas for performance bottle-necks and calculation lag.",
-        "Build robust financial models with dynamic inputs and forecasting.",
-        "Structure spreadsheet rules to validate inputs and prevent accidental data loss.",
-        "Implement custom VBA scripts to extend spreadsheet capabilities."
+        "Audit complex spreadsheets to eliminate calculation lag, formula corruption, and performance bottlenecks.",
+        "Develop structured financial and operational models that internal teams can maintain without ongoing consultant reliance.",
+        "Implement data validation and change-protection rules to prevent accidental overwrites and formula breakage.",
+        "Deliver cost-effective spreadsheet solutions that maximize existing software investments without expensive licensing additions."
       ]
     },
     {
       title: "Dashboard Development",
       slug: "dashboard-development",
       shortDescription:
-        "Real-time dashboards for KPI tracking, performance monitoring, and business intelligence.",
+        "Real-time dashboards for KPI tracking, operational performance monitoring, and business intelligence.",
+      problemSolved:
+        "Scattered departmental data sources requiring recurring manual compilation instead of a unified, real-time source of truth.",
+      targetAudience: [
+        "Business Intelligence Leads",
+        "Operations Directors",
+        "Enterprise Unit Heads"
+      ],
       details: [
-        "Connect live data sources directly to unified dashboard portals.",
-        "Track daily operations metrics, sales volumes, and regional outputs.",
-        "Build drill-down layers to view details from global maps to specific transactions.",
-        "Share interactive reports securely with team leaders and managers."
+        "Consolidate scattered business metrics into clear, executive-ready Power BI and Excel dashboards.",
+        "Gain real-time visibility into operational trends, department KPIs, and regional outputs.",
+        "Enable intuitive drill-down capability from high-level executive summaries to underlying transactions.",
+        "Build lightweight, maintainable dashboards that update efficiently and adapt as your organization grows."
       ]
     },
     {
       title: "App Development",
       slug: "app-development",
       shortDescription:
-        "Custom business applications for reporting, workflow, and operational management.",
+        "Custom business applications for reporting, workflow coordination, and operational management.",
+      problemSolved:
+        "Rigid commercial off-the-shelf software failing to match custom internal approval chains and operational reporting routines.",
+      targetAudience: [
+        "Operations Leads",
+        "IT & Systems Managers",
+        "Administrative Heads"
+      ],
       details: [
-        "Build customized operational applications matching your exact workflow.",
-        "Secure data sharing and roles-based access control.",
+        "Build customized operational applications matching your exact departmental workflow.",
+        "Configure secure data sharing and role-based access control for team members.",
         "Integrate custom database connectors and scheduled background jobs.",
-        "Responsive dashboard layers accessible on desktop and mobile."
+        "Deliver responsive interface layers accessible on desktop and mobile browsers."
       ]
     },
     {
       title: "Process Automation",
       slug: "process-automation",
       shortDescription:
-        "Reduce manual work through intelligent workflow and process automation.",
+        "Reduce manual bottlenecks through practical, cost-conscious workflow and process automation.",
+      problemSolved:
+        "Recurring multi-step administrative data transfers consuming valuable analyst hours during month-end and quarterly closing.",
+      targetAudience: [
+        "Operations Managers",
+        "Shared Services Teams",
+        "Workflow Coordinators"
+      ],
       details: [
-        "Analyze business processes to isolate repetitive manual steps.",
-        "Integrate tools to sync data across folders, spreadsheets, and databases.",
-        "Deploy background automation jobs that run 24/7 without intervention.",
-        "Configure automated email alerts and task assignments on critical events."
+        "Identify and streamline repetitive manual steps across weekly and monthly reporting cycles.",
+        "Automate data consolidation across folders, spreadsheets, and departmental databases.",
+        "Configure reliable background data refresh schedules that free staff for higher-value analytical work.",
+        "Establish practical automated alerts for key operational thresholds and submission milestones."
       ]
     },
     {
       title: "Corporate Training",
       slug: "corporate-training",
       shortDescription:
-        "Hands-on training in Excel, Power BI, analytics, dashboards, and automation tools.",
+        "Hands-on training in Excel, Power BI, analytics, dashboards, and automated reporting tools.",
+      problemSolved:
+        "Spreadsheet and Power BI skill deficiencies across departments resulting in slow reporting turnarounds and unnecessary external dependency.",
+      targetAudience: [
+        "Corporate HR & L&D Heads",
+        "Finance & Analytics Teams",
+        "Departmental Staff"
+      ],
       details: [
-        "Deliver customized training programs matching your team's skill gap.",
-        "Provide practical datasets and assignments modeled after actual business MIS.",
-        "Increase worker efficiency in using advanced formatting and modeling.",
-        "Review post-training skill assessments and performance scorecards."
+        "Deliver customized corporate workshops tailored to your team's specific spreadsheet and analytical skill gaps.",
+        "Provide practical datasets and exercises modeled after actual business MIS and reporting scenarios.",
+        "Increase departmental productivity by upskilling staff in advanced data modeling, DAX, and automated formatting.",
+        "Review post-training skill assessments to verify measurable workplace application."
       ]
     }
   ]
@@ -529,7 +633,7 @@ export const FALLBACK_EDUCATION = {
 
 export const FALLBACK_PRODUCTS = [
   {
-    name: "Grade Scope",
+    name: "GradeScope",
     slug: "grade-scope",
     tagline: "Educational Reporting & Analytics Platform",
     description:
@@ -580,7 +684,7 @@ export const FALLBACK_CONTACT = {
   heading: "Contact KVJ Analytics",
   strapline: "Let's Build Smarter Systems Together",
   intro:
-    "Whether you are a corporate organization looking for automation and analytics solutions or an educational institution seeking industry-oriented learning platforms, KVJ Analytics is ready to support your transformation journey.",
+    "Whether you are seeking to reduce manual reporting overhead, modernize spreadsheet workflows, or build practical analytics capabilities for your team, KVJ Analytics provides cost-conscious, reliable guidance tailored to your operational goals.",
   inquiryAreas: [
     "Corporate Consulting",
     "Dashboard Development",

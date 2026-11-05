@@ -3,7 +3,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { urlFor } from "@/sanity/lib/image";
 import { Container } from "./Container";
 
 export interface HeroSlide {
@@ -97,15 +96,18 @@ export function HeroCarousel({ slides, interval = 6000 }: HeroCarouselProps) {
       <div className="relative h-[58vh] min-h-[420px] md:h-[70vh] md:min-h-[520px] max-h-[760px]">
         {data.map((slide, i) => {
           const active = i === index;
-          const imgUrl = slide.image
-            ? urlFor(slide.image).width(2000).height(1100).fit("crop").url()
-            : null;
+          const imgUrl =
+            slide.imageUrl ||
+            (typeof slide.image === "string"
+              ? slide.image
+              : (slide.image as { asset?: { url?: string }; url?: string })?.asset?.url ||
+              (slide.image as { url?: string })?.url ||
+              null);
           return (
             <div
               key={i}
-              className={`absolute inset-0 transition-opacity duration-700 ease-out ${
-                active ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
-              }`}
+              className={`absolute inset-0 transition-opacity duration-700 ease-out ${active ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
+                }`}
               aria-hidden={!active}
               role="group"
               aria-roledescription="slide"
@@ -132,9 +134,8 @@ export function HeroCarousel({ slides, interval = 6000 }: HeroCarouselProps) {
               {/* Content */}
               <Container className="relative z-10 h-full flex items-center">
                 <div
-                  className={`max-w-2xl transition-all duration-700 ${
-                    active ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"
-                  }`}
+                  className={`max-w-2xl transition-all duration-700 ${active ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"
+                    }`}
                 >
                   {slide.eyebrow && (
                     <span className="inline-block text-[12px] font-extrabold uppercase tracking-[0.18em] text-cta mb-4">
@@ -201,9 +202,8 @@ export function HeroCarousel({ slides, interval = 6000 }: HeroCarouselProps) {
                 onClick={() => goTo(i)}
                 aria-label={`Go to slide ${i + 1}`}
                 aria-current={i === index}
-                className={`h-2.5 rounded-full transition-all duration-300 ${
-                  i === index ? "w-8 bg-cta" : "w-2.5 bg-white/50 hover:bg-white/80"
-                }`}
+                className={`h-2.5 rounded-full transition-all duration-300 ${i === index ? "w-8 bg-cta" : "w-2.5 bg-white/50 hover:bg-white/80"
+                  }`}
               />
             ))}
           </div>

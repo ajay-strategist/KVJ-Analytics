@@ -4,16 +4,13 @@ const COOKIE_NAME = "sb-access-token";
 const THIRTY_DAYS_SECONDS = 60 * 60 * 24 * 30;
 
 /**
- * Synchronizes the current Supabase session access token to the sb-access-token cookie
- * with a 30-day max-age so student sessions don't expire during long study/simulation sessions.
+ * Synchronizes the current Supabase session.
+ * The authoritative session cookie is managed server-side with HttpOnly; Secure flags
+ * by the auth route handlers (/api/auth/login). This function preserves the interface
+ * across existing client components without exposing HttpOnly cookies to client-side JS tampering.
  */
-export function syncStudentSessionCookie(session: any) {
-  if (typeof window === "undefined") return;
-  if (session?.access_token) {
-    const isSecure = window.location.protocol === "https:";
-    const secureFlag = isSecure ? "; Secure" : "";
-    document.cookie = `${COOKIE_NAME}=${session.access_token}; path=/; max-age=${THIRTY_DAYS_SECONDS}; SameSite=Lax${secureFlag}`;
-  }
+export function syncStudentSessionCookie(_session: any) {
+  // Server-managed HttpOnly cookie takes precedence for XSS protection.
 }
 
 /**

@@ -13,7 +13,7 @@ import { IndustryGrid } from "@/components/v3/home/IndustryGrid";
 import { BusinessAnalyticsPipeline } from "@/components/v3/home/BusinessAnalyticsPipeline";
 import { FinalCTAExperience } from "@/components/v3/home/FinalCTAExperience";
 import { getPageContent, mergePageContent } from "@/lib/content";
-import { FALLBACK_HOME_PAGE } from "@/lib/constants";
+import { FALLBACK_HOME_PAGE, CURRENT_EXP_YEARS } from "@/lib/constants";
 import { supabase } from "@/lib/supabase";
 
 export const revalidate = 3600;
@@ -62,6 +62,7 @@ export default async function HomePage() {
         paragraph={hero.description}
         primaryCta={hero.primaryCta}
         secondaryCta={hero.secondaryCta}
+        experienceBadge={`${CURRENT_EXP_YEARS}+ Years of Analytics & Automation Excellence`}
       />
 
       <CapabilityStrip items={capabilities} />

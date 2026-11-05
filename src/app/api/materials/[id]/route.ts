@@ -1,15 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-import { client as sanityClient } from "@/sanity/lib/client";
-
-function getAdminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key || url === "https://placeholder.supabase.co") {
-    return require("@/lib/mockSupabase").mockSupabaseClient;
-  }
-  return createClient(url, key, { auth: { persistSession: false } });
-}
+import { getAdminClient, verifyAndEnsureStudentEnrollment } from "@/lib/supabaseAdmin";
+import { adminToken } from "@/lib/adminAuth";
+import { authenticateStudentRequest, getAuthorizedStudentRole } from "@/lib/sessionAuth";
 
 async function serveMaterial(material: any) {
   if (material.type === "pdf") {
@@ -83,19 +75,26 @@ export async function GET(
       );
     }
 
-    // 1. Fetch material info from Sanity
-    const material = await sanityClient.fetch(
-      `*[_type == "material" && _id == $id][0] {
-        _id,
-        title,
-        type,
-        isPreview,
-        "courseSlug": course->slug.current,
-        url,
-        "pdfUrl": pdfFile.asset->url
-      }`,
-      { id }
-    );
+    // 1. Fetch material info from Supabase lessons
+    const { data: lessonRecord } = await supabaseAdmin
+      .from("lessons")
+      .select("id, title, content_type, resource_url, is_preview, modules(course_slug)")
+      .eq("id", id)
+      .maybeSingle();
+
+    const courseSlug = (lessonRecord as any)?.modules?.course_slug || (lessonRecord as any)?.modules?.[0]?.course_slug || "";
+
+    const material = lessonRecord
+      ? {
+          _id: lessonRecord.id,
+          title: lessonRecord.title,
+          type: lessonRecord.content_type,
+          isPreview: lessonRecord.is_preview || false,
+          courseSlug: courseSlug,
+          url: lessonRecord.resource_url,
+          pdfUrl: lessonRecord.resource_url,
+        }
+      : null;
 
     if (!material) {
       return NextResponse.json(
@@ -104,63 +103,34 @@ export async function GET(
       );
     }
 
-    // 2. Unlocked previews are accessible to all visitors
-    if (material.isPreview) {
+    // 2. Unlocked previews or explicit admin preview are accessible without student enrollment
+    const adminSession = req.cookies.get("admin_session")?.value;
+    const isExplicitPreview = req.nextUrl.searchParams.get("preview") === "1" || req.nextUrl.searchParams.get("preview") === "true";
+    const isAdminPreview = (adminSession === adminToken()) && isExplicitPreview;
+
+    if (material.isPreview || isAdminPreview) {
       return serveMaterial(material);
     }
 
-    // 3. Secure Gate: Read Authorization header or cookies for authenticated student session
-    const authHeader = req.headers.get("authorization");
-    const bearerToken = authHeader?.startsWith("Bearer ") ? authHeader.substring(7).trim() : null;
-    const cookieToken = req.cookies.get("sb-access-token")?.value?.trim() || null;
-    const primaryToken = bearerToken || cookieToken;
-
-    if (!primaryToken) {
+    // 3. Secure Gate: Fast local JWT authentication
+    const auth = await authenticateStudentRequest(req);
+    if (!auth.success) {
       return NextResponse.json(
-        { error: "Access denied. Please sign in to your student account." },
-        { status: 401 }
+        { error: auth.error || "Access denied. Please sign in to your student account." },
+        { status: auth.status || 401 }
       );
     }
+    const user = auth.user;
 
-    let { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(primaryToken);
-    if ((authError || !user) && bearerToken && cookieToken && bearerToken !== cookieToken) {
-      const alternateToken = primaryToken === bearerToken ? cookieToken : bearerToken;
-      const fallback = await supabaseAdmin.auth.getUser(alternateToken);
-      if (!fallback.error && fallback.data.user) {
-        user = fallback.data.user;
-        authError = null;
-      }
-    }
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: "Access denied. Invalid or expired student session." },
-        { status: 401 }
-      );
-    }
-
-    // 4. Check if student is an Administrator
-    const { data: profile } = await supabaseAdmin
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .maybeSingle();
-
-    if (profile?.role === "admin") {
-      // Admins bypass enrollment check for verification purposes
+    // 4. Check if student has admin role (using cached role lookup)
+    const role = await getAuthorizedStudentRole(supabaseAdmin, user.id);
+    if (role === "admin") {
       return serveMaterial(material);
     }
 
-    // 5. Verify standard student enrollment status
-    const { data: enrollment, error: enrollError } = await supabaseAdmin
-      .from("enrollments")
-      .select("id")
-      .eq("user_id", user.id)
-      .eq("course_slug", material.courseSlug)
-      .eq("status", "active")
-      .maybeSingle();
-
-    if (enrollError || !enrollment) {
+    // 5. Verify student enrollment status (using cached enrollment lookup)
+    const isEnrolled = await verifyAndEnsureStudentEnrollment(supabaseAdmin, user.id, material.courseSlug);
+    if (!isEnrolled) {
       return NextResponse.json(
         { error: "Access denied. You must be enrolled in this course to view this resource." },
         { status: 403 }

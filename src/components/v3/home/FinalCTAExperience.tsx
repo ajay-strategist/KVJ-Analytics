@@ -4,6 +4,7 @@ import React, { useEffect, useRef } from "react";
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { Magnetic } from "./Magnetic";
+import { CURRENT_EXP_YEARS } from "@/lib/constants";
 
 interface Cta { label: string; href: string }
 
@@ -107,14 +108,14 @@ export function FinalCTAExperience({
           </p>
 
           {/* Stats strip */}
-          <div className="mt-10 mb-10 grid grid-cols-3 gap-4">
+          <div className="mt-10 mb-10 grid grid-cols-1 sm:grid-cols-3 gap-4">
             {[
-              { value: "500+", label: "Projects Delivered" },
-              { value: "98%", label: "Client Retention" },
-              { value: "12+", label: "Years of Expertise" },
+              { value: `${CURRENT_EXP_YEARS}+ Years`, label: "Operational Track Record" },
+              { value: "Power BI & Excel", label: "Core Technical Depth" },
+              { value: "End-to-End", label: "Reporting & Automation" },
             ].map((s, i) => (
               <div key={i} className="rounded-2xl border border-line bg-white/[0.04] px-4 py-4 hover:border-brand/40 transition-colors">
-                <div className="font-display text-2xl md:text-3xl font-black text-brand">{s.value}</div>
+                <div className="font-display text-xl md:text-2xl font-black text-brand">{s.value}</div>
                 <div className="mt-1 text-[11px] font-semibold uppercase tracking-wider text-slate/80">{s.label}</div>
               </div>
             ))}

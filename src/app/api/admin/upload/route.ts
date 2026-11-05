@@ -42,8 +42,31 @@ export async function POST(req: NextRequest) {
   if (!file || typeof file === "string")
     return NextResponse.json({ error: "No file provided." }, { status: 400 });
 
+  // Security enforcement: Enforce maximum upload size (15MB)
+  const MAX_FILE_SIZE_BYTES = 15 * 1024 * 1024;
+  if (file.size > MAX_FILE_SIZE_BYTES) {
+    return NextResponse.json(
+      { error: "File exceeds maximum permitted upload limit of 15MB." },
+      { status: 400 }
+    );
+  }
+
+  // Security enforcement: Extension allowlist
+  const ALLOWED_EXTENSIONS = new Set([
+    "jpg", "jpeg", "png", "webp", "gif", "svg",
+    "pdf", "mp4", "webm", "csv", "xlsx", "doc", "docx"
+  ]);
+
+  const rawExt = file.name.split(".").pop()?.toLowerCase() ?? "";
+  if (!ALLOWED_EXTENSIONS.has(rawExt)) {
+    return NextResponse.json(
+      { error: `File type .${rawExt} is not permitted. Allowed types: images, videos, documents, spreadsheets.` },
+      { status: 400 }
+    );
+  }
+
   // Sanitise filename: strip spaces, prefix with timestamp to avoid collisions
-  const ext = file.name.split(".").pop()?.toLowerCase() ?? "bin";
+  const ext = rawExt;
   const safeName = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
   const path = `uploads/${safeName}`;
 

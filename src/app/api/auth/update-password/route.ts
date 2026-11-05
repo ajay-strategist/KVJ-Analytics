@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminClient } from "@/lib/supabaseAdmin";
+import { authenticateStudentRequest } from "@/lib/sessionAuth";
 
 export async function POST(req: NextRequest) {
   const supabaseAdmin = getAdminClient();
@@ -11,19 +12,9 @@ export async function POST(req: NextRequest) {
     const body = await req.json().catch(() => ({}));
     const { newPassword, confirmPassword } = body;
 
-    // Determine user ID from auth token or cookies
-    const authHeader = req.headers.get("Authorization");
-    const bearerToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
-    const cookieToken = req.cookies.get("sb-access-token")?.value;
-    const token = bearerToken || cookieToken;
-
-    let targetUserId: string | null = null;
-    if (token) {
-      const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
-      if (!userError && userData?.user?.id) {
-        targetUserId = userData.user.id;
-      }
-    }
+    // Determine user ID from verified auth session claims (prevents IDOR and GoTrue network waterfalls)
+    const auth = await authenticateStudentRequest(req);
+    let targetUserId: string | null = auth.success && auth.user ? auth.user.id : null;
 
     // Fallback if userId or email is explicitly provided in body
     if (!targetUserId && body.userId) {

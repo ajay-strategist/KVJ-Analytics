@@ -44,3 +44,26 @@ next-env.d.ts
 .fuse_hidden*
 .*.fuse_hidden*
 ._*
+
+# Production Backups (Zero-PII Git Protection)
+backups/
+
+# Local synthetic credentials protection
+tests/fixtures/local_synthetic_students.json
+
+# Test execution outputs and synthetic student dumps
+*.log
+dummy_users_*.json
+student_tokens.json
+test_questions_meta.json
+*_user_test_summary.json
+load_test_summary.json
+local_test_evidence/
+test_evidence_archive_100_users/
+/*.png
+dynamic_student_load_test.js
+local_100_user_test.js
+load_test_analysis.md
+
+
+

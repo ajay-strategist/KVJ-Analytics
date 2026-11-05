@@ -62,20 +62,7 @@ function SignInForm() {
     setLoading(true);
 
     try {
-      // 1. Admins sign in here with their admin credentials to get access to every course
-      const adminRes = await fetch("/api/admin/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: email.trim(), password }),
-      });
-      if (adminRes.ok) {
-        const dest = redirect && redirect.startsWith("/training") ? redirect : "/admin/dashboard";
-        router.push(dest);
-        router.refresh();
-        return;
-      }
-
-      // 2. Student login via server-side /api/auth/login
+      // Student login via server-side /api/auth/login
       // This handles both Email and Phone number lookup, auto-confirmation, and sets auth cookies directly.
       const loginRes = await fetch("/api/auth/login", {
         method: "POST",

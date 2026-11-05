@@ -1,5 +1,6 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import { mockSupabaseClient } from "./mockSupabase";
+import { cacheGet, cacheSet, cacheDel } from "@/shared/cache/redis";
 
 let adminClientInstance: SupabaseClient | null = null;
 
@@ -12,8 +13,8 @@ export function getAdminClient(): SupabaseClient {
     return adminClientInstance;
   }
 
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const url = process.env.SUPABASE_LOCAL_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_LOCAL_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!url || !key || url === "https://placeholder.supabase.co" || key === "placeholder-service-role-key") {
     return mockSupabaseClient as unknown as SupabaseClient;
@@ -34,6 +35,29 @@ export function getAdminClient(): SupabaseClient {
   return adminClientInstance;
 }
 
+/**
+ * Creates an ephemeral, un-mutated client for authentication operations (signInWithPassword)
+ * to prevent mutating the shared adminClientInstance singleton session state.
+ */
+export function getAuthClient(): SupabaseClient {
+  const url = process.env.SUPABASE_LOCAL_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !anonKey || url === "https://placeholder.supabase.co") {
+    return mockSupabaseClient as unknown as SupabaseClient;
+  }
+  return createClient(url, anonKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    },
+    global: {
+      headers: {
+        "x-application-name": "kvj-analytics-auth",
+      },
+    },
+  });
+}
+
 // ── In-Memory Fast Cache for Active Batch TOTP Secrets ──────────────────────
 // Avoids 100 concurrent students hitting the 'batches' table simultaneously
 // during peak classroom onboarding.
@@ -50,19 +74,16 @@ interface CachedBatches {
   cachedAt: number;
 }
 
-const BATCH_CACHE_TTL_MS = 30 * 1000; // 30 seconds
-const batchCache = new Map<string, CachedBatches>();
-
 /**
- * Retrieves active batches for a course slug, using a short 30-second memory cache
+ * Retrieves active batches for a course slug, using distributed/memory cache (30s TTL)
  * to handle classroom spikes of 100+ concurrent requests.
  */
 export async function getCachedActiveBatches(slug: string, db: SupabaseClient) {
-  const now = Date.now();
-  const cached = batchCache.get(slug);
+  const cacheKey = `batches:${slug}`;
+  const cached = await cacheGet<any[]>(cacheKey);
 
-  if (cached && (now - cached.cachedAt) < BATCH_CACHE_TTL_MS) {
-    return cached.batches;
+  if (cached) {
+    return cached;
   }
 
   const nowISO = new Date().toISOString();
@@ -75,10 +96,7 @@ export async function getCachedActiveBatches(slug: string, db: SupabaseClient) {
     .gte("valid_to", nowISO);
 
   if (!error && activeBatches) {
-    batchCache.set(slug, {
-      batches: activeBatches,
-      cachedAt: now,
-    });
+    await cacheSet(cacheKey, activeBatches, 30);
     return activeBatches;
   }
 
@@ -86,11 +104,9 @@ export async function getCachedActiveBatches(slug: string, db: SupabaseClient) {
 }
 
 /** Invalidate cache if admin creates/updates a batch */
-export function invalidateBatchCache(slug?: string) {
+export async function invalidateBatchCache(slug?: string) {
   if (slug) {
-    batchCache.delete(slug);
-  } else {
-    batchCache.clear();
+    await cacheDel(`batches:${slug}`);
   }
 }
 
@@ -106,48 +122,14 @@ export const RELATED_COURSE_SLUGS: Record<string, string[]> = {
   "python-mim-business-analytics": ["python"],
 };
 
-// ── Bounded In-Memory Cache for Student Enrollment Verifications ─────────
+// ── Distributed & Memory Cache for Student Enrollment Verifications ─────────
 // Scoped strictly per-student and per-course to avoid cross-user data leakage.
 // Keeps authorization decisions fast during rapid assessment interactions.
-const enrollmentCache = new Map<string, { authorized: boolean; timestamp: number }>();
-const ENROLLMENT_CACHE_TTL_MS = 60 * 1000; // 60 seconds
-const MAX_ENROLLMENT_CACHE_SIZE = 1000;
-
-function getCachedEnrollment(userId: string, slug: string): boolean | null {
-  const key = `${userId}:${slug}`;
-  const item = enrollmentCache.get(key);
-  if (!item) return null;
-  if (Date.now() - item.timestamp > ENROLLMENT_CACHE_TTL_MS) {
-    enrollmentCache.delete(key);
-    return null;
-  }
-  return item.authorized;
-}
-
-function setEnrollmentCache(userId: string, slug: string, authorized: boolean) {
-  if (enrollmentCache.size >= MAX_ENROLLMENT_CACHE_SIZE) {
-    // Evict oldest entry
-    const oldestKey = enrollmentCache.keys().next().value;
-    if (oldestKey) enrollmentCache.delete(oldestKey);
-  }
-  enrollmentCache.set(`${userId}:${slug}`, {
-    authorized,
-    timestamp: Date.now(),
-  });
-}
 
 /** Invalidate enrollment cache when an enrollment or code redemption occurs */
-export function invalidateEnrollmentCache(userId?: string, slug?: string) {
+export async function invalidateEnrollmentCache(userId?: string, slug?: string) {
   if (userId && slug) {
-    enrollmentCache.delete(`${userId}:${slug}`);
-  } else if (userId) {
-    for (const key of enrollmentCache.keys()) {
-      if (key.startsWith(`${userId}:`)) {
-        enrollmentCache.delete(key);
-      }
-    }
-  } else {
-    enrollmentCache.clear();
+    await cacheDel(`enrollment:${userId}:${slug}`);
   }
 }
 
@@ -168,9 +150,10 @@ export async function verifyAndEnsureStudentEnrollment(
   if (!userId || !targetSlug) return false;
 
   const normalizedSlug = targetSlug.trim().toLowerCase();
+  const cacheKey = `enrollment:${userId}:${normalizedSlug}`;
 
-  // 1. Fast path: check student-scoped memory cache
-  const cachedAuth = getCachedEnrollment(userId, normalizedSlug);
+  // 1. Fast path: check distributed / memory cache
+  const cachedAuth = await cacheGet<boolean>(cacheKey);
   if (cachedAuth === true) {
     return true;
   }
@@ -191,7 +174,7 @@ export async function verifyAndEnsureStudentEnrollment(
 
     // 2a. Direct match
     if (enrolledSlugs.has(normalizedSlug)) {
-      setEnrollmentCache(userId, normalizedSlug, true);
+      await cacheSet(cacheKey, true, 30); // 30s TTL for bounded authorization caching
       return true;
     }
 
@@ -212,7 +195,7 @@ export async function verifyAndEnsureStudentEnrollment(
       } catch (e) {
         console.warn("[verifyEnrollment] Auto-upsert related enrollment warning:", e);
       }
-      setEnrollmentCache(userId, normalizedSlug, true);
+      await cacheSet(cacheKey, true, 30);
       return true;
     }
 
@@ -231,7 +214,7 @@ export async function verifyAndEnsureStudentEnrollment(
       } catch (e) {
         console.warn("[verifyEnrollment] Auto-upsert active student enrollment warning:", e);
       }
-      setEnrollmentCache(userId, normalizedSlug, true);
+      await cacheSet(cacheKey, true, 30);
       return true;
     }
   }
@@ -258,7 +241,7 @@ export async function verifyAndEnsureStudentEnrollment(
     } catch (e) {
       console.warn("[verifyEnrollment] Auto-upsert batch enrollment warning:", e);
     }
-    setEnrollmentCache(userId, normalizedSlug, true);
+    await cacheSet(cacheKey, true, 30);
     return true;
   }
 

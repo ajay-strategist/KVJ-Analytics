@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAdminClient, verifyAndEnsureStudentEnrollment } from "@/lib/supabaseAdmin";
 import { adminToken } from "@/lib/adminAuth";
 import { evaluateStudentCode } from "@/lib/codeEvaluator";
+import { authenticateStudentRequest, getAuthorizedStudentRole } from "@/lib/sessionAuth";
 
 function getCorrectAnswerLabel(type: string, config: any) {
   if (!config) return "";
@@ -92,43 +93,25 @@ export async function POST(
 
     // 2. Validate session from cookie or Authorization header
     let user: any = null;
-    const authHeader = req.headers.get("authorization");
-    const bearerToken = authHeader?.startsWith("Bearer ") ? authHeader.substring(7).trim() : null;
-    const cookieToken = req.cookies.get("sb-access-token")?.value?.trim() || null;
-    const primaryToken = bearerToken || cookieToken;
     const adminSession = req.cookies.get("admin_session")?.value;
     const urlObj = new URL(req.url);
     const isExplicitPreview = urlObj.searchParams.get("preview") === "true" || urlObj.searchParams.get("preview") === "1";
     const isAdminPreview = (adminSession === adminToken()) && isExplicitPreview;
 
     if (!isAdminPreview) {
-      if (!primaryToken) {
-        return NextResponse.json({ error: "Unauthorized session." }, { status: 401 });
+      // Fast local JWT verification (Derived Identity & Rule 3 compliance)
+      const auth = await authenticateStudentRequest(req);
+      if (!auth.success) {
+        return NextResponse.json(
+          { error: auth.error || "Unauthorized session." },
+          { status: auth.status || 401 }
+        );
       }
-
-      let { data: { user: authUser }, error: authError } = await db.auth.getUser(primaryToken);
-      if ((authError || !authUser) && bearerToken && cookieToken && bearerToken !== cookieToken) {
-        const alternateToken = primaryToken === bearerToken ? cookieToken : bearerToken;
-        const fallback = await db.auth.getUser(alternateToken);
-        if (!fallback.error && fallback.data.user) {
-          authUser = fallback.data.user;
-          authError = null;
-        }
-      }
-
-      if (authError || !authUser) {
-        return NextResponse.json({ error: "Invalid auth session." }, { status: 401 });
-      }
-      user = authUser;
+      user = auth.user;
 
       // 3. Allow admins or verify enrollment
-      const { data: profile } = await db
-        .from("profiles")
-        .select("role")
-        .eq("id", user.id)
-        .maybeSingle();
-
-      const isAdmin = profile?.role === "admin";
+      const role = await getAuthorizedStudentRole(db, user.id);
+      const isAdmin = role === "admin";
 
       if (!isAdmin) {
         const targetSlug = course?.slug || "";

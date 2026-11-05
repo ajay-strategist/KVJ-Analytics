@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAdminClient } from "@/lib/supabaseAdmin";
+import { getAdminClient, getAuthClient } from "@/lib/supabaseAdmin";
 
 export async function POST(req: NextRequest) {
   const supabaseAdmin = getAdminClient();
@@ -111,8 +111,9 @@ export async function POST(req: NextRequest) {
 
     const finalEmail = matchedUser.email || targetEmail || "";
 
-    // 4. Automatically sign in with the new password so user enters immediately (no second update needed)
-    const { data: signInData, error: signInErr } = await supabaseAdmin.auth.signInWithPassword({
+    // 4. Automatically sign in with the new password via isolated auth client (never mutates adminClientInstance)
+    const authClient = getAuthClient();
+    const { data: signInData, error: signInErr } = await authClient.auth.signInWithPassword({
       email: finalEmail,
       password: newPassword,
     });
@@ -131,7 +132,7 @@ export async function POST(req: NextRequest) {
         maxAge: 60 * 60 * 24 * 30, // 30 days
         sameSite: "lax",
         secure: process.env.NODE_ENV === "production",
-        httpOnly: false,
+        httpOnly: true,
       });
     }
 

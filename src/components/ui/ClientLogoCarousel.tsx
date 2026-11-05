@@ -1,9 +1,8 @@
 import React from "react";
-import { urlFor } from "@/sanity/lib/image";
 
 interface ClientData {
   name: string;
-  logo?: Record<string, unknown>;
+  logo?: Record<string, unknown> | string;
   logoUrl?: string;
   websiteUrl?: string;
   featured?: boolean;
@@ -24,29 +23,31 @@ export function ClientLogoCarousel({
   // If clients count is small, display them statically. If they increase (> 4), scroll from right to left.
   const shouldScroll = activeClients.length > 4;
 
-  const CardContent = ({ item, name }: { item: ClientData; name: string }) => (
-    <div className="flex items-center justify-center px-4 py-2 hover:scale-105 transition-transform duration-300 select-none">
-      {item.logoUrl ? (
-        <img
-          src={item.logoUrl}
-          alt={`${name} Logo`}
-          loading="lazy"
-          className="h-10 md:h-12 w-auto object-contain max-w-[180px] opacity-75 hover:opacity-100 transition-opacity duration-300"
-        />
-      ) : item.logo ? (
-        <img
-          src={urlFor(item.logo).width(200).height(80).url()}
-          alt={`${name} Logo`}
-          loading="lazy"
-          className="h-10 md:h-12 w-auto object-contain max-w-[180px] opacity-75 hover:opacity-100 transition-opacity duration-300"
-        />
-      ) : (
-        <span className="text-base font-semibold font-display tracking-tight text-slate hover:text-ink transition-colors">
-          {name}
-        </span>
-      )}
-    </div>
-  );
+  const CardContent = ({ item, name }: { item: ClientData; name: string }) => {
+    const resolvedUrl =
+      item.logoUrl ||
+      (typeof item.logo === "string"
+        ? item.logo
+        : (item.logo as { asset?: { url?: string }; url?: string })?.asset?.url ||
+          (item.logo as { url?: string })?.url);
+
+    return (
+      <div className="flex items-center justify-center px-4 py-2 hover:scale-105 transition-transform duration-300 select-none">
+        {resolvedUrl ? (
+          <img
+            src={resolvedUrl}
+            alt={`${name} Logo`}
+            loading="lazy"
+            className="h-10 md:h-12 w-auto object-contain max-w-[180px] opacity-75 hover:opacity-100 transition-opacity duration-300"
+          />
+        ) : (
+          <span className="text-base font-semibold font-display tracking-tight text-slate hover:text-ink transition-colors">
+            {name}
+          </span>
+        )}
+      </div>
+    );
+  };
 
   const renderItem = (item: ClientData, idx: number) => {
     const name = item.name;

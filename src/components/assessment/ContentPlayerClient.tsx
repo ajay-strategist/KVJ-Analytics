@@ -1,90 +1,20 @@
 "use client";
 
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import {
-  BookOpen,
-  CheckCircle,
-  Circle,
-  ChevronLeft,
-  ChevronRight,
-  ChevronDown,
-  ChevronUp,
-  Menu,
-  X,
-  Loader2,
-  PlayCircle,
-  Award,
-  CheckCircle2,
-  PanelLeftClose,
-  PanelLeftOpen,
-  Trophy,
-  AlertTriangle,
-  HelpCircle,
-} from "lucide-react";
-import { Button } from "../ui/Button";
+import { BookOpen, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { fetchWithStudentAuth, getValidStudentSession, syncStudentSessionCookie } from "@/lib/studentAuth";
-import { TestTakingWidget } from "@/components/assessment/TestTakingWidget";
-import { LessonIframe, cleanLessonHtml } from "../shared/LessonIframe";
-
-interface Lesson {
-  id: string;
-  title: string;
-  kind: "material" | "activity" | "assessment";
-  max_score: number | null;
-  video_url?: string | null;
-  content_html?: string | null;
-  moduleTitle?: string;
-  moduleIdx?: number;
-}
-
-interface Module {
-  id: string;
-  title: string;
-  lessons: Lesson[];
-}
-
-interface ContentPlayerClientProps {
-  course: {
-    id: string;
-    title: string;
-    slug: string;
-  };
-  modules: Module[];
-  /** Admin preview mode — verified server-side via the admin session cookie. Skips the
-   *  login + enrollment gate so an admin can review the materials exactly as a student sees
-   *  them, without paying or enrolling. Progress is never saved in this mode. */
-  adminPreview?: boolean;
-  initialLessonId?: string | null;
-}
-
-// ─── Viewer Controls Toggle Button ──────────────────────────────────────────
-
-interface ViewerToggleProps {
-  active: boolean;
-  onClick: () => void;
-  title: string;
-  children: React.ReactNode;
-}
-
-function ViewerToggle({ active, onClick, title, children }: ViewerToggleProps) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      title={title}
-      className={`p-1.5 rounded-lg border text-xs transition-all flex items-center gap-1.5 ${
-        active
-          ? "bg-[#10B981]/10 border-[#10B981]/40 text-[#10B981]"
-          : "bg-zinc-100 border-zinc-200 text-zinc-650 hover:text-zinc-800 hover:bg-zinc-200/50"
-      }`}
-    >
-      {children}
-    </button>
-  );
-}
+import {
+  Lesson,
+  Module,
+  EnrichedModule,
+  ContentPlayerClientProps,
+  ActivityResult,
+} from "./player/types";
+import { PlayerSidebar } from "./player/PlayerSidebar";
+import { PlayerHeader } from "./player/PlayerHeader";
+import { LessonViewer } from "./player/LessonViewer";
 
 // ─── localStorage helpers ────────────────────────────────────────────────────
 
@@ -113,22 +43,27 @@ function cleanModuleTitle(title: string, index: number): string {
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 
-export function ContentPlayerClient({ course, modules, adminPreview = false, initialLessonId = null }: ContentPlayerClientProps) {
+export function ContentPlayerClient({
+  course,
+  modules,
+  adminPreview = false,
+  initialLessonId = null,
+}: ContentPlayerClientProps) {
   const router = useRouter();
 
-  const enrichedModules = React.useMemo(() => {
-    return modules.map((mod: any, modIdx: number) => {
+  const enrichedModules: EnrichedModule[] = React.useMemo(() => {
+    return modules.map((mod: Module, modIdx: number) => {
       const cleanTitle = cleanModuleTitle(mod.title, modIdx);
       const modDisplayTitle = `Module ${modIdx + 1}: ${cleanTitle}`;
       return {
         ...mod,
         title: cleanTitle,
         displayTitle: modDisplayTitle,
-        lessons: (mod.lessons || []).map((l: any) => ({
+        lessons: (mod.lessons || []).map((l: Lesson) => ({
           ...l,
           moduleTitle: modDisplayTitle,
-          moduleIdx: modIdx + 1
-        }))
+          moduleIdx: modIdx + 1,
+        })),
       };
     });
   }, [modules]);
@@ -139,7 +74,6 @@ export function ContentPlayerClient({ course, modules, adminPreview = false, ini
   const [isAssessmentActive, setIsAssessmentActive] = useState(false);
   const [activeLesson, setActiveLesson] = useState<Lesson | null>(null);
   const [completedLessonIds, setCompletedLessonIds] = useState<Set<string>>(new Set());
-  const [actionLoading, setActionLoading] = useState(false);
 
   const [expandedModuleIds, setExpandedModuleIds] = useState<Set<string>>(new Set());
   const mainScrollRef = useRef<HTMLDivElement | null>(null);
@@ -147,7 +81,9 @@ export function ContentPlayerClient({ course, modules, adminPreview = false, ini
   // Auto-expand module and scroll into view on activeLesson change
   useEffect(() => {
     if (activeLesson?.id) {
-      const parentMod = modules.find((m: any) => m.lessons.some((l: any) => l.id === activeLesson.id));
+      const parentMod = modules.find((m) =>
+        m.lessons.some((l) => l.id === activeLesson.id)
+      );
       if (parentMod) {
         setExpandedModuleIds(new Set([parentMod.id]));
       }
@@ -184,8 +120,7 @@ export function ContentPlayerClient({ course, modules, adminPreview = false, ini
   };
 
   // Score received from a kvjSubmit() call inside the lesson iframe.
-  // Cleared whenever the active lesson changes.
-  const [activityResult, setActivityResult] = useState<{ score: number; maxScore: number } | null>(null);
+  const [activityResult, setActivityResult] = useState<ActivityResult | null>(null);
 
   // MCQ Assessment States
   const [activeTest, setActiveTest] = useState<any>(null);
@@ -201,14 +136,11 @@ export function ContentPlayerClient({ course, modules, adminPreview = false, ini
   const lessonContentCache = useRef<Map<string, string>>(new Map());
   const submittedScoresRef = useRef<Map<string, number>>(new Map());
 
-  // Refs so the postMessage handler always sees the current lesson/user
-  // without being re-created on every render (avoids stale-closure bugs).
+  // Refs so the postMessage handler always sees the current lesson/user without closure drift
   const activeLessonRef = useRef<Lesson | null>(null);
   const userRef = useRef<any>(null);
   const adminPreviewRef = useRef(adminPreview);
   const courseSlugRef = useRef(course.slug);
-  // contentWindows of the currently-loaded lesson iframe(s), used to validate
-  // event.source in the postMessage handler so we ignore rogue messages.
   const lessonFrameWindowsRef = useRef<Set<Window>>(new Set());
 
   // Fetch full lesson content on-demand when active lesson changes
@@ -225,60 +157,52 @@ export function ContentPlayerClient({ course, modules, adminPreview = false, ini
       return;
     }
 
-    // If activeLesson already has content_html (e.g. fallback lessons)
     if (activeLesson.content_html) {
       setLessonContent(activeLesson.content_html);
       setLoadingLessonContent(false);
       return;
     }
 
-    // Check in-memory client cache
     if (lessonContentCache.current.has(activeLesson.id)) {
       setLessonContent(lessonContentCache.current.get(activeLesson.id) || "");
       setLoadingLessonContent(false);
       return;
     }
 
-    // Fetch on-demand from /api/lessons/[id] with up to 3 retries + exponential backoff.
-    // This handles cold-start timeouts and transient network errors during peak classroom load.
     let isMounted = true;
     setLoadingLessonContent(true);
     setLessonContent(null);
 
-    const lessonUrl = `/api/lessons/${activeLesson.id}?courseSlug=${course.slug}${adminPreview ? "&preview=1" : ""}`;
-    const MAX_RETRIES = 3;
+    const lessonUrl = `/api/lessons/${activeLesson.id}?courseSlug=${course.slug}${
+      adminPreview ? "&preview=1" : ""
+    }`;
 
     (async () => {
-      for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 12000); // 12s circuit breaker timeout
+
+        const res = await fetchWithStudentAuth(lessonUrl, { signal: controller.signal });
+        clearTimeout(timeoutId);
+
         if (!isMounted) return;
-        try {
-          const res = await fetchWithStudentAuth(lessonUrl);
-          if (!isMounted) return;
-          if (res.ok) {
-            const data = await res.json();
-            const html = data.content_html || "";
-            lessonContentCache.current.set(activeLesson.id, html);
-            if (isMounted) setLessonContent(html);
-            return; // success — stop retrying
-          }
-          // 401 or 403: auth error — no point retrying
-          if (res.status === 401 || res.status === 403) {
-            console.warn("[ContentPlayer] Auth error loading lesson content:", res.status);
-            if (isMounted) setLessonContent("");
-            return;
-          }
-          // Other server errors — retry
-          console.warn(`[ContentPlayer] Lesson fetch attempt ${attempt}/${MAX_RETRIES} failed:`, res.status);
-        } catch (err) {
-          if (!isMounted) return;
-          console.warn(`[ContentPlayer] Lesson fetch attempt ${attempt}/${MAX_RETRIES} error:`, err);
+        if (res.ok) {
+          const data = await res.json();
+          const html = data.content_html || "";
+          lessonContentCache.current.set(activeLesson.id, html);
+          if (isMounted) setLessonContent(html);
+          return;
         }
-        // Exponential backoff: 1s, 2s, 4s before giving up
-        if (attempt < MAX_RETRIES && isMounted) {
-          await new Promise((r) => setTimeout(r, 1000 * Math.pow(2, attempt - 1)));
-        }
+
+        if (isMounted) setLessonContent("");
+      } catch (err: any) {
+        if (!isMounted) return;
+        console.warn(
+          "[ContentPlayer] Lesson fetch error:",
+          err?.name === "AbortError" ? "Request timed out" : err
+        );
+        setLessonContent("");
       }
-      if (isMounted) setLessonContent("");
     })().finally(() => {
       if (isMounted) setLoadingLessonContent(false);
     });
@@ -286,87 +210,67 @@ export function ContentPlayerClient({ course, modules, adminPreview = false, ini
     return () => {
       isMounted = false;
     };
-  }, [activeLesson?.id, activeLesson?.kind, activeLesson?.content_html, course.slug, adminPreview, lessonFetchRetry]);
+  }, [
+    activeLesson?.id,
+    activeLesson?.kind,
+    activeLesson?.content_html,
+    course.slug,
+    adminPreview,
+    lessonFetchRetry,
+  ]);
 
-  // Viewer controls — hide-sidebar persisted in localStorage per course slug.
-  // Dark mode is permanently OFF — player always uses the light theme.
-  const darkMode = false;
-  const [hideSidebar, setHideSidebarRaw] = useState<boolean>(false);
-  // Track whether we've initialised from localStorage yet
   const [viewerReady, setViewerReady] = useState(false);
-
-  // Key for localStorage (hide-sidebar only)
   const lsHideKey = `kvj-player-hide-${course.slug}`;
 
   // Initialise hide-sidebar toggle from localStorage on mount
   useEffect(() => {
     const storedHide = lsGet(lsHideKey);
     if (storedHide !== null) {
-      setHideSidebarRaw(storedHide);
       setSidebarOpen(!storedHide);
     } else {
       setSidebarOpen(true);
     }
     setViewerReady(true);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [course.slug]);
+  }, [course.slug, lsHideKey]);
 
-  const setSidebarOpenWithSync = (open: boolean) => {
-    setSidebarOpen(open);
-    setHideSidebarRaw(!open);
-    lsSet(lsHideKey, !open);
-    // Dispatch resize event during and after sidebar transition to recalibrate layout heights
-    [0, 50, 150, 300, 450, 600].forEach((delay) => {
-      setTimeout(() => {
-        if (typeof window !== "undefined") window.dispatchEvent(new Event("resize"));
-      }, delay);
+  const toggleSidebarWithSync = () => {
+    setSidebarOpen((prev) => {
+      const next = !prev;
+      lsSet(lsHideKey, !next);
+      [0, 50, 150, 300].forEach((delay) => {
+        setTimeout(() => {
+          if (typeof window !== "undefined") window.dispatchEvent(new Event("resize"));
+        }, delay);
+      });
+      return next;
     });
   };
 
-  /**
-   * Called by LessonIframe once per load — no-op now that dark mode is removed.
-   */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleLightDetected = useCallback((_isLight: boolean) => {
-    // Light theme is always active — nothing to do.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  useEffect(() => {
+    activeLessonRef.current = activeLesson;
+  }, [activeLesson]);
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
 
-  // Keep refs in sync so the message handler is always up-to-date.
-  useEffect(() => { activeLessonRef.current = activeLesson; }, [activeLesson]);
-  useEffect(() => { userRef.current = user; }, [user]);
-
-  // Clear the score banner AND the remembered iframe window when navigating lessons.
+  // Clear score banner & remembered iframe window when navigating lessons
   useEffect(() => {
     setActivityResult(null);
-    lessonFrameWindowsRef.current.clear(); // stale until the new iframe fires onLoad
+    lessonFrameWindowsRef.current.clear();
   }, [activeLesson?.id]);
 
-  // ── postMessage listener: receives kvjSubmit(score, maxScore) from the iframe ──
+  // postMessage listener: receives kvjSubmit(score, maxScore) from the iframe
   useEffect(() => {
-    /**
-     * Submits an activity score to /api/activity-result and marks the lesson
-     * complete in local state. Safe to call from the message handler because it
-     * reads from refs, not closed-over state.
-     */
     const submitScore = async (score: number, msgMaxScore: number) => {
       const lesson = activeLessonRef.current;
       const currentUser = userRef.current;
       if (!lesson) return;
 
-      // Use the maxScore from the message; fall back to the lesson's stored
-      // max_score if the activity sent 0 or omitted it.
       const effectiveMaxScore = msgMaxScore || lesson.max_score || msgMaxScore;
-
-      // Always update the UI banner
       setActivityResult({ score, maxScore: effectiveMaxScore });
 
-      // Admin preview: show the score but don't write to DB
-      if (adminPreviewRef.current) return;
+      if (adminPreviewRef.current || !currentUser) return;
 
-      if (!currentUser) return;
-
-      // Avoid duplicate submissions for the same lesson and score
       if (submittedScoresRef.current.get(lesson.id) === score) {
         return;
       }
@@ -388,7 +292,6 @@ export function ContentPlayerClient({ course, modules, adminPreview = false, ini
           return;
         }
         submittedScoresRef.current.set(lesson.id, score);
-        // Mark lesson complete in sidebar
         setCompletedLessonIds((prev) => new Set([...prev, lesson.id]));
       } catch (err) {
         console.error("[KVJ] Activity submit error:", err);
@@ -397,12 +300,10 @@ export function ContentPlayerClient({ course, modules, adminPreview = false, ini
 
     const handleMessage = (event: MessageEvent) => {
       if (!event.data || event.data.type !== "KVJ_ACTIVITY_RESULT") return;
-      // Security: only accept messages that originate from the active lesson
-      // iframe. lessonFrameWindowRef is set by LessonIframe's onContentWindow
-      // callback after each load. If it's null (e.g. first render not yet
-      // loaded) we still accept the message — the type guard is sufficient
-      // given sandbox="allow-scripts allow-same-origin".
-      if (lessonFrameWindowsRef.current.size > 0 && !lessonFrameWindowsRef.current.has(event.source as Window)) {
+      if (
+        lessonFrameWindowsRef.current.size > 0 &&
+        !lessonFrameWindowsRef.current.has(event.source as Window)
+      ) {
         console.warn("[KVJ] Ignoring KVJ_ACTIVITY_RESULT from unexpected source.");
         return;
       }
@@ -417,15 +318,12 @@ export function ContentPlayerClient({ course, modules, adminPreview = false, ini
 
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
-  // Intentionally empty: handler uses refs so it only needs to be registered once.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Load mock test when activeLesson changes and is an assessment
   useEffect(() => {
     if (activeLesson?.id && activeLesson.kind === "assessment") {
       const loadTestAndAttempts = async () => {
-        // Do not reset activeTest if we are already displaying the test for this active lesson
         if (activeTest?.lesson_id !== activeLesson.id) {
           setLoadingTest(true);
           setActiveTest(null);
@@ -480,22 +378,20 @@ export function ContentPlayerClient({ course, modules, adminPreview = false, ini
     }
   }, [activeLesson?.id, activeLesson?.kind, user?.id, adminPreview, attemptsTrigger]);
 
-  // Flatten lessons for easy next/prev indexing
-  const allLessons: any[] = enrichedModules.flatMap((mod: any) => mod.lessons);
+  const allLessons: Lesson[] = enrichedModules.flatMap((mod) => mod.lessons);
 
   useEffect(() => {
     const initPlayer = async () => {
-      // 1. Resolve target lesson id from prop or URL param
       let targetLessonId = initialLessonId;
       if (!targetLessonId && typeof window !== "undefined") {
         const urlParams = new URLSearchParams(window.location.search);
         targetLessonId = urlParams.get("lesson");
       }
 
-      // Admin preview: access was already verified server-side via the admin session cookie,
-      // so skip the student login + enrollment gate. No progress is saved in this mode.
       if (adminPreview) {
-        let initialLesson = targetLessonId ? allLessons.find((l: any) => l.id === targetLessonId) : null;
+        let initialLesson = targetLessonId
+          ? allLessons.find((l) => l.id === targetLessonId)
+          : null;
         if (!initialLesson && allLessons.length > 0) {
           initialLesson = allLessons[0];
         }
@@ -504,7 +400,6 @@ export function ContentPlayerClient({ course, modules, adminPreview = false, ini
         return;
       }
 
-      // 1. Get user session & sync cookie for API routes
       const session = await getValidStudentSession();
       if (!session?.user) {
         router.push(`/signin?redirect=/training/${course.slug}/learn`);
@@ -513,7 +408,6 @@ export function ContentPlayerClient({ course, modules, adminPreview = false, ini
       setUser(session.user);
       syncStudentSessionCookie(session);
 
-      // 2 & 3. Verify enrollment and fetch completed lessons in parallel (halving initial network latency)
       const [enrollmentRes, resultsRes] = await Promise.all([
         supabase
           .from("enrollments")
@@ -535,30 +429,29 @@ export function ContentPlayerClient({ course, modules, adminPreview = false, ini
         return;
       }
 
-      const completedSet = new Set<string>(resultsRes.data ? resultsRes.data.map((r: any) => r.lesson_id) : []);
+      const completedSet = new Set<string>(
+        resultsRes.data ? resultsRes.data.map((r: { lesson_id: string }) => r.lesson_id) : []
+      );
       setCompletedLessonIds(completedSet);
 
-      // 4. Resume Lesson Determination:
-      // Priority 1: URL search param ?lesson=<id> or initialLessonId
-      let chosenLesson: any = null;
+      let chosenLesson: Lesson | null = null;
       if (targetLessonId) {
-        chosenLesson = allLessons.find((l: any) => l.id === targetLessonId);
+        chosenLesson = allLessons.find((l) => l.id === targetLessonId) || null;
       }
 
-      // Priority 2: localStorage last visited lesson for this user & course
       if (!chosenLesson && typeof window !== "undefined") {
-        const lastSavedId = localStorage.getItem(`kvj_last_lesson_${course.slug}_${session.user.id}`);
+        const lastSavedId = localStorage.getItem(
+          `kvj_last_lesson_${course.slug}_${session.user.id}`
+        );
         if (lastSavedId) {
-          chosenLesson = allLessons.find((l: any) => l.id === lastSavedId);
+          chosenLesson = allLessons.find((l) => l.id === lastSavedId) || null;
         }
       }
 
-      // Priority 3: Progress evaluation from activity_results (first uncompleted lesson)
       if (!chosenLesson && allLessons.length > 0) {
-        chosenLesson = allLessons.find((l: any) => !completedSet.has(l.id));
+        chosenLesson = allLessons.find((l) => !completedSet.has(l.id)) || null;
       }
 
-      // Priority 4: Default to first lesson if all completed or none matched
       if (!chosenLesson && allLessons.length > 0) {
         chosenLesson = allLessons[0];
       }
@@ -567,7 +460,10 @@ export function ContentPlayerClient({ course, modules, adminPreview = false, ini
         setActiveLesson(chosenLesson);
         if (typeof window !== "undefined") {
           try {
-            localStorage.setItem(`kvj_last_lesson_${course.slug}_${session.user.id}`, chosenLesson.id);
+            localStorage.setItem(
+              `kvj_last_lesson_${course.slug}_${session.user.id}`,
+              chosenLesson.id
+            );
             const url = new URL(window.location.href);
             if (url.searchParams.get("lesson") !== chosenLesson.id) {
               url.searchParams.set("lesson", chosenLesson.id);
@@ -594,9 +490,12 @@ export function ContentPlayerClient({ course, modules, adminPreview = false, ini
     );
   }
 
-  const activeIndex = activeLesson ? allLessons.findIndex((l: any) => l.id === activeLesson.id) : -1;
+  const activeIndex = activeLesson
+    ? allLessons.findIndex((l) => l.id === activeLesson.id)
+    : -1;
   const prevLesson = activeIndex > 0 ? allLessons[activeIndex - 1] : null;
-  const nextLesson = activeIndex < allLessons.length - 1 ? allLessons[activeIndex + 1] : null;
+  const nextLesson =
+    activeIndex < allLessons.length - 1 ? allLessons[activeIndex + 1] : null;
 
   const handleLessonSelect = (lesson: Lesson) => {
     setIsAssessmentActive(false);
@@ -604,10 +503,11 @@ export function ContentPlayerClient({ course, modules, adminPreview = false, ini
     if (mainScrollRef.current) {
       mainScrollRef.current.scrollTop = 0;
     }
-    // Auto-expand module containing this lesson in sidebar
-    const parentMod = modules.find((m: any) => (m.lessons || []).some((l: any) => l.id === lesson.id));
+    const parentMod = modules.find((m) =>
+      (m.lessons || []).some((l) => l.id === lesson.id)
+    );
     if (parentMod) {
-      setExpandedModuleIds((prev) => new Set([...prev, parentMod.id]));
+      setExpandedModuleIds(new Set([parentMod.id]));
     }
     if (typeof window !== "undefined") {
       try {
@@ -622,64 +522,8 @@ export function ContentPlayerClient({ course, modules, adminPreview = false, ini
         }
       } catch {}
     }
-    // Close sidebar on mobile
     if (window.innerWidth < 1024) {
       setSidebarOpen(false);
-    }
-  };
-
-  const handleMarkComplete = async () => {
-    if (!activeLesson || !user) return;
-    setActionLoading(true);
-
-    const isCurrentlyCompleted = completedLessonIds.has(activeLesson.id);
-
-    try {
-      if (isCurrentlyCompleted) {
-        // Toggle completion off by deleting activity result
-        const { error } = await supabase
-          .from("activity_results")
-          .delete()
-          .eq("user_id", user.id)
-          .eq("lesson_id", activeLesson.id);
-
-        if (error) throw error;
-
-        const newCompletions = new Set(completedLessonIds);
-        newCompletions.delete(activeLesson.id);
-        setCompletedLessonIds(newCompletions);
-      } else {
-        // Mark complete by submitting result
-        const response = await fetchWithStudentAuth("/api/activity-result", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            lessonId: activeLesson.id,
-            score: 100,
-            maxScore: 100,
-            courseSlug: course.slug,
-          }),
-        });
-
-        if (!response.ok) {
-          const errData = await response.json().catch(() => ({}));
-          throw new Error(errData.error || "Failed to submit completion.");
-        }
-
-        const newCompletions = new Set(completedLessonIds);
-        newCompletions.add(activeLesson.id);
-        setCompletedLessonIds(newCompletions);
-      }
-    } catch (err: any) {
-      console.error("[KVJ] Toggle completion error:", err);
-      // If unauthorized, redirect to signin to restore session smoothly
-      if (err.message?.includes("Invalid or expired student session") || err.message?.includes("Please sign in")) {
-        router.push(`/signin?redirect=/training/${course.slug}/learn`);
-      } else {
-        alert(err.message || "Failed to update completion status.");
-      }
-    } finally {
-      setActionLoading(false);
     }
   };
 
@@ -689,18 +533,15 @@ export function ContentPlayerClient({ course, modules, adminPreview = false, ini
     const currentLessonId = activeLesson.id;
     const isCurrentlyCompleted = completedLessonIds.has(currentLessonId);
 
-    // 1. Immediately advance to next lesson or return to course overview (0ms delay!)
     if (nextLesson) {
       handleLessonSelect(nextLesson);
     } else {
       router.push(`/training/${course.slug}`);
     }
 
-    // 2. Optimistically update local completion set
     if (!isCurrentlyCompleted) {
       setCompletedLessonIds((prev) => new Set([...prev, currentLessonId]));
 
-      // 3. Persist activity completion asynchronously in background without blocking navigation
       if (!adminPreview && user) {
         fetchWithStudentAuth("/api/activity-result", {
           method: "POST",
@@ -720,284 +561,80 @@ export function ContentPlayerClient({ course, modules, adminPreview = false, ini
 
   const totalLessons = allLessons.length;
   const completedLessonsCount = completedLessonIds.size;
-  const percentComplete = totalLessons > 0 ? Math.round((completedLessonsCount / totalLessons) * 100) : 0;
+  const percentComplete =
+    totalLessons > 0
+      ? Math.round((completedLessonsCount / totalLessons) * 100)
+      : 0;
 
   return (
     <div className="w-full h-screen flex flex-col overflow-hidden">
-
-      <div className={`w-full flex-1 flex relative overflow-hidden transition-colors duration-300 ${
-        darkMode ? "bg-[#050505] text-zinc-200" : "bg-[#F8FAFC] text-zinc-800"
-      }`}>
-
+      <div className="w-full flex-1 flex relative overflow-hidden transition-colors duration-300 bg-[#F8FAFC] text-zinc-800">
         {/* 1. Collapsible Sidebar */}
-        <div
-          className={`fixed top-0 bottom-0 left-0 z-40 w-[320px] lg:w-[22%] lg:min-w-[280px] lg:max-w-[360px] flex flex-col transition-all duration-300 transform ${
-            isAssessmentActive
-              ? "-translate-x-full lg:-ml-[22%] lg:hidden"
-              : sidebarOpen
-                ? "translate-x-0 lg:relative lg:translate-x-0"
-                : "-translate-x-full lg:-ml-[22%]"
-          } ${
-            darkMode 
-              ? "bg-[#070E0B] border-r border-white/5" 
-              : "bg-white border-r border-slate-200/60 shadow-[1px_0_10px_rgba(0,0,0,0.01)]"
-          }`}
-        >
-        {/* Sidebar Header */}
-        <div className={`p-6 border-b flex items-center justify-between ${darkMode ? "border-white/5" : "border-slate-200/60"}`}>
-          <div>
-            <Link 
-              href={`/training/${course.slug}`} 
-              className={`text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 transition-colors group ${
-                darkMode ? "text-zinc-500 hover:text-[#10B981]" : "text-zinc-400 hover:text-[#10B981]"
-              }`}
-            >
-              <ChevronLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-0.5" /> Back to detail
-            </Link>
-            <h2 className={`text-base font-extrabold font-display mt-2 line-clamp-1 tracking-tight ${darkMode ? "text-white" : "text-slate-900"}`}>
-              {course.title}
-            </h2>
-          </div>
-          <button
-            onClick={() => setSidebarOpen(false)}
-            className={`lg:hidden p-2 rounded-xl transition-colors ${
-              darkMode ? "text-zinc-400 hover:bg-zinc-800" : "text-zinc-500 hover:bg-slate-100"
-            }`}
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
+        <PlayerSidebar
+          course={course}
+          enrichedModules={enrichedModules}
+          sidebarOpen={sidebarOpen}
+          isAssessmentActive={isAssessmentActive}
+          expandedModuleIds={expandedModuleIds}
+          activeLesson={activeLesson}
+          completedLessonIds={completedLessonIds}
+          totalLessons={totalLessons}
+          completedLessonsCount={completedLessonsCount}
+          percentComplete={percentComplete}
+          onSelectLesson={handleLessonSelect}
+          onToggleModule={toggleModule}
+          onCloseSidebar={() => setSidebarOpen(false)}
+        />
 
-        {/* Progress Tracker */}
-        <div className={`p-6 border-b shrink-0 ${darkMode ? "border-white/5 bg-[#080E0B]/30" : "border-slate-105 bg-white"}`}>
-          <div className={`p-4 rounded-2xl border ${
-            darkMode ? "bg-black/10 border-white/5" : "bg-[#F4F9FD]/40 border-slate-200/50 shadow-[0_4px_15px_rgba(16,35,63,0.01)]"
-          }`}>
-            <div className={`flex items-center justify-between text-[10px] font-extrabold uppercase tracking-wider mb-2.5 ${
-              darkMode ? "text-zinc-400" : "text-[#7B8A99]"
-            }`}>
-              <span>Course Progress</span>
-              <span className="text-[#08A88A] font-mono font-bold">{percentComplete}% ({completedLessonsCount}/{totalLessons})</span>
-            </div>
-            <div className={`w-full h-2 rounded-full overflow-hidden ${darkMode ? "bg-zinc-800" : "bg-[#DCE5E8]"}`}>
-              <div
-                className="h-full bg-gradient-to-r from-[#08A88A] to-[#0E7490] rounded-full transition-all duration-550 shadow-[0_0_8px_rgba(8,168,138,0.2)]"
-                style={{ width: `${percentComplete}%` }}
-              />
-            </div>
-          </div>
-        </div>
+        {/* 2. Main Player Column */}
+        <div className="flex-1 flex flex-col h-full overflow-hidden relative">
+          <PlayerHeader
+            sidebarOpen={sidebarOpen}
+            activeLesson={activeLesson}
+            prevLesson={prevLesson}
+            nextLesson={nextLesson}
+            isAssessmentActive={isAssessmentActive}
+            hasHtmlContent={Boolean(lessonContent || activeLesson?.content_html)}
+            viewerReady={viewerReady}
+            completedLessonIds={completedLessonIds}
+            onToggleSidebar={toggleSidebarWithSync}
+            onSelectLesson={handleLessonSelect}
+            onMarkCompleteAndNext={handleMarkCompleteAndNext}
+          />
 
-        {/* Curriculum list */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-4">
-          {enrichedModules.map((mod: any, modIdx: number) => {
-            const isOpen = expandedModuleIds.has(mod.id);
-            return (
-              <div key={mod.id} className={`border rounded-2xl overflow-hidden transition-all duration-300 ${
-                isOpen 
-                  ? darkMode ? "border-brand/30 bg-zinc-900/40" : "border-brand/20 bg-[#F0FBF7]/30 shadow-[0_4px_15px_rgba(8,168,138,0.02)]"
-                  : darkMode ? "border-white/5 bg-transparent" : "border-slate-200 bg-transparent"
-              }`}>
-                {/* Module Accordion Header Trigger */}
-                <button
-                  onClick={() => toggleModule(mod.id)}
-                  className="w-full flex items-center justify-between p-4 text-left cursor-pointer hover:bg-slate-50 dark:hover:bg-zinc-800/45 transition-colors"
-                >
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded font-mono border shrink-0 ${
-                      darkMode 
-                        ? "bg-[#10B981]/15 text-[#10B981] border-[#10B981]/30" 
-                        : "bg-[#F0FBF7] text-[#08A88A] border-[#DDF8F0]"
-                    }`}>
-                      Mod {modIdx + 1}
-                    </span>
-                    <h3 className={`text-xs font-extrabold uppercase tracking-wider truncate font-sans ${
-                      darkMode ? "text-zinc-300" : "text-[#10233F]"
-                    }`}>
-                      {mod.title}
-                    </h3>
-                  </div>
-                  {isOpen ? (
-                    <ChevronUp className={`w-4 h-4 shrink-0 ${darkMode ? "text-zinc-500" : "text-slate-400"}`} />
-                  ) : (
-                    <ChevronDown className={`w-4 h-4 shrink-0 ${darkMode ? "text-zinc-500" : "text-slate-400"}`} />
-                  )}
-                </button>
-
-                {/* Module Accordion Lessons Panel */}
-                <div className={`transition-all duration-300 overflow-hidden ${
-                  isOpen ? "max-h-[1000px] border-t border-line/60 p-3 space-y-2" : "max-h-0"
-                }`}>
-                  {mod.lessons.map((les: any) => {
-                    const isActive = activeLesson?.id === les.id;
-                    const isCompleted = completedLessonIds.has(les.id);
-
-                    return (
-                      <button
-                        key={les.id}
-                        id={`lesson-nav-${les.id}`}
-                        onClick={() => handleLessonSelect(les)}
-                        className={`w-full text-left p-3 rounded-xl flex items-center justify-between gap-3 text-xs transition-all duration-200 border transform hover:translate-x-0.5 group ${
-                          isActive
-                            ? darkMode
-                              ? "bg-[#10B981]/10 text-white font-bold border-[#10B981]/30 shadow-[0_2px_8px_rgba(16,185,129,0.05)]"
-                              : "bg-white text-[#10233F] font-bold border-[#08A88A]/60 shadow-[0_4px_12px_rgba(8,168,138,0.08)] scale-[1.01]"
-                            : darkMode
-                              ? "hover:bg-[#111814] border-transparent text-zinc-400 hover:text-zinc-200"
-                              : "hover:bg-[#F4F9FD] border-transparent text-[#526477] hover:text-[#10233F]"
-                        }`}
-                      >
-                        <div className="flex items-center gap-2.5 overflow-hidden min-w-0">
-                          {isCompleted ? (
-                            <CheckCircle2 className="w-4 h-4 text-[#08A88A] shrink-0" />
-                          ) : (
-                            <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 transition-colors ${
-                              isActive
-                                ? "border-[#08A88A]"
-                                : darkMode
-                                  ? "border-zinc-700 group-hover:border-zinc-650"
-                                  : "border-[#DCE5E8] group-hover:border-[#08A88A]/40"
-                            }`}>
-                              <div className={`w-1.5 h-1.5 rounded-full transition-transform ${
-                                isActive
-                                  ? "bg-[#08A88A] scale-100"
-                                  : "bg-transparent scale-0"
-                              }`} />
-                            </div>
-                          )}
-                          <span className={`truncate tracking-tight font-sans ${isActive ? "font-bold text-[#10233F]" : "font-semibold text-[#526477] group-hover:text-[#10233F]"}`}>
-                            {les.title}
-                          </span>
-                        </div>
-                        {les.video_url && (
-                          <PlayCircle className={`w-3.5 h-3.5 shrink-0 ${
-                            isActive 
-                              ? "text-[#08A88A]" 
-                              : darkMode 
-                                ? "text-zinc-600 group-hover:text-zinc-400" 
-                                : "text-[#7B8A99] group-hover:text-[#08A88A]"
-                          }`} />
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* 2. Main Player Column */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden relative">
-
-        {/* Player Header */}
-        <header className={`h-16 border-b px-4 md:px-6 flex items-center justify-between shrink-0 backdrop-blur-md relative z-30 transition-colors duration-300 ${
-          darkMode ? "border-white/5 bg-[#0A0A0C]/55" : "border-line bg-white/75"
-        }`}>
-          <div className="flex items-center gap-3 min-w-0">
-            {!sidebarOpen && (
-              <button
-                onClick={() => setSidebarOpenWithSync(true)}
-                className={`p-2 rounded-lg border shrink-0 transition-colors ${darkMode ? "bg-zinc-900 border-white/5 text-zinc-400 hover:text-white" : "bg-white border-zinc-200 text-zinc-650 hover:text-zinc-800"}`}
-              >
-                <Menu className="w-5 h-5" />
-              </button>
-            )}
-            {activeLesson && (
-              <span className={`text-xs font-mono font-bold uppercase truncate ${darkMode ? "text-zinc-500" : "text-slate/60"}`}>
-                {activeLesson.kind === "activity" ? "Lesson Activity" : "Study Material"}
-              </span>
-            )}
-          </div>
-
-          <div className="flex items-center gap-1.5 md:gap-2 shrink-0">
-
-            {/* ── Viewer controls (only shown when lesson has HTML content) ── */}
-            {Boolean(lessonContent || activeLesson?.content_html) && viewerReady && (
-              <>
-                {/* Hide embedded sidebar toggle */}
-                <ViewerToggle
-                  active={!sidebarOpen}
-                  onClick={() => setSidebarOpenWithSync(!sidebarOpen)}
-                  title={!sidebarOpen ? "Show navigation sidebar" : "Hide navigation sidebar"}
-                >
-                  {!sidebarOpen
-                    ? <PanelLeftOpen className="w-3.5 h-3.5" />
-                    : <PanelLeftClose className="w-3.5 h-3.5" />}
-                  <span className="hidden sm:inline text-[10px] font-semibold leading-none">
-                    {!sidebarOpen ? "Show Nav" : "Hide Nav"}
-                  </span>
-                </ViewerToggle>
-
-                {/* Separator */}
-                <span className="w-px h-5 bg-zinc-200 hidden sm:block" />
-              </>
-            )}
-
-            {/* Prev / Next mini buttons in header */}
-            {activeLesson && !isAssessmentActive && (
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  disabled={!prevLesson}
-                  onClick={() => activeLesson && handleLessonSelect(prevLesson!)}
-                  className={`py-1.5 px-3 text-xs border flex items-center gap-1 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
-                    darkMode
-                      ? "bg-zinc-900 hover:bg-zinc-800 text-zinc-350 border-white/5"
-                      : "bg-white hover:bg-zinc-50 text-zinc-700 border-zinc-200"
-                  }`}
-                >
-                  <ChevronLeft className="w-3.5 h-3.5" /> Prev
-                </button>
-                {nextLesson ? (
-                  <button
-                    type="button"
-                    onClick={handleMarkCompleteAndNext}
-                    className={`py-1.5 px-3 text-xs border flex items-center gap-1.5 rounded-lg transition-all font-semibold ${
-                      completedLessonIds.has(activeLesson.id)
-                        ? darkMode
-                          ? "bg-zinc-900 hover:bg-zinc-800 text-zinc-350 border-white/5"
-                          : "bg-white hover:bg-zinc-50 text-zinc-700 border-zinc-200"
-                        : "bg-[#08A88A] hover:bg-[#068A72] text-white border-transparent shadow-sm"
-                    }`}
-                  >
-                    <span>{completedLessonIds.has(activeLesson.id) ? "Next" : "Complete & Next"}</span>
-                    <ChevronRight className="w-3.5 h-3.5" />
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={handleMarkCompleteAndNext}
-                    className={`py-1.5 px-3 text-xs border flex items-center gap-1.5 rounded-lg transition-all font-semibold ${
-                      darkMode
-                        ? "bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border-emerald-500/30"
-                        : "bg-emerald-50 hover:bg-emerald-100 text-brand border-brand/20"
-                    }`}
-                  >
-                    Finish <CheckCircle2 className="w-3.5 h-3.5" />
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-        </header>
-
-        {/* Player Content Body */}
-        {activeLesson ? (
-          isAssessmentActive && activeTest ? (
-            <div ref={mainScrollRef} className="flex-1 overflow-y-auto p-0 relative bg-[#F8FAFC]">
-              <TestTakingWidget
-                testId={activeTest.id}
-                courseSlug={course.slug}
-                adminPreview={adminPreview}
-                darkMode={darkMode}
-                autoStart={true}
-                onStart={() => setIsAssessmentActive(true)}
-                onExit={() => setIsAssessmentActive(false)}
-                onNext={nextLesson ? () => handleMarkCompleteAndNext() : undefined}
-                onComplete={async (score, maxScore, passed) => {
-                  setAttemptsTrigger((prev) => prev + 1);
+          {/* 3. Player Content Body */}
+          {activeLesson ? (
+            <LessonViewer
+              course={course}
+              activeLesson={activeLesson}
+              prevLesson={prevLesson}
+              nextLesson={nextLesson}
+              isAssessmentActive={isAssessmentActive}
+              sidebarOpen={sidebarOpen}
+              completedLessonIds={completedLessonIds}
+              activityResult={activityResult}
+              adminPreview={adminPreview}
+              activeTest={activeTest}
+              loadingTest={loadingTest}
+              attemptsCount={attemptsCount}
+              highestAttempt={highestAttempt}
+              loadingLessonContent={loadingLessonContent}
+              lessonContent={lessonContent}
+              mainScrollRef={mainScrollRef}
+              totalLessons={totalLessons}
+              activeIndex={activeIndex}
+              viewerReady={viewerReady}
+              onDismissActivityResult={() => setActivityResult(null)}
+              onRetryLessonFetch={() => {
+                lessonContentCache.current.delete(activeLesson.id);
+                setLessonContent(null);
+                setLessonFetchRetry((n) => n + 1);
+              }}
+              onStartAssessment={() => setIsAssessmentActive(true)}
+              onExitAssessment={() => setIsAssessmentActive(false)}
+              onCompleteAssessment={async (score, maxScore, passed) => {
+                setAttemptsTrigger((prev) => prev + 1);
+                if (!adminPreview) {
                   try {
                     const res = await fetchWithStudentAuth("/api/activity-result", {
                       method: "POST",
@@ -1010,374 +647,33 @@ export function ContentPlayerClient({ course, modules, adminPreview = false, ini
                         passed,
                       }),
                     });
-                    // Mark lesson as attended in sidebar progress regardless of pass/fail.
-                    // Passing vs failing is shown in the result screen; progress tracks engagement.
                     if (res.ok) {
                       setCompletedLessonIds((prev) => new Set([...prev, activeLesson.id]));
                     }
                   } catch (err) {
                     console.error("Failed to save activity result:", err);
                   }
-                }}
-              />
-            </div>
+                }
+              }}
+              onSelectLesson={handleLessonSelect}
+              onMarkCompleteAndNext={handleMarkCompleteAndNext}
+              onIframeContentWindow={(win) => {
+                if (win) lessonFrameWindowsRef.current.add(win);
+              }}
+            />
           ) : (
-            <div
-              ref={mainScrollRef}
-              className={`flex-1 overflow-y-auto relative transition-all duration-300 ${
-                !sidebarOpen
-                  ? "p-2 sm:p-4 md:p-6 lg:p-8"
-                  : "p-4 sm:p-6 md:p-8"
-              }`}
-            >
-              <div
-                className={`mx-auto space-y-8 transition-all duration-300 ${
-                  !sidebarOpen
-                    ? "w-full max-w-[98%]"
-                    : "max-w-5xl"
-                }`}
-              >
-
-              {/* Lesson Title & Header */}
-              <div className={`flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-6 ${darkMode ? "border-white/5" : "border-line"}`}>
-                <div>
-                  <h1 className={`text-2xl md:text-3xl font-bold font-display tracking-tight ${darkMode ? "text-white" : "text-slate-900"}`}>
-                    {activeLesson.moduleTitle || activeLesson.title}
-                  </h1>
-                </div>
-
-                {completedLessonIds.has(activeLesson.id) && (
-                  <span className={`py-1.5 px-4 font-semibold text-xs flex items-center gap-1.5 border rounded-full ${
-                    darkMode
-                      ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/25"
-                      : "bg-emerald-50 text-[#08A88A] border-[#08A88A]/20"
-                  }`}>
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                    <span>Completed</span>
-                  </span>
-                )}
+            <div className="flex-1 flex items-center justify-center p-6 text-center">
+              <div>
+                <BookOpen className="w-12 h-12 text-zinc-500 mx-auto mb-4" />
+                <h3 className="text-lg font-bold mb-1 text-ink">Select a Lesson</h3>
+                <p className="font-light text-sm text-slate">
+                  Select any curriculum syllabus item from the sidebar to launch.
+                </p>
               </div>
-
-              {/* Video Player Box */}
-              {activeLesson.video_url && (
-                <div className={`w-full aspect-video rounded-3xl overflow-hidden border bg-black shadow-2xl relative ${darkMode ? "border-white/5" : "border-zinc-200"}`}>
-                  <video
-                    src={activeLesson.video_url}
-                    controls
-                    className="w-full h-full object-contain"
-                  />
-                </div>
-              )}
-
-              {/* ── Activity score banner ────────────────────────────────────
-                  Shown when the lesson iframe calls kvjSubmit(score, maxScore).
-                  Dismissed by clicking ×. In admin preview the score is shown
-                  but not persisted. */}
-              {activityResult && (
-                <div className={`flex items-center justify-between gap-4 border rounded-2xl px-5 py-4 ${
-                  darkMode 
-                    ? "bg-emerald-500/10 border-emerald-500/25 text-emerald-300"
-                    : "bg-emerald-50 border-brand/20 text-brand"
-                }`}>
-                  <div className="flex items-center gap-3">
-                    <Trophy className={`w-5 h-5 shrink-0 ${darkMode ? "text-emerald-400" : "text-[#059669]"}`} />
-                    <div>
-                      <p className={`text-sm font-bold ${darkMode ? "text-emerald-300" : "text-[#059669]"}`}>
-                        Activity complete!
-                        {adminPreview && (
-                          <span className="ml-2 text-[10px] font-normal opacity-70">(admin preview — not saved)</span>
-                        )}
-                      </p>
-                      <p className={`text-xs font-mono mt-0.5 ${darkMode ? "text-emerald-400/80" : "text-brand/80"}`}>
-                        Score: {activityResult.score} / {activityResult.maxScore}
-                        {activityResult.maxScore > 0 && (
-                          <span className="ml-2 opacity-80">
-                            ({Math.round((activityResult.score / activityResult.maxScore) * 100)}%)
-                          </span>
-                        )}
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setActivityResult(null)}
-                    className={`shrink-0 transition-colors ${darkMode ? "text-emerald-500/60 hover:text-emerald-300" : "text-brand/60 hover:text-brand"}`}
-                    title="Dismiss"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              )}
-
-              {/* Text Description Box / Assessment Workspace */}
-              {activeLesson.kind === "assessment" ? (
-                loadingTest ? (
-                  <div className="py-12 flex justify-center items-center">
-                    <Loader2 className="w-8 h-8 animate-spin text-brand" />
-                  </div>
-                ) : !activeTest ? (
-                  <div className={`text-center py-12 rounded-3xl p-8 border ${darkMode ? "bg-[#0A0A0C]/55 border-white/5" : "bg-white border-line shadow-soft"}`}>
-                    <HelpCircle className="w-12 h-12 text-zinc-550 mx-auto mb-3" />
-                    <p className={`text-sm font-semibold ${darkMode ? "text-zinc-400" : "text-ink"}`}>Assessment Under Construction</p>
-                    <p className={`text-xs mt-1 ${darkMode ? "text-zinc-500" : "text-slate"}`}>This module assessment has not been configured yet.</p>
-                  </div>
-                ) : activeTest.attempts_allowed > 0 && attemptsCount >= activeTest.attempts_allowed ? (
-                  <div className={`text-center py-12 rounded-3xl p-8 space-y-4 border ${darkMode ? "bg-[#0A0A0C]/55 border-white/5" : "bg-white border-line shadow-soft"}`}>
-                    <AlertTriangle className="w-12 h-12 text-amber-500 mx-auto" />
-                    <h3 className={`text-base font-bold ${darkMode ? "text-white" : "text-ink"}`}>Attempt Limit Reached</h3>
-                    <p className={`text-xs leading-relaxed max-w-md mx-auto ${darkMode ? "text-zinc-400" : "text-slate"}`}>
-                      You have used all {activeTest.attempts_allowed} of your allowed attempts for this module assessment.
-                    </p>
-                    {highestAttempt && (
-                      <div className={`border p-4 rounded-xl max-w-xs mx-auto text-xs ${
-                        darkMode 
-                          ? "bg-[#111114] border-white/5 text-zinc-400" 
-                          : "bg-zinc-50 border-zinc-200 text-zinc-650"
-                      }`}>
-                        <span className="block uppercase tracking-wider font-bold text-[9px] mb-1 opacity-70">Your Best Score</span>
-                        <span className={`text-sm font-bold block ${darkMode ? "text-white" : "text-ink"}`}>
-                          {highestAttempt.score} / {highestAttempt.max_score} Marks ({highestAttempt.max_score > 0 ? Math.round((highestAttempt.score / highestAttempt.max_score) * 100) : 0}%)
-                        </span>
-                        <span className={`inline-block mt-2 px-2 py-0.5 rounded text-[10px] font-bold ${
-                          highestAttempt.passed ? "bg-emerald-500/10 text-emerald-450" : "bg-red-500/10 text-red-450"
-                        }`}>
-                          {highestAttempt.passed ? "PASSED" : "FAILED"}
-                        </span>
-                      </div>
-                    )}
-
-                    <div className="pt-2 flex items-center justify-center gap-3">
-                      {nextLesson ? (
-                        <button
-                          type="button"
-                          onClick={handleMarkCompleteAndNext}
-                          className="inline-flex items-center gap-2 px-8 py-3 rounded-xl font-bold text-sm bg-[#08A88A] hover:bg-[#068A72] text-white shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5"
-                        >
-                          Continue to Next Session
-                          <ChevronRight className="w-4 h-4" />
-                        </button>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => router.push(`/training/${course.slug}`)}
-                          className="inline-flex items-center gap-2 px-8 py-3 rounded-xl font-bold text-sm bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5"
-                        >
-                          Finish Course
-                          <CheckCircle2 className="w-4 h-4" />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                ) : (
-                  <div className={`border rounded-3xl overflow-hidden ${darkMode ? "bg-[#0A0A0C]/55 border-white/5" : "bg-white border-line shadow-soft"}`}>
-                    <TestTakingWidget
-                      testId={activeTest.id}
-                      courseSlug={course.slug}
-                      adminPreview={adminPreview}
-                      darkMode={darkMode}
-                      isInline={activeTest.is_inline}
-                      showAnswers={activeTest.is_inline ? true : false}
-                      onStart={() => {
-                        if (!activeTest.is_inline) {
-                          setIsAssessmentActive(true);
-                        }
-                      }}
-                      onExit={() => {
-                        if (!activeTest.is_inline) {
-                          setIsAssessmentActive(false);
-                        }
-                      }}
-                      onNext={nextLesson ? () => handleMarkCompleteAndNext() : undefined}
-                      onComplete={async (score, maxScore, passed) => {
-                        setAttemptsTrigger((prev) => prev + 1);
-                        if (!adminPreview) {
-                          try {
-                            const res = await fetchWithStudentAuth("/api/activity-result", {
-                              method: "POST",
-                              headers: { "Content-Type": "application/json" },
-                              body: JSON.stringify({
-                                lessonId: activeLesson.id,
-                                score,
-                                maxScore,
-                                courseSlug: course.slug,
-                                passed,
-                              }),
-                            });
-                            // Mark lesson as attended in sidebar progress regardless of pass/fail.
-                            // Passing vs failing is shown in the result screen; progress tracks engagement.
-                            if (res.ok) {
-                              setCompletedLessonIds((prev) => new Set([...prev, activeLesson.id]));
-                            }
-                          } catch (err) {
-                            console.error("Failed to save activity result:", err);
-                          }
-                        }
-                      }}
-                    />
-                  </div>
-                )
-              ) : (
-                <div className={`border rounded-3xl overflow-hidden ${darkMode ? "bg-[#0A0A0C]/55 border-white/5" : "bg-white border-line shadow-soft"}`}>
-                  {loadingLessonContent ? (
-                    <div className="flex flex-col items-center justify-center py-24 space-y-3">
-                      <Loader2 className="w-8 h-8 animate-spin text-[#08A88A]" />
-                      <p className="text-xs text-zinc-500 font-medium">Loading lesson material...</p>
-                    </div>
-                  ) : (lessonContent || activeLesson.content_html) ? (
-                    <div className="divide-y divide-line dark:divide-white/5">
-                      {(() => {
-                        const rawHtml = lessonContent || activeLesson.content_html || "";
-                        const cleanedHtml = cleanLessonHtml(rawHtml);
-                        return cleanedHtml.split(/(<div class="kvj-assessment-placeholder[^>]*><\/div>)/g).map((segment, idx) => {
-                          const match = segment.match(/data-test-id="([^"]*)"/);
-                          if (match) {
-                            const testId = match[1];
-                            const showAnswersMatch = segment.match(/data-show-answers="([^"]*)"/);
-                            const showAnswers = showAnswersMatch ? showAnswersMatch[1] === "true" : false;
-                            const isInlineBlock = true; // Always force inline mode for embedded assessments in textbook pages
-                            return (
-                              <div key={idx} className="px-3 sm:px-6 md:px-10 py-6 bg-transparent">
-                                <TestTakingWidget
-                                  testId={testId}
-                                  courseSlug={course.slug}
-                                  adminPreview={adminPreview}
-                                  darkMode={darkMode}
-                                  isInline={isInlineBlock}
-                                  showAnswers={showAnswers}
-                                  onStart={() => {}}
-                                  onExit={() => {}}
-                                  onComplete={async (score, maxScore, passed) => {
-                                    console.log(`Embedded test ${testId} completed: ${score}/${maxScore}`);
-                                  }}
-                                />
-                              </div>
-                            );
-                          }
-
-                          if (!segment.trim() || segment === " ") return null;
-
-                          return (
-                             <div key={idx} className="w-full">
-                               <LessonIframe
-                                 html={segment}
-                                 darkMode={viewerReady ? darkMode : false}
-                                 hideSidebar={viewerReady ? hideSidebar : false}
-                                 onLightDetected={handleLightDetected}
-                                 onContentWindow={(win) => { if (win) lessonFrameWindowsRef.current.add(win); }}
-                               />
-                             </div>
-                          );
-                        });
-                      })()}
-                    </div>
-                  ) : (
-                    <div className={`flex flex-col items-center justify-center py-16 gap-4 ${darkMode ? "text-zinc-400" : "text-zinc-500"}`}>
-                      <svg xmlns="http://www.w3.org/2000/svg" className="w-10 h-10 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" /></svg>
-                      <p className={`text-sm font-semibold ${darkMode ? "text-zinc-300" : "text-zinc-600"}`}>Lesson content could not be loaded.</p>
-                      <p className={`text-xs text-center max-w-xs ${darkMode ? "text-zinc-500" : "text-zinc-400"}`}>This may be a temporary network issue. Please tap Retry — your progress is safe.</p>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          lessonContentCache.current.delete(activeLesson.id);
-                          setLessonContent(null);
-                          setLessonFetchRetry((n) => n + 1);
-                        }}
-                        className="mt-1 px-5 py-2 rounded-lg text-sm font-semibold bg-[#08A88A] hover:bg-[#068A72] text-white transition-colors shadow-sm"
-                      >
-                        ↺ Retry
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Bottom Navigation */}
-              {!isAssessmentActive && (
-                <div className={`flex items-center justify-between border-t pt-6 mt-12 ${darkMode ? "border-white/5" : "border-line"}`}>
-                  <button
-                    type="button"
-                    disabled={!prevLesson}
-                    onClick={() => activeLesson && handleLessonSelect(prevLesson!)}
-                    className={`py-2 px-5 text-sm border flex items-center gap-1.5 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
-                      darkMode
-                        ? "bg-zinc-900 hover:bg-zinc-800 text-zinc-350 border-white/5"
-                        : "bg-white hover:bg-zinc-50 text-zinc-700 border-zinc-200"
-                    }`}
-                  >
-                    <ChevronLeft className="w-4 h-4" /> Prev Lesson
-                  </button>
-
-                  <span className={`text-sm font-mono ${darkMode ? "text-zinc-500" : "text-zinc-400"}`}>
-                    {activeIndex + 1} of {totalLessons}
-                  </span>
-
-                  {activeLesson.kind === "assessment" ? (
-                    nextLesson ? (
-                      <button
-                        type="button"
-                        onClick={handleMarkCompleteAndNext}
-                        className="py-2.5 px-6 bg-[#08A88A] hover:bg-[#068A72] text-white text-sm font-semibold flex items-center gap-1.5 rounded-xl border-none transition-all shadow-[0_4px_15px_rgba(8,168,138,0.2)]"
-                      >
-                        Continue to Next Session <ChevronRight className="w-4 h-4" />
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={handleMarkCompleteAndNext}
-                        className="py-2.5 px-6 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold flex items-center gap-1.5 rounded-xl border-none transition-all shadow-[0_4px_15px_rgba(16,185,129,0.2)]"
-                      >
-                        Finish Course <CheckCircle2 className="w-4 h-4" />
-                      </button>
-                    )
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={handleMarkCompleteAndNext}
-                      className="py-2.5 px-6 bg-[#08A88A] hover:bg-[#068A72] active:scale-[0.98] text-white text-sm font-bold flex items-center gap-2 rounded-xl border-none transition-all shadow-[0_4px_15px_rgba(8,168,138,0.25)] cursor-pointer"
-                    >
-                      {completedLessonIds.has(activeLesson.id) ? (
-                        nextLesson ? (
-                          <>
-                            <span>Next Lesson</span>
-                            <ChevronRight className="w-4 h-4" />
-                          </>
-                        ) : (
-                          <>
-                            <span>Finish Course</span>
-                            <CheckCircle2 className="w-4 h-4" />
-                          </>
-                        )
-                      ) : nextLesson ? (
-                        <>
-                          <span>Mark Complete & Next Lesson</span>
-                          <ChevronRight className="w-4 h-4" />
-                        </>
-                      ) : (
-                        <>
-                          <span>Mark Complete & Finish Course</span>
-                          <CheckCircle2 className="w-4 h-4" />
-                        </>
-                      )}
-                    </button>
-                  )}
-                </div>
-              )}
-
             </div>
-          </div>
-        )
-      ) : (
-          <div className="flex-1 flex items-center justify-center p-6 text-center">
-            <div>
-              <BookOpen className="w-12 h-12 text-zinc-500 mx-auto mb-4" />
-              <h3 className={`text-lg font-bold mb-1 ${darkMode ? "text-white" : "text-ink"}`}>Select a Lesson</h3>
-              <p className={`font-light text-sm ${darkMode ? "text-zinc-400" : "text-slate"}`}>Select any curriculum syllabus item from the sidebar to launch.</p>
-            </div>
-          </div>
-        )}
-
+          )}
+        </div>
       </div>
     </div>
-  </div>
   );
 }

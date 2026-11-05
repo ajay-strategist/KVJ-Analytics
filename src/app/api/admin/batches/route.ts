@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { generateTOTPAtCounter, generateBase32Secret } from "@/lib/totp";
 import { adminToken } from "@/lib/adminAuth";
+import { invalidateBatchCache } from "@/lib/supabaseAdmin";
 
 function getAdminClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -106,6 +107,10 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (error) throw error;
+
+    try {
+      await invalidateBatchCache(course_slug);
+    } catch {}
 
     return NextResponse.json({ success: true, batch: data });
   } catch (error: any) {
@@ -230,6 +235,11 @@ export async function PATCH(req: NextRequest) {
       }
     }
 
+    try {
+      if (oldBatch.course_slug) await invalidateBatchCache(oldBatch.course_slug);
+      if (course_slug && course_slug !== oldBatch.course_slug) await invalidateBatchCache(course_slug);
+    } catch {}
+
     return NextResponse.json({ success: true, batch: data });
   } catch (error: any) {
     console.error("Failed to update batch:", error);
@@ -260,19 +270,32 @@ export async function DELETE(req: NextRequest) {
       );
     }
 
-    // Delete associated student roster entries first
+    // 1. Fetch batch to get course_slug for cache invalidation
+    const { data: targetBatch } = await supabaseAdmin
+      .from("batches")
+      .select("course_slug")
+      .eq("id", id)
+      .maybeSingle();
+
+    // 2. Delete associated student roster entries first
     await supabaseAdmin
       .from("batch_students")
       .delete()
       .eq("batch_id", id);
 
-    // Delete the batch itself
+    // 3. Delete the batch itself
     const { error } = await supabaseAdmin
       .from("batches")
       .delete()
       .eq("id", id);
 
     if (error) throw error;
+
+    if (targetBatch?.course_slug) {
+      try {
+        await invalidateBatchCache(targetBatch.course_slug);
+      } catch {}
+    }
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
