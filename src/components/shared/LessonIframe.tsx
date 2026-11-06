@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState, useEffect, useCallback } from "react";
+import React, { useRef, useEffect, useCallback, useId } from "react";
 import { toDirectImageUrl } from "@/lib/mediaUrl";
 
 interface LessonIframeProps {
@@ -150,7 +150,11 @@ export function LessonIframe({
   onLightDetected,
   onContentWindow,
 }: LessonIframeProps) {
+  void darkMode;
+  void onLightDetected;
   const frameRef = useRef<HTMLIFrameElement>(null);
+  const reactId = useId();
+  const frameId = `kvj-frame-${reactId.replace(/[^a-zA-Z0-9_-]/g, "")}`;
 
   const cleanHtml = cleanLessonHtml(html);
 
@@ -189,7 +193,7 @@ export function LessonIframe({
     min-height:auto !important;
     max-height:none !important;
   }
-  body{overflow:hidden}
+  body{overflow-x:hidden}
 
   /* Prevent lesson styles from locking the iframe to full viewport height or centering inside void */
   body [style*="100vh"], body [style*="90vh"], body [style*="95vh"] {
@@ -509,11 +513,61 @@ export function LessonIframe({
   }
 </style>
 </head>
-<body class="m-0 p-0 overflow-hidden">
+<body class="m-0 p-0 overflow-x-hidden">
 <div id="kvj-content-root" class="w-full max-w-none px-5 py-6 sm:px-8 sm:py-8">
 ${cleanHtml.includes("kvj-custom-html-block") ? cleanHtml : `<div class="kvj-custom-html-block">${cleanHtml}</div>`}
 </div>
 <script>
+  // Dynamic content height measurement & reporting via ResizeObserver
+  function calculateDocHeight() {
+    var root = document.getElementById('kvj-content-root') || document.body;
+    if (!root) return 0;
+    var h = Math.max(
+      root.scrollHeight || 0,
+      root.offsetHeight || 0,
+      document.body ? document.body.scrollHeight : 0,
+      document.body ? document.body.offsetHeight : 0,
+      document.documentElement ? document.documentElement.scrollHeight : 0
+    );
+    return Math.ceil(h + 30);
+  }
+
+  var resizeTimer = null;
+  function notifyHeight() {
+    if (resizeTimer) cancelAnimationFrame(resizeTimer);
+    resizeTimer = requestAnimationFrame(function() {
+      var h = calculateDocHeight();
+      if (h > 0) {
+        window.parent.postMessage({ type: 'KVJ_IFRAME_RESIZE', height: h, frameId: '${frameId}' }, '*');
+      }
+    });
+  }
+
+  window.addEventListener('resize', notifyHeight);
+  window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'RECHECK_HEIGHT') {
+      notifyHeight();
+    }
+  });
+
+  if (typeof ResizeObserver !== 'undefined') {
+    var ro = new ResizeObserver(function() {
+      notifyHeight();
+    });
+    var rootEl = document.getElementById('kvj-content-root');
+    if (rootEl) ro.observe(rootEl);
+    if (document.body) ro.observe(document.body);
+    if (document.documentElement) ro.observe(document.documentElement);
+  }
+
+  window.addEventListener('load', notifyHeight);
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(notifyHeight);
+  }
+  notifyHeight();
+  setTimeout(notifyHeight, 100);
+  setTimeout(notifyHeight, 500);
+
   // Copy Code Button & Language Label
   document.querySelectorAll('pre').forEach(pre => {
     pre.className = (pre.className || '') + ' relative group';
@@ -935,60 +989,12 @@ ${cleanHtml.includes("kvj-custom-html-block") ? cleanHtml : `<div class="kvj-cus
     }
   });
 
-  // Dynamic content height measurement & reporting via ResizeObserver
-  function calculateDocHeight() {
-    const root = document.getElementById('kvj-content-root') || document.body;
-    if (!root) return 0;
-    const h = Math.max(
-      root.scrollHeight,
-      root.offsetHeight,
-      document.body ? document.body.scrollHeight : 0,
-      document.body ? document.body.offsetHeight : 0,
-      document.documentElement ? document.documentElement.scrollHeight : 0
-    );
-    return Math.ceil(h + 24);
-  }
-
-  let resizeTimer: any = null;
-  function notifyHeight() {
-    if (resizeTimer) cancelAnimationFrame(resizeTimer);
-    resizeTimer = requestAnimationFrame(() => {
-      const h = calculateDocHeight();
-      if (h > 0) {
-        window.parent.postMessage({ type: 'KVJ_IFRAME_RESIZE', height: h }, '*');
-      }
-    });
-  }
-
-  window.addEventListener('resize', notifyHeight);
-  window.addEventListener('message', (e) => {
-    if (e.data && e.data.type === 'RECHECK_HEIGHT') {
-      notifyHeight();
-    }
-  });
-
-  if (typeof ResizeObserver !== 'undefined') {
-    const ro = new ResizeObserver(() => {
-      notifyHeight();
-    });
-    const root = document.getElementById('kvj-content-root');
-    if (root) ro.observe(root);
-    ro.observe(document.body);
-    ro.observe(document.documentElement);
-  }
-
-  window.addEventListener('load', notifyHeight);
-  if (document.fonts && document.fonts.ready) {
-    document.fonts.ready.then(notifyHeight);
-  }
-  notifyHeight();
-
 </script>
 </body>
 </html>`;
 
   // Initial load handler
-  const handleLoad = () => {
+  const handleLoad = useCallback(() => {
     const frame = frameRef.current;
     if (!frame) return;
     try {
@@ -997,25 +1003,27 @@ ${cleanHtml.includes("kvj-custom-html-block") ? cleanHtml : `<div class="kvj-cus
     } catch {
       // Cross-origin safety
     }
-  };
+  }, [onContentWindow]);
 
   useEffect(() => {
     const timer = setTimeout(handleLoad, 50);
     return () => clearTimeout(timer);
-  }, [html, hideSidebar]);
+  }, [handleLoad, html, hideSidebar]);
 
   // Listen for iframe self-reported resize messages
   useEffect(() => {
     const handleMessage = (e: MessageEvent) => {
       const frame = frameRef.current;
-      if (!frame || e.source !== frame.contentWindow) return;
+      if (!frame) return;
+      if (e.data?.frameId && e.data.frameId !== frameId) return;
+      if (!e.data?.frameId && e.source !== frame.contentWindow) return;
       if (e.data?.type === "KVJ_IFRAME_RESIZE" && typeof e.data.height === "number") {
         frame.style.height = `${Math.ceil(e.data.height)}px`;
       }
     };
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
-  }, []);
+  }, [frameId]);
 
   // ResizeObserver on the iframe element so width changes (e.g. sidebar toggle) trigger height recalibration
   useEffect(() => {
@@ -1050,10 +1058,9 @@ ${cleanHtml.includes("kvj-custom-html-block") ? cleanHtml : `<div class="kvj-cus
       srcDoc={srcDoc}
       onLoad={handleLoad}
       className="w-full border-none bg-transparent block"
-      style={{ minHeight: "150px" }}
+      style={{ minHeight: "350px" }}
       sandbox="allow-scripts allow-popups allow-forms allow-modals allow-downloads allow-popups-to-escape-sandbox"
       allow="clipboard-write; fullscreen"
-      scrolling="no"
     />
   );
 }
