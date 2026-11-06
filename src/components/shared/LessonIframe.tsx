@@ -102,6 +102,9 @@ export function cleanLessonHtml(html: string): string {
   // 2. Trim outer newlines and spaces, and remove trailing empty tags/breaks
   cleaned = cleaned.replace(/^(\s|\\n)+|(\s|\\n)+$/g, "");
   cleaned = cleaned.replace(/(?:<p[^>]*>\s*(?:<br\s*\/?>|&nbsp;|\s)*<\/p>|<br\s*\/?>|\s)+$/gi, "");
+  // Collapse excessive consecutive breaks and empty paragraph wrappers between blocks
+  cleaned = cleaned.replace(/(?:<br\s*\/?>\s*){3,}/gi, "<br/><br/>");
+  cleaned = cleaned.replace(/<p[^>]*>\s*(?:<br\s*\/?>|&nbsp;|\s)*<\/p>/gi, "");
 
   // 3. Replace literal \n with <br/> and \" with " only outside of style/script tags
   const regex = /(<style[\s\S]*?<\/style>|<script[\s\S]*?<\/script>|<[^>]+>)|(\\n)|(\\\")/g;
@@ -190,10 +193,13 @@ export function LessonIframe({
     margin:0 !important;
     padding:0 !important;
     height:auto !important;
-    min-height:auto !important;
+    min-height:0 !important;
     max-height:none !important;
   }
-  body{overflow-x:hidden}
+  body{
+    overflow-x:hidden;
+    overflow-y:hidden;
+  }
 
   /* Prevent lesson styles from locking the iframe to full viewport height or centering inside void */
   body [style*="100vh"], body [style*="90vh"], body [style*="95vh"] {
@@ -520,16 +526,14 @@ ${cleanHtml.includes("kvj-custom-html-block") ? cleanHtml : `<div class="kvj-cus
 <script>
   // Dynamic content height measurement & reporting via ResizeObserver
   function calculateDocHeight() {
-    var root = document.getElementById('kvj-content-root') || document.body;
-    if (!root) return 0;
-    var h = Math.max(
-      root.scrollHeight || 0,
-      root.offsetHeight || 0,
-      document.body ? document.body.scrollHeight : 0,
-      document.body ? document.body.offsetHeight : 0,
-      document.documentElement ? document.documentElement.scrollHeight : 0
-    );
-    return Math.ceil(h + 30);
+    var root = document.getElementById('kvj-content-root');
+    if (root) {
+      var rect = root.getBoundingClientRect();
+      var h = Math.max(rect.height || 0, root.scrollHeight || 0, root.offsetHeight || 0);
+      return Math.ceil(h);
+    }
+    var b = document.body;
+    return b ? Math.ceil(Math.max(b.scrollHeight || 0, b.offsetHeight || 0)) : 0;
   }
 
   var resizeTimer = null;
@@ -556,8 +560,6 @@ ${cleanHtml.includes("kvj-custom-html-block") ? cleanHtml : `<div class="kvj-cus
     });
     var rootEl = document.getElementById('kvj-content-root');
     if (rootEl) ro.observe(rootEl);
-    if (document.body) ro.observe(document.body);
-    if (document.documentElement) ro.observe(document.documentElement);
   }
 
   window.addEventListener('load', notifyHeight);
@@ -1018,7 +1020,11 @@ ${cleanHtml.includes("kvj-custom-html-block") ? cleanHtml : `<div class="kvj-cus
       if (e.data?.frameId && e.data.frameId !== frameId) return;
       if (!e.data?.frameId && e.source !== frame.contentWindow) return;
       if (e.data?.type === "KVJ_IFRAME_RESIZE" && typeof e.data.height === "number") {
-        frame.style.height = `${Math.ceil(e.data.height)}px`;
+        const targetH = Math.ceil(e.data.height);
+        const currentH = parseInt(frame.style.height || "0", 10);
+        if (Math.abs(targetH - currentH) >= 2) {
+          frame.style.height = `${targetH}px`;
+        }
       }
     };
     window.addEventListener("message", handleMessage);
